@@ -97,5 +97,18 @@ El contrato de entrada está en
 El método, sus gates de calidad y sus límites están en
 [docs/SCIENTIFIC_CORE.md](docs/SCIENTIFIC_CORE.md).
 
+El siguiente hito centrado en datos y validación está en
+[docs/NEXT_DATA_VALIDATION_MILESTONE.md](docs/NEXT_DATA_VALIDATION_MILESTONE.md).
+
+Para repetir el sprint local de validación de datos:
+
+```powershell
+python scripts\run_data_validation_sprint.py
+```
+
+Este sprint regenera `semireal_controlled_001`, audita el candidato, ejecuta el
+pipeline GeoTIFF, verifica las políticas científicas mínimas y lanza la suite de
+tests.
+
 El prompt ejecutable para el siguiente hito está en
 [docs/PROMPT_NEXT_MILESTONE.md](docs/PROMPT_NEXT_MILESTONE.md).
