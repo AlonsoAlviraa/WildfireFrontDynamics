@@ -28,8 +28,7 @@ def generate_observations(config: ScenarioConfig) -> list[FrontObservation]:
         noise = rng.normal(0.0, config.position_error_m, size=truth.shape)
         observed = truth + noise
         observed_at = (start + timedelta(seconds=time_s)).isoformat().replace("+00:00", "Z")
-        observations.append(
-            FrontObservation(
+        observation = FrontObservation(
                 observation_id=build_observation_id(config.event_id, config.sensor_id, observed_at),
                 event_id=config.event_id,
                 sensor_id=config.sensor_id,
@@ -43,5 +42,6 @@ def generate_observations(config: ScenarioConfig) -> list[FrontObservation]:
                 method="synthetic_noisy_ellipse",
                 limitations=("synthetic_observation",),
             )
-        )
+        observation.validate()
+        observations.append(observation)
     return observations

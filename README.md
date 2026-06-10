@@ -6,8 +6,8 @@ reconstruye tiempos de llegada, estima velocidades locales y produce un informe
 visual auditable.
 
 También acepta secuencias GeoTIFF georreferenciadas y máscaras binarias para
-generar geometrías observadas, campos de llegada y un dashboard sin inventar
-ground truth ni velocidades no soportadas.
+generar geometrías observadas, campos de llegada y estimaciones conservadoras
+de velocidad local sin inventar ground truth.
 
 ## Inicio rápido
 
@@ -51,9 +51,22 @@ python -m wildfire_front ingest-geotiff `
   --estimated-error-m 2.0
 ```
 
+También está disponible una segmentación adaptativa robusta basada en mediana y
+desviación absoluta mediana:
+
+```powershell
+python -m wildfire_front ingest-geotiff `
+  --images data\sample\images `
+  --mad-z 6 `
+  --output outputs\mad-demo `
+  --sensor-id thermal_demo `
+  --estimated-error-m 2.0
+```
+
 La frontera de una máscara caliente se etiqueta como geometría candidata, no
-como frente de llama validado. El estimador de velocidad real se abstiene hasta
-disponer de un método no radial validado.
+como frente de llama validado. El estimador no radial usa intersecciones con la
+normal exterior y se abstiene localmente cuando la geometría, incertidumbre o
+correspondencia no permiten defender el valor.
 
 ## Salidas del MVP
 
@@ -70,7 +83,8 @@ disponer de un método no radial validado.
 
 Este MVP valida el núcleo geométrico con datos sintéticos y acepta el contrato
 GeoTIFF real. No es una herramienta operacional ni predice incendios reales.
-El siguiente hito es conectar una secuencia térmica real que cumpla el contrato.
+La velocidad no radial todavía requiere validación contra anotaciones
+independientes de una secuencia térmica real.
 
 Consulta [ESTUDIO_FIRE_FRONT_TRACKER.md](ESTUDIO_FIRE_FRONT_TRACKER.md),
 [AUDITORIA_DATASETS_MVP.md](AUDITORIA_DATASETS_MVP.md) y
@@ -79,6 +93,9 @@ Consulta [ESTUDIO_FIRE_FRONT_TRACKER.md](ESTUDIO_FIRE_FRONT_TRACKER.md),
 
 El contrato de entrada está en
 [docs/GEOTIFF_INPUT_CONTRACT.md](docs/GEOTIFF_INPUT_CONTRACT.md).
+
+El método, sus gates de calidad y sus límites están en
+[docs/SCIENTIFIC_CORE.md](docs/SCIENTIFIC_CORE.md).
 
 El prompt ejecutable para el siguiente hito está en
 [docs/PROMPT_NEXT_MILESTONE.md](docs/PROMPT_NEXT_MILESTONE.md).

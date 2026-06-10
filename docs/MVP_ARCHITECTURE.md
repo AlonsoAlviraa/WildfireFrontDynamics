@@ -9,11 +9,13 @@ flowchart LR
     E --> F[Contornos + affine transform]
     F --> O
     O --> G[Reconstrucción genérica de llegada]
-    O --> H[Evaluación de velocidad]
-    H --> I[Abstención real explícita]
+    O --> H[Velocidad por normales]
+    H --> I[Estimación o abstención local]
+    O --> Q[QA científico]
     O --> J[Manifiestos + geometrías]
     G --> K[Dashboard]
     I --> K
+    Q --> K
     J --> K
 ```
 
@@ -25,7 +27,10 @@ flowchart LR
 | `identity.py` | Identidad estable y SHA-256 adaptados de `DetectorDeIncendios` |
 | `synthetic.py` | Observaciones sintéticas con verdad conocida |
 | `ingestion/geotiff.py` | Lectura, QA, segmentación y extracción geoespacial |
-| `reconstruction.py` | Llegada genérica, velocidad sintética y abstención real |
+| `reconstruction.py` | Llegada genérica y velocidad radial sintética |
+| `geometry_speed.py` | Correspondencia de componentes y velocidad no radial con gates |
+| `quality.py` | Resúmenes de QA de ingesta y secuencias observadas |
+| `evaluation.py` | Distancias simétricas de frente contra referencias |
 | `outputs.py` | Manifiestos, geometrías, tablas y dashboard |
 | `cli.py` | Comandos `demo` e `ingest-geotiff` |
 
@@ -38,8 +43,9 @@ flowchart LR
 
 La reconstrucción de llegada acepta geometrías no radiales y múltiples
 componentes. La velocidad sintética conserva el estimador radial original. Para
-geometrías reales el sistema se abstiene explícitamente, porque aplicar ese
-estimador produciría una afirmación no defendible.
+geometrías observadas se emparejan componentes y se mide desplazamiento sobre
+normales exteriores. Cada muestra puede abstenerse por incertidumbre,
+curvatura, intersección inconsistente o mala correspondencia.
 
 ## Sustitución por datos reales
 
@@ -48,3 +54,5 @@ dataset. Para integrar FLAME 3, NASA AMS o una quema controlada se debe construi
 un empaquetado que cumpla `GEOTIFF_INPUT_CONTRACT.md`; reconstrucción, salidas y
 auditoría permanecen desacopladas del proveedor.
 
+El modelo no convierte una máscara térmica en ground truth. Su validación
+externa requiere anotaciones independientes; véase `SCIENTIFIC_CORE.md`.

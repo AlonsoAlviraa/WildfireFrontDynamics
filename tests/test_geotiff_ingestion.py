@@ -14,6 +14,7 @@ from wildfire_front.cli import main, run_geotiff_ingest
 from wildfire_front.ingestion.geotiff import (
     extract_mask_components,
     ingest_geotiff_sequence,
+    segment_band_mad,
     segment_band_threshold,
 )
 
@@ -85,6 +86,13 @@ class GeoTiffIngestionTests(unittest.TestCase):
         expected = np.array([[0, 0], [1, 0]], dtype=np.uint8)
         np.testing.assert_array_equal(expected, segment_band_threshold(image, 10))
 
+    def test_mad_baseline_detects_radiometric_outlier(self) -> None:
+        image = np.full((10, 10), 100, dtype=np.uint16)
+        image[5, 5] = 1000
+        mask, threshold = segment_band_mad(image, z_score=6.0)
+        self.assertEqual(1, int(mask.sum()))
+        self.assertGreaterEqual(threshold, 100)
+
     def test_sequence_can_use_threshold_without_masks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -124,10 +132,10 @@ class GeoTiffIngestionTests(unittest.TestCase):
             write_tiff(images / "no_crs_20260610_120000.tif", base, crs=None, transform=Affine.identity())
             write_tiff(masks / "no_crs_20260610_120000.tif", np.ones((8, 8), dtype=np.uint8), crs=None, transform=Affine.identity())
 
-            write_tiff(images / "mismatch_20260610_120100.tif", base)
+            write_tiff(images / "mismatch_20260610_120100.tif", base * 2)
             write_tiff(masks / "mismatch_20260610_120100.tif", np.ones((7, 7), dtype=np.uint8))
 
-            write_tiff(images / "empty_20260610_120200.tif", base)
+            write_tiff(images / "empty_20260610_120200.tif", base * 3)
             write_tiff(masks / "empty_20260610_120200.tif", np.zeros((8, 8), dtype=np.uint8))
 
             result = ingest_geotiff_sequence(
@@ -143,7 +151,70 @@ class GeoTiffIngestionTests(unittest.TestCase):
             self.assertIn("empty_mask", reasons)
             self.assertEqual(0, len(result.observations))
 
-    def test_cli_flow_generates_complete_real_artifacts_and_abstains(self) -> None:
+    def test_duplicate_sources_timestamps_and_resolution_are_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            images = root / "images"
+            images.mkdir()
+            base = np.zeros((8, 8), dtype=np.uint16)
+            base[2:5, 2:5] = 100
+            write_tiff(images / "a_20260610_120000.tif", base)
+            write_tiff(images / "duplicate_hash_20260610_120100.tif", base)
+            write_tiff(images / "duplicate_time_20260610_120000.tif", base * 2)
+            write_tiff(
+                images / "resolution_20260610_120200.tif",
+                base * 3,
+                transform=from_origin(500000, 4100000, 20, 20),
+            )
+            result = ingest_geotiff_sequence(
+                images,
+                masks_dir=None,
+                event_id="qa",
+                sensor_id="thermal",
+                estimated_error_m=1.0,
+                threshold=50,
+            )
+            reasons = {record.reason for record in result.records}
+            self.assertIn("duplicate_source_sha256", reasons)
+            self.assertIn("duplicate_timestamp", reasons)
+            self.assertIn("sequence_resolution_mismatch", reasons)
+            self.assertEqual(1, len(result.observations))
+
+    def test_invalid_input_does_not_define_sequence_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            images = root / "images"
+            masks = root / "masks"
+            images.mkdir()
+            masks.mkdir()
+            base = np.zeros((8, 8), dtype=np.uint16)
+            base[2:5, 2:5] = 100
+            write_tiff(
+                images / "a_invalid_20260610_120000.tif",
+                base,
+                transform=from_origin(500000, 4100000, 20, 20),
+            )
+            write_tiff(
+                masks / "a_invalid_20260610_120000.tif",
+                np.zeros((8, 8), dtype=np.uint8),
+                transform=from_origin(500000, 4100000, 20, 20),
+            )
+            write_tiff(images / "b_valid_20260610_120000.tif", base * 2)
+            write_tiff(masks / "b_valid_20260610_120000.tif", (base > 0).astype(np.uint8))
+
+            result = ingest_geotiff_sequence(
+                images,
+                masks_dir=masks,
+                event_id="qa",
+                sensor_id="thermal",
+                estimated_error_m=1.0,
+            )
+
+            self.assertEqual(1, len(result.observations))
+            self.assertEqual(10.0, result.observations[0].resolution_m)
+            self.assertIn("empty_mask", {record.reason for record in result.records})
+
+    def test_cli_flow_generates_complete_real_artifacts_and_speed_quality(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             images, masks = make_valid_sequence(root)
@@ -169,12 +240,12 @@ class GeoTiffIngestionTests(unittest.TestCase):
                 "summary.json",
             }
             self.assertEqual(expected, {path.name for path in output.iterdir()})
-            self.assertEqual("abstained", metrics["speed_status"])
+            self.assertIn(metrics["speed_status"], {"estimated", "abstained"})
             self.assertNotIn("speed_mae_m_min", metrics)
             summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
             self.assertIsNone(summary["config"])
             with (output / "local_speeds.csv").open(encoding="utf-8") as handle:
-                self.assertEqual(1, sum(1 for _ in handle))
+                self.assertGreater(sum(1 for _ in handle), 1)
             with (output / "ingest_manifest.csv").open(encoding="utf-8") as handle:
                 self.assertEqual(2, len(list(csv.DictReader(handle))))
 

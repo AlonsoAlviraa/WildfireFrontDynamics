@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 Point = tuple[float, float]
@@ -56,6 +57,25 @@ class FrontObservation:
     method: str = "unknown"
     limitations: tuple[str, ...] = ()
 
+    def validate(self) -> None:
+        if not self.observation_id or not self.event_id or not self.sensor_id:
+            raise ValueError("observation identity fields cannot be empty")
+        if not math.isfinite(self.time_s):
+            raise ValueError("observation time_s must be finite")
+        if self.estimated_error_m < 0 or not math.isfinite(self.estimated_error_m):
+            raise ValueError("estimated_error_m must be finite and non-negative")
+        if not self.components:
+            raise ValueError("observation requires at least one component")
+        for component in self.components:
+            if len(component) < 4:
+                raise ValueError("each closed component requires at least four points")
+            if any(not math.isfinite(value) for point in component for value in point):
+                raise ValueError("component coordinates must be finite")
+        if self.coordinate_system == "projected_metric" and (
+            self.resolution_m is None or self.resolution_m <= 0
+        ):
+            raise ValueError("projected metric observations require positive resolution_m")
+
     @property
     def points(self) -> Line:
         """Primary component retained for the synthetic radial estimator."""
@@ -79,3 +99,46 @@ class SpeedEstimate:
     uncertainty_m_min: float
     observable: bool
     abstention_reason: str | None = None
+    component_index: int = 0
+    method: str = "radial_synthetic"
+    match_distance_m: float | None = None
+    quality_score: float | None = None
+
+
+@dataclass(frozen=True)
+class GeometrySpeedConfig:
+    sample_spacing_m: float = 2.0
+    max_normal_distance_m: float = 100.0
+    max_component_centroid_distance_m: float = 250.0
+    observability_ratio: float = 2.0
+    min_component_area_m2: float = 4.0
+    min_valid_fraction: float = 0.25
+    max_turn_angle_deg: float = 60.0
+    max_normal_to_nearest_ratio: float = 2.0
+
+    def validate(self) -> None:
+        values = (
+            self.sample_spacing_m,
+            self.max_normal_distance_m,
+            self.max_component_centroid_distance_m,
+            self.observability_ratio,
+            self.min_component_area_m2,
+            self.min_valid_fraction,
+            self.max_turn_angle_deg,
+            self.max_normal_to_nearest_ratio,
+        )
+        if any(value <= 0 for value in values):
+            raise ValueError("geometry speed configuration values must be positive")
+        if self.min_valid_fraction > 1:
+            raise ValueError("min_valid_fraction must be in (0, 1]")
+        if self.max_turn_angle_deg > 180:
+            raise ValueError("max_turn_angle_deg must be in (0, 180]")
+
+
+@dataclass(frozen=True)
+class GeometrySpeedResult:
+    estimates: tuple[SpeedEstimate, ...]
+    matched_component_pairs: int
+    unmatched_previous_components: int
+    unmatched_current_components: int
+    pair_abstentions: tuple[str, ...]

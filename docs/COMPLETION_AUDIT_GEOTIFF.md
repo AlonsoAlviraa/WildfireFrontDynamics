@@ -1,5 +1,9 @@
 # Auditoría de finalización del adaptador GeoTIFF
 
+> Auditoría histórica del primer adaptador. La abstención global descrita aquí
+> fue sustituida por el estimador no radial conservador documentado en
+> `SCIENTIFIC_ITERATION_AUDIT.md`.
+
 **Fecha:** 2026-06-10
 **Prompt auditado:** `docs/PROMPT_NEXT_MILESTONE.md`
 

@@ -15,7 +15,7 @@ data/sample/
 ```
 
 Imagen y máscara se emparejan primero por nombre completo y después por stem.
-Sin máscaras se utiliza `--band` y `--threshold`.
+Sin máscaras se utiliza `--band` con `--threshold` o `--mad-z`.
 
 ## Requisitos de imagen
 
@@ -55,6 +55,18 @@ mask = selected_band > threshold
 El umbral es determinista y no convierte el raster a 8 bits. Debe justificarse
 según las unidades y calibración del sensor.
 
+## Segmentación robusta MAD
+
+`--mad-z` crea un baseline adaptativo con:
+
+```text
+threshold = median + mad_z * 1.4826 * median_absolute_deviation
+mask = selected_band > threshold
+```
+
+No sustituye una segmentación validada para el sensor, pero evita fijar un
+umbral absoluto cuando el nivel base cambia entre escenas.
+
 ## QA
 
 `ingest_manifest.csv` registra:
@@ -67,16 +79,19 @@ según las unidades y calibración del sensor.
 - resolución métrica cuando aplica;
 - método y número de componentes.
 
-Se rechazan entradas ilegibles, sin georreferenciación, sin máscara emparejada,
-con dimensiones o georreferenciación incompatibles y con máscara vacía. Un
-timestamp ausente queda en revisión y no genera observación.
+Se rechazan entradas ilegibles, duplicadas, sin georreferenciación, sin máscara
+emparejada, con dimensiones o georreferenciación incompatibles y con máscara
+vacía. También se auditan timestamps duplicados, cambios de CRS o resolución y
+máscaras casi completas. Un timestamp ausente queda en revisión y no genera
+observación.
 
 ## Salidas y limitaciones
 
 `fronts.geojson` es una exportación interna. Puede contener coordenadas
 proyectadas y por tanto no es conforme con RFC 7946; cada feature declara su CRS.
 
-No se calcula velocidad real porque el estimador actualmente validado es radial
-y sintético. El sistema genera una abstención explícita hasta implementar y
-validar correspondencia normal entre geometrías reales.
-
+La velocidad local se estima únicamente en CRS proyectado, con timestamps
+crecientes y componentes emparejables. El método por normales aplica gates de
+observabilidad, curvatura, intersección y correspondencia; las muestras que no
+los superan se abstienen. Sigue siendo una estimación sobre geometrías
+observadas, no una velocidad de llama validada contra ground truth independiente.

@@ -110,22 +110,6 @@ def reconstruct_arrival_from_components(
     return xx, yy, arrival
 
 
-def real_speed_abstention(observations: list[FrontObservation]) -> dict[str, object]:
-    """Explain why the current radial speed estimator is not used on real geometry."""
-
-    reasons: list[str] = []
-    if len(observations) < 2:
-        reasons.append("insufficient_observations")
-    if any(not item.observed_at for item in observations):
-        reasons.append("missing_timestamp")
-    if any(not item.crs for item in observations):
-        reasons.append("missing_crs")
-    if any(item.coordinate_system != "projected_metric" for item in observations):
-        reasons.append("crs_not_projected_metric")
-    reasons.append("non_radial_real_geometry_speed_estimator_not_implemented")
-    return {"speed_status": "abstained", "speed_abstention_reasons": sorted(set(reasons))}
-
-
 def summarize(estimates: list[SpeedEstimate], arrival: np.ndarray) -> dict[str, float | int]:
     observable = [item for item in estimates if item.observable and item.speed_m_min is not None]
     errors = [

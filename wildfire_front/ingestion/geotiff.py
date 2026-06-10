@@ -7,6 +7,7 @@ timestamp inference, and QA manifest patterns are adapted from DetectorDeIncendi
 from __future__ import annotations
 
 import csv
+import math
 import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -36,6 +37,10 @@ class GeoTiffIngestRecord:
     resolution_m: float | None
     method: str
     component_count: int
+    width: int
+    height: int
+    dtype: str
+    positive_pixel_fraction: float | None
 
 
 @dataclass(frozen=True)
@@ -107,6 +112,21 @@ def segment_band_threshold(image: np.ndarray, threshold: float) -> np.ndarray:
     return np.asarray(image > threshold, dtype=np.uint8)
 
 
+def segment_band_mad(image: np.ndarray, z_score: float = 6.0) -> tuple[np.ndarray, float]:
+    """Robust adaptive hot-region baseline using median absolute deviation."""
+
+    if not np.isfinite(z_score) or z_score <= 0:
+        raise ValueError("z_score must be finite and positive")
+    finite = np.asarray(image, dtype=float)[np.isfinite(image)]
+    if finite.size == 0:
+        raise ValueError("image has no finite pixels")
+    median = float(np.median(finite))
+    mad = float(np.median(np.abs(finite - median)))
+    robust_sigma = 1.4826 * mad
+    threshold = median + z_score * robust_sigma
+    return np.asarray(image > threshold, dtype=np.uint8), threshold
+
+
 def read_binary_mask(path: Path) -> tuple[np.ndarray, dict[str, object]]:
     mask, metadata = read_raster_band(path, 1)
     return np.asarray(mask > 0, dtype=np.uint8), metadata
@@ -145,6 +165,7 @@ def _record(
     metadata: dict[str, object] | None,
     method: str,
     component_count: int = 0,
+    positive_pixel_fraction: float | None = None,
 ) -> GeoTiffIngestRecord:
     crs = str(metadata.get("crs") or "") if metadata else ""
     coordinate_system = str(metadata.get("coordinate_system") or "unknown") if metadata else "unknown"
@@ -161,6 +182,10 @@ def _record(
         resolution_m=float(resolution) if resolution is not None else None,
         method=method,
         component_count=component_count,
+        width=int(metadata.get("width") or 0) if metadata else 0,
+        height=int(metadata.get("height") or 0) if metadata else 0,
+        dtype=str(metadata.get("dtype") or "") if metadata else "",
+        positive_pixel_fraction=positive_pixel_fraction,
     )
 
 
@@ -183,6 +208,7 @@ def ingest_geotiff_sequence(
     estimated_error_m: float,
     band: int = 1,
     threshold: float | None = None,
+    mad_z: float | None = None,
 ) -> GeoTiffIngestResult:
     """Validate GeoTIFF inputs and convert accepted masks to observations."""
 
@@ -192,8 +218,10 @@ def ingest_geotiff_sequence(
         raise ValueError(f"images directory does not exist: {images_dir}")
     if masks_dir is not None and not masks_dir.is_dir():
         raise ValueError(f"masks directory does not exist: {masks_dir}")
-    if masks_dir is None and threshold is None:
-        raise ValueError("threshold is required when masks_dir is not provided")
+    if masks_dir is None and threshold is None and mad_z is None:
+        raise ValueError("threshold or mad_z is required when masks_dir is not provided")
+    if threshold is not None and mad_z is not None:
+        raise ValueError("threshold and mad_z are mutually exclusive")
 
     image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
     if not image_paths:
@@ -201,11 +229,23 @@ def ingest_geotiff_sequence(
 
     records: list[GeoTiffIngestRecord] = []
     candidates: list[tuple[str, FrontObservation]] = []
+    seen_digests: set[str] = set()
+    seen_timestamps: set[str] = set()
+    reference_crs: object | None = None
+    reference_resolution: float | None = None
     for image_path in image_paths:
         digest = sha256_of_file(image_path)
         observed_at = infer_timestamp(image_path)
         mask_path = _find_mask(image_path, masks_dir) if masks_dir else None
-        method = "provided_binary_mask" if masks_dir else f"band_{band}_threshold_{threshold}"
+        method = (
+            "provided_binary_mask"
+            if masks_dir
+            else f"band_{band}_threshold_{threshold}" if threshold is not None else f"band_{band}_mad_z_{mad_z}"
+        )
+        if digest in seen_digests:
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "duplicate_source_sha256", None, method))
+            continue
+        seen_digests.add(digest)
         try:
             image, image_meta = read_raster_band(image_path, band)
         except Exception as exc:  # noqa: BLE001
@@ -213,6 +253,9 @@ def ingest_geotiff_sequence(
             continue
         if not image_meta["has_georeferencing"]:
             records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "missing_crs_or_transform", image_meta, method))
+            continue
+        if image_meta["coordinate_system"] != "projected_metric":
+            records.append(_record(image_path, mask_path, digest, observed_at, "review", "crs_not_projected_metric", image_meta, method))
             continue
         if not observed_at:
             records.append(_record(image_path, mask_path, digest, observed_at, "review", "missing_timestamp", image_meta, method))
@@ -234,19 +277,40 @@ def ingest_geotiff_sequence(
                 records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "mask_georeferencing_mismatch", image_meta, method))
                 continue
         else:
-            binary_mask = segment_band_threshold(image, float(threshold))
+            if threshold is not None:
+                binary_mask = segment_band_threshold(image, threshold)
+            else:
+                binary_mask, adaptive_threshold = segment_band_mad(image, float(mad_z))
+                method = f"band_{band}_mad_z_{mad_z}_threshold_{adaptive_threshold:.6g}"
 
-        if not np.any(binary_mask):
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "empty_mask", image_meta, method))
+        positive_fraction = float(np.mean(binary_mask > 0))
+        if positive_fraction == 0.0:
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "empty_mask", image_meta, method, positive_pixel_fraction=positive_fraction))
+            continue
+        if positive_fraction >= 0.98:
+            records.append(_record(image_path, mask_path, digest, observed_at, "review", "near_full_mask", image_meta, method, positive_pixel_fraction=positive_fraction))
             continue
         components = extract_mask_components(binary_mask, image_meta["transform"])  # type: ignore[arg-type]
         if not components:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "no_exterior_components", image_meta, method))
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "no_exterior_components", image_meta, method, positive_pixel_fraction=positive_fraction))
             continue
+        if observed_at in seen_timestamps:
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "duplicate_timestamp", image_meta, method, positive_pixel_fraction=positive_fraction))
+            continue
+        if reference_crs is None:
+            reference_crs = image_meta["crs"]
+            reference_resolution = float(image_meta["resolution_m"])  # type: ignore[arg-type]
+        elif image_meta["crs"] != reference_crs:
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "sequence_crs_mismatch", image_meta, method, positive_pixel_fraction=positive_fraction))
+            continue
+        elif not math.isclose(float(image_meta["resolution_m"]), float(reference_resolution), rel_tol=1e-6):  # type: ignore[arg-type]
+            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "sequence_resolution_mismatch", image_meta, method, positive_pixel_fraction=positive_fraction))
+            continue
+        seen_timestamps.add(observed_at)
 
         limitations = (
             "mask_boundary_is_not_validated_active_flame_front",
-            "real_geometry_speed_estimator_not_implemented",
+            "normal_ray_speed_requires_quality_gates",
         )
         observation = FrontObservation(
             observation_id=build_observation_id(event_id, sensor_id, observed_at, digest),
@@ -264,8 +328,9 @@ def ingest_geotiff_sequence(
             method=method,
             limitations=limitations,
         )
+        observation.validate()
         candidates.append((observed_at, observation))
-        records.append(_record(image_path, mask_path, digest, observed_at, "accepted", "", image_meta, method, len(components)))
+        records.append(_record(image_path, mask_path, digest, observed_at, "accepted", "", image_meta, method, len(components), positive_fraction))
 
     observations: list[FrontObservation] = []
     if candidates:

@@ -7,12 +7,14 @@ from pathlib import Path
 
 import numpy as np
 
+from .evaluation import front_distance_metrics
+from .geometry_speed import estimate_geometry_speeds, summarize_geometry_speeds
 from .ingestion.geotiff import ingest_geotiff_sequence, write_ingest_manifest
-from .models import ScenarioConfig
+from .models import GeometrySpeedConfig, ScenarioConfig
 from .outputs import write_all
+from .quality import summarize_ingest_quality, summarize_observation_quality
 from .reconstruction import (
     estimate_local_speeds,
-    real_speed_abstention,
     reconstruct_arrival_from_components,
     reconstruct_arrival_grid,
     summarize,
@@ -28,6 +30,14 @@ def run_demo(output: Path, seed: int, position_error_m: float) -> dict[str, obje
     xx, yy, arrival = reconstruct_arrival_grid(observations, config)
     metrics = summarize(estimates, arrival)
     metrics["num_observations"] = len(observations)
+    front_metrics = [
+        front_distance_metrics(item.points, item.truth_points, sample_spacing=1.0)
+        for item in observations
+        if item.truth_points is not None
+    ]
+    if front_metrics:
+        for key in front_metrics[0]:
+            metrics[f"{key}_m"] = float(np.mean([item[key] for item in front_metrics]))
     write_all(output, config, observations, estimates, xx, yy, arrival, metrics)
     return metrics
 
@@ -41,6 +51,8 @@ def run_geotiff_ingest(
     estimated_error_m: float,
     band: int,
     threshold: float | None,
+    speed_config: GeometrySpeedConfig | None = None,
+    mad_z: float | None = None,
 ) -> dict[str, object]:
     result = ingest_geotiff_sequence(
         images,
@@ -50,6 +62,7 @@ def run_geotiff_ingest(
         estimated_error_m=estimated_error_m,
         band=band,
         threshold=threshold,
+        mad_z=mad_z,
     )
     output.mkdir(parents=True, exist_ok=True)
     write_ingest_manifest(result.records, output / "ingest_manifest.csv")
@@ -62,16 +75,16 @@ def run_geotiff_ingest(
     if resolution is None:
         raise ValueError("accepted observations do not have metric resolution")
     xx, yy, arrival = reconstruct_arrival_from_components(list(result.observations), resolution)
+    speed_result = estimate_geometry_speeds(list(result.observations), speed_config)
     summary: dict[str, object] = {
         "num_observations": len(result.observations),
         "num_components": sum(len(item.components) for item in result.observations),
-        "accepted_inputs": sum(record.status == "accepted" for record in result.records),
-        "review_inputs": sum(record.status == "review" for record in result.records),
-        "rejected_inputs": sum(record.status == "rejected" for record in result.records),
         "arrival_cells_observed": int((~np.isnan(arrival)).sum()),
-        **real_speed_abstention(list(result.observations)),
+        **summarize_ingest_quality(result.records),
+        **summarize_observation_quality(list(result.observations)),
+        **summarize_geometry_speeds(speed_result),
     }
-    write_all(output, None, list(result.observations), [], xx, yy, arrival, summary)
+    write_all(output, None, list(result.observations), list(speed_result.estimates), xx, yy, arrival, summary)
     return summary
 
 
@@ -91,6 +104,13 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--estimated-error-m", type=float, required=True)
     ingest.add_argument("--band", type=int, default=1)
     ingest.add_argument("--threshold", type=float)
+    ingest.add_argument("--mad-z", type=float, help="Robust adaptive threshold using median absolute deviation")
+    ingest.add_argument("--speed-sample-spacing-m", type=float, default=2.0)
+    ingest.add_argument("--speed-max-normal-distance-m", type=float, default=100.0)
+    ingest.add_argument("--speed-observability-ratio", type=float, default=2.0)
+    ingest.add_argument("--speed-min-valid-fraction", type=float, default=0.25)
+    ingest.add_argument("--speed-max-turn-angle-deg", type=float, default=60.0)
+    ingest.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
     return parser
 
 
@@ -110,6 +130,15 @@ def main(argv: list[str] | None = None) -> None:
                 args.estimated_error_m,
                 args.band,
                 args.threshold,
+                GeometrySpeedConfig(
+                    sample_spacing_m=args.speed_sample_spacing_m,
+                    max_normal_distance_m=args.speed_max_normal_distance_m,
+                    observability_ratio=args.speed_observability_ratio,
+                    min_valid_fraction=args.speed_min_valid_fraction,
+                    max_turn_angle_deg=args.speed_max_turn_angle_deg,
+                    max_normal_to_nearest_ratio=args.speed_max_normal_to_nearest_ratio,
+                ),
+                args.mad_z,
             )
         print(json.dumps({"output": str(args.output), "metrics": metrics}, indent=2))
     except ValueError as exc:
