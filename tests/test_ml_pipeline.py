@@ -67,3 +67,40 @@ class MLPipelineTests(unittest.TestCase):
         if output_weights.exists():
             output_weights.unlink()
             output_weights.parent.rmdir()
+
+    def test_cloud_train_build_parser(self) -> None:
+        from wildfire_front.ml.cloud_train import build_parser
+        parser = build_parser()
+        args = parser.parse_args([
+            "--images", "img_path",
+            "--masks", "mask_path",
+            "--weights", "weights_path",
+            "--output-weights", "out_path",
+        ])
+        self.assertEqual(args.images, Path("img_path"))
+        self.assertEqual(args.masks, Path("mask_path"))
+        self.assertEqual(args.weights, Path("weights_path"))
+        self.assertEqual(args.output_weights, Path("out_path"))
+
+    def test_cloud_train_execution_one_epoch_without_upload(self) -> None:
+        from wildfire_front.ml.cloud_train import main as cloud_main
+        output_weights = Path("outputs/test-ml-weights/cloud_fine_tuned.pt")
+        if output_weights.exists():
+            output_weights.unlink()
+
+        # Execute main with arguments
+        cloud_main([
+            "--images", str(self.images_dir),
+            "--masks", str(self.masks_dir),
+            "--weights", str(self.weights_path),
+            "--output-weights", str(output_weights),
+            "--epochs", "1",
+            "--lr", "1e-4"
+        ])
+
+        self.assertTrue(output_weights.exists(), "Cloud weights checkpoint should be saved")
+
+        if output_weights.exists():
+            output_weights.unlink()
+            output_weights.parent.rmdir()
+
