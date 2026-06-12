@@ -1,0 +1,87 @@
+{
+  "model_name": "A3C_PerCellModel_LSTM",
+  "description": "A3C RL model with CNN encoder + LSTM temporal policy for wildfire spread prediction on a 300m geospatial grid (30×30). Includes relaxed IoU reward (8-neighbor tolerance).",
+  "framework": "pytorch",
+
+  "input": {
+    "in_channels": 16,
+    "sequence_length": 3,
+    "spatial_size": [30, 30],
+    "feature_description": {
+      "0-1": "DEM (slope, aspect)",
+      "2-10": "Weather features (temp, humidity, wind_speed, wind_dir, precip, pressure, cloud, visibility, dew_point)",
+      "11": "NDVI",
+      "12-15": "FSM (forest susceptibility, one-hot or categorical)"
+    }
+  },
+
+  "architecture": {
+    "encoder": {
+      "conv1": {"out_channels": 64, "kernel_size": 3, "padding": 1, "groupnorm_groups": 8, "dropout": 0.1},
+      "conv2": {"out_channels": 128, "kernel_size": 3, "padding": 1, "groupnorm_groups": 16, "dropout": 0.1},
+      "conv3": {"out_channels": 256, "kernel_size": 3, "padding": 1, "groupnorm_groups": 32, "dropout": 0.1},
+      "spatial_pool": "AdaptiveAvgPool2d -> vector(256)"
+    },
+
+    "lstm": {
+      "input_size": 256,
+      "hidden_size": 256,
+      "num_layers": 1,
+      "dropout": 0.0,
+      "batch_first": false
+    },
+
+    "upsample": {
+      "linear_expand": 1024,
+      "reshape": [256, 2, 2],
+      "upsample_to": [30, 30],
+      "mode": "bilinear"
+    },
+
+    "policy_head": {
+      "input": "3x3 local patch flattened (256 * 9 = 2304)",
+      "layers": [
+        {"linear": 256, "activation": "ReLU"},
+        {"dropout": 0.2},
+        {"linear": 8}
+      ],
+      "output_actions": 8,
+      "action_description": "8-directional spread (N, NE, E, SE, S, SW, W, NW)"
+    },
+
+    "value_head": {
+      "layers": [
+        "AdaptiveAvgPool2d -> flatten(256)",
+        {"linear": 64, "activation": "ReLU"},
+        {"dropout": 0.2},
+        {"linear": 1}
+      ]
+    }
+  },
+
+  "training": {
+    "algorithm": "A3C",
+    "temporal_context": "LSTM-based",
+    "reward_function": "Relaxed IoU (3x3 dilation, 8-neighbor tolerance)",
+    "penalties": {
+      "false_negative_no_spread": -10,
+      "false_positive_spurious_spread": -5
+    },
+    "discount_gamma": 0.99,
+    "value_loss_coef": 0.5,
+    "entropy_coef": 0.01,
+    "max_grad_norm": 0.5
+  },
+
+  "outputs": {
+    "policy": "8-direction binary activation for next-step fire spread",
+    "value": "State value estimation"
+  },
+
+  "checkpoint_format": {
+    "model_state_dict": "PyTorch state dict",
+    "optimizer_state_dict": "PyTorch optimizer",
+    "episode": "Training iteration",
+    "best_iou": "Best Relaxed IoU metric"
+  }
+}
