@@ -6,26 +6,6 @@ import tensorflow as tf
 
 print("=== Starting Google NDWS TFRecord Preprocessing ===")
 
-# Define the features present in the TFRecords
-feature_description = {
-    'elevation': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'wind_direction': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'wind_speed': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'min_temp': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'max_temp': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'humidity': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'precipitation': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'drought_index': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'vegetation': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'population_density': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'erc': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'prev_fire_mask': tf.io.FixedLenFeature([64, 64], tf.float32),
-    'fire_mask': tf.io.FixedLenFeature([64, 64], tf.float32),
-}
-
-def parse_proto(example_proto):
-    return tf.io.parse_single_example(example_proto, feature_description)
-
 # Paths on Kaggle
 input_dir = "/kaggle/input/next-day-wildfire-spread"
 output_dir = "/tmp/ndws_npz"
@@ -34,10 +14,67 @@ os.makedirs(output_dir, exist_ok=True)
 # Find all training tfrecords
 tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*train*.tfrecord")))
 if not tfrecord_files:
-    # Fallback to check any tfrecords if naming is different
     tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*.tfrecord")))
 
 print(f"Found {len(tfrecord_files)} TFRecord files to process.")
+
+if not tfrecord_files:
+    print("Error: No TFRecord files found!")
+    sys.exit(1)
+
+# Inspect keys of the first file
+first_file = tfrecord_files[0]
+raw_dataset = tf.data.TFRecordDataset(first_file)
+# Try uncompressed, fallback to GZIP
+try:
+    first_record = next(iter(raw_dataset))
+    is_gzip = False
+    print("Detection: First file appears to be uncompressed.")
+except Exception:
+    raw_dataset = tf.data.TFRecordDataset(first_file, compression_type='GZIP')
+    first_record = next(iter(raw_dataset))
+    is_gzip = True
+    print("Detection: First file appears to be GZIP compressed.")
+
+example = tf.train.Example()
+example.ParseFromString(first_record.numpy())
+actual_keys = list(example.features.feature.keys())
+print("Actual keys in TFRecord:", actual_keys)
+
+# Define candidates for mapping
+possible_keys = {
+    'elevation': ['elevation', 'dem', 'Elevation'],
+    'wind_direction': ['wind_direction', 'wind_dir', 'wind_direction_10m'],
+    'wind_speed': ['wind_speed', 'wind_speed_10m'],
+    'min_temp': ['min_temp', 'min_temperature', 'temp_min'],
+    'max_temp': ['max_temp', 'max_temperature', 'temp_max'],
+    'humidity': ['humidity', 'relative_humidity', 'rh'],
+    'precipitation': ['precipitation', 'precip', 'prcp'],
+    'drought_index': ['drought', 'drought_index', 'kbdi'],
+    'vegetation': ['vegetation', 'ndvi', 'NDVI'],
+    'erc': ['erc', 'energy_release_component'],
+    'prev_fire_mask': ['prev_fire_mask', 'ignition', 'prev_fire'],
+    'fire_mask': ['fire_mask', 'target', 'next_fire']
+}
+
+mapped_keys = {}
+for req_key, candidates in possible_keys.items():
+    for cand in candidates:
+        if cand in actual_keys:
+            mapped_keys[req_key] = cand
+            break
+
+print("Mapped feature keys:")
+for k, v in mapped_keys.items():
+    print(f"  {k} -> {v}")
+
+# Build feature description dynamically
+feature_description = {}
+for req_key, actual_key in mapped_keys.items():
+    feature_description[actual_key] = tf.io.FixedLenFeature([64, 64], tf.float32)
+
+def parse_proto(example_proto):
+    return tf.io.parse_single_example(example_proto, feature_description)
 
 patch_count = 0
 sequence_count = 0
@@ -50,17 +87,10 @@ for file_path in tfrecord_files:
     
     print(f"Processing: {os.path.basename(file_path)}")
     try:
-        # Try reading as uncompressed TFRecord first
-        try:
-            raw_dataset = tf.data.TFRecordDataset(file_path)
-            # Try to read one raw record to verify it decodes without errors
-            next(iter(raw_dataset))
-            print("Successfully opened as uncompressed TFRecord.")
-        except Exception:
-            # Fallback to GZIP compression if uncompressed read fails
+        if is_gzip:
             raw_dataset = tf.data.TFRecordDataset(file_path, compression_type='GZIP')
-            next(iter(raw_dataset))
-            print("Successfully opened as GZIP compressed TFRecord.")
+        else:
+            raw_dataset = tf.data.TFRecordDataset(file_path)
             
         parsed_dataset = raw_dataset.map(parse_proto)
         
@@ -68,18 +98,24 @@ for file_path in tfrecord_files:
             if patch_count >= max_patches:
                 break
             
-            # Extract features as numpy arrays
-            elevation = record['elevation'].numpy()
-            wind_dir = record['wind_direction'].numpy()
-            wind_speed = record['wind_speed'].numpy()
-            max_temp = record['max_temp'].numpy()
-            min_temp = record['min_temp'].numpy()
-            humidity = record['humidity'].numpy()
-            precip = record['precipitation'].numpy()
-            veg = record['vegetation'].numpy()
-            erc = record['erc'].numpy()
-            prev_fire = record['prev_fire_mask'].numpy()
-            fire = record['fire_mask'].numpy()
+            # Helper to get parsed field or return zeros
+            def get_field(name, default_val=0.0):
+                if name in mapped_keys:
+                    return record[mapped_keys[name]].numpy()
+                return np.full((64, 64), default_val, dtype=np.float32)
+            
+            # Extract features dynamically
+            elevation = get_field('elevation')
+            wind_dir = get_field('wind_direction')
+            wind_speed = get_field('wind_speed')
+            max_temp = get_field('max_temp', default_val=25.0)
+            min_temp = get_field('min_temp', default_val=15.0)
+            humidity = get_field('humidity', default_val=40.0)
+            precip = get_field('precipitation')
+            veg = get_field('vegetation', default_val=0.6)
+            erc = get_field('erc', default_val=40.0)
+            prev_fire = get_field('prev_fire_mask')
+            fire = get_field('fire_mask')
             
             # Compute slope and aspect from elevation using numpy gradients
             dy, dx = np.gradient(elevation)
@@ -102,7 +138,6 @@ for file_path in tfrecord_files:
             channels[11] = veg   # NDVI
             
             # FSM (One-hot mapping or susceptibility proxy based on normalized ERC)
-            # Normalize ERC to [0, 1] range to serve as fuel susceptibility channel 0
             erc_norm = np.clip(erc / 100.0, 0.0, 1.0)
             channels[12] = erc_norm
             channels[13] = 1.0 - erc_norm
