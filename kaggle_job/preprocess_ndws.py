@@ -50,8 +50,18 @@ for file_path in tfrecord_files:
     
     print(f"Processing: {os.path.basename(file_path)}")
     try:
-        # Google NDWS TFRecords are GZIP compressed
-        raw_dataset = tf.data.TFRecordDataset(file_path, compression_type='GZIP')
+        # Try reading as uncompressed TFRecord first
+        try:
+            raw_dataset = tf.data.TFRecordDataset(file_path)
+            # Try to read one raw record to verify it decodes without errors
+            next(iter(raw_dataset))
+            print("Successfully opened as uncompressed TFRecord.")
+        except Exception:
+            # Fallback to GZIP compression if uncompressed read fails
+            raw_dataset = tf.data.TFRecordDataset(file_path, compression_type='GZIP')
+            next(iter(raw_dataset))
+            print("Successfully opened as GZIP compressed TFRecord.")
+            
         parsed_dataset = raw_dataset.map(parse_proto)
         
         for record in parsed_dataset:
