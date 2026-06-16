@@ -89,7 +89,7 @@ pretrained_output = "../weights_pretrained.pt"
 torch.save(model.state_dict(), pretrained_output)
 print(f"Pre-trained weights saved to {pretrained_output}")
 
-# 6. FASE 3: TRANSFER LEARNING CON DATASET TÁCTICO LOCAL
+# 6. FASE 3: TRANSFER LEARNING CON DATASET TACTICO LOCAL
 print("=== FASE 3: TRANSFER LEARNING CON DATASET LOCAL ===")
 local_images = "data/candidates/semireal_controlled_001/images"
 local_masks = "data/candidates/semireal_controlled_001/masks"
