@@ -104,3 +104,69 @@ class MLPipelineTests(unittest.TestCase):
             output_weights.unlink()
             output_weights.parent.rmdir()
 
+    def test_npz_wildfire_dataset(self) -> None:
+        import tempfile
+        import numpy as np
+        from wildfire_front.ml.dataset import NpzWildfireDataset
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create a dummy NPZ file
+            seq_dummy = np.random.randn(3, 16, 30, 30).astype(np.float32)
+            curr_dummy = np.random.randint(0, 2, size=(30, 30)).astype(np.float32)
+            target_dummy = np.random.randint(0, 2, size=(30, 30)).astype(np.float32)
+            
+            np.savez(
+                Path(tmpdir) / "patch_000000.npz",
+                sequence=seq_dummy,
+                current_fire=curr_dummy,
+                target_fire=target_dummy
+            )
+            
+            # Load dataset
+            dataset = NpzWildfireDataset(tmpdir)
+            self.assertEqual(len(dataset), 1)
+            
+            seq, curr, target = dataset[0]
+            self.assertEqual(seq.shape, (3, 16, 30, 30))
+            self.assertEqual(curr.shape, (30, 30))
+            self.assertEqual(target.shape, (30, 30))
+
+    def test_wildfire_meta_labeler(self) -> None:
+        import numpy as np
+        from wildfire_front.ml.meta_labeler import WildfireMetaLabeler
+
+        meta_labeler = WildfireMetaLabeler(n_estimators=5, max_depth=2, random_state=42)
+        
+        # Test feature building
+        prob = np.array([0.1, 0.9, 0.5])
+        slope = np.array([0.05, 0.1, 0.0])
+        aspect = np.array([1.5, 3.1, 0.0])
+        ws = 10.0
+        hum = 45.0
+        temp = 25.0
+        
+        features = meta_labeler.build_features(
+            prob=prob,
+            slope=slope,
+            aspect=aspect,
+            wind_speed=ws,
+            humidity=hum,
+            temp=temp
+        )
+        # 3 samples, 7 features
+        self.assertEqual(features.shape, (3, 7))
+        
+        # Test training and prediction
+        X = np.random.randn(10, 7)
+        y = np.random.randint(0, 2, size=(10,))
+        
+        meta_labeler.train(X, y)
+        self.assertTrue(meta_labeler.is_trained)
+        
+        preds = meta_labeler.predict_trustworthiness(X)
+        probs = meta_labeler.predict_probability(X)
+        
+        self.assertEqual(preds.shape, (10,))
+        self.assertEqual(probs.shape, (10,))
+        self.assertTrue(np.all(probs >= 0.0) and np.all(probs <= 1.0))
+

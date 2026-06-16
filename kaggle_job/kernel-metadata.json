@@ -1,14 +1,16 @@
 {
   "id": "alonsoalvira/wildfire-front-training",
   "title": "Wildfire Front Training",
-  "code_file": "run_training.py",
+  "code_file": "run_mega_training.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": true,
   "enable_gpu": true,
   "enable_tpu": false,
   "enable_internet": true,
-  "dataset_sources": [],
+  "dataset_sources": [
+    "fantineh/next-day-wildfire-spread"
+  ],
   "competition_sources": [],
   "kernel_sources": []
 }

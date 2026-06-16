@@ -224,9 +224,30 @@ class WildfireDataset(Dataset):
                 window=rasterio.windows.Window(col, row, self.patch_size, self.patch_size)
             ).astype(np.float32)
 
-        # Convert to PyTorch tensors
         sequence_tensor = torch.from_numpy(sequence_data)
         current_fire_tensor = torch.from_numpy(current_fire)
         target_fire_tensor = torch.from_numpy(target_fire)
 
         return sequence_tensor, current_fire_tensor, target_fire_tensor
+
+
+class NpzWildfireDataset(Dataset):
+    """
+    High-speed PyTorch dataset loading pre-processed .npz spatiotemporal sequences.
+    Optimized for cloud container runs (like Kaggle) avoiding GIS/GDAL dependencies.
+    """
+
+    def __init__(self, directory: Path | str) -> None:
+        self.directory = Path(directory)
+        self.files = sorted(list(self.directory.glob("*.npz")))
+
+    def __len__(self) -> int:
+        return len(self.files)
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        file_path = self.files[idx]
+        with np.load(file_path) as data:
+            sequence = torch.from_numpy(data["sequence"].astype(np.float32))
+            current_fire = torch.from_numpy(data["current_fire"].astype(np.float32))
+            target_fire = torch.from_numpy(data["target_fire"].astype(np.float32))
+        return sequence, current_fire, target_fire
