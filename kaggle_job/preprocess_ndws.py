@@ -44,17 +44,17 @@ print("Actual keys in TFRecord:", actual_keys)
 # Define candidates for mapping
 possible_keys = {
     'elevation': ['elevation', 'dem', 'Elevation'],
-    'wind_direction': ['wind_direction', 'wind_dir', 'wind_direction_10m'],
-    'wind_speed': ['wind_speed', 'wind_speed_10m'],
-    'min_temp': ['min_temp', 'min_temperature', 'temp_min'],
-    'max_temp': ['max_temp', 'max_temperature', 'temp_max'],
-    'humidity': ['humidity', 'relative_humidity', 'rh'],
-    'precipitation': ['precipitation', 'precip', 'prcp'],
-    'drought_index': ['drought', 'drought_index', 'kbdi'],
+    'wind_direction': ['wind_direction', 'wind_dir', 'wind_direction_10m', 'th'],
+    'wind_speed': ['wind_speed', 'wind_speed_10m', 'vs'],
+    'min_temp': ['min_temp', 'min_temperature', 'temp_min', 'tmmn'],
+    'max_temp': ['max_temp', 'max_temperature', 'temp_max', 'tmmx'],
+    'humidity': ['humidity', 'relative_humidity', 'rh', 'sph'],
+    'precipitation': ['precipitation', 'precip', 'prcp', 'pr'],
+    'drought_index': ['drought', 'drought_index', 'kbdi', 'pdsi'],
     'vegetation': ['vegetation', 'ndvi', 'NDVI'],
     'erc': ['erc', 'energy_release_component'],
-    'prev_fire_mask': ['prev_fire_mask', 'ignition', 'prev_fire'],
-    'fire_mask': ['fire_mask', 'target', 'next_fire']
+    'prev_fire_mask': ['prev_fire_mask', 'ignition', 'prev_fire', 'PrevFireMask'],
+    'fire_mask': ['fire_mask', 'target', 'next_fire', 'FireMask']
 }
 
 mapped_keys = {}
