@@ -170,3 +170,19 @@ class MLPipelineTests(unittest.TestCase):
         self.assertEqual(probs.shape, (10,))
         self.assertTrue(np.all(probs >= 0.0) and np.all(probs <= 1.0))
 
+    def test_preprocess_ndws_cli(self) -> None:
+        import subprocess
+        import sys
+        
+        # 1. Running without --split should fail with exit code 2 (argparse standard)
+        res = subprocess.run([sys.executable, "kaggle_job/preprocess_ndws.py"], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 2)
+        self.assertIn("required", res.stderr.lower() + res.stdout.lower())
+        
+        # 2. Running with --split train should fail because TF is missing or no records found
+        res2 = subprocess.run([sys.executable, "kaggle_job/preprocess_ndws.py", "--split", "train"], capture_output=True, text=True)
+        self.assertNotEqual(res2.returncode, 0)
+        output = res2.stderr.lower() + res2.stdout.lower()
+        self.assertTrue("no tfrecord" in output or "tensorflow" in output)
+
+

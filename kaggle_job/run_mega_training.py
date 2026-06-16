@@ -15,10 +15,11 @@ print("Changing directory to WildfireFrontDynamics...")
 os.chdir("WildfireFrontDynamics")
 sys.path.append(os.getcwd())
 
-# 2. Run Preprocessing as a subprocess
-print("=== FASE 1: PREPROCESAMIENTO DE TFRECORDS ===")
+# 2. Run Preprocessing as a subprocess for both train and val splits
+print("=== FASE 1: PREPROCESAMIENTO DE TFRECORDS (TRAIN & VAL) ===")
 preprocess_script = "kaggle_job/preprocess_ndws.py"
-subprocess.run([sys.executable, preprocess_script], check=True)
+subprocess.run([sys.executable, preprocess_script, "--split", "train"], check=True)
+subprocess.run([sys.executable, preprocess_script, "--split", "val"], check=True)
 
 # 3. Setup paths and imports
 print("=== SETUP ENTORNOS ===")
@@ -29,20 +30,11 @@ from wildfire_front.ml.dataset import NpzWildfireDataset, WildfireDataset
 from wildfire_front.ml.meta_labeler import WildfireMetaLabeler
 from wildfire_front.ml.train import calculate_local_spread_loss
 
-# 3. Load pre-training dataset
-npz_dir = "/tmp/ndws_npz"
-full_dataset = NpzWildfireDataset(npz_dir)
-total_samples = len(full_dataset)
-print(f"Total spatiotemporal patches loaded: {total_samples}")
-
-# Split dataset: 90% pre-training, 10% validation for Meta-Labeler
-train_size = int(0.9 * total_samples)
-val_size = total_samples - train_size
-train_dataset, val_dataset = random_split(
-    full_dataset, 
-    [train_size, val_size], 
-    generator=torch.Generator().manual_seed(42)
-)
+# 3. Load pre-training and validation datasets explicitly (no random_split to avoid leakage)
+train_dir = "/tmp/ndws_npz/train"
+val_dir = "/tmp/ndws_npz/val"
+train_dataset = NpzWildfireDataset(train_dir)
+val_dataset = NpzWildfireDataset(val_dir)
 print(f"Pre-training samples: {len(train_dataset)}, Meta-Labeler validation samples: {len(val_dataset)}")
 
 train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
@@ -63,9 +55,11 @@ model.to(device)
 # 5. FASE 2: PRE-ENTRENAMIENTO MASIVO (GOOGLE NDWS)
 print("=== FASE 2: PRE-ENTRENAMIENTO MASIVO EN LA NUBE ===")
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
+from torch.optim.lr_scheduler import CosineAnnealingLR
+epochs = 12  # Pre-train for 12 epochs
+scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
 model.train()
 
-epochs = 5  # Pre-train for 5 epochs
 for epoch in range(epochs):
     epoch_loss = 0.0
     steps = 0
@@ -85,8 +79,10 @@ for epoch in range(epochs):
             epoch_loss += loss.item()
             steps += 1
 
+    scheduler.step()
     avg_loss = epoch_loss / steps if steps > 0 else 0.0
-    print(f"Pre-training Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.6f}")
+    current_lr = scheduler.get_last_lr()[0]
+    print(f"Pre-training Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.6f} - LR: {current_lr:.8f}")
 
 # Save pre-trained model
 pretrained_output = "../weights_pretrained.pt"

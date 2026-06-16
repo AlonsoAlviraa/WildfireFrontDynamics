@@ -2,27 +2,41 @@ import os
 import sys
 import glob
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--split", choices=["train", "val"], required=True)
+args = parser.parse_args()
+
 import tensorflow as tf
 
-print("=== Starting Google NDWS TFRecord Preprocessing ===")
+print(f"=== Starting Google NDWS TFRecord Preprocessing for split: {args.split} ===")
 
 # Paths on Kaggle
 input_dir = "/kaggle/input/next-day-wildfire-spread"
-output_dir = "/tmp/ndws_npz"
+output_dir = os.path.join("/tmp/ndws_npz", args.split)
 os.makedirs(output_dir, exist_ok=True)
 
 # Find all training tfrecords
-tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*train*.tfrecord")))
-if not tfrecord_files:
-    tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*.tfrecord")))
+all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*train*.tfrecord")))
+if not all_tfrecord_files:
+    all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*.tfrecord")))
 
-print(f"Found {len(tfrecord_files)} TFRecord files to process.")
-
-if not tfrecord_files:
+if not all_tfrecord_files:
     print("Error: No TFRecord files found!")
     sys.exit(1)
 
-# Inspect keys of the first file
+# Distribute tfrecord files to avoid train-validation leakage
+if args.split == "train":
+    tfrecord_files = all_tfrecord_files[:13]
+    max_patches = 80000
+else:
+    tfrecord_files = all_tfrecord_files[13:]
+    max_patches = 15000
+
+print(f"Split {args.split} contains {len(tfrecord_files)} files. Limit set to {max_patches} patches.")
+
+# Inspect keys of the first file in this split
 first_file = tfrecord_files[0]
 raw_dataset = tf.data.TFRecordDataset(first_file)
 # Try uncompressed, fallback to GZIP
@@ -78,7 +92,6 @@ def parse_proto(example_proto):
 
 patch_count = 0
 sequence_count = 0
-max_patches = 12000  # Cap the total number of patches to prevent disk/time overflow
 
 # Read files and extract patches
 for file_path in tfrecord_files:
