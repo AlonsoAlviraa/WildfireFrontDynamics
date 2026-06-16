@@ -7,16 +7,20 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 import numpy as np
 
-# 1. Run Preprocessing as a subprocess
+# 1. Clone repository
+print("Cloning repository...")
+subprocess.run(["git", "clone", "https://github.com/AlonsoAlviraa/WildfireFrontDynamics.git"], check=True)
+
+print("Changing directory to WildfireFrontDynamics...")
+os.chdir("WildfireFrontDynamics")
+sys.path.append(os.getcwd())
+
+# 2. Run Preprocessing as a subprocess
 print("=== FASE 1: PREPROCESAMIENTO DE TFRECORDS ===")
 preprocess_script = "kaggle_job/preprocess_ndws.py"
-if os.path.exists(preprocess_script):
-    subprocess.run([sys.executable, preprocess_script], check=True)
-else:
-    # If running inside cloned directory in Kaggle
-    subprocess.run([sys.executable, "preprocess_ndws.py"], check=True)
+subprocess.run([sys.executable, preprocess_script], check=True)
 
-# 2. Setup paths and imports
+# 3. Setup paths and imports
 print("=== SETUP ENTORNOS ===")
 sys.path.append(os.getcwd())
 
