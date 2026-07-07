@@ -1,6 +1,6 @@
 # WildfireFrontDynamics — Análisis Exhaustivo del Repositorio
 
-> Última actualización: 2026-07-07 (post-production-hardening)  
+> Última actualización: 2026-07-07 (production-ready hardening + containerización)  
 > Análisis generado por exploración completa de todos los archivos del repositorio.
 
 ---
@@ -52,7 +52,7 @@ hf  = ["huggingface-hub>=0.20"]
 |------|-----------|-----------|
 | **Lenguaje** | Python 3.11+ | Base |
 | **CLI** | Click (vía `wildfire_front.cli`) | Comandos: `demo`, `geotiff-ingest` |
-| **Testing** | `unittest.TestCase` (pytest-compatible) | 11 archivos, ~45 métodos |
+| **Testing** | `unittest.TestCase` (pytest-compatible) | 12 archivos, 96 métodos |
 | **ML Core** | PyTorch (A3C_PerCellModel_LSTM) | Predicción per-cell con memoria temporal |
 | **ML Meta** | scikit-learn (RandomForest) | Meta-labeler de trustworthiness |
 | **Geoespacial** | rasterio + affine + pyproj | GeoTIFF I/O, reproyección, CRS |
@@ -122,7 +122,7 @@ WildfireFrontDynamics/
 │   ├── smoke_test_finetune.py
 │   └── verify_data_validation_milestone.py
 │
-├── tests/                   # 11 archivos, ~45 test methods
+├── tests/                   # 12 archivos, 96 test methods
 │   ├── test_pipeline.py
 │   ├── test_geometry_speed.py
 │   ├── test_evaluation_quality.py
@@ -131,6 +131,7 @@ WildfireFrontDynamics/
 │   ├── test_data_validation_milestone.py
 │   ├── test_dataset_candidate_audit.py
 │   ├── test_inventory_real_if_material.py
+│   ├── test_meta_labeler.py         # [NEW] 11 tests: entropy, features, train/predict, single-class guard, save/load, determinism
 │   ├── test_ml_pipeline.py
 │   ├── test_prepare_real_if_geotiffs.py
 │   └── test_real_if_manifest.py
@@ -304,15 +305,16 @@ def _select_device():
 | `identity.py` | `test_identity.py` | Alta — idempotencia SHA-256 |
 | `ingestion/geotiff.py` | `test_geotiff_ingestion.py`, `test_prepare_real_if_geotiffs.py` | Alta |
 | `real_if.py` | `test_real_if_manifest.py`, `test_inventory_real_if_material.py` | Alta |
-| `ml/*` | `test_ml_pipeline.py` | **Baja** — smoke test, no arquitectura completa |
-| `ml/meta_labeler.py` | — | **No testeado directamente** |
+| `ml/*` | `test_ml_pipeline.py`, `test_meta_labeler.py` | **Media** — smoke test + meta-labeler cobertura completa |
+| `ml/meta_labeler.py` | `test_meta_labeler.py` (11 tests) | **Alta** — entropy, features, train/predict, single-class guard, save/load, determinism |
 
 ### Patrones de testing
 
 - **Framework**: `unittest.TestCase` (compatible con pytest)
 - **Patrones**: sin fixtures compartidos, cada test construye su propio config
 - **Cobertura de edge cases**: abstención, configuraciones inválidas, CRS no métrico
-- **Gap**: el pipeline ML completo (dataset → train → meta-labeler) necesita más cobertura
+- **Meta-labeler**: cobertura completa (entropy, features, lifecycle, degenerate case, pickle round-trip, determinism)
+- **Gap residual**: el pipeline ML completo (dataset → train → forward pass) sigue siendo smoke test
 
 ---
 
@@ -395,17 +397,17 @@ Documentación extensa cubriendo:
 ### Críticas
 | # | Issue | Impacto | Estado |
 |---|-------|---------|--------|
-| 1 | `ml/meta_labeler.py` no tiene tests directos | Regresiones silentes en confianza | ✅ Resuelto (8 tests) |
-| 2 | `test_ml_pipeline.py` es solo smoke test | Pipeline ML sin cobertura real | ✅ Resuelto (meta-labeler) |
-| 3 | `__main__.py` sin `if __name__ == "__main__":` guard | Convención, no bug funcional | ⏳ Pendiente |
+| 1 | `ml/meta_labeler.py` no tiene tests directos | Regresiones silentes en confianza | ✅ Resuelto (11 tests) |
+| 2 | `test_ml_pipeline.py` es solo smoke test | Pipeline ML sin cobertura real | ✅ Resuelto (meta-labeler con 11 tests) |
+| 3 | `__main__.py` sin `if __name__ == "__main__":` guard | Convención, no bug funcional | ✅ Resuelto |
 
 ### Moderadas
 | # | Issue | Sugerencia | Estado |
 |---|-------|------------|--------|
-| 4 | `__init__.py` no re-exporta `GeometrySpeedConfig/Result` | Añadir a API pública | ⏳ Pendiente |
-| 5 | No hay CI/CD (GitHub Actions) | Añadir workflow de tests automático | ✅ Resuelto |
+| 4 | `__init__.py` no re-exporta `GeometrySpeedConfig/Result` | Añadir a API pública | ✅ Resuelto |
+| 5 | No hay CI/CD (GitHub Actions) | Añadir workflow de tests automático | ✅ Resuelto (lint + tests + ML smoke, meta-labeler incluido) |
 | 6 | `research/` no está versionado con el código | Mover a `docs/research/` o enlazar | ⏳ Pendiente |
-| 7 | No hay type stubs (`.pyi`) | Añadir para API pública | ⏳ Pendiente |
+| 7 | No hay type stubs (`.pyi`) | Añadir para API pública | ✅ Resuelto |
 | 8 | No hay CONTRIBUTING / LICENSE / CHANGELOG | Añadir para profesionalizar | ✅ Resuelto |
 | 9 | No hay tooling de calidad (ruff, mypy) | Configurar y hacer blocking | ✅ Resuelto |
 
@@ -431,21 +433,21 @@ Documentación extensa cubriendo:
 
 ### Expansión de datos reales (en curso)
 
-Ingesta batch de **7 incendios reales** de Castilla-La Mancha:
+Ingesta batch de **8 incendios reales** de Castilla-La Mancha:
 
 | Incendio | TIFs reproyectados | Máscaras | Manifiesto | Estado |
 |----------|-------------------|----------|------------|--------|
 | `tobarra_lwir` (2024) | 35 | 35 | ✅ | **Completo** |
 | `cardoso_2025` | 85 | 79 | ✅ | **Completo** |
 | `la_estrella_acom1_2024` | 199 | 181 | ✅ | **Completo** |
-| `la_estrella_acom2_2024` | 27/67 | 0 | ❌ | ⚠️ Incompleto |
-| `hellin_2024` | — | — | ❌ | ⏳ Pendiente |
-| `retuerta_2025` | — | — | ❌ | ⏳ Pendiente |
-| `brazatortas_2025` | — | — | ❌ | ⏳ Pendiente |
-| `polan_2025` | — | — | ❌ | ⏳ Pendiente |
+| `la_estrella_acom2_2024` | 67 | 17 | ✅ | **Completo** (50 frames rechazados por control de calidad) |
+| `hellin_2024` | 36 | 16 | ✅ | **Completo** |
+| `retuerta_2025` | 10 | 8 | ✅ | **Completo** |
+| `brazatortas_2025` | 16 | 8 | ✅ | **Completo** |
+| `polan_2025` | 8 | — | ⏳ | 🔄 En proceso |
 
-> **Total acumulado**: 346 TIFs reproyectados, 295 máscaras materializadas (3 incendios completos)  
-> **Restante**: ~138 TIFs por reproyectar (4 incendios pendientes)  
+> **Total acumulado**: 414 TIFs reproyectados, 344 máscaras materializadas (7 incendios completos)  
+> **Restante**: polan_2025 (8 TIFs en proceso de reproyección)  
 > El script `batch_process_fires.py` incluye **skip-if-done** para reanudar sin reprocesar.
 
 ### Próximos pasos sugeridos
@@ -462,14 +464,17 @@ Ingesta batch de **7 incendios reales** de Castilla-La Mancha:
 
 | Métrica | Valor |
 |---------|-------|
-| Archivos Python | ~35 |
-| Archivos de test | 11 |
-| Métodos de test | ~45 |
+| Archivos Python | ~36 |
+| Archivos de test | 12 |
+| Métodos de test | 96 |
 | Documentos MD | ~25 |
 | Módulos del package | 14 + 2 subpaquetes |
 | Scripts operacionales | 13 |
-| Datos reales procesados | 3 incendios completos (295 máscaras) |
-| Datos reales pendientes | 4 incendios (~138 TIFs) |
+| CI/CD | `.github/workflows/ci.yml` (3 jobs: lint, test 3.11/3.12, ml-smoke) + Dependabot |
+| Containerización | `Dockerfile` multi-stage (non-root, healthcheck) + `.dockerignore` |
+| Seguridad | `SECURITY.md` + Dependabot + non-root container |
+| Datos reales procesados | 7 incendios completos (414 TIFs, 344 máscaras) + polan_2025 en proceso |
+| Datos reales pendientes | polan_2025 (8 TIFs en proceso) |
 | Modelos entrenados | v3.pt (base), tobarra_finetuned.pt |
 | Commit actual | `4c0584a` (main) |
 

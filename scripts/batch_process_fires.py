@@ -44,7 +44,7 @@ FIRES = [
     ("hellin_2024", "HELLIN20240719", "hellin_2024", 2.0),
     ("retuerta_2025", "04_09_2025_IF.RETUERTA", "retuerta_2025", 2.0),
     ("brazatortas_2025", "05_10_2025_IF.BRAZATORTAS", "brazatortas_2025", 2.0),
-    ("polan_2025", "13_09_2025_IF.POLAN", "polan_2025", 2.0),
+    ("polan_2025", "13_09_2025_IF.POLAN/13_09_2025_IF.POLAN", "polan_2025", 2.0),
 ]
 
 # ─── Pipeline ────────────────────────────────────────────────────────────────

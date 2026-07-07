@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added — Production hardening (2026-07-07)
+- **Containerization**: Multi-stage `Dockerfile` (builder + runtime) with non-root
+  user, healthcheck, OCI labels, and layer caching via `.dockerignore`.
+- **Security**: `SECURITY.md` with responsible disclosure policy and SLA.
+- **Dependency governance**: `.github/dependabot.yml` (pip, GitHub Actions, Docker).
+- Real wildfire data ingestion completed: `hellin_2024`, `retuerta_2025`,
+  `brazatortas_2025` (70 new TIFs, 32 masks). `la_estrella_acom2_2024` completed
+  (67 TIFs; 50 frames rejected by quality control).
+
+### Added — Engineering baseline
 - Professional development workflow: `Makefile`, `CONTRIBUTING.md`, `LICENSE`.
 - CI/CD pipeline with concurrency control and pip caching.
 - Ruff linting + formatting and mypy strict type-checking.
-- Meta-labeler test suite (8 tests covering temporal consistency).
+- Meta-labeler test suite (11 tests: entropy, features, train/predict,
+  single-class guard, save/load, determinism).
 - Batch processing pipeline for multi-fire ingestion.
 - MIT license declaration in `pyproject.toml`.
 
@@ -19,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI mypy step now blocks on errors (removed `|| true`).
 - README restructured with badges, clear sections, and professional layout.
 - GitHub Actions workflows use `cache: pip` for faster runs.
+- `REPO_ANALYSIS.md` updated to reflect production-ready status and real metrics.
 
 ### Fixed
 - Ruff lint errors in `wildfire_front/ml/` module (3 auto-fixed).
