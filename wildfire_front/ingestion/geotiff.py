@@ -189,6 +189,10 @@ def _find_mask(image: Path, masks_dir: Path) -> Path | None:
     if exact.exists():
         return exact
     matches = [path for path in masks_dir.glob(f"{image.stem}.*") if path.suffix.lower() in TIFF_EXTENSIONS]
+    if matches:
+        return sorted(matches)[0]
+    # Flexible fallback: match stem + suffix variants (e.g. image_stem_mask.tif)
+    matches = [path for path in masks_dir.glob(f"{image.stem}_*") if path.suffix.lower() in TIFF_EXTENSIONS]
     return sorted(matches)[0] if matches else None
 
 
@@ -226,6 +230,75 @@ def _record(
     )
 
 
+def write_binary_mask_geotiff(
+    mask: np.ndarray,
+    reference_path: Path,
+    output_path: Path,
+) -> None:
+    """Persist a binary mask as a single-band uint8 GeoTIFF inheriting georeferencing.
+
+    The output raster reuses the CRS, transform, width and height of *reference_path*
+    so it can be paired 1:1 with the source image by downstream consumers
+    (e.g. :class:`wildfire_front.ml.dataset.WildfireDataset`).
+    """
+
+    if mask.ndim != 2:
+        raise ValueError("mask must be a 2-D array")
+    mask_uint8 = np.asarray(mask > 0, dtype=np.uint8)
+    with rasterio.open(reference_path) as src:
+        profile = src.profile.copy()
+    profile.update(count=1, dtype="uint8", compress="deflate")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with rasterio.open(output_path, "w", **profile) as dst:
+        dst.write(mask_uint8, 1)
+
+
+def materialize_lwir_masks(
+    images_dir: Path,
+    output_dir: Path,
+    *,
+    mad_z: float = 3.5,
+    band: int = 1,
+    suffix: str = "_mask.tif",
+) -> tuple[list[tuple[Path, Path]], list[tuple[Path, str]]]:
+    """Threshold LWIR rasters with MAD and persist binary masks as GeoTIFFs.
+
+    Returns ``(succeeded, failed)`` where each entry pairs the source image path
+    with the generated mask path (or an error reason).
+    """
+
+    if mad_z <= 0:
+        raise ValueError("mad_z must be positive")
+    if not images_dir.is_dir():
+        raise ValueError(f"images directory does not exist: {images_dir}")
+
+    image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
+    if not image_paths:
+        raise ValueError(f"no GeoTIFF images found in {images_dir}")
+
+    succeeded: list[tuple[Path, Path]] = []
+    failed: list[tuple[Path, str]] = []
+    for image_path in image_paths:
+        try:
+            image, image_meta = read_raster_band(image_path, band)
+        except Exception as exc:  # noqa: BLE001
+            failed.append((image_path, f"image_read_error:{exc}"))
+            continue
+        try:
+            binary_mask, _adaptive_threshold = segment_band_mad(image, z_score=mad_z)
+        except ValueError as exc:
+            failed.append((image_path, f"segmentation_error:{exc}"))
+            continue
+        mask_path = output_dir / f"{image_path.stem}{suffix}"
+        try:
+            write_binary_mask_geotiff(binary_mask, image_path, mask_path)
+        except Exception as exc:  # noqa: BLE001
+            failed.append((image_path, f"write_error:{exc}"))
+            continue
+        succeeded.append((image_path, mask_path))
+    return succeeded, failed
+
+
 def write_ingest_manifest(records: tuple[GeoTiffIngestRecord, ...], output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     fields = list(GeoTiffIngestRecord.__dataclass_fields__.keys())
@@ -248,8 +321,18 @@ def ingest_geotiff_sequence(
     mad_z: float | None = None,
     respect_alpha: bool = False,
     min_component_pixels: int = 1,
+    persist_masks_dir: Path | None = None,
+    mask_suffix: str = "_mask.tif",
 ) -> GeoTiffIngestResult:
-    """Validate GeoTIFF inputs and convert accepted masks to observations."""
+    """Validate GeoTIFF inputs and convert accepted masks to observations.
+
+    When ``persist_masks_dir`` is provided together with a live segmentation
+    method (``threshold`` or ``mad_z``), each accepted mask is also written as a
+    single-band uint8 GeoTIFF inside that directory and the path is recorded in
+    the ``mask_path`` column of the manifest. This closes the gap between
+    on-the-fly thresholding and the persistent mask files required by
+    :class:`wildfire_front.ml.dataset.WildfireDataset`.
+    """
 
     if estimated_error_m < 0:
         raise ValueError("estimated_error_m cannot be negative")
@@ -263,6 +346,8 @@ def ingest_geotiff_sequence(
         raise ValueError("threshold and mad_z are mutually exclusive")
     if min_component_pixels < 1:
         raise ValueError("min_component_pixels must be at least 1")
+    if persist_masks_dir is not None and masks_dir is not None:
+        raise ValueError("persist_masks_dir is only valid when masks_dir is not provided")
 
     image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
     if not image_paths:
@@ -327,6 +412,11 @@ def ingest_geotiff_sequence(
             else:
                 binary_mask, adaptive_threshold = segment_band_mad(image, float(mad_z), valid_mask if isinstance(valid_mask, np.ndarray) else None)
                 method = f"band_{band}_mad_z_{mad_z}_threshold_{adaptive_threshold:.6g}"
+            # Record the future on-disk mask path so it propagates into the manifest
+            # even for records that are later rejected (the file is only written
+            # when the mask is accepted, see the persist call below).
+            if persist_masks_dir is not None:
+                mask_path = persist_masks_dir / f"{image_path.stem}{mask_suffix}"
         if min_component_pixels > 1:
             binary_mask = np.asarray(sieve(binary_mask, size=min_component_pixels, connectivity=8), dtype=np.uint8)
 
@@ -377,6 +467,10 @@ def ingest_geotiff_sequence(
         )
         observation.validate()
         candidates.append((observed_at, observation))
+        # Persist the accepted binary mask so downstream consumers (WildfireDataset)
+        # can find a materialized GeoTIFF paired 1:1 with the source image.
+        if persist_masks_dir is not None and mask_path is not None:
+            write_binary_mask_geotiff(binary_mask, image_path, mask_path)
         records.append(_record(image_path, mask_path, digest, observed_at, "accepted", "", image_meta, method, len(components), positive_fraction))
 
     observations: list[FrontObservation] = []

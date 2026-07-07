@@ -36,6 +36,7 @@ class WildfireDataset(Dataset):
         ndvi_path: Path | None = None,
         fsm_path: Path | None = None,
         weather_data: dict[str, float] | None = None,
+        max_patches: int | None = None,
     ) -> None:
         """
         Args:
@@ -55,6 +56,8 @@ class WildfireDataset(Dataset):
         self.dem_path = dem_path
         self.ndvi_path = ndvi_path
         self.fsm_path = fsm_path
+        self.max_patches = max_patches
+
         self.weather_data = weather_data or {
             "temp": 25.0,
             "humidity": 40.0,
@@ -82,16 +85,32 @@ class WildfireDataset(Dataset):
                 f"need at least {self.sequence_length + 1}."
             )
 
-        # Pre-load static maps (DEM, NDVI, FSM) to match the spatial resolution of the first image
-        with rasterio.open(self.samples[0][0]) as src:
-            self.height = src.height
-            self.width = src.width
-            self.transform = src.transform
-            self.crs = src.crs
+        # Read all images/masks to find the common intersection dimensions.
+        # Tobarra LWIR frames have variable pixel dimensions (drone footprints
+        # shift between captures), so we crop everything to the smallest
+        # height/width across the sequence.
+        raw_shapes: list[tuple[int, int]] = []
+        for img_path, mask_path, _ in self.samples:
+            with rasterio.open(mask_path) as src:
+                raw_shapes.append((src.height, src.width))
+        self.height = min(h for h, _ in raw_shapes)
+        self.width = min(w for _, w in raw_shapes)
+        self.transform = None
+        self.crs = None
 
         self.dem_slope, self.dem_aspect = self._load_or_synthesize_dem()
         self.ndvi = self._load_or_synthesize_ndvi()
         self.fsm = self._load_or_synthesize_fsm()
+
+        # Cache masks in memory to avoid thousands of rasterio.open calls.
+        self._mask_cache: list[np.ndarray] = []
+        for img_path, mask_path, _ in self.samples:
+            with rasterio.open(mask_path) as src:
+                full = src.read(1).astype(np.uint8)
+            self._mask_cache.append(full[: self.height, : self.width])
+            if self.crs is None:
+                self.crs = src.crs
+                self.transform = src.transform
 
         # Build spatiotemporal sequence index patches
         self.patches = self._generate_sequence_patches()
@@ -131,8 +150,43 @@ class WildfireDataset(Dataset):
         fsm[0] = 1.0
         return fsm
 
+    def _read_thermal_band(self, img_path: Path) -> np.ndarray | None:
+        """Read band 1 from the source image and z-score normalize it.
+
+        Returns ``None`` if the image cannot be read or has no finite data
+        (e.g. when ``img_path`` is not a thermal raster). This makes the
+        thermal injection opt-in and safe for synthetic-only datasets.
+        """
+
+        try:
+            with rasterio.open(img_path) as src:
+                # Read only the common intersection area so frames with larger
+                # footprints (variable drone captures) are handled gracefully.
+                band = src.read(1).astype(np.float32)
+                band = band[: self.height, : self.width]
+        except Exception:  # noqa: BLE001
+            return None
+        finite = band[np.isfinite(band)]
+        if finite.size == 0:
+            return None
+        median = float(np.median(finite))
+        mad = float(np.median(np.abs(finite - median)))
+        robust_sigma = 1.4826 * mad if mad > 0 else float(np.std(finite))
+        if robust_sigma < 1e-6:
+            robust_sigma = 1.0
+        return np.asarray((band - median) / robust_sigma, dtype=np.float32)
+
     def _build_16_channels(self, img_path: Path) -> np.ndarray:
-        """Construct the 16-channel array for a single timestep."""
+        """Construct the 16-channel array for a single timestep.
+
+        When the source image is a thermal LWIR raster (as is the case for the
+        Tobarra dataset), band 1 is z-score normalized and injected into
+        **channel 11**, replacing the constant NDVI fallback. This ensures the
+        model sees real fire signal during both fine-tuning and inference.
+        Channels 0-10 and 12-15 remain DEM/weather/FSM as defined by
+        ``config.json``.
+        """
+
         channels = np.zeros((16, self.height, self.width), dtype=np.float32)
 
         # 0-1: DEM (slope, aspect)
@@ -150,41 +204,46 @@ class WildfireDataset(Dataset):
         channels[9] = self.weather_data["visibility"]
         channels[10] = self.weather_data["dew_point"]
 
-        # 11: NDVI
-        channels[11] = self.ndvi
+        # 11: Thermal signal (LWIR z-score) if available, otherwise NDVI fallback
+        thermal = self._read_thermal_band(img_path)
+        if thermal is not None:
+            channels[11] = thermal
+        else:
+            channels[11] = self.ndvi
 
         # 12-15: FSM
         channels[12:16] = self.fsm
 
-        # Note: If the source image has thermal bands, we can overlay them onto channels if needed.
-        # Here we prioritize the standard 16 features required by config.json.
         return channels
 
     def _generate_sequence_patches(self) -> list[dict[str, int]]:
-        """Identify all spatial patches containing active fire sequences."""
+        """Identify all spatial patches containing active fire sequences.
+
+        Uses the in-memory ``_mask_cache`` instead of opening rasterio for
+        every candidate window — a major speedup for thousands of patches.
+        """
         patches = []
+        half = self.patch_size // 2
         # Loop through all possible sequence starting indices
         for i in range(len(self.samples) - self.sequence_length):
             # Target is the next step immediately following the sequence
             target_idx = i + self.sequence_length
-            
+            target_mask = self._mask_cache[target_idx]
+
             # Slide windows of patch_size x patch_size
-            for row in range(0, self.height - self.patch_size + 1, self.patch_size // 2):
-                for col in range(0, self.width - self.patch_size + 1, self.patch_size // 2):
+            for row in range(0, self.height - self.patch_size + 1, half):
+                for col in range(0, self.width - self.patch_size + 1, half):
                     # Quick check: Is there fire active in the target patch?
-                    # This filters out massive empty background patches
-                    with rasterio.open(self.samples[target_idx][1]) as mask_src:
-                        patch_mask = mask_src.read(
-                            1,
-                            window=rasterio.windows.Window(col, row, self.patch_size, self.patch_size)
-                        )
-                        if np.sum(patch_mask) > 0:
-                            patches.append({
-                                "start_idx": i,
-                                "target_idx": target_idx,
-                                "row": row,
-                                "col": col
-                            })
+                    patch = target_mask[row:row + self.patch_size, col:col + self.patch_size]
+                    if patch.sum() > 0:
+                        patches.append({
+                            "start_idx": i,
+                            "target_idx": target_idx,
+                            "row": row,
+                            "col": col,
+                        })
+                    if self.max_patches is not None and len(patches) >= self.max_patches:
+                        return patches
         return patches
 
     def __len__(self) -> int:
@@ -208,21 +267,15 @@ class WildfireDataset(Dataset):
             # Crop to the spatial patch
             sequence_data[t] = channels[:, row:row+self.patch_size, col:col+self.patch_size]
 
-        # 2. Get the current fire mask at the end of the sequence
-        _, last_mask_path, _ = self.samples[target_idx - 1]
-        with rasterio.open(last_mask_path) as src:
-            current_fire = src.read(
-                1,
-                window=rasterio.windows.Window(col, row, self.patch_size, self.patch_size)
-            ).astype(np.float32)
+        # 2. Get the current fire mask at the end of the sequence (from cache)
+        current_fire = self._mask_cache[target_idx - 1][
+            row:row + self.patch_size, col:col + self.patch_size
+        ].astype(np.float32)
 
-        # 3. Get the target fire mask (ground truth for next step spread)
-        _, target_mask_path, _ = self.samples[target_idx]
-        with rasterio.open(target_mask_path) as src:
-            target_fire = src.read(
-                1,
-                window=rasterio.windows.Window(col, row, self.patch_size, self.patch_size)
-            ).astype(np.float32)
+        # 3. Get the target fire mask (ground truth for next step spread, cache)
+        target_fire = self._mask_cache[target_idx][
+            row:row + self.patch_size, col:col + self.patch_size
+        ].astype(np.float32)
 
         sequence_tensor = torch.from_numpy(sequence_data)
         current_fire_tensor = torch.from_numpy(current_fire)

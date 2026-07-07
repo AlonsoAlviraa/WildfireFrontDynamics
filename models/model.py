@@ -17,10 +17,13 @@ class A3C_PerCellModel_LSTM(nn.Module):
     """
     A3C model with CNN encoder + LSTM for temporal context.
 
-    Architecture:
-    1. CNN Encoder: Processes each timestep spatially (16ch -> 256 features)
-    2. LSTM: Processes temporal sequence (learns trends, momentum)
-    3. Policy/Value Heads: Predict actions and value from LSTM output
+    Architecture (v2 — spatial-aware, no pooling bottleneck):
+    1. CNN Encoder: Processes each timestep spatially (16ch -> 256, 30x30)
+    2. Spatial pooling ONLY for LSTM temporal context vector (batch, 256)
+    3. LSTM: Models global temporal trends -> context vector (batch, 256)
+    4. Fusion: temporal context is broadcast and ADDED to the spatial features
+       of the last timestep, preserving positional information (U-Net style).
+    5. Policy/Value Heads: Predict per-cell from fused spatial features.
     """
 
     def __init__(self, in_channels=16, lstm_hidden=256, sequence_length=3, use_groupnorm=True):
@@ -46,10 +49,10 @@ class A3C_PerCellModel_LSTM(nn.Module):
         self.dropout3 = nn.Dropout2d(0.1)
 
         # Spatial pooling to get per-timestep feature vector
-        # (batch, 256, 30, 30) -> (batch, 256)
+        # (batch, 256, 30, 30) -> (batch, 256) — used ONLY as global temporal context
         self.spatial_pool = nn.AdaptiveAvgPool2d(1)
 
-        # LSTM for temporal modeling
+        # LSTM for temporal modeling (global context only)
         # Input: (sequence_length, batch, 256) -> Output: (sequence_length, batch, lstm_hidden)
         self.lstm = nn.LSTM(
             input_size=256,
@@ -59,16 +62,30 @@ class A3C_PerCellModel_LSTM(nn.Module):
             dropout=0.0
         )
 
-        # Upsampling to restore spatial dimensions
-        # (batch, lstm_hidden) -> (batch, 256, 30, 30)
-        self.upsample = nn.Sequential(
-            nn.Linear(lstm_hidden, 256 * 4),
+        # Temporal-context projection: maps LSTM hidden state (256) to a spatial
+        # feature map (256, 30, 30) that will be FUSED with the last-timestep
+        # spatial features. This avoids the information-destroying upsample of v1.
+        self.temporal_projection = nn.Sequential(
+            nn.Linear(lstm_hidden, 256),
             nn.ReLU(),
-            nn.Unflatten(1, (256, 2, 2)),
-            nn.Upsample(size=(30, 30), mode='bilinear', align_corners=False)
+            nn.Unflatten(1, (256, 1, 1)),
         )
 
-        # Policy head - per-cell 8-neighbor prediction
+        # Fusion gate: learns how much temporal context to inject at each pixel.
+        # (batch, 512, 30, 30) -> (batch, 256, 30, 30)
+        self.fusion_gate = nn.Sequential(
+            nn.Conv2d(256 * 2, 256, kernel_size=1),
+            nn.Sigmoid(),
+        )
+
+        # Refinement conv after fusion (keeps spatial resolution)
+        self.refine = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.GroupNorm(32, 256) if use_groupnorm else nn.Identity(),
+            nn.ReLU(),
+        )
+
+        # Policy head - per-cell 8-neighbor prediction (operates on fused features)
         self.policy_head = nn.Sequential(
             nn.Linear(256 * 9, 256),
             nn.ReLU(),
@@ -76,7 +93,7 @@ class A3C_PerCellModel_LSTM(nn.Module):
             nn.Linear(256, 8)
         )
 
-        # Value head
+        # Value head (global pooling over fused features)
         self.value_head = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
@@ -130,37 +147,48 @@ class A3C_PerCellModel_LSTM(nn.Module):
 
     def forward(self, sequence, fire_mask):
         """
-        Forward pass with temporal sequence.
+        Forward pass with temporal sequence (v2 — spatial-aware fusion).
 
         Args:
             sequence: (batch, seq_len, 16, 30, 30) - temporal sequence
             fire_mask: (batch, 30, 30) - current fire mask (only for last timestep)
 
         Returns:
-            spatial_features: (batch, 256, 30, 30) - features for policy head
+            spatial_features: (batch, 256, 30, 30) - fused features for policy head
             value: (batch, 1) - state value
         """
         batch_size, seq_len, C, H, W = sequence.shape
 
-        # Encode each timestep with CNN
+        # Encode each timestep with CNN, keeping BOTH spatial and pooled features
         pooled_sequence = []
+        last_spatial = None
         for t in range(seq_len):
-            _, pooled = self.encode_timestep(sequence[:, t])  # (batch, 256)
-            pooled_sequence.append(pooled)
+            spatial_t, pooled_t = self.encode_timestep(sequence[:, t])  # (B,256,30,30), (B,256)
+            pooled_sequence.append(pooled_t)
+            if t == seq_len - 1:
+                last_spatial = spatial_t  # keep full-resolution features of last frame
 
         # Stack into sequence: (seq_len, batch, 256)
         pooled_sequence = torch.stack(pooled_sequence, dim=0)
 
-        # LSTM temporal processing
+        # LSTM temporal processing -> global temporal context
         lstm_out, (h_n, c_n) = self.lstm(pooled_sequence)
+        final_hidden = h_n.squeeze(0)  # (batch, lstm_hidden)
 
-        # Use final hidden state: (batch, lstm_hidden)
-        final_hidden = h_n.squeeze(0)  # (1, batch, hidden) -> (batch, hidden)
+        # Temporal-context projection: (batch, lstm_hidden) -> (batch, 256, 1, 1)
+        temporal_ctx = self.temporal_projection(final_hidden)
+        # Broadcast to spatial dims: (batch, 256, 30, 30)
+        temporal_ctx = temporal_ctx.expand(-1, -1, H, W)
 
-        # Upsample to spatial features: (batch, lstm_hidden) -> (batch, 256, 30, 30)
-        spatial_features = self.upsample(final_hidden)
+        # Gated fusion: concat [last_spatial, temporal_ctx] and learn per-pixel gate
+        # (batch, 512, 30, 30) -> (batch, 256, 30, 30)
+        gate = self.fusion_gate(torch.cat([last_spatial, temporal_ctx], dim=1))
+        fused = gate * temporal_ctx + (1.0 - gate) * last_spatial
 
-        # Value prediction
+        # Refinement conv keeps spatial resolution and mixes fused features
+        spatial_features = self.refine(fused)
+
+        # Value prediction (global pooling over fused spatial features)
         value = self.value_head(spatial_features)
 
         return spatial_features, value

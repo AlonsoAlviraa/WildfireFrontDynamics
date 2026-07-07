@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 
 from models.model import A3C_PerCellModel_LSTM
 from .dataset import WildfireDataset
+from .weights import load_pretrained_weights
 
 
 def calculate_local_spread_loss(
@@ -66,6 +67,7 @@ def fine_tune_model(
     output_weights_path: Path,
     epochs: int = 5,
     lr: float = 1e-4,
+    max_patches: int | None = None,
 ) -> dict[str, object]:
     """
     Perform behavior-cloning fine-tuning on the local dataset.
@@ -73,18 +75,14 @@ def fine_tune_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 1. Initialize dataset and dataloader (batch size must be 1 due to model assertions)
-    dataset = WildfireDataset(images_dir, masks_dir, sequence_length=3, patch_size=30)
+    dataset = WildfireDataset(images_dir, masks_dir, sequence_length=3, patch_size=30, max_patches=max_patches)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     # 2. Load model and restore pre-trained weights
     model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
     
     print(f"Loading pre-trained weights from {weights_path}...")
-    checkpoint = torch.load(weights_path, map_location=device)
-    
-    # Extract state dict if it's a structured checkpoint
-    state_dict = checkpoint.get("model_state_dict", checkpoint)
-    model.load_state_dict(state_dict)
+    load_pretrained_weights(model, weights_path)
     model.to(device)
 
     # 3. Optimize policy weights

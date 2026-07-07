@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--split", choices=["train", "val"], required=True)
+parser.add_argument("--split", choices=["train", "val", "test"], required=True)
 args = parser.parse_args()
 
 import tensorflow as tf
@@ -26,15 +26,34 @@ if not all_tfrecord_files:
     print("Error: No TFRecord files found!")
     sys.exit(1)
 
-# Distribute tfrecord files to avoid train-validation leakage
+# --- LEAK-FREE 3-WAY SPLIT -----------------------------------------------
+# NDWS ships ~15 tfrecord shards. We partition them into disjoint groups so
+# that NO shard (and therefore NO fire event) appears in more than one split.
+# This is the strongest guarantee against temporal/geographic leakage.
+#
+#   train : shards  0..11  (12 files)  -> up to 80k patches
+#   val   : shards 12..13  ( 2 files)  -> up to 15k patches  (model selection)
+#   test  : shards 14..    ( 1+ files) -> up to 15k patches  (unseen evaluation)
+n = len(all_tfrecord_files)
+if n < 4:
+    raise SystemExit(f"Need at least 4 TFRecord shards for a leak-free 3-way split, found {n}")
+
+train_cut = max(12, int(n * 0.80))          # ~80% train
+val_cut = min(n - 1, train_cut + max(2, int(n * 0.10)))  # ~10% val, keep >=1 for test
+
 if args.split == "train":
-    tfrecord_files = all_tfrecord_files[:13]
+    tfrecord_files = all_tfrecord_files[:train_cut]
     max_patches = 80000
-else:
-    tfrecord_files = all_tfrecord_files[13:]
+elif args.split == "val":
+    tfrecord_files = all_tfrecord_files[train_cut:val_cut]
+    max_patches = 15000
+else:  # test
+    tfrecord_files = all_tfrecord_files[val_cut:]
     max_patches = 15000
 
-print(f"Split {args.split} contains {len(tfrecord_files)} files. Limit set to {max_patches} patches.")
+print(f"Leak-free split: {args.split} = shards [{0 if args.split=='train' else train_cut if args.split=='val' else val_cut}"
+      f"..{train_cut if args.split=='train' else val_cut if args.split=='val' else n}] "
+      f"({len(tfrecord_files)} files, cap={max_patches} patches)")
 
 # Inspect keys of the first file in this split
 first_file = tfrecord_files[0]

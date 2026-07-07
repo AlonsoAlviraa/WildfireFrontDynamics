@@ -7,10 +7,22 @@ name = "wildfire-front-dynamics"
 version = "0.1.0"
 description = "Auditable MVP for wildfire front reconstruction"
 requires-python = ">=3.11"
-dependencies = ["numpy>=2.0", "rasterio>=1.4"]
+dependencies = ["numpy>=2.0", "rasterio>=1.4", "affine"]
+
+[project.optional-dependencies]
+ml = ["torch>=2.0", "scikit-learn>=1.3"]
+cloud = ["tensorflow>=2.15"]
+dev = ["pytest>=7.0", "hypothesis>=6.0", "ruff>=0.4"]
+viz = ["matplotlib>=3.7", "Pillow>=10.0"]
+all = ["wildfire-front-dynamics[ml,cloud,dev,viz]"]
 
 [project.scripts]
 wildfire-front = "wildfire_front.cli:main"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::rasterio.errors.NotGeoreferencedWarning",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

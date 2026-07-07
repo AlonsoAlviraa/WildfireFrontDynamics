@@ -20,6 +20,7 @@ from torch.utils.data import DataLoader
 from models.model import A3C_PerCellModel_LSTM
 from .dataset import WildfireDataset
 from .train import calculate_local_spread_loss
+from .weights import load_pretrained_weights
 
 
 def upload_to_huggingface(
@@ -81,9 +82,7 @@ def main(argv: list[str] | None = None) -> None:
     # 2. Setup model
     model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
     print(f"Loading pre-trained weights from {args.weights}...")
-    checkpoint = torch.load(args.weights, map_location=device)
-    state_dict = checkpoint.get("model_state_dict", checkpoint)
-    model.load_state_dict(state_dict)
+    load_pretrained_weights(model, args.weights)
     model.to(device)
 
     # 3. Optimize policy weights

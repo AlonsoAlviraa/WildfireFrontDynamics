@@ -1,11 +1,23 @@
-external/
-.venv/
+# Binaries / model weights
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.joblib
+
+# Data artifacts (regenerable, large)
+artifacts/tobarra_lwir_masks/
+artifacts/tobarra_reprojected_lwir/
+artifacts/tobarra_lwir_reproject_manifest.csv
+outputs/
+
+# Python
 __pycache__/
 *.pyc
-.pytest_cache/
-outputs/
 *.egg-info/
-kaggle_output/
-data/real_if/raw_dropbox/
-data/real_if/extracted/
-data/real_if/inventories/*.csv
+.pytest_cache/
+*.npz
+
+# Temp
+*.log
+.DS_Store

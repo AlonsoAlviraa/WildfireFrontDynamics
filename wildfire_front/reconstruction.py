@@ -49,6 +49,79 @@ def estimate_local_speeds(
     return estimates
 
 
+def estimate_observed_speeds(
+    observations: list[FrontObservation], config: ScenarioConfig
+) -> list[SpeedEstimate]:
+    """Estimate local front speeds from consecutive observed masks (no ground truth needed).
+
+    For each pair of consecutive observations, measures how far the front advanced
+    by computing the radial expansion of the burned-area hull along sampled angles.
+    This is the real-data counterpart of ``estimate_local_speeds`` and abstains
+    when the displacement is below the observability threshold.
+    """
+
+    num_samples = getattr(config, "num_radial_samples", 36)
+    estimates: list[SpeedEstimate] = []
+    combined_error = math.sqrt(2.0) * config.position_error_m
+    for previous, current in zip(observations, observations[1:]):
+        dt_min = (current.time_s - previous.time_s) / 60.0
+        if dt_min <= 0:
+            continue
+        prev_radii = _component_radii_by_angle(previous.components, num_samples)
+        curr_radii = _component_radii_by_angle(current.components, num_samples)
+        if not prev_radii or not curr_radii:
+            continue
+        angles = sorted(set(prev_radii.keys()) & set(curr_radii.keys()))
+        for angle_deg in angles:
+            r0 = prev_radii[angle_deg]
+            r1 = curr_radii[angle_deg]
+            displacement = float(r1 - r0)
+            observable = abs(displacement) > config.observability_ratio * combined_error
+            speed = displacement / dt_min if observable else None
+            rad = math.radians(angle_deg)
+            point = (float(r1 * math.cos(rad)), float(r1 * math.sin(rad)))
+            estimates.append(
+                SpeedEstimate(
+                    time_start_s=previous.time_s,
+                    time_end_s=current.time_s,
+                    angle_deg=angle_deg,
+                    point=point,
+                    displacement_m=displacement,
+                    speed_m_min=speed,
+                    truth_speed_m_min=None,
+                    uncertainty_m_min=combined_error / dt_min,
+                    observable=observable,
+                    abstention_reason=None if observable else "movement_below_observability_threshold",
+                )
+            )
+    return estimates
+
+
+def _component_radii_by_angle(
+    components: tuple[tuple[tuple[float, float], ...], ...], num_samples: int
+) -> dict[float, float]:
+    """Sample the maximum radius of observed components at fixed angular bins."""
+
+    if not components:
+        return {}
+    radii_by_angle: dict[float, float] = {}
+    half_bin = 180.0 / max(num_samples, 1)
+    for component in components:
+        points = np.asarray(component)
+        if points.shape[0] < 4:
+            continue
+        angles = np.degrees(np.arctan2(points[:, 1], points[:, 0]))
+        radii = np.linalg.norm(points, axis=1)
+        for angle_deg in np.linspace(-180.0, 180.0, num_samples, endpoint=False):
+            diffs = np.abs(((angles - angle_deg + 180.0) % 360.0) - 180.0)
+            mask = diffs < half_bin
+            if np.any(mask):
+                max_r = float(np.max(radii[mask]))
+                key = float(angle_deg)
+                radii_by_angle[key] = max(radii_by_angle.get(key, 0.0), max_r)
+    return radii_by_angle
+
+
 def reconstruct_arrival_grid(
     observations: list[FrontObservation], config: ScenarioConfig
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
