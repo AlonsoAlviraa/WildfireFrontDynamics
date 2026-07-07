@@ -80,7 +80,36 @@ train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# --------------------------------------------------------------------------- #
+# Robust device selection: verify GPU compute-capability is supported by PyTorch
+# --------------------------------------------------------------------------- #
+def _select_device():
+    """Pick a usable GPU (checking sm compatibility) or fall back to CPU.
+
+    Kaggle may assign a Tesla P100 (sm_60) which is NOT supported by recent
+    PyTorch builds (min sm_70).  We probe with a tiny op and fall back to CPU
+    so the job always completes instead of crashing.
+    """
+    if not torch.cuda.is_available():
+        print("CUDA not available — using CPU.")
+        return torch.device("cpu")
+    cap = torch.cuda.get_device_capability(0)
+    name = torch.cuda.get_device_name(0)
+    print(f"GPU detected: {name} (compute capability sm_{cap[0]}{cap[1]})")
+    # Probe with a tiny operation to confirm kernels actually run.
+    try:
+        probe = torch.zeros(8, device="cuda")
+        _ = (probe @ probe).sum().item()  # forces a real kernel launch
+        if cap[0] < 7:
+            raise RuntimeError(f"sm_{cap[0]}{cap[1]} < sm_70 — not supported by this PyTorch build")
+        print(f"GPU kernel probe OK — using cuda ({name}).")
+        return torch.device("cuda")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: GPU unusable ({exc}). Falling back to CPU — training will be slow.")
+        return torch.device("cpu")
+
+
+device = _select_device()
 print(f"Using device: {device}")
 
 # --------------------------------------------------------------------------- #
