@@ -14,6 +14,7 @@ from wildfire_front.cli import main, run_geotiff_ingest
 from wildfire_front.ingestion.geotiff import (
     extract_mask_components,
     ingest_geotiff_sequence,
+    infer_timestamp,
     segment_band_mad,
     segment_band_threshold,
 )
@@ -86,12 +87,30 @@ class GeoTiffIngestionTests(unittest.TestCase):
         expected = np.array([[0, 0], [1, 0]], dtype=np.uint8)
         np.testing.assert_array_equal(expected, segment_band_threshold(image, 10))
 
+    def test_threshold_can_respect_alpha_mask(self) -> None:
+        image = np.array([[255, 255], [0, 255]], dtype=np.uint8)
+        valid = np.array([[True, False], [True, True]])
+        expected = np.array([[1, 0], [0, 1]], dtype=np.uint8)
+        np.testing.assert_array_equal(expected, segment_band_threshold(image, 200, valid))
+
     def test_mad_baseline_detects_radiometric_outlier(self) -> None:
         image = np.full((10, 10), 100, dtype=np.uint16)
         image[5, 5] = 1000
         mask, threshold = segment_band_mad(image, z_score=6.0)
         self.assertEqual(1, int(mask.sum()))
         self.assertGreaterEqual(threshold, 100)
+
+    def test_mad_baseline_ignores_invalid_alpha_pixels(self) -> None:
+        image = np.full((10, 10), 100, dtype=np.uint16)
+        image[0, 0] = 1000
+        valid = np.ones((10, 10), dtype=bool)
+        valid[0, 0] = False
+        mask, _ = segment_band_mad(image, z_score=6.0, valid_mask=valid)
+        self.assertEqual(0, int(mask.sum()))
+
+    def test_infers_millisecond_timestamp_from_real_sensor_name(self) -> None:
+        observed_at = infer_timestamp(Path("2024-08-02_16-08-21-553_LWIR.tif"))
+        self.assertEqual("2024-08-02T16:08:21.553000Z", observed_at)
 
     def test_sequence_can_use_threshold_without_masks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -112,6 +131,65 @@ class GeoTiffIngestionTests(unittest.TestCase):
             )
             self.assertEqual(1, len(result.observations))
             self.assertEqual("band_2_threshold_350", result.observations[0].method)
+
+    def test_sequence_threshold_can_ignore_transparent_pixels(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            images = root / "images"
+            images.mkdir()
+            rgba = np.zeros((4, 8, 8), dtype=np.uint8)
+            rgba[0, :, :] = 255
+            rgba[3, :, :] = 0
+            rgba[3, 2:6, 2:6] = 255
+            write_tiff(images / "rgba_20260610_120000.tif", rgba)
+
+            unmasked = ingest_geotiff_sequence(
+                images,
+                masks_dir=None,
+                event_id="rgba",
+                sensor_id="thermal",
+                estimated_error_m=2.0,
+                band=1,
+                threshold=200,
+            )
+            masked = ingest_geotiff_sequence(
+                images,
+                masks_dir=None,
+                event_id="rgba",
+                sensor_id="thermal",
+                estimated_error_m=2.0,
+                band=1,
+                threshold=200,
+                respect_alpha=True,
+            )
+
+            self.assertEqual(1.0, unmasked.records[0].positive_pixel_fraction)
+            self.assertEqual(0.25, masked.records[0].positive_pixel_fraction)
+
+    def test_sequence_can_sieve_small_threshold_components(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            images = root / "images"
+            images.mkdir()
+            image = np.zeros((8, 8), dtype=np.uint8)
+            image[1, 1] = 255
+            image[3:6, 3:6] = 255
+            write_tiff(images / "speckled_20260610_120000.tif", image)
+
+            result = ingest_geotiff_sequence(
+                images,
+                masks_dir=None,
+                event_id="speckled",
+                sensor_id="thermal",
+                estimated_error_m=2.0,
+                band=1,
+                threshold=200,
+                min_component_pixels=4,
+            )
+
+            self.assertEqual(1, len(result.observations))
+            self.assertEqual(1, result.records[0].component_count)
+            self.assertAlmostEqual(9 / 64, result.records[0].positive_pixel_fraction)
 
     def test_extract_mask_preserves_multiple_components(self) -> None:
         mask = np.zeros((8, 8), dtype=np.uint8)

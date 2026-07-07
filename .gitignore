@@ -6,3 +6,6 @@ __pycache__/
 outputs/
 *.egg-info/
 kaggle_output/
+data/real_if/raw_dropbox/
+data/real_if/extracted/
+data/real_if/inventories/*.csv

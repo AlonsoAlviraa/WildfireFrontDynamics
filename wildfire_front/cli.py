@@ -53,6 +53,8 @@ def run_geotiff_ingest(
     threshold: float | None,
     speed_config: GeometrySpeedConfig | None = None,
     mad_z: float | None = None,
+    respect_alpha: bool = False,
+    min_component_pixels: int = 1,
 ) -> dict[str, object]:
     result = ingest_geotiff_sequence(
         images,
@@ -63,6 +65,8 @@ def run_geotiff_ingest(
         band=band,
         threshold=threshold,
         mad_z=mad_z,
+        respect_alpha=respect_alpha,
+        min_component_pixels=min_component_pixels,
     )
     output.mkdir(parents=True, exist_ok=True)
     write_ingest_manifest(result.records, output / "ingest_manifest.csv")
@@ -105,6 +109,8 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--band", type=int, default=1)
     ingest.add_argument("--threshold", type=float)
     ingest.add_argument("--mad-z", type=float, help="Robust adaptive threshold using median absolute deviation")
+    ingest.add_argument("--respect-alpha", action="store_true", help="Ignore transparent pixels when thresholding RGBA GeoTIFFs")
+    ingest.add_argument("--min-component-pixels", type=int, default=1, help="Remove thresholded components smaller than this many pixels before vectorization")
     ingest.add_argument("--speed-sample-spacing-m", type=float, default=2.0)
     ingest.add_argument("--speed-max-normal-distance-m", type=float, default=100.0)
     ingest.add_argument("--speed-observability-ratio", type=float, default=2.0)
@@ -139,6 +145,8 @@ def main(argv: list[str] | None = None) -> None:
                     max_normal_to_nearest_ratio=args.speed_max_normal_to_nearest_ratio,
                 ),
                 args.mad_z,
+                args.respect_alpha,
+                args.min_component_pixels,
             )
         print(json.dumps({"output": str(args.output), "metrics": metrics}, indent=2))
     except ValueError as exc:

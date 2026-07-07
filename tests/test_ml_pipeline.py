@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import unittest
+import importlib.util
 from pathlib import Path
 
-import torch
+try:
+    import torch
+except ModuleNotFoundError:
+    torch = None  # type: ignore[assignment]
 
-from wildfire_front.ml.dataset import WildfireDataset
-from wildfire_front.ml.train import fine_tune_model
 from wildfire_front.models import FrontObservation
+
+HAS_SKLEARN = importlib.util.find_spec("sklearn") is not None
 
 
 class MLPipelineTests(unittest.TestCase):
@@ -18,7 +22,10 @@ class MLPipelineTests(unittest.TestCase):
         self.masks_dir = Path("data/candidates/semireal_controlled_001/masks")
         self.weights_path = Path("models/v3.pt")
 
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_wildfire_dataset_loading_and_shapes(self) -> None:
+        from wildfire_front.ml.dataset import WildfireDataset
+
         # Check that the dataset loads and extracts patches of size 30x30
         dataset = WildfireDataset(
             images_dir=self.images_dir,
@@ -44,7 +51,10 @@ class MLPipelineTests(unittest.TestCase):
         self.assertTrue(torch.is_tensor(current_fire))
         self.assertTrue(torch.is_tensor(target_fire))
 
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_fine_tuning_execution_one_epoch(self) -> None:
+        from wildfire_front.ml.train import fine_tune_model
+
         # Run fine-tuning for exactly one epoch on the semireal candidate
         output_weights = Path("outputs/test-ml-weights/fine_tuned.pt")
         if output_weights.exists():
@@ -68,6 +78,7 @@ class MLPipelineTests(unittest.TestCase):
             output_weights.unlink()
             output_weights.parent.rmdir()
 
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_cloud_train_build_parser(self) -> None:
         from wildfire_front.ml.cloud_train import build_parser
         parser = build_parser()
@@ -82,6 +93,7 @@ class MLPipelineTests(unittest.TestCase):
         self.assertEqual(args.weights, Path("weights_path"))
         self.assertEqual(args.output_weights, Path("out_path"))
 
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_cloud_train_execution_one_epoch_without_upload(self) -> None:
         from wildfire_front.ml.cloud_train import main as cloud_main
         output_weights = Path("outputs/test-ml-weights/cloud_fine_tuned.pt")
@@ -104,6 +116,7 @@ class MLPipelineTests(unittest.TestCase):
             output_weights.unlink()
             output_weights.parent.rmdir()
 
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_npz_wildfire_dataset(self) -> None:
         import tempfile
         import numpy as np
@@ -131,6 +144,7 @@ class MLPipelineTests(unittest.TestCase):
             self.assertEqual(curr.shape, (30, 30))
             self.assertEqual(target.shape, (30, 30))
 
+    @unittest.skipIf(not HAS_SKLEARN, "scikit-learn is not installed")
     def test_wildfire_meta_labeler(self) -> None:
         import numpy as np
         from wildfire_front.ml.meta_labeler import WildfireMetaLabeler

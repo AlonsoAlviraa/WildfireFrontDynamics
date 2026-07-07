@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import rasterio
 from affine import Affine
-from rasterio.features import shapes
+from rasterio.features import shapes, sieve
 
 from ..identity import build_observation_id, sha256_of_file
 from ..models import FrontObservation, MultiLine
@@ -53,6 +53,14 @@ def infer_timestamp(path: Path) -> str:
     """Infer UTC timestamp from common filenames without inventing one."""
 
     stem = path.stem
+    match = re.search(r"(20\d{2})[-_](\d{2})[-_](\d{2})[T_-](\d{2})[-_:](\d{2})[-_:](\d{2})[-_.](\d{3,6})", stem)
+    if match:
+        values = match.groups()
+        fraction = values[6].ljust(6, "0")[:6]
+        return (
+            f"{values[0]}-{values[1]}-{values[2]}T{values[3]}:{values[4]}:{values[5]}"
+            f".{fraction}Z"
+        )
     match = re.search(r"(20\d{2})(\d{2})(\d{2})[_-]?(\d{2})(\d{2})(\d{2})", stem)
     if match:
         values = match.groups()
@@ -83,13 +91,19 @@ def _has_georeferencing(dataset: rasterio.io.DatasetReader) -> bool:
     return dataset.crs is not None and dataset.transform != Affine.identity()
 
 
-def read_raster_band(path: Path, band: int) -> tuple[np.ndarray, dict[str, object]]:
+def read_raster_band(path: Path, band: int, *, respect_alpha: bool = False) -> tuple[np.ndarray, dict[str, object]]:
     """Read one native-dtype band and metadata without radiometric conversion."""
 
     with rasterio.open(path) as dataset:
         if band < 1 or band > dataset.count:
             raise ValueError(f"band {band} outside valid range 1..{dataset.count}")
         array = dataset.read(band)
+        valid_mask = None
+        valid_pixel_fraction = None
+        if respect_alpha and dataset.count >= 4:
+            alpha = dataset.read(4)
+            valid_mask = alpha > 0
+            valid_pixel_fraction = float(np.mean(valid_mask))
         metadata = {
             "width": dataset.width,
             "height": dataset.height,
@@ -100,31 +114,54 @@ def read_raster_band(path: Path, band: int) -> tuple[np.ndarray, dict[str, objec
             "resolution_m": _resolution_m(dataset),
             "coordinate_system": _coordinate_system(dataset.crs),
             "has_georeferencing": _has_georeferencing(dataset),
+            "valid_mask": valid_mask,
+            "valid_pixel_fraction": valid_pixel_fraction,
         }
     return array, metadata
 
 
-def segment_band_threshold(image: np.ndarray, threshold: float) -> np.ndarray:
+def _apply_valid_mask(mask: np.ndarray, valid_mask: np.ndarray | None) -> np.ndarray:
+    if valid_mask is None:
+        return np.asarray(mask, dtype=np.uint8)
+    if mask.shape != valid_mask.shape:
+        raise ValueError("valid mask dimensions must match image dimensions")
+    return np.asarray(mask & valid_mask, dtype=np.uint8)
+
+
+def segment_band_threshold(
+    image: np.ndarray,
+    threshold: float,
+    valid_mask: np.ndarray | None = None,
+) -> np.ndarray:
     """Deterministic hot-region candidate baseline; not a validated active front."""
 
     if not np.isfinite(threshold):
         raise ValueError("threshold must be finite")
-    return np.asarray(image > threshold, dtype=np.uint8)
+    return _apply_valid_mask(np.asarray(image > threshold), valid_mask)
 
 
-def segment_band_mad(image: np.ndarray, z_score: float = 6.0) -> tuple[np.ndarray, float]:
+def segment_band_mad(
+    image: np.ndarray,
+    z_score: float = 6.0,
+    valid_mask: np.ndarray | None = None,
+) -> tuple[np.ndarray, float]:
     """Robust adaptive hot-region baseline using median absolute deviation."""
 
     if not np.isfinite(z_score) or z_score <= 0:
         raise ValueError("z_score must be finite and positive")
-    finite = np.asarray(image, dtype=float)[np.isfinite(image)]
+    values = np.asarray(image, dtype=float)
+    if valid_mask is not None:
+        if values.shape != valid_mask.shape:
+            raise ValueError("valid mask dimensions must match image dimensions")
+        values = values[valid_mask]
+    finite = values[np.isfinite(values)]
     if finite.size == 0:
         raise ValueError("image has no finite pixels")
     median = float(np.median(finite))
     mad = float(np.median(np.abs(finite - median)))
     robust_sigma = 1.4826 * mad
     threshold = median + z_score * robust_sigma
-    return np.asarray(image > threshold, dtype=np.uint8), threshold
+    return _apply_valid_mask(np.asarray(image > threshold), valid_mask), threshold
 
 
 def read_binary_mask(path: Path) -> tuple[np.ndarray, dict[str, object]]:
@@ -209,6 +246,8 @@ def ingest_geotiff_sequence(
     band: int = 1,
     threshold: float | None = None,
     mad_z: float | None = None,
+    respect_alpha: bool = False,
+    min_component_pixels: int = 1,
 ) -> GeoTiffIngestResult:
     """Validate GeoTIFF inputs and convert accepted masks to observations."""
 
@@ -222,6 +261,8 @@ def ingest_geotiff_sequence(
         raise ValueError("threshold or mad_z is required when masks_dir is not provided")
     if threshold is not None and mad_z is not None:
         raise ValueError("threshold and mad_z are mutually exclusive")
+    if min_component_pixels < 1:
+        raise ValueError("min_component_pixels must be at least 1")
 
     image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
     if not image_paths:
@@ -247,7 +288,7 @@ def ingest_geotiff_sequence(
             continue
         seen_digests.add(digest)
         try:
-            image, image_meta = read_raster_band(image_path, band)
+            image, image_meta = read_raster_band(image_path, band, respect_alpha=respect_alpha)
         except Exception as exc:  # noqa: BLE001
             records.append(_record(image_path, mask_path, digest, observed_at, "rejected", f"image_read_error:{exc}", None, method))
             continue
@@ -277,11 +318,17 @@ def ingest_geotiff_sequence(
                 records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "mask_georeferencing_mismatch", image_meta, method))
                 continue
         else:
+            valid_mask = image_meta.get("valid_mask") if respect_alpha else None
+            if valid_mask is not None and not np.any(valid_mask):
+                records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "empty_alpha_mask", image_meta, method))
+                continue
             if threshold is not None:
-                binary_mask = segment_band_threshold(image, threshold)
+                binary_mask = segment_band_threshold(image, threshold, valid_mask if isinstance(valid_mask, np.ndarray) else None)
             else:
-                binary_mask, adaptive_threshold = segment_band_mad(image, float(mad_z))
+                binary_mask, adaptive_threshold = segment_band_mad(image, float(mad_z), valid_mask if isinstance(valid_mask, np.ndarray) else None)
                 method = f"band_{band}_mad_z_{mad_z}_threshold_{adaptive_threshold:.6g}"
+        if min_component_pixels > 1:
+            binary_mask = np.asarray(sieve(binary_mask, size=min_component_pixels, connectivity=8), dtype=np.uint8)
 
         positive_fraction = float(np.mean(binary_mask > 0))
         if positive_fraction == 0.0:
