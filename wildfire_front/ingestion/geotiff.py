@@ -10,7 +10,7 @@ import csv
 import math
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -53,13 +53,14 @@ def infer_timestamp(path: Path) -> str:
     """Infer UTC timestamp from common filenames without inventing one."""
 
     stem = path.stem
-    match = re.search(r"(20\d{2})[-_](\d{2})[-_](\d{2})[T_-](\d{2})[-_:](\d{2})[-_:](\d{2})[-_.](\d{3,6})", stem)
+    match = re.search(
+        r"(20\d{2})[-_](\d{2})[-_](\d{2})[T_-](\d{2})[-_:](\d{2})[-_:](\d{2})[-_.](\d{3,6})", stem
+    )
     if match:
         values = match.groups()
         fraction = values[6].ljust(6, "0")[:6]
         return (
-            f"{values[0]}-{values[1]}-{values[2]}T{values[3]}:{values[4]}:{values[5]}"
-            f".{fraction}Z"
+            f"{values[0]}-{values[1]}-{values[2]}T{values[3]}:{values[4]}:{values[5]}.{fraction}Z"
         )
     match = re.search(r"(20\d{2})(\d{2})(\d{2})[_-]?(\d{2})(\d{2})(\d{2})", stem)
     if match:
@@ -71,7 +72,9 @@ def infer_timestamp(path: Path) -> str:
         return f"{values[0]}-{values[1]}-{values[2]}T{values[3]}:{values[4]}:{values[5]}Z"
     match = re.search(r"(?:^|_)(\d{10})(?:_|$)", stem)
     if match:
-        return datetime.fromtimestamp(int(match.group(1)), tz=timezone.utc).isoformat().replace("+00:00", "Z")
+        return (
+            datetime.fromtimestamp(int(match.group(1)), tz=UTC).isoformat().replace("+00:00", "Z")
+        )
     return ""
 
 
@@ -91,7 +94,9 @@ def _has_georeferencing(dataset: rasterio.io.DatasetReader) -> bool:
     return dataset.crs is not None and dataset.transform != Affine.identity()
 
 
-def read_raster_band(path: Path, band: int, *, respect_alpha: bool = False) -> tuple[np.ndarray, dict[str, object]]:
+def read_raster_band(
+    path: Path, band: int, *, respect_alpha: bool = False
+) -> tuple[np.ndarray, dict[str, object]]:
     """Read one native-dtype band and metadata without radiometric conversion."""
 
     with rasterio.open(path) as dataset:
@@ -173,10 +178,16 @@ def extract_mask_components(mask: np.ndarray, transform: Affine) -> MultiLine:
     """Extract exterior rings in raster coordinates transformed to source CRS."""
 
     components: list[tuple[tuple[float, float], ...]] = []
-    for geometry, value in shapes(mask.astype(np.uint8), mask=mask.astype(bool), transform=transform):
+    for geometry, value in shapes(
+        mask.astype(np.uint8), mask=mask.astype(bool), transform=transform
+    ):
         if int(value) != 1:
             continue
-        polygons = geometry["coordinates"] if geometry["type"] == "MultiPolygon" else [geometry["coordinates"]]
+        polygons = (
+            geometry["coordinates"]
+            if geometry["type"] == "MultiPolygon"
+            else [geometry["coordinates"]]
+        )
         for polygon in polygons:
             exterior = tuple((float(x), float(y)) for x, y in polygon[0])
             if len(exterior) >= 4:
@@ -188,11 +199,15 @@ def _find_mask(image: Path, masks_dir: Path) -> Path | None:
     exact = masks_dir / image.name
     if exact.exists():
         return exact
-    matches = [path for path in masks_dir.glob(f"{image.stem}.*") if path.suffix.lower() in TIFF_EXTENSIONS]
+    matches = [
+        path for path in masks_dir.glob(f"{image.stem}.*") if path.suffix.lower() in TIFF_EXTENSIONS
+    ]
     if matches:
         return sorted(matches)[0]
     # Flexible fallback: match stem + suffix variants (e.g. image_stem_mask.tif)
-    matches = [path for path in masks_dir.glob(f"{image.stem}_*") if path.suffix.lower() in TIFF_EXTENSIONS]
+    matches = [
+        path for path in masks_dir.glob(f"{image.stem}_*") if path.suffix.lower() in TIFF_EXTENSIONS
+    ]
     return sorted(matches)[0] if matches else None
 
 
@@ -209,8 +224,13 @@ def _record(
     positive_pixel_fraction: float | None = None,
 ) -> GeoTiffIngestRecord:
     crs = str(metadata.get("crs") or "") if metadata else ""
-    coordinate_system = str(metadata.get("coordinate_system") or "unknown") if metadata else "unknown"
+    coordinate_system = (
+        str(metadata.get("coordinate_system") or "unknown") if metadata else "unknown"
+    )
     resolution = metadata.get("resolution_m") if metadata else None
+    resolution_float = float(resolution) if isinstance(resolution, (int, float)) else None
+    width_value = metadata.get("width") if metadata else None
+    height_value = metadata.get("height") if metadata else None
     return GeoTiffIngestRecord(
         source_path=str(source),
         mask_path=str(mask) if mask else "",
@@ -220,11 +240,11 @@ def _record(
         reason=reason,
         crs=crs,
         coordinate_system=coordinate_system,
-        resolution_m=float(resolution) if resolution is not None else None,
+        resolution_m=resolution_float,
         method=method,
         component_count=component_count,
-        width=int(metadata.get("width") or 0) if metadata else 0,
-        height=int(metadata.get("height") or 0) if metadata else 0,
+        width=int(width_value) if isinstance(width_value, int) else 0,
+        height=int(height_value) if isinstance(height_value, int) else 0,
         dtype=str(metadata.get("dtype") or "") if metadata else "",
         positive_pixel_fraction=positive_pixel_fraction,
     )
@@ -272,7 +292,9 @@ def materialize_lwir_masks(
     if not images_dir.is_dir():
         raise ValueError(f"images directory does not exist: {images_dir}")
 
-    image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
+    image_paths = sorted(
+        path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS
+    )
     if not image_paths:
         raise ValueError(f"no GeoTIFF images found in {images_dir}")
 
@@ -349,7 +371,9 @@ def ingest_geotiff_sequence(
     if persist_masks_dir is not None and masks_dir is not None:
         raise ValueError("persist_masks_dir is only valid when masks_dir is not provided")
 
-    image_paths = sorted(path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
+    image_paths = sorted(
+        path for path in images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS
+    )
     if not image_paths:
         raise ValueError(f"no GeoTIFF images found in {images_dir}")
 
@@ -366,51 +390,172 @@ def ingest_geotiff_sequence(
         method = (
             "provided_binary_mask"
             if masks_dir
-            else f"band_{band}_threshold_{threshold}" if threshold is not None else f"band_{band}_mad_z_{mad_z}"
+            else f"band_{band}_threshold_{threshold}"
+            if threshold is not None
+            else f"band_{band}_mad_z_{mad_z}"
         )
         if digest in seen_digests:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "duplicate_source_sha256", None, method))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "duplicate_source_sha256",
+                    None,
+                    method,
+                )
+            )
             continue
         seen_digests.add(digest)
         try:
             image, image_meta = read_raster_band(image_path, band, respect_alpha=respect_alpha)
         except Exception as exc:  # noqa: BLE001
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", f"image_read_error:{exc}", None, method))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    f"image_read_error:{exc}",
+                    None,
+                    method,
+                )
+            )
             continue
         if not image_meta["has_georeferencing"]:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "missing_crs_or_transform", image_meta, method))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "missing_crs_or_transform",
+                    image_meta,
+                    method,
+                )
+            )
             continue
         if image_meta["coordinate_system"] != "projected_metric":
-            records.append(_record(image_path, mask_path, digest, observed_at, "review", "crs_not_projected_metric", image_meta, method))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "review",
+                    "crs_not_projected_metric",
+                    image_meta,
+                    method,
+                )
+            )
             continue
         if not observed_at:
-            records.append(_record(image_path, mask_path, digest, observed_at, "review", "missing_timestamp", image_meta, method))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "review",
+                    "missing_timestamp",
+                    image_meta,
+                    method,
+                )
+            )
             continue
 
         if masks_dir:
             if mask_path is None:
-                records.append(_record(image_path, None, digest, observed_at, "rejected", "mask_not_found", image_meta, method))
+                records.append(
+                    _record(
+                        image_path,
+                        None,
+                        digest,
+                        observed_at,
+                        "rejected",
+                        "mask_not_found",
+                        image_meta,
+                        method,
+                    )
+                )
                 continue
             try:
                 binary_mask, mask_meta = read_binary_mask(mask_path)
             except Exception as exc:  # noqa: BLE001
-                records.append(_record(image_path, mask_path, digest, observed_at, "rejected", f"mask_read_error:{exc}", image_meta, method))
+                records.append(
+                    _record(
+                        image_path,
+                        mask_path,
+                        digest,
+                        observed_at,
+                        "rejected",
+                        f"mask_read_error:{exc}",
+                        image_meta,
+                        method,
+                    )
+                )
                 continue
-            if (image_meta["width"], image_meta["height"]) != (mask_meta["width"], mask_meta["height"]):
-                records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "mask_dimensions_mismatch", image_meta, method))
+            if (image_meta["width"], image_meta["height"]) != (
+                mask_meta["width"],
+                mask_meta["height"],
+            ):
+                records.append(
+                    _record(
+                        image_path,
+                        mask_path,
+                        digest,
+                        observed_at,
+                        "rejected",
+                        "mask_dimensions_mismatch",
+                        image_meta,
+                        method,
+                    )
+                )
                 continue
-            if image_meta["transform"] != mask_meta["transform"] or image_meta["crs"] != mask_meta["crs"]:
-                records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "mask_georeferencing_mismatch", image_meta, method))
+            if (
+                image_meta["transform"] != mask_meta["transform"]
+                or image_meta["crs"] != mask_meta["crs"]
+            ):
+                records.append(
+                    _record(
+                        image_path,
+                        mask_path,
+                        digest,
+                        observed_at,
+                        "rejected",
+                        "mask_georeferencing_mismatch",
+                        image_meta,
+                        method,
+                    )
+                )
                 continue
         else:
-            valid_mask = image_meta.get("valid_mask") if respect_alpha else None
+            valid_mask_obj = image_meta.get("valid_mask") if respect_alpha else None
+            valid_mask = valid_mask_obj if isinstance(valid_mask_obj, np.ndarray) else None
             if valid_mask is not None and not np.any(valid_mask):
-                records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "empty_alpha_mask", image_meta, method))
+                records.append(
+                    _record(
+                        image_path,
+                        mask_path,
+                        digest,
+                        observed_at,
+                        "rejected",
+                        "empty_alpha_mask",
+                        image_meta,
+                        method,
+                    )
+                )
                 continue
             if threshold is not None:
-                binary_mask = segment_band_threshold(image, threshold, valid_mask if isinstance(valid_mask, np.ndarray) else None)
+                binary_mask = segment_band_threshold(image, threshold, valid_mask)
             else:
-                binary_mask, adaptive_threshold = segment_band_mad(image, float(mad_z), valid_mask if isinstance(valid_mask, np.ndarray) else None)
+                binary_mask, adaptive_threshold = segment_band_mad(
+                    image, float(mad_z) if mad_z is not None else 6.0, valid_mask
+                )
                 method = f"band_{band}_mad_z_{mad_z}_threshold_{adaptive_threshold:.6g}"
             # Record the future on-disk mask path so it propagates into the manifest
             # even for records that are later rejected (the file is only written
@@ -418,30 +563,112 @@ def ingest_geotiff_sequence(
             if persist_masks_dir is not None:
                 mask_path = persist_masks_dir / f"{image_path.stem}{mask_suffix}"
         if min_component_pixels > 1:
-            binary_mask = np.asarray(sieve(binary_mask, size=min_component_pixels, connectivity=8), dtype=np.uint8)
+            binary_mask = np.asarray(
+                sieve(binary_mask, size=min_component_pixels, connectivity=8), dtype=np.uint8
+            )
 
         positive_fraction = float(np.mean(binary_mask > 0))
         if positive_fraction == 0.0:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "empty_mask", image_meta, method, positive_pixel_fraction=positive_fraction))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "empty_mask",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
         if positive_fraction >= 0.98:
-            records.append(_record(image_path, mask_path, digest, observed_at, "review", "near_full_mask", image_meta, method, positive_pixel_fraction=positive_fraction))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "review",
+                    "near_full_mask",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
-        components = extract_mask_components(binary_mask, image_meta["transform"])  # type: ignore[arg-type]
+        transform = image_meta["transform"]
+        assert isinstance(transform, Affine)
+        components = extract_mask_components(binary_mask, transform)
         if not components:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "no_exterior_components", image_meta, method, positive_pixel_fraction=positive_fraction))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "no_exterior_components",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
         if observed_at in seen_timestamps:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "duplicate_timestamp", image_meta, method, positive_pixel_fraction=positive_fraction))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "duplicate_timestamp",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
         if reference_crs is None:
             reference_crs = image_meta["crs"]
-            reference_resolution = float(image_meta["resolution_m"])  # type: ignore[arg-type]
+            resolution_value = image_meta["resolution_m"]
+            assert isinstance(resolution_value, float)
+            reference_resolution = resolution_value
         elif image_meta["crs"] != reference_crs:
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "sequence_crs_mismatch", image_meta, method, positive_pixel_fraction=positive_fraction))
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "sequence_crs_mismatch",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
-        elif not math.isclose(float(image_meta["resolution_m"]), float(reference_resolution), rel_tol=1e-6):  # type: ignore[arg-type]
-            records.append(_record(image_path, mask_path, digest, observed_at, "rejected", "sequence_resolution_mismatch", image_meta, method, positive_pixel_fraction=positive_fraction))
+        elif not math.isclose(
+            float(image_meta["resolution_m"]),  # type: ignore[arg-type]
+            float(reference_resolution or 0.0),
+            rel_tol=1e-6,
+        ):
+            records.append(
+                _record(
+                    image_path,
+                    mask_path,
+                    digest,
+                    observed_at,
+                    "rejected",
+                    "sequence_resolution_mismatch",
+                    image_meta,
+                    method,
+                    positive_pixel_fraction=positive_fraction,
+                )
+            )
             continue
         seen_timestamps.add(observed_at)
 
@@ -471,7 +698,20 @@ def ingest_geotiff_sequence(
         # can find a materialized GeoTIFF paired 1:1 with the source image.
         if persist_masks_dir is not None and mask_path is not None:
             write_binary_mask_geotiff(binary_mask, image_path, mask_path)
-        records.append(_record(image_path, mask_path, digest, observed_at, "accepted", "", image_meta, method, len(components), positive_fraction))
+        records.append(
+            _record(
+                image_path,
+                mask_path,
+                digest,
+                observed_at,
+                "accepted",
+                "",
+                image_meta,
+                method,
+                len(components),
+                positive_fraction,
+            )
+        )
 
     observations: list[FrontObservation] = []
     if candidates:
@@ -480,8 +720,6 @@ def ingest_geotiff_sequence(
         for observed_at, item in candidates:
             current = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
             observations.append(
-                FrontObservation(
-                    **{**asdict(item), "time_s": (current - start).total_seconds()}
-                )
+                FrontObservation(**{**asdict(item), "time_s": (current - start).total_seconds()})
             )
     return GeoTiffIngestResult(tuple(observations), tuple(records))

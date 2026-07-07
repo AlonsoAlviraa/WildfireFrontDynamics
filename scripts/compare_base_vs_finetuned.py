@@ -21,9 +21,9 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from models.model import A3C_PerCellModel_LSTM  # noqa: E402
 from wildfire_front.ml.dataset import WildfireDataset  # noqa: E402
 from wildfire_front.ml.weights import load_pretrained_weights  # noqa: E402
-from models.model import A3C_PerCellModel_LSTM  # noqa: E402
 
 
 def evaluate(model: torch.nn.Module, dataloader, device, label: str) -> dict:
@@ -57,10 +57,17 @@ def evaluate(model: torch.nn.Module, dataloader, device, label: str) -> dict:
                     predicted_spread += int(pred_label == 1)
                     target_spread += int(target_label == 1)
     acc = correct / total_cells if total_cells else 0.0
-    print(f"[{label}] neighbor-pairs={total_cells}  acc={acc:.3f}  "
-          f"pred_spread={predicted_spread}  target_spread={target_spread}")
-    return {"label": label, "acc": acc, "total": total_cells,
-            "pred_spread": predicted_spread, "target_spread": target_spread}
+    print(
+        f"[{label}] neighbor-pairs={total_cells}  acc={acc:.3f}  "
+        f"pred_spread={predicted_spread}  target_spread={target_spread}"
+    )
+    return {
+        "label": label,
+        "acc": acc,
+        "total": total_cells,
+        "pred_spread": predicted_spread,
+        "target_spread": target_spread,
+    }
 
 
 def main() -> int:
@@ -74,8 +81,9 @@ def main() -> int:
         print(f"ERROR: fine-tuned weights not found: {ft_weights}")
         return 1
 
-    dataset = WildfireDataset(images_dir, masks_dir, sequence_length=3,
-                              patch_size=30, max_patches=30)
+    dataset = WildfireDataset(
+        images_dir, masks_dir, sequence_length=3, patch_size=30, max_patches=30
+    )
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
     print(f"Dataset: {len(dataset)} patches from {images_dir.name}")

@@ -24,7 +24,9 @@ def rectangle(min_x: float, min_y: float, max_x: float, max_y: float) -> Line:
     )
 
 
-def observation(time_s: float, components: tuple[Line, ...], error_m: float = 0.1) -> FrontObservation:
+def observation(
+    time_s: float, components: tuple[Line, ...], error_m: float = 0.1
+) -> FrontObservation:
     return FrontObservation(
         observation_id=f"obs_{time_s}",
         event_id="geometry_test",
@@ -90,7 +92,9 @@ class GeometrySpeedTests(unittest.TestCase):
     def test_component_matching_is_one_to_one(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 10, 10), rectangle(100, 100, 110, 110)))
         current = observation(60.0, (rectangle(-1, -1, 11, 11), rectangle(101, 101, 111, 111)))
-        matches, missing_previous, missing_current = match_components(previous, current, GeometrySpeedConfig())
+        matches, missing_previous, missing_current = match_components(
+            previous, current, GeometrySpeedConfig()
+        )
         self.assertEqual(2, len(matches))
         self.assertFalse(missing_previous)
         self.assertFalse(missing_current)
@@ -101,7 +105,9 @@ class GeometrySpeedTests(unittest.TestCase):
         current = FrontObservation(**{**current.__dict__, "coordinate_system": "geographic"})
         result = estimate_geometry_speeds([previous, current])
         self.assertEqual(0, len(result.estimates))
-        self.assertIn("geometry speed requires projected metric coordinates", result.pair_abstentions)
+        self.assertIn(
+            "geometry speed requires projected metric coordinates", result.pair_abstentions
+        )
 
     def test_resampling_and_orientation_are_stable(self) -> None:
         ring = rectangle(0, 0, 20, 10)

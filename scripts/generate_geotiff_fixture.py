@@ -34,7 +34,11 @@ def main() -> None:
     masks = root / "masks"
     images.mkdir(parents=True)
     masks.mkdir()
-    for timestamp, radius in (("20260610_120000", 4), ("20260610_120100", 5), ("20260610_120200", 6)):
+    for timestamp, radius in (
+        ("20260610_120000", 4),
+        ("20260610_120100", 5),
+        ("20260610_120200", 6),
+    ):
         rows, cols = np.ogrid[:32, :32]
         candidate = (rows - 16) ** 2 + ((cols - 16) / 1.4) ** 2 <= radius**2
         image = np.zeros((2, 32, 32), dtype=np.uint16)
@@ -49,4 +53,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

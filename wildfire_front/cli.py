@@ -28,7 +28,7 @@ def run_demo(output: Path, seed: int, position_error_m: float) -> dict[str, obje
     observations = generate_observations(config)
     estimates = estimate_local_speeds(observations, config)
     xx, yy, arrival = reconstruct_arrival_grid(observations, config)
-    metrics = summarize(estimates, arrival)
+    metrics: dict[str, object] = dict(summarize(estimates, arrival))
     metrics["num_observations"] = len(observations)
     front_metrics = [
         front_distance_metrics(item.points, item.truth_points, sample_spacing=1.0)
@@ -88,18 +88,33 @@ def run_geotiff_ingest(
         **summarize_observation_quality(list(result.observations)),
         **summarize_geometry_speeds(speed_result),
     }
-    write_all(output, None, list(result.observations), list(speed_result.estimates), xx, yy, arrival, summary)
+    write_all(
+        output,
+        None,
+        list(result.observations),
+        list(speed_result.estimates),
+        xx,
+        yy,
+        arrival,
+        summary,
+    )
     return summary
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="wildfire-front", description="Wildfire Front Dynamics MVP")
+    parser = argparse.ArgumentParser(
+        prog="wildfire-front", description="Wildfire Front Dynamics MVP"
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     demo = commands.add_parser("demo", help="Run the synthetic end-to-end MVP")
     demo.add_argument("--output", type=Path, default=Path("outputs/demo"))
     demo.add_argument("--seed", type=int, default=7)
-    demo.add_argument("--position-error-m", type=float, default=0.6, help="One-sigma observation error in metres")
-    ingest = commands.add_parser("ingest-geotiff", help="Ingest georeferenced GeoTIFF images and masks")
+    demo.add_argument(
+        "--position-error-m", type=float, default=0.6, help="One-sigma observation error in metres"
+    )
+    ingest = commands.add_parser(
+        "ingest-geotiff", help="Ingest georeferenced GeoTIFF images and masks"
+    )
     ingest.add_argument("--images", type=Path, required=True)
     ingest.add_argument("--masks", type=Path)
     ingest.add_argument("--output", type=Path, default=Path("outputs/geotiff-demo"))
@@ -108,9 +123,20 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--estimated-error-m", type=float, required=True)
     ingest.add_argument("--band", type=int, default=1)
     ingest.add_argument("--threshold", type=float)
-    ingest.add_argument("--mad-z", type=float, help="Robust adaptive threshold using median absolute deviation")
-    ingest.add_argument("--respect-alpha", action="store_true", help="Ignore transparent pixels when thresholding RGBA GeoTIFFs")
-    ingest.add_argument("--min-component-pixels", type=int, default=1, help="Remove thresholded components smaller than this many pixels before vectorization")
+    ingest.add_argument(
+        "--mad-z", type=float, help="Robust adaptive threshold using median absolute deviation"
+    )
+    ingest.add_argument(
+        "--respect-alpha",
+        action="store_true",
+        help="Ignore transparent pixels when thresholding RGBA GeoTIFFs",
+    )
+    ingest.add_argument(
+        "--min-component-pixels",
+        type=int,
+        default=1,
+        help="Remove thresholded components smaller than this many pixels before vectorization",
+    )
     ingest.add_argument("--speed-sample-spacing-m", type=float, default=2.0)
     ingest.add_argument("--speed-max-normal-distance-m", type=float, default=100.0)
     ingest.add_argument("--speed-observability-ratio", type=float, default=2.0)

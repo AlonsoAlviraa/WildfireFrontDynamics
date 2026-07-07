@@ -48,16 +48,25 @@ def write_markdown_audit(summary: dict[str, object], output: Path) -> None:
         ("Rejected inputs", summary.get("rejected_inputs", 0)),
         ("Observation count", summary.get("observation_count", 0)),
         ("Median interval s", summary.get("interval_s_median", "unknown")),
-        ("Positive pixel fraction median", summary.get("positive_pixel_fraction_median", "unknown")),
+        (
+            "Positive pixel fraction median",
+            summary.get("positive_pixel_fraction_median", "unknown"),
+        ),
     ]
     if reference_available:
         metric_rows.extend(
             [
                 ("Independent references", summary.get("independent_reference_count", 0)),
                 ("Reference matches", summary.get("front_reference_match_count", 0)),
-                ("Mean front distance m", summary.get("reference_front_distance_mean_m", "unknown")),
+                (
+                    "Mean front distance m",
+                    summary.get("reference_front_distance_mean_m", "unknown"),
+                ),
                 ("P95 front distance m", summary.get("reference_front_distance_p95_m", "unknown")),
-                ("Hausdorff front distance m", summary.get("reference_front_hausdorff_m", "unknown")),
+                (
+                    "Hausdorff front distance m",
+                    summary.get("reference_front_hausdorff_m", "unknown"),
+                ),
             ]
         )
 
@@ -140,7 +149,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--images", type=Path, required=True)
     parser.add_argument("--masks", type=Path)
-    parser.add_argument("--annotations", type=Path, help="Independent front-reference masks matched by filename")
+    parser.add_argument(
+        "--annotations", type=Path, help="Independent front-reference masks matched by filename"
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--event-id", default="candidate_event")
     parser.add_argument("--sensor-id", required=True)

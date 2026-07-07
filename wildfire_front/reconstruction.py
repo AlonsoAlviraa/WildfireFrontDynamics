@@ -16,22 +16,24 @@ def estimate_local_speeds(
 
     estimates: list[SpeedEstimate] = []
     combined_error = math.sqrt(2.0) * config.position_error_m
-    for previous, current in zip(observations, observations[1:]):
+    for previous, current in zip(observations, observations[1:], strict=False):
         p0 = np.asarray(previous.points)
         p1 = np.asarray(current.points)
         if previous.truth_points is None or current.truth_points is None:
-            raise ValueError("radial speed estimator requires optional ground truth and is synthetic-only")
+            raise ValueError(
+                "radial speed estimator requires optional ground truth and is synthetic-only"
+            )
         t0 = np.asarray(previous.truth_points)
         t1 = np.asarray(current.truth_points)
         dt_min = (current.time_s - previous.time_s) / 60.0
         radii0 = np.linalg.norm(p0, axis=1)
         radii1 = np.linalg.norm(p1, axis=1)
         truth_displacement = np.linalg.norm(t1, axis=1) - np.linalg.norm(t0, axis=1)
-        for index, (start_radius, end_radius) in enumerate(zip(radii0, radii1)):
+        for index, (start_radius, end_radius) in enumerate(zip(radii0, radii1, strict=True)):
             displacement = float(end_radius - start_radius)
             observable = displacement > config.observability_ratio * combined_error
             speed = displacement / dt_min if observable else None
-            point = tuple(map(float, p1[index]))
+            point = (float(p1[index][0]), float(p1[index][1]))
             estimates.append(
                 SpeedEstimate(
                     time_start_s=previous.time_s,
@@ -43,7 +45,9 @@ def estimate_local_speeds(
                     truth_speed_m_min=float(truth_displacement[index] / dt_min),
                     uncertainty_m_min=combined_error / dt_min,
                     observable=observable,
-                    abstention_reason=None if observable else "movement_below_observability_threshold",
+                    abstention_reason=None
+                    if observable
+                    else "movement_below_observability_threshold",
                 )
             )
     return estimates
@@ -63,7 +67,7 @@ def estimate_observed_speeds(
     num_samples = getattr(config, "num_radial_samples", 36)
     estimates: list[SpeedEstimate] = []
     combined_error = math.sqrt(2.0) * config.position_error_m
-    for previous, current in zip(observations, observations[1:]):
+    for previous, current in zip(observations, observations[1:], strict=False):
         dt_min = (current.time_s - previous.time_s) / 60.0
         if dt_min <= 0:
             continue
@@ -91,7 +95,9 @@ def estimate_observed_speeds(
                     truth_speed_m_min=None,
                     uncertainty_m_min=combined_error / dt_min,
                     observable=observable,
-                    abstention_reason=None if observable else "movement_below_observability_threshold",
+                    abstention_reason=None
+                    if observable
+                    else "movement_below_observability_threshold",
                 )
             )
     return estimates
@@ -141,7 +147,9 @@ def reconstruct_arrival_grid(
         order = np.argsort(point_angles)
         sorted_angles = point_angles[order]
         sorted_radii = point_radii[order]
-        extended_angles = np.concatenate((sorted_angles - 2 * np.pi, sorted_angles, sorted_angles + 2 * np.pi))
+        extended_angles = np.concatenate(
+            (sorted_angles - 2 * np.pi, sorted_angles, sorted_angles + 2 * np.pi)
+        )
         extended_radii = np.tile(sorted_radii, 3)
         boundary = np.interp(angles.ravel(), extended_angles, extended_radii).reshape(angles.shape)
         inside = np.hypot(xx, yy) <= boundary
@@ -159,7 +167,11 @@ def reconstruct_arrival_from_components(
     if resolution <= 0:
         raise ValueError("resolution must be positive")
     all_points = np.vstack(
-        [np.asarray(component) for observation in observations for component in observation.components]
+        [
+            np.asarray(component)
+            for observation in observations
+            for component in observation.components
+        ]
     )
     min_x, min_y = np.min(all_points, axis=0) - resolution
     max_x, max_y = np.max(all_points, axis=0) + resolution
@@ -175,7 +187,9 @@ def reconstruct_arrival_from_components(
         ]
         if not geometries:
             continue
-        inside = rasterize(geometries, out_shape=arrival.shape, transform=transform, fill=0, default_value=1)
+        inside = rasterize(
+            geometries, out_shape=arrival.shape, transform=transform, fill=0, default_value=1
+        )
         arrival[np.isnan(arrival) & (inside == 1)] = observation.time_s
     xs = min_x + (np.arange(width) + 0.5) * resolution
     ys = max_y - (np.arange(height) + 0.5) * resolution
@@ -188,7 +202,7 @@ def summarize(estimates: list[SpeedEstimate], arrival: np.ndarray) -> dict[str, 
     errors = [
         abs(float(item.speed_m_min) - item.truth_speed_m_min)
         for item in observable
-        if item.truth_speed_m_min is not None
+        if item.speed_m_min is not None and item.truth_speed_m_min is not None
     ]
     result: dict[str, float | int] = {
         "num_speed_estimates": len(estimates),

@@ -8,18 +8,17 @@ Hugging Face Hub, avoiding local storage.
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from models.model import A3C_PerCellModel_LSTM
+
 from .dataset import WildfireDataset
 from .train import calculate_local_spread_loss
+from .types import LocalSpreadModel
 from .weights import load_pretrained_weights
 
 
@@ -39,7 +38,9 @@ def upload_to_huggingface(
         )
         return
 
-    print(f"Authenticating and uploading {local_file.name} to Hugging Face repository '{repo_id}'...")
+    print(
+        f"Authenticating and uploading {local_file.name} to Hugging Face repository '{repo_id}'..."
+    )
     try:
         api = HfApi()
         # Create repo if it doesn't exist
@@ -60,12 +61,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Cloud training and Hugging Face upload pipeline.")
     parser.add_argument("--images", type=Path, required=True, help="Path to images directory")
     parser.add_argument("--masks", type=Path, required=True, help="Path to masks directory")
-    parser.add_argument("--weights", type=Path, required=True, help="Path to pre-trained weights v3.pt")
-    parser.add_argument("--output-weights", type=Path, required=True, help="Where to save the fine-tuned weights")
+    parser.add_argument(
+        "--weights", type=Path, required=True, help="Path to pre-trained weights v3.pt"
+    )
+    parser.add_argument(
+        "--output-weights", type=Path, required=True, help="Where to save the fine-tuned weights"
+    )
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
     parser.add_argument("--hf-token", type=str, help="Hugging Face write token")
-    parser.add_argument("--hf-repo", type=str, help="Hugging Face repository name (e.g. username/repo-name)")
+    parser.add_argument(
+        "--hf-repo", type=str, help="Hugging Face repository name (e.g. username/repo-name)"
+    )
     return parser
 
 
@@ -80,7 +87,9 @@ def main(argv: list[str] | None = None) -> None:
     print(f"Dataset loaded. Total spatial sequence patches: {len(dataset)}")
 
     # 2. Setup model
-    model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
+    model: LocalSpreadModel = A3C_PerCellModel_LSTM(  # type: ignore[assignment]
+        in_channels=16, lstm_hidden=256, sequence_length=3
+    )
     print(f"Loading pre-trained weights from {args.weights}...")
     load_pretrained_weights(model, args.weights)
     model.to(device)
@@ -110,7 +119,7 @@ def main(argv: list[str] | None = None) -> None:
                 steps += 1
 
         avg_loss = epoch_loss / steps if steps > 0 else 0.0
-        print(f"Epoch {epoch+1}/{args.epochs} - Loss: {avg_loss:.6f}")
+        print(f"Epoch {epoch + 1}/{args.epochs} - Loss: {avg_loss:.6f}")
 
     # 4. Save local weights file
     args.output_weights.parent.mkdir(parents=True, exist_ok=True)

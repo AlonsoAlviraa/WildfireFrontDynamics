@@ -50,7 +50,13 @@ class DatasetCandidateAuditTests(unittest.TestCase):
         self.assertEqual("segmentation_only", classify_candidate(records, observation_count=1))
 
     def test_non_projected_candidate_is_segmentation_only(self) -> None:
-        records = [{"status": "review", "coordinate_system": "geographic", "reason": "crs_not_projected_metric"}]
+        records = [
+            {
+                "status": "review",
+                "coordinate_system": "geographic",
+                "reason": "crs_not_projected_metric",
+            }
+        ]
         self.assertEqual("segmentation_only", classify_candidate(records, observation_count=0))
 
     def test_unusable_candidate_is_rejected(self) -> None:

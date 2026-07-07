@@ -25,7 +25,9 @@ class EvaluationQualityTests(unittest.TestCase):
         self.assertAlmostEqual(0.0, metrics["front_hausdorff"])
 
     def test_shifted_front_distance_is_metric(self) -> None:
-        metrics = front_distance_metrics(rectangle(0, 0, 10, 10), rectangle(2, 0, 12, 10), sample_spacing=0.5)
+        metrics = front_distance_metrics(
+            rectangle(0, 0, 10, 10), rectangle(2, 0, 12, 10), sample_spacing=0.5
+        )
         self.assertGreater(metrics["front_distance_mean"], 0.0)
         self.assertAlmostEqual(2.0, metrics["front_hausdorff"], delta=0.05)
 
@@ -39,8 +41,12 @@ class EvaluationQualityTests(unittest.TestCase):
             "coordinate_system": "projected_metric",
             "resolution_m": 1.0,
         }
-        first = FrontObservation(observation_id="1", time_s=0, components=(rectangle(0, 0, 10, 10),), **common)
-        second = FrontObservation(observation_id="2", time_s=60, components=(rectangle(0, 0, 8, 8),), **common)
+        first = FrontObservation(
+            observation_id="1", time_s=0, components=(rectangle(0, 0, 10, 10),), **common
+        )
+        second = FrontObservation(
+            observation_id="2", time_s=60, components=(rectangle(0, 0, 8, 8),), **common
+        )
         summary = summarize_observation_quality([first, second])
         self.assertEqual(1, summary["observed_area_decrease_count"])
         self.assertEqual(60.0, summary["interval_s_median"])

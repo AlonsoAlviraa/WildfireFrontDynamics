@@ -61,7 +61,7 @@ def _normalize_band(band: np.ndarray) -> np.ndarray:
     lo, hi = float(finite.min()), float(finite.max())
     if hi <= lo:
         return np.zeros_like(band, dtype=np.uint8)
-    scaled = ((band - lo) / (hi - lo) * 255.0)
+    scaled = (band - lo) / (hi - lo) * 255.0
     scaled = np.nan_to_num(scaled, nan=0.0, posinf=255.0, neginf=0.0)
     return np.clip(scaled, 0, 255).astype(np.uint8)
 
@@ -81,14 +81,18 @@ def _make_thumbnail_rgb(geotiff_path: Path) -> tuple[np.ndarray, float, float, f
         thermal = dataset.read(1, out_shape=out_shape, masked=True)
         # Convert to float64 before filling so np.nan is valid (numpy >= 2.0).
         thermal_filled = thermal.astype(np.float64).filled(np.nan)
-        thermal_mean = float(np.nanmean(thermal_filled)) if np.isfinite(thermal_filled).any() else 0.0
+        thermal_mean = (
+            float(np.nanmean(thermal_filled)) if np.isfinite(thermal_filled).any() else 0.0
+        )
         thermal_std = float(np.nanstd(thermal_filled)) if np.isfinite(thermal_filled).any() else 0.0
 
         red = _normalize_band(thermal_filled)
 
         # Try to use band 2 as green for false-color, else reuse thermal
         if band_count >= 2:
-            green_data = dataset.read(2, out_shape=out_shape, masked=True).astype(np.float64).filled(np.nan)
+            green_data = (
+                dataset.read(2, out_shape=out_shape, masked=True).astype(np.float64).filled(np.nan)
+            )
             green = _normalize_band(green_data)
         else:
             green = red.copy()
@@ -144,7 +148,9 @@ def _add_border(rgb: np.ndarray, border_color: tuple[int, int, int]) -> np.ndarr
     out[:, :, 0] = border_color[0]
     out[:, :, 1] = border_color[1]
     out[:, :, 2] = border_color[2]
-    out[THUMBNAIL_BORDER_PX : THUMBNAIL_BORDER_PX + h, THUMBNAIL_BORDER_PX : THUMBNAIL_BORDER_PX + w] = rgb
+    out[
+        THUMBNAIL_BORDER_PX : THUMBNAIL_BORDER_PX + h, THUMBNAIL_BORDER_PX : THUMBNAIL_BORDER_PX + w
+    ] = rgb
     return out
 
 

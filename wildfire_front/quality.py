@@ -49,5 +49,7 @@ def summarize_observation_quality(observations: list[FrontObservation]) -> dict[
         "non_increasing_timestamp_count": int(np.sum(intervals <= 0)) if len(intervals) else 0,
         "observed_area_m2_first": float(areas[0]) if areas else None,
         "observed_area_m2_last": float(areas[-1]) if areas else None,
-        "observed_area_decrease_count": int(np.sum(area_differences < 0)) if len(area_differences) else 0,
+        "observed_area_decrease_count": int(np.sum(area_differences < 0))
+        if len(area_differences)
+        else 0,
     }

@@ -22,28 +22,50 @@ from pathlib import Path
 
 from wildfire_front.ingestion.geotiff import (
     ingest_geotiff_sequence,
-    write_ingest_manifest,
     materialize_lwir_masks,
+    write_ingest_manifest,
 )
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--images-dir", type=Path, required=True, help="Directory with source LWIR GeoTIFFs")
-    parser.add_argument("--output-dir", type=Path, required=True, help="Directory where *_mask.tif files are written")
-    parser.add_argument("--manifest", type=Path, default=None, help="Existing ingest manifest CSV to update (optional)")
-    parser.add_argument("--mad-z", type=float, default=3.5, help="MAD z-score threshold (default: 3.5)")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--images-dir", type=Path, required=True, help="Directory with source LWIR GeoTIFFs"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="Directory where *_mask.tif files are written",
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="Existing ingest manifest CSV to update (optional)",
+    )
+    parser.add_argument(
+        "--mad-z", type=float, default=3.5, help="MAD z-score threshold (default: 3.5)"
+    )
     parser.add_argument("--event-id", type=str, default="tobarra_2024")
     parser.add_argument("--sensor-id", type=str, default="lwir_thermal")
     parser.add_argument("--estimated-error-m", type=float, default=2.0)
-    parser.add_argument("--mode", choices=["ingest", "standalone"], default="ingest",
-                        help="ingest=re-run ingest with persist_masks_dir; standalone=just write masks")
+    parser.add_argument(
+        "--mode",
+        choices=["ingest", "standalone"],
+        default="ingest",
+        help="ingest=re-run ingest with persist_masks_dir; standalone=just write masks",
+    )
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.mode == "standalone":
-        succeeded, failed = materialize_lwir_masks(args.images_dir, args.output_dir, mad_z=args.mad_z)
+        succeeded, failed = materialize_lwir_masks(
+            args.images_dir, args.output_dir, mad_z=args.mad_z
+        )
         print(f"[standalone] masks written: {len(succeeded)}, failed: {len(failed)}")
         for src, reason in failed:
             print(f"  FAILED {src.name}: {reason}")

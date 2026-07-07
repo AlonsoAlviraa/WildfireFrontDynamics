@@ -18,15 +18,23 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from wildfire_front.real_if import build_frame_manifest, write_frame_manifest, write_manifest_summary
+from wildfire_front.real_if import (
+    build_frame_manifest,
+    write_frame_manifest,
+    write_manifest_summary,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Build a frame manifest from a raw real-if folder."
     )
-    parser.add_argument("--source", type=Path, required=True, help="Root of the extracted real-if folder")
-    parser.add_argument("--output-dir", type=Path, required=True, help="Directory to write manifest files")
+    parser.add_argument(
+        "--source", type=Path, required=True, help="Root of the extracted real-if folder"
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, required=True, help="Directory to write manifest files"
+    )
     parser.add_argument("--event-id", required=True, help="Event identifier for all rows")
     return parser
 
@@ -43,7 +51,9 @@ def main() -> None:
 
     print(f"Wrote {len(result.rows)} rows to {csv_path}")
     print(f"Wrote summary to {summary_path}")
-    print(f"QA: ok={result.summary['qa_ok']} review={result.summary['qa_review']} rejected={result.summary['qa_rejected']}")
+    print(
+        f"QA: ok={result.summary['qa_ok']} review={result.summary['qa_review']} rejected={result.summary['qa_rejected']}"
+    )
 
 
 if __name__ == "__main__":

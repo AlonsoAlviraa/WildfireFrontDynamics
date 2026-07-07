@@ -1,34 +1,82 @@
 # Wildfire Front Dynamics
 
-MVP reproducible para reconstruir la dinámica observada de un frente de incendio.
-Genera una quema sintética con verdad conocida, simula observaciones con error,
-reconstruye tiempos de llegada, estima velocidades locales y produce un informe
-visual auditable.
+[![CI](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/actions/workflows/ci.yml/badge.svg)](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
-También acepta secuencias GeoTIFF georreferenciadas y máscaras binarias para
-generar geometrías observadas, campos de llegada y estimaciones conservadoras
-de velocidad local sin inventar ground truth.
+> MVP reproducible y auditable para reconstruir la dinámica observada de un frente de incendio a partir de secuencias térmicas georreferenciadas (LWIR/GeoTIFF).
 
-## Inicio rápido
+## Overview
 
-```powershell
+El pipeline genera quemas sintéticas con verdad conocida, simula observaciones con error, reconstruye tiempos de llegada, estima velocidades locales y produce informes visuales auditables. También acepta secuencias GeoTIFF reales y máscaras binarias para generar geometrías observadas, campos de llegada y estimaciones conservadoras de velocidad local **sin inventar ground truth**.
+
+### Key Features
+
+- **Scientific rigor**: strict separation between `observed`, `inferred`, and `ground-truth` data (leak-free pipeline).
+- **SHA-256 traceability**: every artifact has content hashes for full reproducibility.
+- **Modular architecture**: ingestion → reconstruction → evaluation → ML, each independently testable.
+- **Adaptive segmentation**: MAD-based (Median Absolute Deviation) thermal thresholding for robust hotspot detection.
+- **Meta-labeler**: temporal consistency validation for reconstructed fire fronts.
+
+## Quick Start
+
+```bash
+# Install (editable, with dev tools)
+pip install -e ".[dev]"
+
+# Run the synthetic demo
 python -m wildfire_front demo --output outputs/demo
-python -m unittest discover -s tests -v
+
+# Run the test suite
+pytest tests/ -q
+
+# Open the report
+start outputs/demo/report.html      # Windows
+# open outputs/demo/report.html     # macOS
 ```
 
-Abrir después `outputs/demo/report.html`.
-
-Para ejecutar pruebas y demo en un único paso:
+### One-step MVP (Windows)
 
 ```powershell
 .\scripts\run_mvp.cmd
 ```
 
-Este comando genera tanto `outputs/demo/report.html` como
-`outputs/geotiff-demo/report.html`.
+Generates both `outputs/demo/report.html` and `outputs/geotiff-demo/report.html`.
 
-## Ingesta GeoTIFF
+## Installation
 
+### Prerequisites
+
+- Python ≥ 3.11
+- GDAL system libraries (for rasterio): `gdal-bin libgdal-dev` (Ubuntu) or [OSGeo4W](https://trac.osgeo.org/osgeo4w/) (Windows)
+
+### Setup
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate              # Windows
+# source .venv/bin/activate         # macOS/Linux
+pip install -e ".[dev]"
+
+# For ML experiments:
+pip install -e ".[ml]"
+
+# For everything:
+pip install -e ".[all]"
+```
+
+## Usage
+
+### Synthetic Demo
+
+```bash
+python -m wildfire_front demo --output outputs/demo
+```
+
+### GeoTIFF Ingest (Real Data)
+
+With pre-supplied masks:
 ```powershell
 python -m wildfire_front ingest-geotiff `
   --images data\sample\images `
@@ -39,21 +87,7 @@ python -m wildfire_front ingest-geotiff `
   --estimated-error-m 2.0
 ```
 
-Sin máscaras suministradas puede utilizarse el baseline determinista de umbral:
-
-```powershell
-python -m wildfire_front ingest-geotiff `
-  --images data\sample\images `
-  --threshold 350 `
-  --band 1 `
-  --output outputs\threshold-demo `
-  --sensor-id thermal_demo `
-  --estimated-error-m 2.0
-```
-
-También está disponible una segmentación adaptativa robusta basada en mediana y
-desviación absoluta mediana:
-
+Adaptive MAD-based segmentation (no masks needed):
 ```powershell
 python -m wildfire_front ingest-geotiff `
   --images data\sample\images `
@@ -63,52 +97,52 @@ python -m wildfire_front ingest-geotiff `
   --estimated-error-m 2.0
 ```
 
-La frontera de una máscara caliente se etiqueta como geometría candidata, no
-como frente de llama validado. El estimador no radial usa intersecciones con la
-normal exterior y se abstiene localmente cuando la geometría, incertidumbre o
-correspondencia no permiten defender el valor.
+### Batch Processing (Multiple Fires)
 
-## Salidas del MVP
-
-- `fronts.geojson`: frentes verdaderos y observados.
-- `observations_manifest.csv`: trazabilidad de observaciones y error declarado.
-- `ingest_manifest.csv`: aceptados, revisiones, rechazos y sus razones.
-- `arrival_time.csv`: campo rasterizado de tiempo de llegada.
-- `local_speeds.csv`: velocidad local, incertidumbre y abstenciones.
-- `summary.json`: métricas y configuración reproducible.
-- `fronts.svg`: visualización vectorial.
-- `report.html`: dashboard autocontenido.
-
-## Alcance
-
-Este MVP valida el núcleo geométrico con datos sintéticos y acepta el contrato
-GeoTIFF real. No es una herramienta operacional ni predice incendios reales.
-La velocidad no radial todavía requiere validación contra anotaciones
-independientes de una secuencia térmica real.
-
-Consulta [ESTUDIO_FIRE_FRONT_TRACKER.md](ESTUDIO_FIRE_FRONT_TRACKER.md),
-[AUDITORIA_DATASETS_MVP.md](AUDITORIA_DATASETS_MVP.md) y
-[docs/PROVENANCE.md](docs/PROVENANCE.md). La arquitectura está resumida en
-[docs/MVP_ARCHITECTURE.md](docs/MVP_ARCHITECTURE.md).
-
-El contrato de entrada está en
-[docs/GEOTIFF_INPUT_CONTRACT.md](docs/GEOTIFF_INPUT_CONTRACT.md).
-
-El método, sus gates de calidad y sus límites están en
-[docs/SCIENTIFIC_CORE.md](docs/SCIENTIFIC_CORE.md).
-
-El siguiente hito centrado en datos y validación está en
-[docs/NEXT_DATA_VALIDATION_MILESTONE.md](docs/NEXT_DATA_VALIDATION_MILESTONE.md).
-
-Para repetir el sprint local de validación de datos:
-
-```powershell
-python scripts\run_data_validation_sprint.py
+```bash
+python scripts/batch_process_fires.py
 ```
 
-Este sprint regenera `semireal_controlled_001`, audita el candidato, ejecuta el
-pipeline GeoTIFF, verifica las políticas científicas mínimas y lanza la suite de
-tests.
+Processes all organized wildfire sequences: reprojection → ingest → mask materialization → audit.
 
-El prompt ejecutable para el siguiente hito está en
-[docs/PROMPT_NEXT_MILESTONE.md](docs/PROMPT_NEXT_MILESTONE.md).
+## Outputs
+
+| File | Description |
+|------|-------------|
+| `fronts.geojson` | True and observed fire fronts |
+| `observations_manifest.csv` | Observation traceability with declared error |
+| `ingest_manifest.csv` | Accepted/reviewed/rejected records with reasons |
+| `arrival_time.csv` | Rasterized arrival time field |
+| `local_speeds.csv` | Local speed, uncertainty, and abstentions |
+| `summary.json` | Metrics and reproducible configuration |
+| `fronts.svg` | Vector visualization |
+| `report.html` | Self-contained dashboard |
+
+## Development
+
+```bash
+make verify    # lint + typecheck + test
+make help      # see all targets
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/MVP_ARCHITECTURE.md](docs/MVP_ARCHITECTURE.md) | Architecture overview |
+| [docs/SCIENTIFIC_CORE.md](docs/SCIENTIFIC_CORE.md) | Scientific method, quality gates, and limits |
+| [docs/GEOTIFF_INPUT_CONTRACT.md](docs/GEOTIFF_INPUT_CONTRACT.md) | GeoTIFF input specification |
+| [docs/PROVENANCE.md](docs/PROVENANCE.md) | Data provenance and traceability |
+| [docs/REPO_ANALYSIS.md](docs/REPO_ANALYSIS.md) | Repository analysis and improvement areas |
+| [docs/RUNBOOK_NEW_FIRES.md](docs/RUNBOOK_NEW_FIRES.md) | Protocol for ingesting new fires |
+| [docs/MEGA_SPRINT_PLAN.md](docs/MEGA_SPRINT_PLAN.md) | Sprint plan and roadmap |
+
+## Project Status
+
+This MVP validates the geometric core with synthetic data and accepts the real GeoTIFF contract. It is **not** an operational tool and does not predict real wildfires. Non-radial speed estimation still requires validation against independent annotations from a real thermal sequence.
+
+## License
+
+[MIT](LICENSE) — © 2026 Alonso Alviraa

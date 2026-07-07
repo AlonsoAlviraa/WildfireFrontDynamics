@@ -33,7 +33,9 @@ class ScenarioConfig:
         if min(self.initial_radius_m, self.east_speed_m_min, self.north_speed_m_min) <= 0:
             raise ValueError("radius and speeds must be positive")
         if self.position_error_m < 0 or self.grid_resolution_m <= 0:
-            raise ValueError("position_error_m cannot be negative and grid_resolution_m must be positive")
+            raise ValueError(
+                "position_error_m cannot be negative and grid_resolution_m must be positive"
+            )
         if self.observability_ratio <= 0:
             raise ValueError("observability_ratio must be positive")
 

@@ -6,21 +6,21 @@ gradient descent using binary cross-entropy on local neighbor transitions.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from models.model import A3C_PerCellModel_LSTM
+
 from .dataset import WildfireDataset
+from .types import LocalSpreadModel
 from .weights import load_pretrained_weights
 
 
 def calculate_local_spread_loss(
-    model: nn.Module,
+    model: LocalSpreadModel,
     features: torch.Tensor,
     current_fire: torch.Tensor,
     target_fire: torch.Tensor,
@@ -75,12 +75,16 @@ def fine_tune_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 1. Initialize dataset and dataloader (batch size must be 1 due to model assertions)
-    dataset = WildfireDataset(images_dir, masks_dir, sequence_length=3, patch_size=30, max_patches=max_patches)
+    dataset = WildfireDataset(
+        images_dir, masks_dir, sequence_length=3, patch_size=30, max_patches=max_patches
+    )
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     # 2. Load model and restore pre-trained weights
-    model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
-    
+    model: LocalSpreadModel = A3C_PerCellModel_LSTM(  # type: ignore[assignment]
+        in_channels=16, lstm_hidden=256, sequence_length=3
+    )
+
     print(f"Loading pre-trained weights from {weights_path}...")
     load_pretrained_weights(model, weights_path)
     model.to(device)

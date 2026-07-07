@@ -19,14 +19,18 @@ def point_to_segments_distance(points: np.ndarray, component: Line) -> np.ndarra
     offsets = points[:, None, :] - starts[None, :, :]
     projections = np.zeros((len(points), len(starts)))
     valid = lengths_sq > 1e-12
-    projections[:, valid] = np.sum(offsets[:, valid, :] * segments[None, valid, :], axis=2) / lengths_sq[valid]
+    projections[:, valid] = (
+        np.sum(offsets[:, valid, :] * segments[None, valid, :], axis=2) / lengths_sq[valid]
+    )
     projections = np.clip(projections, 0.0, 1.0)
     nearest = starts[None, :, :] + projections[:, :, None] * segments[None, :, :]
     distances = np.linalg.norm(points[:, None, :] - nearest, axis=2)
     return np.min(distances, axis=1)
 
 
-def front_distance_metrics(observed: Line, reference: Line, sample_spacing: float = 1.0) -> dict[str, float]:
+def front_distance_metrics(
+    observed: Line, reference: Line, sample_spacing: float = 1.0
+) -> dict[str, float]:
     observed_samples = resample_closed_component(observed, sample_spacing)
     reference_samples = resample_closed_component(reference, sample_spacing)
     observed_to_reference = point_to_segments_distance(observed_samples, reference)

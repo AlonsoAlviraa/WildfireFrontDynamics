@@ -38,8 +38,16 @@ n = len(all_tfrecord_files)
 if n < 4:
     raise SystemExit(f"Need at least 4 TFRecord shards for a leak-free 3-way split, found {n}")
 
-train_cut = max(12, int(n * 0.80))          # ~80% train
-val_cut = min(n - 1, train_cut + max(2, int(n * 0.10)))  # ~10% val, keep >=1 for test
+# Robust leak-free 3-way split: guarantee train>=4, val>=1, test>=1 even when
+# the shard count is small (n<15). The old `max(12, ...)` forced train_cut=12
+# for any n<15, which silently collapsed val to EMPTY (a data-leak / no-val bug).
+train_cut = max(4, int(round(n * 0.80)))                       # ~80% train, min 4
+val_cut = min(n - 1, train_cut + max(1, int(round(n * 0.10))))  # ~10% val, keep >=1 for test
+if not (train_cut >= 4 and val_cut > train_cut and val_cut < n):
+    raise SystemExit(
+        f"Cannot build leak-free 3-way split from {n} shards: "
+        f"train_cut={train_cut}, val_cut={val_cut}. Need more shards."
+    )
 
 if args.split == "train":
     tfrecord_files = all_tfrecord_files[:train_cut]

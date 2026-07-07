@@ -43,7 +43,9 @@ class PipelineTests(unittest.TestCase):
         high_error = ScenarioConfig(position_error_m=3.0)
         low = estimate_local_speeds(generate_observations(low_error), low_error)
         high = estimate_local_speeds(generate_observations(high_error), high_error)
-        self.assertGreater(sum(item.observable for item in low), sum(item.observable for item in high))
+        self.assertGreater(
+            sum(item.observable for item in low), sum(item.observable for item in high)
+        )
 
     def test_invalid_config_is_rejected(self) -> None:
         with self.assertRaises(ValueError):

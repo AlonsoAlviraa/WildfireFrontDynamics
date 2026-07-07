@@ -28,7 +28,9 @@ def sha256_of_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def build_observation_id(event_id: str, sensor_id: str, observed_at: str, source_sha256: str = "") -> str:
+def build_observation_id(
+    event_id: str, sensor_id: str, observed_at: str, source_sha256: str = ""
+) -> str:
     """Build a stable, portable observation identifier."""
 
     event = _slugify(event_id, "unknown_event")

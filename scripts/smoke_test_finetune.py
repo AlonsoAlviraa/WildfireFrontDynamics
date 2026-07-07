@@ -25,21 +25,30 @@ from wildfire_front.ml.train import fine_tune_model  # noqa: E402
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--images-dir", type=Path,
-                        default=ROOT / "artifacts" / "tobarra_reprojected_lwir")
-    parser.add_argument("--masks-dir", type=Path,
-                        default=ROOT / "artifacts" / "tobarra_lwir_masks")
-    parser.add_argument("--weights", type=Path,
-                        default=ROOT / "models" / "v3.pt",
-                        help="Pre-trained base weights")
-    parser.add_argument("--output", type=Path,
-                        default=ROOT / "models" / "tobarra_finetuned.pt",
-                        help="Where to save fine-tuned weights")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--images-dir", type=Path, default=ROOT / "artifacts" / "tobarra_reprojected_lwir"
+    )
+    parser.add_argument("--masks-dir", type=Path, default=ROOT / "artifacts" / "tobarra_lwir_masks")
+    parser.add_argument(
+        "--weights", type=Path, default=ROOT / "models" / "v3.pt", help="Pre-trained base weights"
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=ROOT / "models" / "tobarra_finetuned.pt",
+        help="Where to save fine-tuned weights",
+    )
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--lr", type=float, default=1e-4)
-    parser.add_argument("--max-patches", type=int, default=50,
-                        help="Cap number of patches for fast CPU smoke tests (default: 50)")
+    parser.add_argument(
+        "--max-patches",
+        type=int,
+        default=50,
+        help="Cap number of patches for fast CPU smoke tests (default: 50)",
+    )
     args = parser.parse_args()
 
     print("=" * 60)

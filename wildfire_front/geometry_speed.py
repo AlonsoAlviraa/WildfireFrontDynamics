@@ -105,7 +105,9 @@ def _cross_2d(left: np.ndarray, right: np.ndarray) -> np.ndarray:
     return left[..., 0] * right[..., 1] - left[..., 1] * right[..., 0]
 
 
-def normal_ray_distance(point: np.ndarray, normal: np.ndarray, target: Line, max_distance_m: float) -> float | None:
+def normal_ray_distance(
+    point: np.ndarray, normal: np.ndarray, target: Line, max_distance_m: float
+) -> float | None:
     """Return nearest forward ray intersection with a target closed ring."""
 
     target_points = _open_ring(target)
@@ -117,8 +119,13 @@ def normal_ray_distance(point: np.ndarray, normal: np.ndarray, target: Line, max
     offsets = starts - point
     ray_t = np.full(len(segments), np.nan)
     segment_u = np.full(len(segments), np.nan)
-    ray_t[non_parallel] = _cross_2d(offsets[non_parallel], segments[non_parallel]) / denominators[non_parallel]
-    segment_u[non_parallel] = _cross_2d(offsets[non_parallel], np.broadcast_to(normal, segments.shape)[non_parallel]) / denominators[non_parallel]
+    ray_t[non_parallel] = (
+        _cross_2d(offsets[non_parallel], segments[non_parallel]) / denominators[non_parallel]
+    )
+    segment_u[non_parallel] = (
+        _cross_2d(offsets[non_parallel], np.broadcast_to(normal, segments.shape)[non_parallel])
+        / denominators[non_parallel]
+    )
     valid = (
         non_parallel
         & (ray_t >= 0.0)
@@ -178,7 +185,10 @@ def match_components(
 def _validate_observation_pair(previous: FrontObservation, current: FrontObservation) -> float:
     previous.validate()
     current.validate()
-    if previous.coordinate_system != "projected_metric" or current.coordinate_system != "projected_metric":
+    if (
+        previous.coordinate_system != "projected_metric"
+        or current.coordinate_system != "projected_metric"
+    ):
         raise ValueError("geometry speed requires projected metric coordinates")
     if not previous.crs or previous.crs != current.crs:
         raise ValueError("geometry speed requires matching non-empty CRS")
@@ -201,7 +211,7 @@ def estimate_geometry_speeds(
     matched_pairs = 0
     unmatched_previous_total = 0
     unmatched_current_total = 0
-    for previous, current in zip(observations, observations[1:]):
+    for previous, current in zip(observations, observations[1:], strict=False):
         try:
             dt_min = _validate_observation_pair(previous, current)
         except ValueError as exc:
@@ -228,15 +238,17 @@ def estimate_geometry_speeds(
             turn_angles = local_turn_angles(sampled)
             distances = [
                 normal_ray_distance(point, normal, current_component, config.max_normal_distance_m)
-                for point, normal in zip(sampled, normals)
+                for point, normal in zip(sampled, normals, strict=True)
             ]
-            nearest_distances = [nearest_boundary_distance(point, current_component) for point in sampled]
+            nearest_distances = [
+                nearest_boundary_distance(point, current_component) for point in sampled
+            ]
             valid_count = sum(distance is not None for distance in distances)
             valid_fraction = valid_count / len(distances)
             if valid_fraction < config.min_valid_fraction:
                 pair_abstentions.append("insufficient_normal_intersections")
             for point, normal, distance, nearest_distance, turn_angle in zip(
-                sampled, normals, distances, nearest_distances, turn_angles
+                sampled, normals, distances, nearest_distances, turn_angles, strict=True
             ):
                 angle_deg = float((math.degrees(math.atan2(normal[1], normal[0])) + 360.0) % 360.0)
                 reason: str | None = None
@@ -290,7 +302,9 @@ def estimate_geometry_speeds(
 
 
 def summarize_geometry_speeds(result: GeometrySpeedResult) -> dict[str, object]:
-    observable = [item for item in result.estimates if item.observable and item.speed_m_min is not None]
+    observable = [
+        item for item in result.estimates if item.observable and item.speed_m_min is not None
+    ]
     speeds = np.asarray([item.speed_m_min for item in observable], dtype=float)
     reasons: dict[str, int] = {}
     for item in result.estimates:

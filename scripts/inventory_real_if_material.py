@@ -12,9 +12,8 @@ import csv
 import hashlib
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".heic"}
 GIS_EXTENSIONS = {".shp", ".kml", ".kmz", ".gpx", ".geojson", ".gpkg", ".prj", ".dbf", ".shx"}
@@ -65,7 +64,10 @@ def infer_event_id(path: Path, root: Path) -> str:
 def infer_timestamp(path: Path) -> tuple[str, str]:
     text = " ".join([path.stem, *path.parts])
     patterns = [
-        (r"(20\d{2})[-_](\d{2})[-_](\d{2})[T _-](\d{2})[-_:](\d{2})[-_:](\d{2})[-_.](\d{3,6})", "exact"),
+        (
+            r"(20\d{2})[-_](\d{2})[-_](\d{2})[T _-](\d{2})[-_:](\d{2})[-_:](\d{2})[-_.](\d{3,6})",
+            "exact",
+        ),
         (r"(20\d{2})(\d{2})(\d{2})[_-]?(\d{2})(\d{2})(\d{2})", "exact"),
         (r"(20\d{2})[-_](\d{2})[-_](\d{2})[T _-](\d{2})[-_:](\d{2})[-_:](\d{2})", "exact"),
         (r"(20\d{2})(\d{2})(\d{2})", "date_only"),
@@ -90,10 +92,10 @@ def infer_timestamp(path: Path) -> tuple[str, str]:
                     int(values[4]),
                     int(values[5]),
                     microsecond,
-                    tzinfo=timezone.utc,
+                    tzinfo=UTC,
                 )
             else:
-                dt = datetime(int(values[0]), int(values[1]), int(values[2]), tzinfo=timezone.utc)
+                dt = datetime(int(values[0]), int(values[1]), int(values[2]), tzinfo=UTC)
         except ValueError:
             continue
         return dt.isoformat().replace("+00:00", "Z"), quality
@@ -106,11 +108,19 @@ def classify_file(path: Path) -> tuple[str, str, str]:
     if suffix in IMAGE_EXTENSIONS:
         return "image", "observation", "check EXIF or surrounding folder for timestamp/location"
     if suffix in GIS_EXTENSIONS:
-        return "geospatial", "validation", "inspect CRS and whether it is perimeter, track or reference layer"
+        return (
+            "geospatial",
+            "validation",
+            "inspect CRS and whether it is perimeter, track or reference layer",
+        )
     if suffix in TABLE_EXTENSIONS:
         if any(token in name for token in ("meteo", "weather", "viento", "humedad", "temperatura")):
             return "meteo", "weather", "synchronize station/time resolution with event"
-        return "table", "context", "inspect columns for timestamps, coordinates or operational records"
+        return (
+            "table",
+            "context",
+            "inspect columns for timestamps, coordinates or operational records",
+        )
     if suffix in DOC_EXTENSIONS:
         if any(token in name for token in ("plan", "parte", "informe", "operativo", "acta")):
             return "planning", "context", "extract event timeline and operational notes"
@@ -157,7 +167,9 @@ def write_inventory(records: list[FileInventoryRecord], output: Path) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Create a traceable inventory of real wildfire source material.")
+    parser = argparse.ArgumentParser(
+        description="Create a traceable inventory of real wildfire source material."
+    )
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser

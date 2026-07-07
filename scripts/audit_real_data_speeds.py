@@ -11,7 +11,7 @@ import argparse
 import csv
 import json
 import statistics
-from pathlib import Path>
+from pathlib import Path
 
 from wildfire_front.models import ScenarioConfig
 
@@ -68,19 +68,31 @@ def audit_observed_speeds(
     # Persist per-angle speed estimates
     with (output / "observed_speeds.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow([
-            "time_start_s", "time_end_s", "angle_deg", "displacement_m",
-            "speed_m_min", "uncertainty_m_min", "observable", "abstention_reason",
-        ])
+        writer.writerow(
+            [
+                "time_start_s",
+                "time_end_s",
+                "angle_deg",
+                "displacement_m",
+                "speed_m_min",
+                "uncertainty_m_min",
+                "observable",
+                "abstention_reason",
+            ]
+        )
         for est in estimates:
-            writer.writerow([
-                est.time_start_s, est.time_end_s, round(est.angle_deg, 1),
-                round(est.displacement_m, 3),
-                None if est.speed_m_min is None else round(est.speed_m_min, 4),
-                round(est.uncertainty_m_min, 4),
-                est.observable,
-                est.abstention_reason,
-            ])
+            writer.writerow(
+                [
+                    est.time_start_s,
+                    est.time_end_s,
+                    round(est.angle_deg, 1),
+                    round(est.displacement_m, 3),
+                    None if est.speed_m_min is None else round(est.speed_m_min, 4),
+                    round(est.uncertainty_m_min, 4),
+                    est.observable,
+                    est.abstention_reason,
+                ]
+            )
 
     observable = [e for e in estimates if e.observable and e.speed_m_min is not None]
     speeds = [float(e.speed_m_min) for e in observable]  # type: ignore[arg-type]
@@ -89,8 +101,12 @@ def audit_observed_speeds(
     MAX_PLAUSIBLE_SPEED_M_MIN = 120.0  # ~7.2 km/h, extreme spotting excluded
     MIN_PLAUSIBLE_SPEED_M_MIN = 0.1
 
-    plausible = [s for s in speeds if MIN_PLAUSIBLE_SPEED_M_MIN <= abs(s) <= MAX_PLAUSIBLE_SPEED_M_MIN]
-    implausible = [s for s in speeds if not (MIN_PLAUSIBLE_SPEED_M_MIN <= abs(s) <= MAX_PLAUSIBLE_SPEED_M_MIN)]
+    plausible = [
+        s for s in speeds if MIN_PLAUSIBLE_SPEED_M_MIN <= abs(s) <= MAX_PLAUSIBLE_SPEED_M_MIN
+    ]
+    implausible = [
+        s for s in speeds if not (MIN_PLAUSIBLE_SPEED_M_MIN <= abs(s) <= MAX_PLAUSIBLE_SPEED_M_MIN)
+    ]
 
     median_speed = statistics.median(speeds) if speeds else None
     mean_speed = statistics.fmean(speeds) if speeds else None

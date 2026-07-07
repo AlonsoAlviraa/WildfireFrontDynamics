@@ -19,8 +19,12 @@ from pathlib import Path
 
 import torch
 
+from .types import LocalSpreadModel
 
-def load_pretrained_weights(model: torch.nn.Module, weights_path: Path) -> dict[str, object]:
+
+def load_pretrained_weights(
+    model: LocalSpreadModel | torch.nn.Module, weights_path: Path
+) -> dict[str, object]:
     """Load weights into ``model`` with backward-compatible key remapping.
 
     Returns a dict with ``"missing"``, ``"unexpected"``, and ``"shape_mismatch"``
@@ -40,7 +44,7 @@ def load_pretrained_weights(model: torch.nn.Module, weights_path: Path) -> dict[
     for key, value in state_dict.items():
         new_key = key
         if key.startswith("upsample."):
-            new_key = "temporal_projection." + key[len("upsample."):]
+            new_key = "temporal_projection." + key[len("upsample.") :]
 
         if new_key in model_state:
             if model_state[new_key].shape != value.shape:

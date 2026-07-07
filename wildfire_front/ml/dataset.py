@@ -7,7 +7,6 @@ for the A3C-LSTM architecture.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +14,7 @@ import rasterio
 import torch
 from torch.utils.data import Dataset
 
-from ..ingestion.geotiff import TIFF_EXTENSIONS, _find_mask, read_raster_band, infer_timestamp
+from ..ingestion.geotiff import TIFF_EXTENSIONS, _find_mask, infer_timestamp
 
 
 class WildfireDataset(Dataset):
@@ -71,7 +70,9 @@ class WildfireDataset(Dataset):
         }
 
         # Identify and match all image and mask pairs
-        image_paths = sorted(path for path in self.images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS)
+        image_paths = sorted(
+            path for path in self.images_dir.iterdir() if path.suffix.lower() in TIFF_EXTENSIONS
+        )
         self.samples: list[tuple[Path, Path, str]] = []
         for img_path in image_paths:
             mask_path = _find_mask(img_path, self.masks_dir)
@@ -90,7 +91,7 @@ class WildfireDataset(Dataset):
         # shift between captures), so we crop everything to the smallest
         # height/width across the sequence.
         raw_shapes: list[tuple[int, int]] = []
-        for img_path, mask_path, _ in self.samples:
+        for _img_path, mask_path, _ in self.samples:
             with rasterio.open(mask_path) as src:
                 raw_shapes.append((src.height, src.width))
         self.height = min(h for h, _ in raw_shapes)
@@ -104,7 +105,7 @@ class WildfireDataset(Dataset):
 
         # Cache masks in memory to avoid thousands of rasterio.open calls.
         self._mask_cache: list[np.ndarray] = []
-        for img_path, mask_path, _ in self.samples:
+        for _img_path, mask_path, _ in self.samples:
             with rasterio.open(mask_path) as src:
                 full = src.read(1).astype(np.uint8)
             self._mask_cache.append(full[: self.height, : self.width])
@@ -125,7 +126,7 @@ class WildfireDataset(Dataset):
                 aspect = np.arctan2(-dy, dx)
                 return slope, aspect
         # Synthesize a smooth gradient slope and aspect
-        y, x = np.mgrid[:self.height, :self.width]
+        y, x = np.mgrid[: self.height, : self.width]
         slope = (x / self.width) * 0.1
         aspect = (y / self.height) * 2 * np.pi
         return slope, aspect
@@ -234,14 +235,16 @@ class WildfireDataset(Dataset):
             for row in range(0, self.height - self.patch_size + 1, half):
                 for col in range(0, self.width - self.patch_size + 1, half):
                     # Quick check: Is there fire active in the target patch?
-                    patch = target_mask[row:row + self.patch_size, col:col + self.patch_size]
+                    patch = target_mask[row : row + self.patch_size, col : col + self.patch_size]
                     if patch.sum() > 0:
-                        patches.append({
-                            "start_idx": i,
-                            "target_idx": target_idx,
-                            "row": row,
-                            "col": col,
-                        })
+                        patches.append(
+                            {
+                                "start_idx": i,
+                                "target_idx": target_idx,
+                                "row": row,
+                                "col": col,
+                            }
+                        )
                     if self.max_patches is not None and len(patches) >= self.max_patches:
                         return patches
         return patches
@@ -258,23 +261,22 @@ class WildfireDataset(Dataset):
 
         # 1. Build the input sequence of shape (seq_len, 16, patch_size, patch_size)
         sequence_data = np.zeros(
-            (self.sequence_length, 16, self.patch_size, self.patch_size),
-            dtype=np.float32
+            (self.sequence_length, 16, self.patch_size, self.patch_size), dtype=np.float32
         )
         for t in range(self.sequence_length):
             img_path, _, _ = self.samples[start_idx + t]
             channels = self._build_16_channels(img_path)
             # Crop to the spatial patch
-            sequence_data[t] = channels[:, row:row+self.patch_size, col:col+self.patch_size]
+            sequence_data[t] = channels[:, row : row + self.patch_size, col : col + self.patch_size]
 
         # 2. Get the current fire mask at the end of the sequence (from cache)
         current_fire = self._mask_cache[target_idx - 1][
-            row:row + self.patch_size, col:col + self.patch_size
+            row : row + self.patch_size, col : col + self.patch_size
         ].astype(np.float32)
 
         # 3. Get the target fire mask (ground truth for next step spread, cache)
         target_fire = self._mask_cache[target_idx][
-            row:row + self.patch_size, col:col + self.patch_size
+            row : row + self.patch_size, col : col + self.patch_size
         ].astype(np.float32)
 
         sequence_tensor = torch.from_numpy(sequence_data)
@@ -292,7 +294,7 @@ class NpzWildfireDataset(Dataset):
 
     def __init__(self, directory: Path | str) -> None:
         self.directory = Path(directory)
-        self.files = sorted(list(self.directory.glob("*.npz")))
+        self.files = sorted(self.directory.glob("*.npz"))
 
     def __len__(self) -> int:
         return len(self.files)

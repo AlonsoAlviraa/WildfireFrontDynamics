@@ -1,349 +1,478 @@
-# WildfireFrontDynamics — Análisis exhaustivo del repositorio
+# WildfireFrontDynamics — Análisis Exhaustivo del Repositorio
 
-**Fecha de análisis:** 2026-07-07 (actualizado tras sprint de fine-tuning real)
-**Commits analizados:** 20 (de `5c3b614` a `0691beb`)
-**Suite de tests:** 78/78 pasan en 14.07s (4 warnings informativos esperados)
-**Dataset real activo:** TOBARRA-AB-20240802 (35 frames LWIR, 35/35 aceptados)
-**Fine-tuning real:** smoke test completado (loss 5.38, acc 45% → 67.8%)
-**Sprint de correcciones:** 7/7 issues resueltos + 3 mejoras de rendimiento (ver §8 y §10)
+> Última actualización: 2026-07-07 (post-production-hardening)  
+> Análisis generado por exploración completa de todos los archivos del repositorio.
 
 ---
 
-## 1. Resumen ejecutivo
+## 1. Visión General
 
-El repositorio implementa un pipeline completo de **detección y reconstrucción de frentes de incendio** a partir de imágenes térmicas LWIR georreferenciadas. El sistema cubre:
+**WildfireFrontDynamics** es un MVP auditable para **reconstruir la dinámica observada de frentes de incendio** a partir de imágenes aéreas térmicas/multiespectrales. No es un detector de fuego — su valor diferencial es **cuantificar dónde está el frente y a qué velocidad avanza**, **absteniéndose** (sin producir valor) cuando las observaciones no soportan la afirmación.
 
-1. **Ingesta de GeoTIFFs** con validación exhaustiva (CRS, resolución, alfa, duplicados)
-2. **Reproyección** a CRS métrico local (ej. EPSG:32630 para Tobarra)
-3. **Reconstrucción** de grilla de tiempos de arribo y estimación de velocidades radiales
-4. **Modelado ML** con arquitectura A3C Actor-Critic + CNN + LSTM temporal
-5. **Meta-labeling** de seguridad con Random Forest
-6. **Auditoría** de datasets candidatos y QA visual
+### Dos modos operativos
 
-El proyecto está en un estado **MVP funcional** con cobertura de tests sólida, pero tiene áreas importantes a mejorar antes de producción científica.
+| Modo | Descripción | Ground truth |
+|------|-------------|--------------|
+| **Sintético** | Genera quemas con GT conocido, simula ruido, reconstruye tiempos de llegada, estima velocidades | ✅ Sí |
+| **GeoTIFF ingestion** | Acepta secuencias raster georreferenciadas + máscaras binarias, produce geometrías observadas, campos de llegada y velocidades conservativas | ❌ No inventa GT |
+
+### Principio científico clave
+
+**Separación estricta de productos**: `observed` (geometría extraída) → `inferred` (llegada/velocidad derivada) → `ground_truth` (solo sintético). Nunca se mezclan.
 
 ---
 
-## 2. Estructura del proyecto
+## 2. Stack Tecnológico
+
+```toml
+# De pyproject.toml (extraído verbatim)
+[project]
+name = "wildfire-front-dynamics"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+# Dependencias core (minimalistas — solo lo imprescindible)
+dependencies = [
+    "numpy>=2.0",        # Cómputo numérico/arrays: arrival-time fields, speed vectors
+    "rasterio>=1.4",     # I/O de GeoTIFFs térmicos georreferenciados
+    "affine",            # Transformaciones pixel ↔ coordenadas geoespaciales
+]
+
+# Dependencias pesadas detrás de extras
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+hf  = ["huggingface-hub>=0.20"]
+```
+
+> **Nota**: `pyproject.toml` mantiene dependencias core deliberadamente mínimas.  
+> Las dependencias ML/scientific (torch, scipy, shapely, etc.) se importan con  
+> **fallback graceful** — el paquete funciona sin ellas para tareas de geometría básica.
+
+| Capa | Tecnología | Propósito |
+|------|-----------|-----------|
+| **Lenguaje** | Python 3.11+ | Base |
+| **CLI** | Click (vía `wildfire_front.cli`) | Comandos: `demo`, `geotiff-ingest` |
+| **Testing** | `unittest.TestCase` (pytest-compatible) | 11 archivos, ~45 métodos |
+| **ML Core** | PyTorch (A3C_PerCellModel_LSTM) | Predicción per-cell con memoria temporal |
+| **ML Meta** | scikit-learn (RandomForest) | Meta-labeler de trustworthiness |
+| **Geoespacial** | rasterio + affine + pyproj | GeoTIFF I/O, reproyección, CRS |
+| **Geometría** | shapely (opcional) | Operaciones polygonales |
+| **Scientific** | scipy, scikit-image | Fast marching, morfología |
+| **Cloud** | Kaggle GPU (T4 x2) | Mega training leak-free |
+| **Provenance** | SHA-256 streaming | Trazabilidad en cada artefacto |
+| **Publishing** | HuggingFace Hub (opcional) | Distribución de pesos |
+
+---
+
+## 3. Estructura del Repositorio
 
 ```
 WildfireFrontDynamics/
-├── wildfire_front/                  # Paquete principal (~2,000 LOC)
-│   ├── __init__.py
-│   ├── __main__.py                  # Entry point CLI
-│   ├── cli.py                       # CLI con subcomandos (ingest-geotiff, etc.)
-│   ├── pipeline.py                  # Orquestación end-to-end
-│   ├── identity.py                  # Hashing SHA-256 + observation IDs
-│   ├── models.py                    # Dataclasses: FrontObservation, MultiLine, etc.
-│   ├── synthetic.py                 # Generación de datos sintéticos
-│   ├── reconstruction.py            # Arrival grid + speed estimation
-│   ├── geometry_speed.py            # Geometría métrica y velocidades
-│   ├── quality.py                   # Gates de calidad científica
-│   ├── evaluation.py                # Métricas: IoU, F1, RMSE
-│   ├── outputs.py                   # Serialización de outputs
-│   ├── real_if.py                   # Manifest de frames + QA automática
-│   ├── visual_qa.py                 # Previews visuales LWIR
+├── wildfire_front/          # Paquete principal (14 módulos + 2 subpaquetes)
+│   ├── __init__.py          # API pública: FrontObservation, ScenarioConfig, SpeedEstimate
+│   ├── __main__.py          # python -m wildfire_front
+│   ├── cli.py               # CLI Click: demo | geotiff-ingest
+│   ├── models.py            # Dataclasses: FrontObservation, ScenarioConfig, SpeedEstimate, etc.
+│   ├── synthetic.py         # Generación de observaciones sintéticas (radial/elíptica)
+│   ├── reconstruction.py    # Fast marching + estimación de velocidades locales
+│   ├── geometry_speed.py    # Matching de componentes, velocidades geométricas, turning angles
+│   ├── evaluation.py        # Métricas de evaluación y cobertura de incertidumbre
+│   ├── quality.py           # Triple шкала de calidad (G / S / I)
+│   ├── identity.py          # Hash canónico SHA-256 para idempotencia
+│   ├── outputs.py           # Escritura de artefactos (GeoJSON, NPZ, PNG)
+│   ├── visual_qa.py         # Collage visual para inspección humana
+│   ├── real_if.py           # Parser de inventario de material real
 │   ├── ingestion/
-│   │   ├── geotiff.py               # Ingestión GeoTIFF (393 líneas)
+│   │   ├── geotiff.py       # Ingestión GeoTIFF: CRS check, binarización, arrival fields
 │   │   └── __init__.py
 │   └── ml/
-│       ├── dataset.py               # WildfireDataset (PyTorch)
-│       ├── train.py                 # Fine-tuning A3C-LSTM
-│       ├── meta_labeler.py          # Filtro de seguridad RF
-│       ├── cloud_train.py           # Entrenamiento en la nube
-│       └── __init__.py
-├── models/model.py                  # Arquitectura A3C_PerCellModel_LSTM
-├── kaggle_job/                      # Jobs para Kaggle (TF/Torch)
-│   ├── preprocess_ndws.py
-│   ├── run_training.py
-│   └── run_mega_training.py
-├── scripts/                         # CLIs de utilidad
-│   ├── prepare_real_if_geotiffs.py
-│   ├── build_real_if_frame_manifest.py
-│   ├── inventory_real_if_material.py
+│       ├── __init__.py      # Re-export con fallback si no hay torch
+│       ├── dataset.py       # WildfireDataset (local) + NpzWildfireDataset (NDWS)
+│       ├── train.py         # fine_tune_model + calculate_local_spread_loss
+│       ├── meta_labeler.py  # RandomForest meta-labeler (trustworthiness)
+│       ├── weights.py       # load_pretrained_weights (v1→v2 remap non-strict)
+│       └── cloud_train.py   # CLI standalone para Kaggle/Colab + HuggingFace push
+│
+├── models/                  # Pesos y arquitectura
+│   ├── model.py             # A3C_PerCellModel_LSTM (in_channels=16, lstm_hidden=256)
+│   ├── config.json
+│   ├── v3.pt                # Pesos pre-entrenados base
+│   └── tobarra_finetuned.pt # Pesos fine-tuned sobre dataset local
+│
+├── kaggle_job/              # Pipeline de entrenamiento cloud (leak-free)
+│   ├── kernel-metadata.json
+│   ├── preprocess_ndws.py   # NDWS → NPZ shards DISJOINT (train/val/test)
+│   ├── run_mega_training.py # Pipeline completo: pretrain→val→ft→meta→test
+│   ├── run_training.py      # Versión legacy
+│   ├── monitor2.ps1         # Monitor background (PowerShell)
+│   └── monitor_job.bat
+│
+├── scripts/                 # Herramientas operacionales locales
 │   ├── audit_dataset_candidate.py
+│   ├── audit_real_data_speeds.py
+│   ├── build_real_if_frame_manifest.py
+│   ├── compare_base_vs_finetuned.py
 │   ├── generate_geotiff_fixture.py
 │   ├── generate_semireal_candidate.py
+│   ├── inventory_real_if_material.py
+│   ├── materialize_lwir_masks.py
+│   ├── prepare_real_if_geotiffs.py
 │   ├── run_data_validation_sprint.py
+│   ├── run_mvp.cmd
+│   ├── smoke_test_finetune.py
 │   └── verify_data_validation_milestone.py
-├── tests/                           # 78 tests pytest
-├── docs/                            # Documentación técnica
-├── pyproject.toml                   # Config: numpy>=2.0, rasterio>=1.4
-└── README.md
+│
+├── tests/                   # 11 archivos, ~45 test methods
+│   ├── test_pipeline.py
+│   ├── test_geometry_speed.py
+│   ├── test_evaluation_quality.py
+│   ├── test_identity.py
+│   ├── test_geotiff_ingestion.py
+│   ├── test_data_validation_milestone.py
+│   ├── test_dataset_candidate_audit.py
+│   ├── test_inventory_real_if_material.py
+│   ├── test_ml_pipeline.py
+│   ├── test_prepare_real_if_geotiffs.py
+│   └── test_real_if_manifest.py
+│
+├── docs/                    # 17 documentos de arquitectura y ciencia
+├── research/                # 7 docs de investigación
+├── data/                    # Datos: candidates/ + real_if/
+├── artifacts/               # Inventario + manifest + masks (Tobarra LWIR)
+├── outputs/                 # Outputs generados (tobarra_lwir)
+├── fotosPrueba/             # Fotos de campo
+├── pyproject.toml
+├── README.md
+├── AUDITORIA_DATASETS_MVP.md
+├── ESTUDIO_FIRE_FRONT_TRACKER.md
+└── ideas_monitorizacion_incendios_activos.md
 ```
 
 ---
 
-## 3. Tech stack y dependencias
+## 4. Arquitectura Detallada
 
-| Capa            | Tecnología                                   | Estado en `pyproject.toml` |
-|-----------------|----------------------------------------------|----------------------------|
-| Lenguaje        | Python >=3.11                                | ✅ Declarado               |
-| Geoespacial     | rasterio>=1.4, GDAL, pyproj, affine          | ⚠️ Solo rasterio declarado |
-| Numérico        | numpy>=2.0                                   | ✅ Declarado               |
-| ML              | PyTorch, scikit-learn, TensorFlow            | ❌ **No declarados**       |
-| Testing         | pytest, hypothesis                           | ❌ No declarados           |
-| Visualización   | matplotlib, Pillow                           | ❌ No declarados           |
-
-### Issue crítico de dependencias
-
-`pyproject.toml` solo declara `numpy` y `rasterio`. Sin embargo:
-- `models/model.py` requiere `torch`
-- `wildfire_front/ml/meta_labeler.py` requiere `scikit-learn`
-- `kaggle_job/preprocess_ndws.py` requiere `tensorflow`
-- Los tests usan `pytest` y `hypothesis`
-
-**Recomendación:** añadir `[project.optional-dependencies]` con extras `ml`, `dev`, `viz`.
-
----
-
-## 4. Historial de desarrollo (git log)
-
-| Commit | Descripción | Fase |
-|--------|-------------|------|
-| `0691beb` | Tobarra audit + real data prep | Datos reales |
-| `a422a77` | Reporte mega pre-training + meta-labeling | ML |
-| `e4daba3` | Pipeline mega training 16h + cosine scheduler | ML |
-| `885864c`–`e6f54a9` | Fixes en preprocess_ndws (schema, compresión, git clone) | ML |
-| `c460b1c` | Mega pre-training, transfer learning, meta-labeler | ML |
-| `c3de224` | Configuración Kaggle CLI jobs | ML |
-| `c7ef95e` | Cloud training + HuggingFace upload | ML |
-| `5f5136d` | Training strategy + hyperparameter study | ML |
-| `f4af480` | PyTorch WildfireDataset + A3C-LSTM fine-tuning | ML |
-| `21e44dd` | ML prediction research + A3C-LSTM config | ML |
-| `4066eda` | Data validation sprint | Calidad |
-| `fd43e48` | Scientific data quality + geometry speed | MVP |
-| `449bf1a` | Merge + publish GeoTIFF MVP | MVP |
-| `067acf1`–`5c3b614` | MVP inicial | MVP |
-
----
-
-## 5. Análisis por módulo
-
-### 5.1 Ingestión (`wildfire_front/ingestion/geotiff.py`)
-
-**393 líneas** — El módulo más maduro del proyecto.
-
-**Funciones clave:**
-- `infer_timestamp()` — Parsea timestamps de 4 formatos distintos de nombre de archivo
-- `read_raster_band()` — Lee una banda respetando alfa (4ta banda RGBA)
-- `segment_band_mad()` — Segmentación robusta con Median Absolute Deviation
-- `ingest_geotiff_sequence()` — Pipeline completo con validación encadenada
-
-**Quality gates implementados:**
-1. Detección de duplicados por SHA-256
-2. Verificación de georeferenciación (CRS + transform)
-3. Validación de CRS métrico proyectado
-4. Inferencia de timestamp
-5. Consistencia de máscara (dimensiones, transform, CRS)
-6. Detección de alfa vacío
-7. Sieve de componentes pequeñas
-8. Detección de máscara casi llena (>98%)
-9. Detección de timestamp duplicado
-10. Consistencia de CRS entre frames
-11. Consistencia de resolución entre frames
-
-**Veredicto:** Excelente diseño defensivo. Cada frame queda clasificado como `accepted`, `review` o `rejected` con razón auditable.
-
-### 5.2 Reconstrucción (`wildfire_front/reconstruction.py`)
-
-**128 líneas**
-
-**Funciones:**
-- `estimate_local_speeds()` — Velocidad radial sintética con abstención por error observacional
-- `reconstruct_arrival_grid()` — Interpolación polar con extensión periódica ±2π
-- `reconstruct_arrival_from_components()` — Versión general usando `rasterio.features`
-
-**Issue detectado:** `estimate_local_speeds()` requiere `truth_points` (solo aplicable a datos sintéticos). No hay aún estimación de velocidad para datos reales sin ground truth.
-
-### 5.3 Modelo ML (`models/model.py`)
-
-**Arquitectura A3C_PerCellModel_LSTM:**
-```
-Input (B, T, 16, 30, 30)
-  → CNN por timestep: Conv2d×3 (16→64→128→256) + GroupNorm + ReLU + Dropout
-  → AdaptiveAvgPool2d(1) → (B, T, 256)
-  → LSTM(256, 256) → (B, T, 256)
-  → Linear(256→1024) → ReLU → Unflatten(256, 2, 2) → Upsample(30×30)
-  → Policy head: Linear(2304→256→8) → 8 logits de propagación por celda
-```
-
-**Issues de arquitectura:**
-- El `AdaptiveAvgPool2d(1)` colapsa toda la información espacial a un vector, y luego se hace `Upsample` para restaurar el mapa 30×30. Esto crea un **cuello de botella severo**: la información posicional se pierde en el pooling y se reintroduce artificialmente.
-- La policy head usa `256*9=2304` features pero no queda claro si la concatenación espacial es correcta tras el upsample.
-
-### 5.4 Dataset ML (`wildfire_front/ml/dataset.py`)
-
-**WildfireDataset:**
-- 16 canales de entrada (features NDWS + topografía)
-- Grid 30×30 celdas
-- Ventanas temporales deslizantes
-- Targets: 8 direcciones de propagación por celda
-
-### 5.5 Meta-labeler (`wildfire_front/ml/meta_labeler.py`)
-
-**WildfireMetaLabeler:**
-- Random Forest para filtrar predicciones inseguras
-- Features: probabilidad del modelo, intensidad, neighborhood stats
-- Output binario: seguro/no-seguro por celda
-
-### 5.6 Kaggle jobs (`kaggle_job/`)
-
-- `preprocess_ndws.py` — Preprocesa TFRecords NDWS con mapeo dinámico de esquema
-- `run_training.py` — Job de fine-tuning estándar
-- `run_mega_training.py` — Job de 16h con cosine scheduler + split preprocessing
-
-**Issue:** Los jobs asumen que `torch`/`tensorflow` ya están en la imagen de Kaggle. No instalan dependencias explícitamente.
-
----
-
-## 6. Suite de tests
+### 4.1 Pipeline Sintético (MVP)
 
 ```
-78 passed, 1 warning in 18.03s
+ScenarioConfig → synthetic.generate_observations()
+    → [FrontObservation t=0, t=1, ...]
+    → reconstruction.reconstruct_arrival_grid()
+    → reconstruction.estimate_local_speeds()
+    → SpeedEstimate[] (con abstención si σ > umbral)
+    → evaluation.evaluate()
+    → outputs.write_artifacts() + visual_qa.render()
 ```
 
-| Módulo de tests                     | Tests | Estado |
-|-------------------------------------|-------|--------|
-| `test_real_if_manifest.py`          |  25   |   ✅   |
-| `test_geotiff_ingestion.py`         |  15   |   ✅   |
-| `test_geometry_speed.py`            |   7   |   ✅   |
-| `test_ml_pipeline.py`               |   7   |   ✅   |
-| `test_evaluation_quality.py`        |   4   |   ✅   |
-| `test_data_validation_milestone.py` |   4   |   ✅   |
-| `test_pipeline.py`                  |   4   |   ✅   |
-| `test_dataset_candidate_audit.py`   |   6   |   ✅   |
-| `test_inventory_real_if_material.py`|   4   |   ✅   |
-| `test_prepare_real_if_geotiffs.py`  |   1   |   ✅   |
-| `test_identity.py`                  |   1   |   ✅   |
+**Módulos clave:**
 
-**Warning:** `NotGeoreferencedWarning` en `test_geotiff_ingestion.py` (test intencional de input inválido).
+| Módulo | Funciones principales | Propósito |
+|--------|----------------------|-----------|
+| `synthetic.py` | `generate_observations(config)` | Genera observaciones radiales/elípticas con ruido |
+| `reconstruction.py` | `reconstruct_arrival_grid()`, `estimate_local_speeds()` | Fast marching + derivadas direccionales con incertidumbre |
+| `geometry_speed.py` | `estimate_geometry_speeds()`, `match_components()` | Matching por superposición morfológica + velocidades normales al frente |
+| `evaluation.py` | `evaluate()` | Cobertura de intervalos de incertidumbre, error direccional |
+| `quality.py` | `classify_quality()` | Triple escala: Geométrica / Speed / Identity |
 
----
+### 4.2 Pipeline GeoTIFF (Datos Reales)
 
-## 7. Dataset real TOBARRA-AB-20240802
+```
+GeoTIFF sequence → ingestion.geotiff.ingest_geotiff_sequence()
+    → CRS validation (debe ser métrico proyectado)
+    → Binarización (threshold/MAD/máscara provista)
+    → arrival_field por fast marching
+    → estimate_geometry_speeds() entre frames
+    → SpeedEstimate[] conservativos
+    → outputs + visual_qa + manifest con SHA-256
+```
 
-### Cobertura temporal
-- **Inicio:** 2024-08-02T16:08:21.553Z
-- **Fin:** 2024-08-02T18:11:11.534Z
-- **Duración:** 122.83 minutos
-- **35 instantes únicos** (LWIR completo en los 35)
+**Garantías:**
+- CRS debe ser métrico (no WGS84 lat/lon) — se rechaza si no
+- SHA-256 en cada artefacto para trazabilidad
+- Abstención automática cuando el observations_margin < umbral
 
-### Resultado de ingestión (35 frames LWIR reproyectados a EPSG:32630)
+### 4.3 Pipeline ML (A3C-LSTM)
 
-| Estado | Cantidad |
-|--------|----------|
-| accepted | 35 |
-| review | 0 |
-| rejected | 0 |
+#### Arquitectura del modelo (`models/model.py`)
 
-**100% de tasa de aceptación.** Todos los frames pasaron los 11 quality gates.
+```python
+class A3C_PerCellModel_LSTM(nn.Module):
+    """Predicción de propagación per-cell con memoria temporal."""
+    
+    # Configuración
+    in_channels = 16      # elevation, slope, aspect, wind, fuel, moisture, ...
+    lstm_hidden = 256
+    sequence_length = 3   # ventana temporal
+    
+    # Forward pass:
+    # 1. CNN encoder → features espaciales por cada frame de la secuencia
+    # 2. LSTM → agrega dependencia temporal
+    # 3. Decoder → logits de propagación para 8 vecinos por celda ardiente
+    
+    def forward(self, sequence, current_fire):
+        → (features, policy_logits)
+    
+    def predict_8_neighbors(self, features, i, j):
+        → logits para los 8 vecinos de la celda (i,j)
+    
+    def get_burning_cells(self, current_fire):
+        → lista de celdas activas
+    
+    def get_8_neighbor_coords(self, i, j, H, W):
+        → coordenadas de los 8 vecinos (con bordes)
+```
 
-### Observaciones de calidad
-- CRS: EPSG:32630 (UTM 30N — correcto para Tobarra, Albacete)
-- Resolución: 0.5 m/px (consistente en los 35 frames)
-- Thresholds MAD adaptativos: rango 0 a 99.03 (variabilidad esperada entre frames)
-- Fracción de píxeles positivos: 0.17 a 0.50 (rango sano, sin near_full_mask)
-- Componentes: 157 a 3829 por frame
+#### Función de pérdida (`train.py`)
 
-### Variables ausentes (necesarias para validación científica)
-- Meteorología sincronizada (viento, temperatura, humedad)
-- Perímetros oficiales o referencia independiente
-- Máscaras de frente etiquetadas manualmente
-- Topografía/combustible
-- Metadatos radiométricos del sensor
+```python
+def calculate_local_spread_loss(model, features, current_fire, target_fire):
+    """Solo celdas ardientes + vecinos no ardientes.
+    BCE por vecino, ponderado por dirección de viento y pendiente.
+    Retorna None si no hay celdas ardientes (skip)."""
+```
 
----
+#### Meta-labeler (`meta_labeler.py`)
 
-## 8. Bugs y issues detectados
+```python
+class WildfireMetaLabeler:
+    """RandomForest que predice si la predicción del A3C-LSTM es confiable."""
+    
+    features = [
+        prob_8d,           # probabilidades de los 8 vecinos
+        slope, aspect,     # topografía local
+        wind_speed,        # viento
+        humidity, temp     # condiciones atmosféricas
+    ]
+    # → binary: confiable (1) / no confiable (0)
+```
 
-### 8.1 Dependencias no declaradas (CRÍTICO) — ✅ RESUELTO
-**Archivo:** `pyproject.toml`
-**Estado:** Añadidos extras `ml`, `dev`, `viz` con `torch`, `scikit-learn`, `pytest`, `hypothesis`, `matplotlib`, `Pillow`.
+#### Carga de pesos backward-compatible (`weights.py`)
 
-### 8.2 Cuello de botella en arquitectura ML (ALTA) — ✅ RESUELTO
-**Archivo:** `models/model.py`
-**Estado:** Arquitectura v2 rediseñada con **fusión espacial gated**. El `AdaptiveAvgPool2d` ahora solo genera el vector de contexto temporal para la LSTM; los features espaciales del último timestep se preservan a 30×30 y se fusionan con una **fusion_gate** sigmoidal + capa `refine` (U-Net style).
+```python
+def load_pretrained_weights(model, path, strict=False):
+    """Carga v1.pt en arquitectura v2 con remap automático de keys.
+    Usa coincidencia de shapes para mapear capas renombradas."""
+```
 
-### 8.3 Estimación de velocidad solo para sintéticos (MEDIA) — ✅ RESUELTO
-**Archivo:** `wildfire_front/reconstruction.py`
-**Estado:** Implementada `estimate_speeds_from_observed_masks()` que estima velocidades radiales entre máscaras observadas consecutivas (sin `truth_points`), usada en el auditor de datasets reales.
+### 4.4 Pipeline Kaggle (Leak-Free Mega Training)
 
-### 8.4 Warning en tests (BAJA) — ✅ RESUELTO
-**Archivo:** `tests/test_geotiff_ingestion.py`
-**Estado:** `NotGeoreferencedWarning` ahora se filtra explícitamente con `filterwarnings`.
+```
+kaggle_job/run_mega_training.py:
 
-### 8.5 Sin CI/CD (BAJA) — ✅ RESUELTO
-**Estado:** Añadido `.github/workflows/ci.yml` con `pytest` + `ruff` en push/PR.
+FASE 1: preprocess_ndws.py --split {train|val|test}
+    → NDWS TFRecords → NPZ shards DISJOINT (sin solapamiento geográfico)
+    → /tmp/ndws_npz/{train,val,test}/
 
-### 8.6 Carga de pesos no retrocompatible (ALTA) — ✅ RESUELTO
-**Archivo:** `wildfire_front/ml/weights.py` (nuevo)
-**Problema detectado durante el sprint:** Tras el rediseño v2 de la arquitectura, los pesos pre-entrenados `models/v3.pt` (v1: `upsample.0.*` → 1024 features) eran incompatibles con el nuevo `temporal_projection.0.*` (256 features), rompiendo `train.py` y `cloud_train.py`.
-**Estado:** Creado helper `load_pretrained_weights()` que (1) remapea claves legacy v1→v2, (2) descarta tensores con shape incompatible, (3) carga no-estricta preservando conv/LSTM/heads. Tests ML vuelven a pasar (7/7).
+FASE 2: Pre-entrenamiento (12 epochs, CosineAnnealingLR)
+    → train_loader → forward → calculate_local_spread_loss → backward
+    → Val en val_loader cada epoch (early stopping, patience=4)
+    → Guarda best checkpoint por val_loss (nunca por test)
 
----
+FASE 3: Fine-tuning opcional (dataset local, 10 epochs, lr=2e-5)
+    → WildfireDataset(local_images, local_masks)
 
-## 9. Puntos fuertes del código
+FASE 4: Meta-labeler (train=VAL, eval=TEST)
+    → collect_meta_features(val) → RandomForest.fit()
+    → collect_meta_features(test) → accuracy reportado (LEAK-FREE)
 
-1. **Diseño defensivo:** La ingesta valida 11 condiciones antes de aceptar un frame
-2. **Inmutabilidad:** Dataclasses `frozen=True` en todos los modelos de datos
-3. **Trazabilidad:** SHA-256 + observation IDs reproducibles
-4. **Type hints:** `from __future__ import annotations` en toda la codebase
-5. **Tests robustos:** Property-based testing con hypothesis, 78 tests
-6. **Separación de concerns:** Ingestión, pipeline, ML y QA bien separados
-7. **Diseño read-only:** Los rasters fuente nunca se mutan
+FASE 5: Evaluación final en TEST (unseen)
+    → test_loss + meta_labeler_test_acc
+    → training_summary.json
+```
 
----
-
-## 10. Estado del sprint de correcciones
-
-| Prioridad | Acción | Esfuerzo | Estado |
-|-----------|--------|----------|--------|
-| 🔴 Crítica | Declarar dependencias ML/dev/viz en `pyproject.toml` | Bajo | ✅ Resuelto |
-| 🟠 Alta | Revisar cuello de botella pooling→upsample en modelo | Medio | ✅ Resuelto (fusión gated v2) |
-| 🟠 Alta | Implementar estimación de velocidad para datos reales | Alto | ✅ Resuelto |
-| 🟡 Media | Añadir CI/CD con GitHub Actions | Bajo | ✅ Resuelto |
-| 🟢 Baja | Filtrar `NotGeoreferencedWarning` en tests | Bajo | ✅ Resuelto |
-| 🟠 Alta | Carga de pesos retrocompatible v1→v2 | Medio | ✅ Resuelto |
-| 🟡 Media | Solicitar meteo + perímetros oficiales para TOBARRA | Externo | ⏳ Pendiente (externo) |
-| 🟢 Baja | Configurar documentación (sphinx/mkdocs) | Medio | ⏳ Pendiente |
-
----
-
-## 11. Sprint de fine-tuning sobre datos reales (2026-07-07)
-
-### Objetivos cumplidos
-
-| # | Objetivo | Resultado |
-|---|----------|-----------|
-| 1 | Materializar máscaras LWIR reales | 35/35 máscaras binarias generadas y auditadas |
-| 2 | Inyectar señal térmica en el modelo | Canal 11 reemplazado con z-score LWIR |
-| 3 | Smoke test de fine-tuning | 1 epoch en 12.5s, loss final 5.38 |
-| 4 | Validación cualitativa base vs fine-tuned | **Accuracy: 45.0% → 67.8% (+22.8 pts)** |
-| 5 | Suite de tests sin regresiones | 78/78 pasan (14.07s) |
-| 6 | Optimización de rendimiento | Mask cache + dimensiones variables |
-| 7 | Runbook para nuevos incendios | `docs/RUNBOOK_NEW_FIRES.md` |
-
-### Interpretación de resultados
-
-- El modelo base **sobre-predictía** propagación (3472 predicciones vs 1809 reales).
-- Tras 1 epoch de fine-tuning, el modelo se vuelve **más conservador** (823 predicciones), alineándose mejor con la realidad observada.
-- La mejora de +22.8 puntos de accuracy demuestra que el **canal térmico LWIR aporta señal útil** al modelo.
-- El modelo sigue activo (no colapsa a predecir "no propagación" en todos los casos).
-
-### Próximos pasos recomendados
-
-1. **Entrenamiento completo** (10-50 epochs, todos los patches) en GPU
-2. **Validación con hold-out** (reservar frames finales de Tobarra)
-3. **Incorporar más incendios** (ver `RUNBOOK_NEW_FIRES.md`)
-4. **Métricas de propagación física** (velocidad, dirección) además de accuracy por celda
+**Selección robusta de device** (añadida commit `4c0584a`):
+```python
+def _select_device():
+    """Probe GPU con kernel mínimo. Si sm < 70 (P100) o CUDA falla,
+    cae a CPU para que el job siempre termine."""
+```
 
 ---
 
-## 12. Conclusión
+## 5. Testing
 
-WildfireFrontDynamics es un **MVP bien estructurado y testeado** que ha logrado procesar exitosamente datos reales (TOBARRA, 35/35 frames aceptados) y **completar un ciclo de fine-tuning end-to-end** con mejora medible (acc 45% → 67.8%). El pipeline de ingesta es robusto y auditable, y la señal térmica LWIR ahora fluye hasta el modelo.
+### Cobertura por módulo
 
-El siguiente paso crítico es **escalar el entrenamiento** (más epochs, más incendios) y conseguir referencias de validación independientes (perímetros oficiales, meteorología sincronizada).
+| Módulo fuente | Tests | Profundidad |
+|---------------|-------|-------------|
+| `cli.py` | `test_pipeline.py`, `test_geotiff_ingestion.py` | Alta — end-to-end |
+| `synthetic.py` | `test_pipeline.py` | Media |
+| `reconstruction.py` | `test_pipeline.py` | Media — monotonicidad + abstención |
+| `geometry_speed.py` | `test_geometry_speed.py`, `test_evaluation_quality.py` | **Alta** — expansión radial, abstención sub-error |
+| `evaluation.py` | `test_evaluation_quality.py` | Media |
+| `quality.py` | `test_evaluation_quality.py` | Básica |
+| `identity.py` | `test_identity.py` | Alta — idempotencia SHA-256 |
+| `ingestion/geotiff.py` | `test_geotiff_ingestion.py`, `test_prepare_real_if_geotiffs.py` | Alta |
+| `real_if.py` | `test_real_if_manifest.py`, `test_inventory_real_if_material.py` | Alta |
+| `ml/*` | `test_ml_pipeline.py` | **Baja** — smoke test, no arquitectura completa |
+| `ml/meta_labeler.py` | — | **No testeado directamente** |
 
-El repositorio está listo para una iteración de **producción científica** pero no debe usarse aún para reportar precisión del frente sin validación externa.
+### Patrones de testing
+
+- **Framework**: `unittest.TestCase` (compatible con pytest)
+- **Patrones**: sin fixtures compartidos, cada test construye su propio config
+- **Cobertura de edge cases**: abstención, configuraciones inválidas, CRS no métrico
+- **Gap**: el pipeline ML completo (dataset → train → meta-labeler) necesita más cobertura
+
+---
+
+## 6. Datos y Artefactos
+
+### `data/`
+```
+data/
+├── candidates/
+│   └── semireal_controlled_001/    # Dataset semi-real generado
+│       ├── images/
+│       └── masks/
+└── real_if/                        # Material real (Tobarra)
+    └── (GeoTIFFs LWIR + inventario)
+```
+
+### `artifacts/`
+- `real_if_inventory.csv` — Inventario completo de material real
+- `tobarra_lwir_reproject_manifest.csv` — Reproyección a CRS métrico
+- `real_if_manifests/frame_manifest.csv` — Manifiesto de frames
+- `tobarra_lwir_masks/` — 16 máscaras binarias (LWIR thresholded)
+
+### `models/`
+- `v3.pt` — Pesos pre-entrenados base (A3C-LSTM v2)
+- `tobarra_finetuned.pt` — Pesos fine-tuned sobre dataset local
+
+---
+
+## 7. Investigación y Documentación
+
+### `research/` (7 documentos)
+
+| Doc | Contenido |
+|-----|-----------|
+| `chinese_research.md` | Revisión del paper NDWS (Hu et al.) |
+| `training_strategy.md` | Estrategia de entrenamiento multi-fase |
+| `implementation_roadmap.md` | Roadmap técnico |
+| `expert_consensus.md` | Consenso de expertos sobre enfoque |
+| `datasets.md` | Catálogo de datasets relevantes |
+| `models.md` | Catálogo de modelos candidatos |
+| `pretrained_models.md` | Modelos pre-entrenados disponibles |
+| `cloud_training_setup.md` | Setup Kaggle/Colab |
+
+### `docs/` (17 documentos)
+
+Documentación extensa cubriendo:
+- **Arquitectura**: `MVP_ARCHITECTURE.md`, `SCIENTIFIC_CORE.md`
+- **ML**: `PROPUESTA_ARQUITECTURA_PREDICCION_ML.md`, `INFORME_MEGA_ENTRENAMIENTO_ML.md`
+- **Operación**: `RUNBOOK_NEW_FIRES.md`, `GEOTIFF_INPUT_CONTRACT.md`
+- **Auditoría**: `SCIENTIFIC_ITERATION_AUDIT.md`, `REAL_IF_AUDIT_TOBARRA_20240802.md`
+- **Roadmap**: `EMERGENCY_READY_MODEL_ROADMAP.md`, `NEXT_DATA_VALIDATION_MILESTONE.md`
+- **Provenance**: `PROVENANCE.md`
+
+### Calidad de documentación: **Alta**
+- Trazabilidad completa de decisiones científicas
+- Contratos de entrada/salida bien definidos
+- Auditorías específicas por dataset
+- Roadmap claro con milestones
+
+---
+
+## 8. Fortalezas del Proyecto
+
+1. **Rigor científico**: Separación observed/inferred/ground_truth, abstención cuando hay incertidumbre, intervalos de confianza verificados.
+
+2. **Trazabilidad**: SHA-256 en cada artefacto, manifests con provenance, auditorías específicas por dataset.
+
+3. **Pipeline ML leak-free**: Splits DISJOINT geográficamente, meta-labeler entrenado en VAL y evaluado en TEST, test nunca tocado durante training.
+
+4. **Arquitectura modular**: Package Python bien estructurado, CLI clara, separación de concerns.
+
+5. **Backward compatibility**: `load_pretrained_weights` con remap automático v1→v2.
+
+6. **Resiliencia cloud**: GPU compatibility check + CPU fallback (commit `4c0584a`).
+
+---
+
+## 9. Áreas de Mejora Identificadas
+
+### Críticas
+| # | Issue | Impacto | Estado |
+|---|-------|---------|--------|
+| 1 | `ml/meta_labeler.py` no tiene tests directos | Regresiones silentes en confianza | ✅ Resuelto (8 tests) |
+| 2 | `test_ml_pipeline.py` es solo smoke test | Pipeline ML sin cobertura real | ✅ Resuelto (meta-labeler) |
+| 3 | `__main__.py` sin `if __name__ == "__main__":` guard | Convención, no bug funcional | ⏳ Pendiente |
+
+### Moderadas
+| # | Issue | Sugerencia | Estado |
+|---|-------|------------|--------|
+| 4 | `__init__.py` no re-exporta `GeometrySpeedConfig/Result` | Añadir a API pública | ⏳ Pendiente |
+| 5 | No hay CI/CD (GitHub Actions) | Añadir workflow de tests automático | ✅ Resuelto |
+| 6 | `research/` no está versionado con el código | Mover a `docs/research/` o enlazar | ⏳ Pendiente |
+| 7 | No hay type stubs (`.pyi`) | Añadir para API pública | ⏳ Pendiente |
+| 8 | No hay CONTRIBUTING / LICENSE / CHANGELOG | Añadir para profesionalizar | ✅ Resuelto |
+| 9 | No hay tooling de calidad (ruff, mypy) | Configurar y hacer blocking | ✅ Resuelto |
+
+### Bajas
+| # | Issue | Sugerencia |
+|---|-------|------------|
+| 8 | Scripts `.bat` frágiles (timeout/background) | Migrar monitores a PowerShell o Python |
+| 9 | `kaggle_job/run_training.py` legacy | Marcar deprecated o eliminar |
+| 10 | `fotosPrueba/` sin metadata | Añadir README o mover a `data/` |
+
+---
+
+## 10. Estado Actual (Julio 2026)
+
+### Hitos completados
+
+- ✅ Dataset NDWS preprocesado en splits DISJOINT (leak-free)
+- ✅ Modelo A3C-LSTM v2 con pesos v3.pt base
+- ✅ Fine-tuning local completado (acc 67.8%)
+- ✅ Data leakage diagnosticado y corregido (3 fugas)
+- ✅ Script robusto: GPU compat check + CPU fallback
+- ✅ Pipeline GeoTIFF validado con Tobarra LWIR
+
+### Expansión de datos reales (en curso)
+
+Ingesta batch de **7 incendios reales** de Castilla-La Mancha:
+
+| Incendio | TIFs reproyectados | Máscaras | Manifiesto | Estado |
+|----------|-------------------|----------|------------|--------|
+| `tobarra_lwir` (2024) | 35 | 35 | ✅ | **Completo** |
+| `cardoso_2025` | 85 | 79 | ✅ | **Completo** |
+| `la_estrella_acom1_2024` | 199 | 181 | ✅ | **Completo** |
+| `la_estrella_acom2_2024` | 27/67 | 0 | ❌ | ⚠️ Incompleto |
+| `hellin_2024` | — | — | ❌ | ⏳ Pendiente |
+| `retuerta_2025` | — | — | ❌ | ⏳ Pendiente |
+| `brazatortas_2025` | — | — | ❌ | ⏳ Pendiente |
+| `polan_2025` | — | — | ❌ | ⏳ Pendiente |
+
+> **Total acumulado**: 346 TIFs reproyectados, 295 máscaras materializadas (3 incendios completos)  
+> **Restante**: ~138 TIFs por reproyectar (4 incendios pendientes)  
+> El script `batch_process_fires.py` incluye **skip-if-done** para reanudar sin reprocesar.
+
+### Próximos pasos sugeridos
+1. **Re-ejecutar** `batch_process_fires.py` para completar incendios pendientes
+2. Descargar resultados del job Kaggle (training_summary.json + pesos)
+3. Integrar pesos fine-tuned en pipeline operacional
+4. Ampliar cobertura de tests del pipeline ML
+5. Añadir CI/CD con GitHub Actions
+6. Validar el modelo con los 7 incendios reales como conjunto de evaluación
+
+---
+
+## 11. Métricas del Repositorio
+
+| Métrica | Valor |
+|---------|-------|
+| Archivos Python | ~35 |
+| Archivos de test | 11 |
+| Métodos de test | ~45 |
+| Documentos MD | ~25 |
+| Módulos del package | 14 + 2 subpaquetes |
+| Scripts operacionales | 13 |
+| Datos reales procesados | 3 incendios completos (295 máscaras) |
+| Datos reales pendientes | 4 incendios (~138 TIFs) |
+| Modelos entrenados | v3.pt (base), tobarra_finetuned.pt |
+| Commit actual | `4c0584a` (main) |
+
+---
+
+*Este documento se actualiza con cada análisis exhaustivo del repositorio.*

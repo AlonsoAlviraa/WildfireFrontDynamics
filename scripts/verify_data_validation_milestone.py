@@ -50,7 +50,11 @@ def verify_milestone(
 ) -> list[CheckResult]:
     audit = _read_json(audit_dir / "candidate_audit.json")
     pipeline_summary = _read_json(pipeline_dir / "summary.json")
-    metrics = pipeline_summary.get("metrics", {}) if isinstance(pipeline_summary.get("metrics"), dict) else {}
+    metrics = (
+        pipeline_summary.get("metrics", {})
+        if isinstance(pipeline_summary.get("metrics"), dict)
+        else {}
+    )
     images = _matching_files(dataset_dir / "images")
     masks = _matching_files(dataset_dir / "masks")
     annotations = _matching_files(dataset_dir / "annotations")
@@ -112,7 +116,8 @@ def verify_milestone(
         ),
         CheckResult(
             "reference_metric_policy",
-            (has_annotations and has_reference_metrics) or (not has_annotations and not has_reference_metrics),
+            (has_annotations and has_reference_metrics)
+            or (not has_annotations and not has_reference_metrics),
             "reference metrics only appear when annotations exist",
         ),
         CheckResult(
@@ -122,7 +127,8 @@ def verify_milestone(
         ),
         CheckResult(
             "scientific_separation",
-            "ground_truth" not in str(audit.get("sensor_id", "")) and bool(audit.get("annotations", "") or not has_reference_metrics),
+            "ground_truth" not in str(audit.get("sensor_id", ""))
+            and bool(audit.get("annotations", "") or not has_reference_metrics),
             "observed masks and independent annotations are separate inputs",
         ),
         CheckResult(
@@ -140,7 +146,9 @@ def verify_milestone(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Verify the data-validation milestone for one candidate.")
+    parser = argparse.ArgumentParser(
+        description="Verify the data-validation milestone for one candidate."
+    )
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--audit-dir", type=Path, required=True)
     parser.add_argument("--pipeline-dir", type=Path, required=True)

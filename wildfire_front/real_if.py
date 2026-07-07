@@ -17,7 +17,7 @@ import math
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -137,7 +137,12 @@ def read_geotiff_info(path: Path) -> dict[str, object]:
             "dtype": dtype,
             "crs": str(crs) if crs else "",
             "coordinate_system": coordinate_system,
-            "bbox": (float(bounds.left), float(bounds.bottom), float(bounds.right), float(bounds.top)),
+            "bbox": (
+                float(bounds.left),
+                float(bounds.bottom),
+                float(bounds.right),
+                float(bounds.top),
+            ),
             "transform": transform,
             "resolution_estimate_m": resolution_estimate_m,
             "alpha_valid_fraction": alpha_valid_fraction,
@@ -344,7 +349,9 @@ def build_frame_manifest(source: Path, event_id: str) -> FrameManifestResult:
 
         bbox = geotiff_info.get("bbox") if geotiff_info else None
         crs = str(geotiff_info.get("crs", "")) if geotiff_info else ""
-        coordinate_system = str(geotiff_info.get("coordinate_system", "unknown")) if geotiff_info else "unknown"
+        coordinate_system = (
+            str(geotiff_info.get("coordinate_system", "unknown")) if geotiff_info else "unknown"
+        )
         alpha_frac = geotiff_info.get("alpha_valid_fraction") if geotiff_info else None
         resolution = geotiff_info.get("resolution_estimate_m") if geotiff_info else None
 
@@ -365,6 +372,10 @@ def build_frame_manifest(source: Path, event_id: str) -> FrameManifestResult:
         if isinstance(bbox, tuple) and len(bbox) == 4:
             west, south, east, north = (float(v) for v in bbox)
 
+        _width = geotiff_info.get("width")
+        _height = geotiff_info.get("height")
+        _bands = geotiff_info.get("band_count")
+
         rows.append(
             FrameManifestRow(
                 event_id=event_id,
@@ -376,9 +387,9 @@ def build_frame_manifest(source: Path, event_id: str) -> FrameManifestResult:
                 kml_path=str(kml_path) if kml_path else "",
                 kmz_path=str(files.get("kmz", "")),
                 window_path=str(window_path) if window_path else "",
-                width=int(geotiff_info.get("width", 0)),
-                height=int(geotiff_info.get("height", 0)),
-                band_count=int(geotiff_info.get("band_count", 0)),
+                width=int(_width) if isinstance(_width, int) else 0,
+                height=int(_height) if isinstance(_height, int) else 0,
+                band_count=int(_bands) if isinstance(_bands, int) else 0,
                 dtype=str(geotiff_info.get("dtype", "")),
                 crs=crs,
                 coordinate_system=coordinate_system,
@@ -420,7 +431,7 @@ def compute_temporal_gaps(
         if row.timestamp_utc and row.sensor != "UNKNOWN":
             by_sensor.setdefault(row.sensor, []).append(row.timestamp_utc)
 
-    for sensor, timestamps in by_sensor.items():
+    for _sensor, timestamps in by_sensor.items():
         unique_sorted = sorted(set(timestamps))
         for i in range(1, len(unique_sorted)):
             try:
@@ -464,8 +475,8 @@ def _build_summary(
     review_count = sum(1 for r in rows if r.qa_status == "review")
     rejected_count = sum(1 for r in rows if r.qa_status == "rejected")
 
-    sensors = sorted(set(r.sensor for r in rows if r.sensor != "UNKNOWN"))
-    timestamps = sorted(set(r.timestamp_utc for r in rows if r.timestamp_utc))
+    sensors = sorted({r.sensor for r in rows if r.sensor != "UNKNOWN"})
+    timestamps = sorted({r.timestamp_utc for r in rows if r.timestamp_utc})
 
     duration_s = 0.0
     if len(timestamps) >= 2:
@@ -510,7 +521,7 @@ def write_manifest_summary(result: FrameManifestResult, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = [
         "# Frame manifest summary",
-        "# Generated: " + datetime.now(timezone.utc).isoformat(),
+        "# Generated: " + datetime.now(UTC).isoformat(),
         "",
         "Total rows:          " + str(result.summary["total_rows"]),
         "QA ok:               " + str(result.summary["qa_ok"]),
@@ -519,14 +530,25 @@ def write_manifest_summary(result: FrameManifestResult, output: Path) -> None:
         "Sensors:             " + str(result.summary["sensors"]),
         "Unique timestamps:   " + str(result.summary["unique_timestamps"]),
         "Duration (s):        " + str(result.summary["duration_s"]),
-        "Gaps > " + str(int(GAP_THRESHOLD_S)) + "s:       " + str(result.summary["gaps_above_threshold"]),
+        "Gaps > "
+        + str(int(GAP_THRESHOLD_S))
+        + "s:       "
+        + str(result.summary["gaps_above_threshold"]),
         "Duplicate ts/sensor: " + str(result.summary["duplicate_timestamp_sensor_pairs"]),
         "",
     ]
     if result.gaps:
         lines.append("Temporal gaps:")
         for gap in result.gaps:
-            line = "  " + gap.from_timestamp + " -> " + gap.to_timestamp + "  (" + str(round(gap.gap_seconds, 1)) + " s)"
+            line = (
+                "  "
+                + gap.from_timestamp
+                + " -> "
+                + gap.to_timestamp
+                + "  ("
+                + str(round(gap.gap_seconds, 1))
+                + " s)"
+            )
             lines.append(line)
         lines.append("")
 

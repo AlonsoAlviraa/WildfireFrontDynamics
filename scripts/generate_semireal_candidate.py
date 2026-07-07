@@ -15,7 +15,6 @@ import numpy as np
 import rasterio
 from rasterio.transform import from_origin
 
-
 ROOT = Path("data/candidates/semireal_controlled_001")
 CRS = "EPSG:32630"
 TRANSFORM = from_origin(500000.0, 4100000.0, 2.0, 2.0)
@@ -31,8 +30,7 @@ def ellipse_mask(
     radius_col: float,
 ) -> np.ndarray:
     return (
-        ((rows - center_row) / radius_row) ** 2
-        + ((cols - center_col) / radius_col) ** 2
+        ((rows - center_row) / radius_row) ** 2 + ((cols - center_col) / radius_col) ** 2
     ) <= 1.0
 
 

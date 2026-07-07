@@ -13,8 +13,8 @@ from rasterio.transform import Affine, from_origin
 from wildfire_front.cli import main, run_geotiff_ingest
 from wildfire_front.ingestion.geotiff import (
     extract_mask_components,
-    ingest_geotiff_sequence,
     infer_timestamp,
+    ingest_geotiff_sequence,
     segment_band_mad,
     segment_band_threshold,
 )
@@ -207,8 +207,15 @@ class GeoTiffIngestionTests(unittest.TestCase):
             masks.mkdir()
 
             base = np.ones((8, 8), dtype=np.uint16)
-            write_tiff(images / "no_crs_20260610_120000.tif", base, crs=None, transform=Affine.identity())
-            write_tiff(masks / "no_crs_20260610_120000.tif", np.ones((8, 8), dtype=np.uint8), crs=None, transform=Affine.identity())
+            write_tiff(
+                images / "no_crs_20260610_120000.tif", base, crs=None, transform=Affine.identity()
+            )
+            write_tiff(
+                masks / "no_crs_20260610_120000.tif",
+                np.ones((8, 8), dtype=np.uint8),
+                crs=None,
+                transform=Affine.identity(),
+            )
 
             write_tiff(images / "mismatch_20260610_120100.tif", base * 2)
             write_tiff(masks / "mismatch_20260610_120100.tif", np.ones((7, 7), dtype=np.uint8))
