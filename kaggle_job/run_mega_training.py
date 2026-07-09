@@ -161,16 +161,19 @@ if USE_AMP:
 print("\n=== FASE 2: PRE-ENTRENAMIENTO MASIVO (NDWS train) ===")
 # Focal loss + pos_weight is now built into calculate_local_spread_loss (train.py).
 # This penalizes false negatives 3x more than false positives → higher recall.
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=3e-4)
+# v11: LR peak reducido a 5e-5 (la mitad) para evitar oscilaciones post-warmup
+#      que causaban early stopping prematuro en epoch 3.
+PEAK_LR = float(os.environ.get("WF_PEAK_LR", "5e-5"))
+optimizer = torch.optim.AdamW(model.parameters(), lr=PEAK_LR, weight_decay=3e-4)
 
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 
 EPOCHS = int(os.environ.get("WF_EPOCHS", "50"))  # nocturno: 50 epochs
-WARMUP_EPOCHS = 3  # linear warmup to stabilize early gradients
+WARMUP_EPOCHS = 5  # v11: warmup más largo (3→5) para estabilizar gradientes
 GRAD_ACCUM_STEPS = 4  # simulate batch_size=4 via gradient accumulation
-patience = 8  # more patience for longer training runs
+patience = 12  # v11: más paciencia (8→12) para dar tiempo al cosine decay
 
-# Warmup (3 epochs linear to lr=1e-4) then cosine decay to lr_min=1e-6
+# Warmup (5 epochs linear to peak LR) then cosine decay to lr_min=1e-6
 warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=WARMUP_EPOCHS)
 cosine_scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS - WARMUP_EPOCHS, eta_min=1e-6)
 scheduler = SequentialLR(
@@ -395,7 +398,11 @@ meta_labeler = WildfireMetaLabeler(n_estimators=100, max_depth=10, random_state=
 
 
 def collect_meta_features(model, loader, device):
-    """Return (X, y, preds, labels) for every neighbor of every burning cell."""
+    """Return (X, y) for every neighbor of every burning cell.
+
+    v11 (Sprint 2): Uses :meth:`build_enhanced_features` with 12 features
+    (base 7 + 5 spatial: prob_mean, prob_std, burning_density, prob_gradient).
+    """
     model.eval()
     X_all, y_all = [], []
     with torch.no_grad():
@@ -419,20 +426,25 @@ def collect_meta_features(model, loader, device):
                 probs_8d = torch.sigmoid(logits_8d).cpu().numpy()
                 labels_8d = np.zeros(8, dtype=np.float32)
                 neighbors = model.get_8_neighbor_coords(i, j, H, W)
+                burning_flags = np.zeros(8, dtype=np.float32)
                 for n_idx, neighbor in enumerate(neighbors):
                     if neighbor is not None:
                         ni, nj = neighbor
                         if target_fire[0, ni, nj] > 0.5 and current_fire[0, ni, nj] <= 0.5:
                             labels_8d[n_idx] = 1.0
+                        if current_fire[0, ni, nj] > 0.5:
+                            burning_flags[n_idx] = 1.0
                 preds_8d = (probs_8d > 0.5).astype(np.float32)
                 correct_8d = (preds_8d == labels_8d).astype(np.float32)
-                cell_features = meta_labeler.build_features(
+                # Sprint 2: enhanced features (12 columns)
+                cell_features = meta_labeler.build_enhanced_features(
                     prob=probs_8d,
                     slope=np.full(8, slope_grid[i, j]),
                     aspect=np.full(8, aspect_grid[i, j]),
                     wind_speed=wind_speed,
                     humidity=humidity,
                     temp=temp,
+                    burning_neighbors=burning_flags,
                 )
                 for k in range(8):
                     X_all.append(cell_features[k])
@@ -470,6 +482,53 @@ print("\n=== FASE 5: EVALUACIÓN FINAL EN TEST (unseen) ===")
 test_loss = evaluate_loss(model, test_loader, device)
 print(f"  Neural model TEST loss: {test_loss:.5f}")
 
+# --- Sprint 3: Interpretable segmentation metrics (IoU/Recall/Precision) ---
+from wildfire_front.evaluation import (
+    compute_segmentation_metrics,
+    aggregate_segmentation_metrics,
+)
+
+@torch.no_grad()
+def evaluate_segmentation(model, loader, device):
+    """Compute per-sample IoU/Recall/Precision over test set."""
+    model.eval()
+    all_metrics = []
+    for sequence, current_fire, target_fire in loader:
+        sequence = sequence.to(device)
+        current_fire = current_fire.to(device)
+        target_fire = target_fire.to(device)
+        with torch.amp.autocast('cuda', enabled=USE_AMP):
+            features, _ = model.forward(sequence, current_fire)
+        # Build predicted spread mask
+        H, W = current_fire.shape[1], current_fire.shape[2]
+        pred_spread = torch.zeros_like(target_fire)
+        burning_cells = model.get_burning_cells(current_fire)
+        for i, j in burning_cells:
+            logits_8d = model.predict_8_neighbors(features, i, j).squeeze(0)
+            probs_8d = torch.sigmoid(logits_8d)
+            neighbors = model.get_8_neighbor_coords(i, j, H, W)
+            for n_idx, neighbor in enumerate(neighbors):
+                if neighbor is not None:
+                    ni, nj = neighbor
+                    if current_fire[0, ni, nj] <= 0.5:
+                        pred_spread[0, ni, nj] = probs_8d[n_idx]
+        gt_np = target_fire[0].cpu().numpy()
+        pred_np = pred_spread[0].cpu().numpy()
+        m = compute_segmentation_metrics(pred_np, gt_np, threshold=0.5)
+        all_metrics.append(m)
+    return aggregate_segmentation_metrics(all_metrics)
+
+seg_metrics = evaluate_segmentation(model, test_loader, device)
+print(f"  Segmentation metrics (TEST):")
+print(f"    IoU (micro):       {seg_metrics.get('micro_iou', 0.0):.4f}")
+print(f"    Dice/F1 (micro):   {seg_metrics.get('micro_dice', 0.0):.4f}")
+print(f"    Precision (micro): {seg_metrics.get('micro_precision', 0.0):.4f}")
+print(f"    Recall (micro):    {seg_metrics.get('micro_recall', 0.0):.4f}")
+
+# Save evaluation_metrics.json alongside training_summary.json
+Path("../evaluation_metrics.json").write_text(json.dumps(seg_metrics, indent=2, default=str))
+print("  Evaluation metrics saved to ../evaluation_metrics.json")
+
 summary = {
     "best_pretrain_epoch": best_epoch,
     "best_val_loss": best_val_loss,
@@ -478,8 +537,15 @@ summary = {
     "train_samples": len(train_dataset),
     "val_samples": len(val_dataset),
     "test_samples": len(test_dataset),
+    "v11_config": {
+        "peak_lr": PEAK_LR,
+        "warmup_epochs": WARMUP_EPOCHS,
+        "patience": patience,
+        "meta_labeler_features": 12,
+    },
+    "seg_metrics": seg_metrics,
 }
-Path("../training_summary.json").write_text(json.dumps(summary, indent=2))
+Path("../training_summary.json").write_text(json.dumps(summary, indent=2, default=str))
 print("\nSummary written to ../training_summary.json")
 print(json.dumps(summary, indent=2))
 

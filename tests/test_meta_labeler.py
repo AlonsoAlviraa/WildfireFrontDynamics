@@ -178,5 +178,72 @@ class TestDeterminism(unittest.TestCase):
         np.testing.assert_allclose(ml1.predict_probability(X), ml2.predict_probability(X))
 
 
+class TestEnhancedFeatures(unittest.TestCase):
+    """Sprint 2: build_enhanced_features adds 4 spatial context columns."""
+
+    def test_enhanced_shape_is_12_columns(self):
+        ml = WildfireMetaLabeler()
+        prob = np.full((4, 4), 0.3)
+        slope = np.full((4, 4), 10.0)
+        aspect = np.full((4, 4), 180.0)
+        X = ml.build_enhanced_features(
+            prob, slope, aspect, wind_speed=5.0, humidity=50.0, temp=30.0
+        )
+        self.assertEqual(X.shape, (16, 12))
+
+    def test_enhanced_includes_base_columns(self):
+        ml = WildfireMetaLabeler()
+        prob = np.full((2, 2), 0.4)
+        slope = np.full((2, 2), 5.0)
+        aspect = np.full((2, 2), 90.0)
+        X_base = ml.build_features(prob, slope, aspect, 5.0, 50.0, 30.0)
+        X_enh = ml.build_enhanced_features(
+            prob, slope, aspect, wind_speed=5.0, humidity=50.0, temp=30.0
+        )
+        # Columns 0-6 must match base features
+        np.testing.assert_allclose(X_enh[:, :7], X_base)
+
+    def test_enhanced_burning_density_column(self):
+        """Column 10 (index 10) = burning_density."""
+        ml = WildfireMetaLabeler()
+        prob = np.array([0.5] * 8)
+        slope = np.array([10.0] * 8)
+        aspect = np.array([180.0] * 8)
+        bn = np.array([1, 1, 0, 0, 1, 0, 0, 1], dtype=np.float64)  # 4/8 = 0.5
+        X = ml.build_enhanced_features(
+            prob, slope, aspect, wind_speed=5.0, humidity=50.0, temp=30.0,
+            burning_neighbors=bn,
+        )
+        # Column 7=prob_mean, 8=prob_std, 9=prob_max, 10=burning_density, 11=prob_gradient
+        self.assertAlmostEqual(X[0, 10], 0.5, places=5)
+        # prob_gradient = max-min of uniform prob = 0
+        self.assertAlmostEqual(X[0, 11], 0.0, places=5)
+        # prob_max of uniform 0.5 array
+        self.assertAlmostEqual(X[0, 9], 0.5, places=5)
+
+    def test_enhanced_prob_gradient_nonzero(self):
+        """When probabilities vary, prob_gradient must be > 0."""
+        ml = WildfireMetaLabeler()
+        prob = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+        slope = np.full(8, 10.0)
+        aspect = np.full(8, 180.0)
+        X = ml.build_enhanced_features(
+            prob, slope, aspect, wind_speed=5.0, humidity=50.0, temp=30.0
+        )
+        self.assertGreater(X[0, 11], 0.0)
+
+    def test_enhanced_train_predict_works(self):
+        """Enhanced features must be trainable end-to-end."""
+        ml = WildfireMetaLabeler(n_estimators=5, max_depth=3)
+        rng = np.random.default_rng(42)
+        n = 50
+        X = rng.random((n, 12))
+        y = (X[:, 0] > 0.5).astype(int)
+        ml.train(X, y)
+        self.assertTrue(ml.is_trained)
+        preds = ml.predict_trustworthiness(X)
+        self.assertEqual(preds.shape, (n,))
+
+
 if __name__ == "__main__":
     unittest.main()

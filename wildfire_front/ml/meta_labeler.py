@@ -54,6 +54,9 @@ class WildfireMetaLabeler:
     ) -> np.ndarray:
         """
         Construct feature matrix from grid arrays.
+
+        Returns array of shape (N, 7) with columns:
+        [prob, entropy, slope, aspect, wind_speed, humidity, temp].
         """
         prob_flat = prob.flatten()
         entropy_flat = self.compute_entropy(prob_flat)
@@ -80,6 +83,72 @@ class WildfireMetaLabeler:
             ]
         )
         return features
+
+    # ------------------------------------------------------------------ #
+    # Sprint 2: Enhanced features with spatial context
+    # ------------------------------------------------------------------ #
+    def build_enhanced_features(
+        self,
+        prob: np.ndarray,
+        slope: np.ndarray,
+        aspect: np.ndarray,
+        wind_speed: float | np.ndarray,
+        humidity: float | np.ndarray,
+        temp: float | np.ndarray,
+        burning_neighbors: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Construct enriched feature matrix with spatial context.
+
+        Extends :meth:`build_features` with five additional columns:
+
+        8. ``prob_mean`` — mean probability across the 8 neighbours of the
+           burning cell (captures overall model confidence for this cell).
+        9. ``prob_std`` — standard deviation of neighbour probabilities
+           (high variance = front edge / transition zone).
+        10. ``prob_max`` — maximum neighbour probability (strongest spread
+            signal).
+        11. ``burning_density`` — fraction of the 8 neighbours that are
+            currently burning (0.0–1.0). Cells surrounded by fire propagate
+            differently than isolated cells.
+        12. ``prob_gradient`` — ``max - min`` of neighbour probabilities,
+            a cheap proxy for the Sobel gradient magnitude.
+
+        Parameters
+        ----------
+        burning_neighbors
+            Optional boolean array (same length as *prob*) indicating which
+            neighbours are currently on fire.  If ``None``, this column is
+            set to zero.
+
+        Returns
+        -------
+        np.ndarray
+            Feature matrix of shape ``(N, 12)``.
+        """
+        base = self.build_features(prob, slope, aspect, wind_speed, humidity, temp)
+        prob_flat = prob.flatten()
+        N = len(prob_flat)
+
+        prob_mean = float(np.mean(prob_flat))
+        prob_std = float(np.std(prob_flat))
+        prob_max = float(np.max(prob_flat))
+        prob_gradient = float(np.max(prob_flat) - np.min(prob_flat))
+
+        if burning_neighbors is not None:
+            bn = np.asarray(burning_neighbors, dtype=np.float64).flatten()
+            burning_density_val = float(np.mean(bn)) if len(bn) > 0 else 0.0
+        else:
+            burning_density_val = 0.0
+
+        # All five spatial features are scalars replicated across rows
+        extra = np.column_stack([
+            np.full(N, prob_mean),
+            np.full(N, prob_std),
+            np.full(N, prob_max),
+            np.full(N, burning_density_val),
+            np.full(N, prob_gradient),
+        ])
+        return np.hstack([base, extra])
 
     def train(self, X: np.ndarray, y: np.ndarray) -> None:
         """Train the Meta-Labeler classifier.
