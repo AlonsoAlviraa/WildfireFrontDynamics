@@ -150,13 +150,15 @@ class MLPipelineTests(unittest.TestCase):
 
         # FN loss should be significantly higher than FP loss (pos_weight=3×)
         self.assertGreater(
-            loss_fn.item(), loss_fp.item(),
-            "False negative loss should exceed false positive loss with pos_weight=3.0"
+            loss_fn.item(),
+            loss_fp.item(),
+            "False negative loss should exceed false positive loss with pos_weight=3.0",
         )
         # And the ratio should be meaningful (at least 2×)
         self.assertGreater(
-            loss_fn.item() / max(loss_fp.item(), 1e-8), 2.0,
-            "FN/FP loss ratio should be >= 2× with pos_weight=3.0"
+            loss_fn.item() / max(loss_fp.item(), 1e-8),
+            2.0,
+            "FN/FP loss ratio should be >= 2× with pos_weight=3.0",
         )
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
@@ -203,8 +205,9 @@ class MLPipelineTests(unittest.TestCase):
 
         # refine conv should be near-identity (center weight ≈ 1)
         refine_conv = None
-        for name, module in model.refine.named_modules():
+        for _name, module in model.refine.named_modules():
             import torch.nn as nn
+
             if isinstance(module, nn.Conv2d):
                 refine_conv = module
                 break
@@ -212,9 +215,7 @@ class MLPipelineTests(unittest.TestCase):
         center = refine_conv.kernel_size[0] // 2
         # Check diagonal center weights are 1
         for c in range(min(refine_conv.out_channels, refine_conv.in_channels)):
-            self.assertAlmostEqual(
-                refine_conv.weight[c, c, center, center].item(), 1.0, places=4
-            )
+            self.assertAlmostEqual(refine_conv.weight[c, c, center, center].item(), 1.0, places=4)
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_load_pretrained_weights_filters_smart_init_from_warnings(self) -> None:
@@ -243,7 +244,7 @@ class MLPipelineTests(unittest.TestCase):
         for key, value in v2_state.items():
             if key.startswith("temporal_projection."):
                 # Rename to v1 legacy key; the loader should remap it back.
-                v1_key = "upsample." + key[len("temporal_projection."):]
+                v1_key = "upsample." + key[len("temporal_projection.") :]
                 v1_state[v1_key] = value.clone()
             elif key.startswith("fusion_gate.") or key.startswith("refine."):
                 # Skip: these layers don't exist in v1 checkpoints.
@@ -255,9 +256,7 @@ class MLPipelineTests(unittest.TestCase):
             ckpt_path = Path(tmpdir) / "v1_checkpoint.pt"
             torch.save({"model_state_dict": v1_state}, ckpt_path)
 
-            fresh_model = A3C_PerCellModel_LSTM(
-                in_channels=17, lstm_hidden=256, sequence_length=3
-            )
+            fresh_model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
 
             # Capture any warnings emitted during load.
             with _warnings.catch_warnings(record=True) as caught:

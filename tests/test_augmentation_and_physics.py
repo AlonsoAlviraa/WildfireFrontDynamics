@@ -8,23 +8,23 @@ Validates:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
-import pytest
 import torch
-from pathlib import Path, PurePosixPath
 
 from wildfire_front.ml.dataset import NpzWildfireDataset
 from wildfire_front.ml.physics import (
-    rothermel_ros,
     compute_ffmc,
     ffmc_to_moisture,
     physics_loss_cell,
+    rothermel_ros,
 )
-
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────
+
 
 def _make_fake_npz(tmp_path: Path, name: str = "sample_0.npz") -> Path:
     """Create a tiny .npz file with sequence, current_fire, target_fire."""
@@ -42,6 +42,7 @@ def _make_fake_npz(tmp_path: Path, name: str = "sample_0.npz") -> Path:
 # ─────────────────────────────────────────────────────────────
 # Sprint 3: Augmentation tests
 # ─────────────────────────────────────────────────────────────
+
 
 class TestAugmentation:
     """Verify NpzWildfireDataset augment flag works correctly."""
@@ -98,6 +99,7 @@ class TestAugmentation:
 # Sprint 4: Physics-informed loss tests
 # ─────────────────────────────────────────────────────────────
 
+
 class TestPhysicsRothermel:
     """Verify Rothermel rate-of-spread and FFMC calculations."""
 
@@ -105,7 +107,8 @@ class TestPhysicsRothermel:
         """No wind and no slope should give minimal but positive ROS."""
         # FFMC=90 → moisture ≈ 8%; slope_deg=0; wind=0
         ros = rothermel_ros(
-            wind_speed_ms=0.0, slope_deg=0.0,
+            wind_speed_ms=0.0,
+            slope_deg=0.0,
             fuel_moisture=ffmc_to_moisture(90.0),
         )
         assert ros > 0.0, "ROS should always be positive (fuel combustion)"
@@ -128,11 +131,13 @@ class TestPhysicsRothermel:
     def test_rothermel_ros_increases_with_ffmc(self) -> None:
         """Higher FFMC (drier fuel) should increase spread."""
         ros_wet = rothermel_ros(
-            wind_speed_ms=5.0, slope_deg=5.7,
+            wind_speed_ms=5.0,
+            slope_deg=5.7,
             fuel_moisture=ffmc_to_moisture(70.0),
         )
         ros_dry = rothermel_ros(
-            wind_speed_ms=5.0, slope_deg=5.7,
+            wind_speed_ms=5.0,
+            slope_deg=5.7,
             fuel_moisture=ffmc_to_moisture(95.0),
         )
         assert ros_dry > ros_wet, "Drier fuel (higher FFMC) should spread faster"
@@ -140,7 +145,8 @@ class TestPhysicsRothermel:
     def test_rothermel_ros_clamped(self) -> None:
         """Extreme inputs should still produce finite, reasonable ROS."""
         ros_extreme = rothermel_ros(
-            wind_speed_ms=100.0, slope_deg=86.0,
+            wind_speed_ms=100.0,
+            slope_deg=86.0,
             fuel_moisture=ffmc_to_moisture(99.0),
         )
         assert np.isfinite(ros_extreme), "ROS must be finite"

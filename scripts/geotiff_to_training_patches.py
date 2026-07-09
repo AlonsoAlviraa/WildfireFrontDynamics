@@ -42,12 +42,10 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import rasterio
 
 # Re-use the identical channel-construction logic so there is a single source
 # of truth for the 17-channel contract.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from wildfire_front.ingestion.geotiff import TIFF_EXTENSIONS, _find_mask, infer_timestamp  # noqa: E402
 from wildfire_front.ml.dataset import WildfireDataset  # noqa: E402
 
 

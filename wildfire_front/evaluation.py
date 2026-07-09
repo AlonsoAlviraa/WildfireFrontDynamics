@@ -13,6 +13,7 @@ This module provides two families of metrics:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 import numpy as np
@@ -158,7 +159,7 @@ def compute_segmentation_metrics(
 
 def aggregate_segmentation_metrics(
     metrics_list: list[SegmentationMetrics],
-) -> dict[str, float]:
+) -> Mapping[str, float | str]:
     """Aggregate a list of per-sample metrics into mean ± std summaries.
 
     Handles the common case where some patches have zero active fire
@@ -182,7 +183,6 @@ def aggregate_segmentation_metrics(
     total_tp = sum(m.tp for m in metrics_list)
     total_fp = sum(m.fp for m in metrics_list)
     total_fn = sum(m.fn for m in metrics_list)
-    total_tn = sum(m.tn for m in metrics_list)
     agg["micro_iou"] = total_tp / (total_tp + total_fp + total_fn + 1e-7)
     agg["micro_dice"] = (2 * total_tp) / (2 * total_tp + total_fp + total_fn + 1e-7)
     agg["micro_precision"] = total_tp / (total_tp + total_fp + 1e-7)

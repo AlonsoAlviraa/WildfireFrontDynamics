@@ -16,7 +16,6 @@ import csv
 import json
 import sys
 import urllib.request
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -25,7 +24,6 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from wildfire_front.ml.physics import compute_ffmc
-
 
 AEMET_BASE = "https://opendata.aemet.es/opendata/api"
 
@@ -211,7 +209,7 @@ def main() -> None:
 
     # 5. Summary
     ffmc_values = [r["ffmc"] for r in records]
-    print(f"\n--- FFMC Summary ---")
+    print("\n--- FFMC Summary ---")
     print(f"  Range: {min(ffmc_values):.1f} - {max(ffmc_values):.1f}")
     print(f"  Mean:  {np.mean(ffmc_values):.1f}")
     print(f"  Max danger days (FFMC > 90): {sum(1 for v in ffmc_values if v > 90)}")

@@ -41,11 +41,11 @@ import numpy as np
 # Values chosen so the normalized output lands in ~[0, 1] or ~[-3, 3].
 _CHANNEL_STATS: list[tuple[float, float]] = [
     # 0: slope (radians, 0 to π/2)
-    (0.0, 1.5708),          # divide by π/2
+    (0.0, 1.5708),  # divide by π/2
     # 1: aspect (radians, -π to π) → shift to [0, 2π] then scale
-    (3.14159, 6.28318),     # (aspect + π) / 2π
+    (3.14159, 6.28318),  # (aspect + π) / 2π
     # 2: temperature (Celsius, -10 to 50)
-    (15.0, 20.0),           # (temp - 15) / 20
+    (15.0, 20.0),  # (temp - 15) / 20
     # 3: humidity (%, 0-100)
     (0.0, 100.0),
     # 4: wind speed (m/s, 0-30+)
@@ -55,7 +55,7 @@ _CHANNEL_STATS: list[tuple[float, float]] = [
     # 6: precipitation (mm, 0-50+)
     (0.0, 10.0),
     # 7: pressure (hPa, 900-1050)
-    (1000.0, 50.0),         # (p - 1000) / 50
+    (1000.0, 50.0),  # (p - 1000) / 50
     # 8: cloud cover (%, 0-100)
     (0.0, 100.0),
     # 9: visibility (km, 0-50+)
@@ -70,7 +70,7 @@ _CHANNEL_STATS: list[tuple[float, float]] = [
     (0.0, 1.0),
     (0.0, 1.0),
     # 16: FFMC (0-101)
-    (50.0, 51.0),           # (ffmc - 50) / 51 → ~[0, 1]
+    (50.0, 51.0),  # (ffmc - 50) / 51 → ~[0, 1]
 ]
 
 

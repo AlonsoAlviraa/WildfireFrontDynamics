@@ -33,7 +33,6 @@ import csv
 import shutil
 import sys
 import zipfile
-from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -149,7 +148,7 @@ def package_to_zip(
 
     # Process Tobarra if provided
     if tobarra_dir and tobarra_dir.exists():
-        print(f"  Processing: TOBARRA")
+        print("  Processing: TOBARRA")
         dest = base / "TOBARRA"
         dest.mkdir(parents=True, exist_ok=True)
         photos_dir = dest / "photos"
@@ -206,7 +205,7 @@ def package_to_zip(
 
     final_size = output_zip.stat().st_size
     print(f"  ZIP created: {final_size / 1e6:.1f} MB")
-    print(f"\nUpload to Kaggle with:")
+    print("\nUpload to Kaggle with:")
     print(f"  kaggle datasets version -p {output_zip.parent} -m \"Real wildfire data update\"")
 
 
@@ -240,7 +239,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"Packaging real wildfire data for Kaggle")
+    print("Packaging real wildfire data for Kaggle")
     print(f"  Source:  {args.source}")
     print(f"  Tobarra: {args.tobarra}")
     print(f"  Output:  {args.output}")

@@ -62,20 +62,10 @@ class WildfireMetaLabeler:
 
         N = len(prob_flat)
         ws_flat = (
-            np.full(N, wind_speed)
-            if np.isscalar(wind_speed)
-            else np.asarray(wind_speed).flatten()
+            np.full(N, wind_speed) if np.isscalar(wind_speed) else np.asarray(wind_speed).flatten()
         )
-        hum_flat = (
-            np.full(N, humidity)
-            if np.isscalar(humidity)
-            else np.asarray(humidity).flatten()
-        )
-        temp_flat = (
-            np.full(N, temp)
-            if np.isscalar(temp)
-            else np.asarray(temp).flatten()
-        )
+        hum_flat = np.full(N, humidity) if np.isscalar(humidity) else np.asarray(humidity).flatten()
+        temp_flat = np.full(N, temp) if np.isscalar(temp) else np.asarray(temp).flatten()
 
         # Stack features into (N, 7) shape
         features = np.column_stack(

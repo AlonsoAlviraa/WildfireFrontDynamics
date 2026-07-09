@@ -32,13 +32,13 @@ import torch
 
 # Rothermel reference fuel model constants (NFFL Fuel Model 2 — timber litter)
 # These are the most representative for Mediterranean wildfires.
-_FUEL_LOAD = 0.053          # kg/m² (fuel load, oven-dry)
-_FUEL_DEPTH = 0.305         # m (flame/fuel bed depth)
-_FUEL_SAV = 5700.0          # 1/m (surface-area-to-volume ratio)
-_FUEL_HEAT = 18600.0        # kJ/kg (low heat content)
-_FUEL_DENSITY = 513.0       # kg/m³ (particle density)
+_FUEL_LOAD = 0.053  # kg/m² (fuel load, oven-dry)
+_FUEL_DEPTH = 0.305  # m (flame/fuel bed depth)
+_FUEL_SAV = 5700.0  # 1/m (surface-area-to-volume ratio)
+_FUEL_HEAT = 18600.0  # kJ/kg (low heat content)
+_FUEL_DENSITY = 513.0  # kg/m³ (particle density)
 _FUEL_MINERAL_DAMPING = 0.4  # — (effective mineral content damping coefficient)
-_MINERAL_SILICA = 0.0555     # — (total mineral content)
+_MINERAL_SILICA = 0.0555  # — (total mineral content)
 
 # Wind reduction factor (mid-flame wind < 3m above ground for surface fires)
 _WIND_REDUCTION_FACTOR = 0.4
@@ -119,11 +119,8 @@ def compute_ffmc(
 
     # --- 3. Drying/wetting rate (wind-dependent) ---
     # K0 coefficient: faster with higher wind
-    k0 = (
-        0.424
-        * (1.0 - np.power(rh / 100.0, 1.7))
-        + 0.0694 * np.sqrt(wind)
-        * (1.0 - np.power(rh / 100.0, 8.0))
+    k0 = 0.424 * (1.0 - np.power(rh / 100.0, 1.7)) + 0.0694 * np.sqrt(wind) * (
+        1.0 - np.power(rh / 100.0, 8.0)
     )
     kd = ko * k0 * 0.581 * np.exp(21.06 - 0.0495 * mo_rain)
 
@@ -157,11 +154,11 @@ def ffmc_to_moisture(ffmc: float | np.ndarray) -> float | np.ndarray:
 class RothermelParams:
     """Rothermel reference fuel model parameters."""
 
-    fuel_load: float = _FUEL_LOAD          # kg/m²
-    fuel_depth: float = _FUEL_DEPTH        # m
-    fuel_sav: float = _FUEL_SAV            # 1/m
-    fuel_heat: float = _FUEL_HEAT          # kJ/kg
-    fuel_density: float = _FUEL_DENSITY    # kg/m³
+    fuel_load: float = _FUEL_LOAD  # kg/m²
+    fuel_depth: float = _FUEL_DEPTH  # m
+    fuel_sav: float = _FUEL_SAV  # 1/m
+    fuel_heat: float = _FUEL_HEAT  # kJ/kg
+    fuel_density: float = _FUEL_DENSITY  # kg/m³
     mineral_damping: float = _FUEL_MINERAL_DAMPING
     mineral_silica: float = _MINERAL_SILICA
 

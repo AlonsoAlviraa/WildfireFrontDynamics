@@ -19,7 +19,6 @@ from .physics import physics_loss_cell
 from .types import LocalSpreadModel
 from .weights import load_pretrained_weights
 
-
 # --- Loss helpers ---
 
 # pos_weight penalizes false negatives 3× more than false positives.
@@ -101,7 +100,7 @@ def calculate_local_spread_loss(
     H, W = current_fire.shape[1], current_fire.shape[2]
 
     use_physics = sequence is not None and lambda_physics > 0
-    if use_physics:
+    if use_physics and sequence is not None:
         last_ts = sequence[0, -1]
         wind_grid = last_ts[4]
         slope_grid = last_ts[0]
@@ -117,9 +116,7 @@ def calculate_local_spread_loss(
                 if target_fire[0, ni, nj] > 0.5 and current_fire[0, ni, nj] <= 0.5:
                     labels[n_idx] = 1.0
 
-        cell_loss = focal_loss_with_logits(
-            logits, labels, gamma=focal_gamma, pos_weight=pos_weight
-        )
+        cell_loss = focal_loss_with_logits(logits, labels, gamma=focal_gamma, pos_weight=pos_weight)
 
         with torch.no_grad():
             probs = torch.sigmoid(logits)
@@ -155,7 +152,10 @@ def calculate_local_spread_loss(
 # VECTORIZED LOSS — v7 (10-50x faster than per-cell loop)
 # ------------------------------------------------------------------ #
 
-def _build_neighbor_label_grid(target_fire: torch.Tensor, current_fire: torch.Tensor) -> torch.Tensor:
+
+def _build_neighbor_label_grid(
+    target_fire: torch.Tensor, current_fire: torch.Tensor
+) -> torch.Tensor:
     """Build a full (H, W, 8) grid of spread labels via vectorized shifts.
 
     For every cell (i,j), computes whether each of its 8 neighbors will ignite:
@@ -179,7 +179,7 @@ def _build_neighbor_label_grid(target_fire: torch.Tensor, current_fire: torch.Te
     # the value of its neighbor at (i+di, j+dj).
     # We use F.pad + slice to handle borders (out-of-bounds = 0, no spread).
 
-    padded = F.pad(grid, (1, 1, 1, 1), mode='constant', value=0.0)  # (H+2, W+2)
+    padded = F.pad(grid, (1, 1, 1, 1), mode="constant", value=0.0)  # (H+2, W+2)
     # In padded coords, original (i,j) maps to (i+1, j+1).
     # Neighbor (i+di, j+dj) maps to (i+1+di, j+1+dj).
     # To get a grid G where G[i,j] = padded[i+1+di, j+1+dj], we slice accordingly.
@@ -229,10 +229,7 @@ def calculate_local_spread_loss_vectorized(
         Scalar loss tensor, or None if no burning cells.
     """
     # 1. Find burning cells
-    if current_fire.dim() == 3:
-        fire_2d = current_fire[0]
-    else:
-        fire_2d = current_fire
+    fire_2d = current_fire[0] if current_fire.dim() == 3 else current_fire
     burning_mask = fire_2d > 0.5  # (H, W) bool
     N_burning = int(burning_mask.sum().item())
 
@@ -244,7 +241,7 @@ def calculate_local_spread_loss_vectorized(
     # 2. Extract ALL 3x3 patches in ONE operation via unfold
     #    features: (1, 256, H, W) -> unfold(3) -> (1, 256*9, (H-2)*(W-2))
     #    We pad features by 1px so edge cells get zero-padded patches.
-    padded_features = F.pad(features, (1, 1, 1, 1), mode='constant', value=0)  # (1,256,H+2,W+2)
+    padded_features = F.pad(features, (1, 1, 1, 1), mode="constant", value=0)  # (1,256,H+2,W+2)
     # unfold kernel=3, stride=1: output positions correspond to top-left of each 3x3 window
     # Position (0,0) in unfolded = patch centered at (1,1) in padded = (0,0) in original
     patches = F.unfold(padded_features, kernel_size=3, stride=1)  # (1, 256*9, H*W)
@@ -265,15 +262,17 @@ def calculate_local_spread_loss_vectorized(
     # 6. Focal BCE — batched for all burning cells at once
     #    focal_loss_with_logits expects (N, *) shaped inputs and averages.
     loss = focal_loss_with_logits(
-        burning_logits, burning_labels,
-        gamma=focal_gamma, pos_weight=pos_weight,
+        burning_logits,
+        burning_labels,
+        gamma=focal_gamma,
+        pos_weight=pos_weight,
     )
 
     # 7. Spread-direction bonus (soft IoU) — vectorized
     with torch.no_grad():
         probs = torch.sigmoid(burning_logits)  # (N, 8)
     predicted_positive = (probs > 0.5).float()
-    tp = (predicted_positive * burning_labels).sum(dim=1)   # (N,)
+    tp = (predicted_positive * burning_labels).sum(dim=1)  # (N,)
     fp = (predicted_positive * (1 - burning_labels)).sum(dim=1)
     fn = ((1 - predicted_positive) * burning_labels).sum(dim=1)
     denom = tp + fp + fn
@@ -284,17 +283,22 @@ def calculate_local_spread_loss_vectorized(
     physics_term = torch.tensor(0.0, device=features.device)
     if sequence is not None and lambda_physics > 0:
         last_ts = sequence[0, -1]  # (C, H, W)
-        wind_grid = last_ts[4][burning_mask]      # (N,)
-        slope_grid = last_ts[0][burning_mask]      # (N,)
-        ffmc_grid = last_ts[16][burning_mask] if last_ts.shape[0] > 16 else torch.full(
-            (N_burning,), 90.0, device=features.device
+        wind_grid = last_ts[4][burning_mask]  # (N,)
+        slope_grid = last_ts[0][burning_mask]  # (N,)
+        ffmc_grid = (
+            last_ts[16][burning_mask]
+            if last_ts.shape[0] > 16
+            else torch.full((N_burning,), 90.0, device=features.device)
         )
         probs_det = torch.sigmoid(burning_logits).detach()
         # Vectorized physics loss per cell (mean over 8 neighbors)
         for idx in range(N_burning):
             physics_term += physics_loss_cell(
-                probs_det[idx], float(wind_grid[idx]), float(slope_grid[idx]),
-                ffmc=float(ffmc_grid[idx]), lambda_physics=lambda_physics,
+                probs_det[idx],
+                float(wind_grid[idx]),
+                float(slope_grid[idx]),
+                ffmc=float(ffmc_grid[idx]),
+                lambda_physics=lambda_physics,
             )
         physics_term = physics_term / N_burning
 

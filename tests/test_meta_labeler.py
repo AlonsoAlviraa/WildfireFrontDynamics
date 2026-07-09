@@ -80,8 +80,12 @@ class TestBuildFeatures(unittest.TestCase):
         aspect = np.full((2, 2), 90.0)
         X_scalar = ml.build_features(prob, slope, aspect, 5.0, 50.0, 30.0)
         X_array = ml.build_features(
-            prob, slope, aspect,
-            np.full(4, 5.0), np.full(4, 50.0), np.full(4, 30.0),
+            prob,
+            slope,
+            aspect,
+            np.full(4, 5.0),
+            np.full(4, 50.0),
+            np.full(4, 30.0),
         )
         np.testing.assert_allclose(X_scalar, X_array)
 

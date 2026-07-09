@@ -343,9 +343,7 @@ class NpzWildfireDataset(Dataset):
             target_fire = torch.from_numpy(data["target_fire"].astype(np.float32))
 
         if self.augment:
-            sequence, current_fire, target_fire = self._augment(
-                sequence, current_fire, target_fire
-            )
+            sequence, current_fire, target_fire = self._augment(sequence, current_fire, target_fire)
 
         return sequence, current_fire, target_fire
 

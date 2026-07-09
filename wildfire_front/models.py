@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import TypeAlias
 
-Point = tuple[float, float]
-Line = tuple[Point, ...]
-MultiLine = tuple[Line, ...]
+Point: TypeAlias = tuple[float, float]
+Line: TypeAlias = tuple[Point, ...]
+MultiLine: TypeAlias = tuple[Line, ...]
 
 
 @dataclass(frozen=True)

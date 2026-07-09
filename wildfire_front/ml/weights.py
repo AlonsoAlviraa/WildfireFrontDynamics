@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from typing import cast
 
 import torch
 
@@ -56,7 +57,7 @@ def _smart_init_fusion_layers(model: torch.nn.Module) -> list[str]:
 
         # refine: Conv2d(256, 256, 3, pad=1) → identity-like initialization
         elif name == "refine":
-            for sub_name, sub_module in module.named_modules():
+            for _sub_name, sub_module in module.named_modules():
                 if isinstance(sub_module, nn.Conv2d):
                     # Identity initialization: center weight = 1, rest = 0
                     nn.init.zeros_(sub_module.weight)
@@ -75,7 +76,7 @@ def _smart_init_fusion_layers(model: torch.nn.Module) -> list[str]:
 
         # temporal_projection: Linear(256→256) → scale down so temporal noise is small initially
         elif name == "temporal_projection":
-            for sub_name, sub_module in module.named_modules():
+            for _sub_name, sub_module in module.named_modules():
                 if isinstance(sub_module, nn.Linear):
                     nn.init.xavier_uniform_(sub_module.weight, gain=0.1)
                     if sub_module.bias is not None:
@@ -132,22 +133,20 @@ def load_pretrained_weights(
     # temporal_projection).  Without this filter the caller sees spurious
     # "missing keys" / "shape mismatch" warnings for layers that are actually
     # being deliberately initialized.
-    smart_init = _smart_init_fusion_layers(model)
+    # model is always an nn.Module at runtime; cast satisfies mypy's union narrowing.
+    smart_init = _smart_init_fusion_layers(cast(torch.nn.Module, model))
     smart_init_prefixes = tuple(name + "." for name in smart_init)
 
     def _is_smart_init_key(key: str) -> bool:
         return any(key.startswith(prefix) for prefix in smart_init_prefixes)
 
     missing = [
-        k for k in result.missing_keys
-        if k not in shape_mismatch and not _is_smart_init_key(k)
+        k for k in result.missing_keys if k not in shape_mismatch and not _is_smart_init_key(k)
     ]
     shape_mismatch = [k for k in shape_mismatch if not _is_smart_init_key(k)]
 
     if smart_init:
-        print(
-            f"  Smart-initialized v2 fusion layers (identity/passthrough): {smart_init}"
-        )
+        print(f"  Smart-initialized v2 fusion layers (identity/passthrough): {smart_init}")
     if missing:
         warnings.warn(
             f"Pre-trained weights missing keys (initialized randomly): {missing}",
