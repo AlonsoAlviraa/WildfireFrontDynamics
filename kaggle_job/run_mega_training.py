@@ -61,7 +61,10 @@ for split in ["train", "val", "test"]:
 from models.model import A3C_PerCellModel_LSTM
 from wildfire_front.ml.dataset import NpzWildfireDataset, WildfireDataset
 from wildfire_front.ml.meta_labeler import WildfireMetaLabeler
-from wildfire_front.ml.train import calculate_local_spread_loss
+from wildfire_front.ml.train import (
+    calculate_local_spread_loss,
+    calculate_local_spread_loss_vectorized,
+)
 from wildfire_front.ml.weights import load_pretrained_weights
 
 train_dir = "/tmp/ndws_npz/train"
@@ -88,12 +91,17 @@ print(f"Using AMP mixed precision + cudnn.benchmark for speedup")
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
 
+# v7: Increased workers (4->8) + persistent_workers + prefetch_factor
+# for maximal GPU feeding throughput with vectorized loss.
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
-                          num_workers=4, pin_memory=True)
+                          num_workers=8, pin_memory=True,
+                          persistent_workers=True, prefetch_factor=4)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False,
-                        num_workers=2, pin_memory=True)
+                        num_workers=4, pin_memory=True,
+                        persistent_workers=True, prefetch_factor=4)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False,
-                         num_workers=2, pin_memory=True)
+                         num_workers=4, pin_memory=True,
+                         persistent_workers=True, prefetch_factor=4)
 
 # --------------------------------------------------------------------------- #
 # Robust device selection: verify GPU compute-capability is supported by PyTorch
@@ -188,7 +196,7 @@ def evaluate_loss(model, loader, device):
         with torch.amp.autocast('cuda', enabled=USE_AMP):
             features, _ = model.forward(sequence, current_fire)
         features = features.float()  # cast back to fp32 for stable loss
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        loss = calculate_local_spread_loss_vectorized(model, features, current_fire, target_fire, sequence=sequence)
         if loss is not None:
             total += loss.item()
             steps += 1
@@ -209,7 +217,7 @@ for epoch in range(EPOCHS):
         with torch.amp.autocast('cuda', enabled=USE_AMP):
             features, _ = model.forward(sequence, current_fire)
         features = features.float()  # CRITICAL: cast to fp32 before loss
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        loss = calculate_local_spread_loss_vectorized(model, features, current_fire, target_fire, sequence=sequence)
 
         if loss is not None:
             optimizer.zero_grad()
@@ -274,7 +282,7 @@ if local_images.is_dir() and local_masks.is_dir():
             with torch.amp.autocast('cuda', enabled=USE_AMP):
                 features, _ = model.forward(sequence, current_fire)
             features = features.float()
-            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+            loss = calculate_local_spread_loss_vectorized(model, features, current_fire, target_fire, sequence=sequence)
             if loss is not None:
                 optimizer.zero_grad()
                 scaler.scale(loss).backward()
