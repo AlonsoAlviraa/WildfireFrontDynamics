@@ -337,4 +337,99 @@ código de focal loss (Sprint 2) realmente se ejecuta en producción.
 - `wildfire_front/ml/physics.py` — módulo de física (Rothermel + FFMC)
 - `scripts/fetch_aemet_fwi.py` — descarga de datos meteorológicos
 - `kaggle_output/v3/` — nuevo mega-entrenamiento con todas las mejoras
-- `docs/ML_EVALUATION_V3.md` — reporte final con métricas comparativas
+- `docs/ML_EVALUATION_V3.md` — reporte final con métricas comparativas---
+
+## 10. Actualizacion Critica - Fix NaN + Velocidad (2026-07-09 18:10)
+
+> **Estado:** Kernel v6 RUNNING en Kaggle (https://www.kaggle.com/code/alonsoalvira/wildfire-front-training-v6)
+
+### 10.1 Problemas detectados en entrenamientos v3-v5
+
+#### Bug 1 - NaN en loss (v4-v5) [CRITICO]
+
+**Sintoma:** `Epoch 01 train=nan val=nan`
+
+**Causa raiz:** `torch.amp.autocast('cuda')` envolvia tanto el forward pass COMO
+el calculo de loss dentro del mismo contexto fp16. La combinacion de:
+
+1. Focal loss: `(1.0 - p_t) ** gamma` donde gamma=2.0
+2. `pos_weight=3.0` en BCE
+3. fp16 (rango maximo ~65504, precision ~3 decimales)
+
+...produce overflow y NaN en gradientes.
+
+**Fix aplicado** (`kaggle_job/run_mega_training.py`):
+
+```python
+# ANTES (roto):
+with torch.amp.autocast('cuda', enabled=USE_AMP):
+    features, _ = model.forward(sequence, current_fire)
+    loss = calculate_local_spread_loss(...)  # loss en fp16 = NaN
+
+# DESPUES (correcto):
+with torch.amp.autocast('cuda', enabled=USE_AMP):
+    features, _ = model.forward(sequence, current_fire)
+features = features.float()  # cast a fp32 ANTES del loss
+loss = calculate_local_spread_loss(...)  # loss estable en fp32
+```
+
+Aplicado en las 3 zonas: `evaluate_loss`, pre-training loop, y fine-tuning loop.
+
+#### Bug 2 - 9910s/epoch (2.75 horas por epoch) [CRITICO]
+
+**Sintoma:** Entrenamiento estimado en >40h, imposible en Kaggle (limite 9-12h)
+
+**Causa raiz:** `preprocess_ndws.py` generaba **80,000 patches de entrenamiento**.
+Con batch_size=1 (requerido por arquitectura per-cell) y ~100 burning cells por
+patch, cada epoch = ~8,000,000 evaluaciones de loss.
+
+**Fix aplicado** (`kaggle_job/preprocess_ndws.py`):
+
+- Train: 80,000 a 12,000 patches (6.7x menos)
+- Val: 15,000 a 5,000 patches
+- Test: 15,000 a 5,000 patches
+
+**Estimacion de tiempo v6:**
+
+- Preprocesamiento: ~30 min
+- 15 epochs x ~1500s = ~6.25h
+- Fine-tuning + meta-labeler + test: ~1h
+- **Total: ~8h** (dentro del limite de 9h de Kaggle)
+
+### 10.2 Commits y artifacts
+
+| Commit | Descripcion | Hash |
+|--------|-------------|------|
+| 1 | fix: resolve NaN loss + reduce dataset size for feasible training time | `0d87636` |
+| 2 | chore: bump kernel to v6 for clean re-run with NaN+speed fixes | `11cabd9` |
+
+### 10.3 Proximos sprints post-v6
+
+#### Sprint 8 - Analisis de resultados v6 (INMEDIATO post-v6)
+
+1. Descargar `training_summary.json` + `training_history.json` de Kaggle
+2. Comparar val_loss v6 vs v3 (objetivo: v6 < 0.34, sin NaN)
+3. Verificar que focal loss ahora impacta (loss deberia diferir de Junio 2026)
+4. Si val_loss > 0.40, diagnosticar si 12k patches es insuficiente
+
+#### Sprint 9 - Si v6 funciona: escalar a 25k patches
+
+Si v6 completa sin NaN y val_loss < 0.34:
+
+- Subir `max_patches` de 12k a 25k (todavia factible en 9h)
+- Mas datos = mejor generalizacion sin overfitting
+
+#### Sprint 10 - Si v6 tiene good recall: threshold optimization
+
+- Script `scripts/optimize_threshold.py` con sweep 0.1-0.9
+- Reportar F1, IoU, precision, recall por umbral
+- Seleccionar umbral optimo para deployment
+
+### 10.4 Lecciones aprendidas (para futuro)
+
+1. **AMP + loss custom = peligroso:** Siempre castear a fp32 antes de losses
+   no-estandar (focal, contrastive, etc.)
+2. **Profilear antes de lanzar:** 80k patches x batch=1 deberia haberse
+   detectado en local antes de gastar horas de GPU en Kaggle
+3. **Dataset size != mejor:** 12k patches diversos pueden generalizar mejor
+   que 80k redundantes (muchos patches solapan geograficamente)
