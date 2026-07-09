@@ -165,10 +165,12 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=3e-4)
 
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 
-EPOCHS = 15  # increased from 12 → more training with focal loss
-WARMUP_EPOCHS = 2  # linear warmup to stabilize early gradients
+EPOCHS = int(os.environ.get("WF_EPOCHS", "50"))  # nocturno: 50 epochs
+WARMUP_EPOCHS = 3  # linear warmup to stabilize early gradients
+GRAD_ACCUM_STEPS = 4  # simulate batch_size=4 via gradient accumulation
+patience = 8  # more patience for longer training runs
 
-# Warmup (2 epochs linear to lr=1e-4) then cosine decay to lr_min=1e-6
+# Warmup (3 epochs linear to lr=1e-4) then cosine decay to lr_min=1e-6
 warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=WARMUP_EPOCHS)
 cosine_scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS - WARMUP_EPOCHS, eta_min=1e-6)
 scheduler = SequentialLR(
@@ -177,11 +179,34 @@ scheduler = SequentialLR(
     milestones=[WARMUP_EPOCHS],
 )
 
+# --- AUTO-RESUME from last checkpoint (nocturno: survives interruptions) ---
+RESUME_CKPT = Path("../weights_pretrained_best.pt")
+RESUME_META = Path("../training_state.json")
+start_epoch = 0
 best_val_loss = float("inf")
 best_epoch = -1
-patience = 4
 no_improve = 0
 history = []
+
+if RESUME_CKPT.exists() and RESUME_META.exists():
+    try:
+        state = json.loads(RESUME_META.read_text())
+        start_epoch = state.get("epoch", 0)
+        best_val_loss = state.get("best_val_loss", float("inf"))
+        best_epoch = state.get("best_epoch", -1)
+        no_improve = state.get("no_improve", 0)
+        history = state.get("history", [])
+        model.load_state_dict(torch.load(RESUME_CKPT, map_location=device))
+        # Advance scheduler to the right epoch
+        for _ in range(start_epoch):
+            scheduler.step()
+        print(f"AUTO-RESUME: starting at epoch {start_epoch+1}/{EPOCHS}, "
+              f"best_val_loss={best_val_loss:.5f} (epoch {best_epoch})")
+    except Exception as exc:
+        print(f"AUTO-RESUME: failed to load state ({exc}), starting from scratch")
+        start_epoch = 0
+else:
+    print("No previous checkpoint found — starting training from scratch")
 
 
 @torch.no_grad()
@@ -208,9 +233,22 @@ def evaluate_loss(model, loader, device):
 nan_skipped_batches = 0
 total_batches_seen = 0
 
-for epoch in range(EPOCHS):
+# --- Logging setup (nocturno: append to file for long runs) ---
+LOG_FILE = Path("../training_log.txt")
+def log_msg(msg):
+    print(msg)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+
+log_msg(f"\n--- Training run started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
+log_msg(f"Config: EPOCHS={EPOCHS}, WARMUP={WARMUP_EPOCHS}, GRAD_ACCUM={GRAD_ACCUM_STEPS}, "
+        f"patience={patience}, AMP={USE_AMP}")
+
+for epoch in range(start_epoch, EPOCHS):
     model.train()
     epoch_loss, steps = 0.0, 0
+    accum_count = 0
+    optimizer.zero_grad()
     t0 = time.time()
     for sequence, current_fire, target_fire in train_loader:
         total_batches_seen += 1
@@ -232,46 +270,74 @@ for epoch in range(EPOCHS):
         if torch.isnan(features).any() or torch.isinf(features).any():
             nan_skipped_batches += 1
             if nan_skipped_batches <= 5:
-                print(f"  WARNING: NaN/Inf in features at batch {total_batches_seen}, skipping")
+                log_msg(f"  WARNING: NaN/Inf in features at batch {total_batches_seen}, skipping")
             continue
 
         loss = calculate_local_spread_loss_vectorized(model, features, current_fire, target_fire, sequence=sequence)
 
         if loss is not None and not torch.isnan(loss) and not torch.isinf(loss):
-            optimizer.zero_grad()
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
-            scaler.step(optimizer)
-            scaler.update()
+            # --- GRADIENT ACCUMULATION (simulate batch_size=4) ---
+            # Divide loss by accum steps, backward without zeroing grad
+            scaler.scale(loss / GRAD_ACCUM_STEPS).backward()
+            accum_count += 1
             epoch_loss += loss.item()
             steps += 1
+
+            # Every GRAD_ACCUM_STEPS: step optimizer + zero grad
+            if accum_count >= GRAD_ACCUM_STEPS:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
+                accum_count = 0
         elif loss is not None:
             nan_skipped_batches += 1
+
+    # Flush remaining accumulated gradients at epoch end
+    if accum_count > 0:
+        scaler.unscale_(optimizer)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+        scaler.step(optimizer)
+        scaler.update()
+        optimizer.zero_grad()
 
     scheduler.step()
     train_loss = epoch_loss / steps if steps else 0.0
     if nan_skipped_batches > 0:
-        print(f"  [v8 NaN-guard] Skipped {nan_skipped_batches}/{total_batches_seen} batches due to NaN/Inf")
+        log_msg(f"  [v8 NaN-guard] Skipped {nan_skipped_batches}/{total_batches_seen} batches due to NaN/Inf")
     val_loss = evaluate_loss(model, val_loader, device)
     lr_now = scheduler.get_last_lr()[0]
     elapsed = time.time() - t0
-    print(f"Epoch {epoch+1:02d}/{EPOCHS}  train={train_loss:.5f}  val={val_loss:.5f}  "
-          f"lr={lr_now:.2e}  ({elapsed:.0f}s)")
+    log_msg(f"Epoch {epoch+1:02d}/{EPOCHS}  train={train_loss:.5f}  val={val_loss:.5f}  "
+            f"lr={lr_now:.2e}  ({elapsed:.0f}s)")
     history.append({"epoch": epoch + 1, "train_loss": train_loss, "val_loss": val_loss})
 
-    # Model selection on VAL (never on test)
+    # Model selection on VAL (never on test) + SAVE FULL STATE for auto-resume
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         best_epoch = epoch + 1
         no_improve = 0
         torch.save(model.state_dict(), "../weights_pretrained_best.pt")
-        print(f"  -> new best val_loss; checkpoint saved")
+        log_msg(f"  -> new best val_loss; checkpoint saved")
     else:
         no_improve += 1
         if no_improve >= patience:
-            print(f"  -> early stopping at epoch {epoch+1} (no improvement {no_improve} epochs)")
+            log_msg(f"  -> early stopping at epoch {epoch+1} (no improvement {no_improve} epochs)")
             break
+
+    # --- SAVE TRAINING STATE (auto-resume checkpoint, every epoch) ---
+    # This survives Kaggle session disconnects — training can resume exactly
+    # where it left off without losing progress.
+    training_state = {
+        "epoch": epoch + 1,
+        "best_val_loss": best_val_loss,
+        "best_epoch": best_epoch,
+        "no_improve": no_improve,
+        "history": history,
+    }
+    Path("../training_state.json").write_text(json.dumps(training_state, indent=2))
+    Path("../training_history.json").write_text(json.dumps(history, indent=2))
 
 # Load best checkpoint
 print(f"\nLoading best checkpoint from epoch {best_epoch} (val_loss={best_val_loss:.5f})")

@@ -401,6 +401,90 @@ def physics_loss_cell(
     return loss
 
 
+# --------------------------------------------------------------------------- #
+# VECTORIZED physics loss — v9 (replaces slow per-cell Python loop)
+# --------------------------------------------------------------------------- #
+# Normalization constants from wildfire_front/ml/normalization.py
+# raw = normalized * divide_by + subtract
+_WIND_DIVIDE_BY = 20.0  # channel 4: wind_speed (m/s)
+_WIND_SUBTRACT = 0.0
+_SLOPE_DIVIDE_BY = 1.5708  # channel 0: slope (radians)
+_SLOPE_SUBTRACT = 0.0
+
+
+def physics_loss_cell_vectorized(
+    predicted_probs: torch.Tensor,
+    wind_norm: torch.Tensor,
+    slope_norm: torch.Tensor,
+    ffmc: torch.Tensor | float = 90.0,
+    dt_min: float = DEFAULT_DT_MIN,
+    lambda_physics: float = 0.1,
+) -> torch.Tensor:
+    """Vectorized physics loss for ALL burning cells at once.
+
+    Replaces the slow per-cell Python loop in ``calculate_local_spread_loss``.
+
+    IMPORTANT: This function des-normalizes wind and slope internally.
+    Input channels from the model's ``sequence`` tensor are NORMALIZED
+    (raw/20 for wind, raw/1.5708 for slope). We convert back to physical
+    units before computing Rothermel ROS.
+
+    Args:
+        predicted_probs: (N, 8) tensor — probabilities for each neighbor
+                         of each burning cell (detached, no gradient).
+        wind_norm: (N,) tensor — wind speed channel values (NORMALIZED [0,1]).
+        slope_norm: (N,) tensor — slope channel values (NORMALIZED [0,1]).
+        ffmc: (N,) tensor or scalar — FFMC values in [0, 101].
+        dt_min: Time step in minutes.
+        lambda_physics: Loss weight.
+
+    Returns:
+        Scalar loss tensor (CLAMPED to [0, lambda_physics] so physics
+        never dominates the focal BCE term).
+    """
+    device = predicted_probs.device
+
+    # --- Des-normalize to physical units ---
+    wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
+    slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT  # radians
+    slope_deg = torch.rad2deg(slope_rad)
+
+    if isinstance(ffmc, torch.Tensor):
+        moisture = 147.2 * (101.0 - ffmc.float()) / (59.5 + ffmc.float())
+    else:
+        moisture = torch.full_like(wind_ms, 147.2 * (101.0 - ffmc) / (59.5 + ffmc))
+
+    # --- Vectorized Rothermel ROS (all N cells at once) ---
+    ros_max = _rothermel_ros_torch(wind_ms, slope_deg, moisture, DEFAULT_FUEL)  # (N,)
+
+    ros_implied = CELL_SIZE_M / dt_min  # scalar: 3.0 m/min
+
+    # violation_ratio: how much the physical limit is exceeded
+    # If ros_max >= ros_implied → propagation is physical → ratio = 0 (no penalty)
+    # If ros_max < ros_implied → impossible spread → ratio > 1 (penalty)
+    violation_ratio = torch.clamp(
+        ros_implied / (ros_max + 1e-6) - 1.0, min=0.0
+    )  # (N,)
+
+    # Weight penalty by predicted probability (only penalize if model predicts spread)
+    # predicted_probs: (N, 8) — take mean prob per cell → (N,)
+    mean_prob = predicted_probs.detach().clamp(min=0.0).mean(dim=1)  # (N,)
+
+    # Per-cell penalty: violation_ratio * mean_prob
+    per_cell_loss = violation_ratio * mean_prob  # (N,)
+
+    # Aggregate: mean over all burning cells, scaled by lambda_physics
+    loss = lambda_physics * per_cell_loss.mean()
+
+    # CRITICAL: clamp to [0, lambda_physics] so physics NEVER dominates
+    # the focal BCE term (which is typically in [0.1, 1.0] range).
+    # Without this clamp, normalization errors or extreme conditions
+    # can produce losses of 100,000+ that destroy training.
+    loss = torch.clamp(loss, max=lambda_physics)
+
+    return loss
+
+
 __all__ = [
     "RothermelParams",
     "DEFAULT_FUEL",
@@ -410,4 +494,5 @@ __all__ = [
     "compute_ros_from_wind_slope_channels",
     "physics_loss",
     "physics_loss_cell",
+    "physics_loss_cell_vectorized",
 ]

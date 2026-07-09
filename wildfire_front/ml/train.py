@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from models.model import A3C_PerCellModel_LSTM
 
 from .dataset import WildfireDataset
-from .physics import physics_loss_cell
+from .physics import physics_loss_cell, physics_loss_cell_vectorized
 from .types import LocalSpreadModel
 from .weights import load_pretrained_weights
 
@@ -60,6 +60,13 @@ def focal_loss_with_logits(
     # Final safety: if loss is NaN (shouldn't happen after guards), return 0
     if torch.isnan(loss):
         return torch.tensor(0.0, device=logits.device, requires_grad=True)
+
+    # v10: HARD CLAMP to prevent loss explosion at initialization.
+    # With pos_weight=3 and random weights, worst-case focal BCE ≈ 30 per
+    # element. In practice, AMP + gradient accumulation can amplify this.
+    # Clamping to 10.0 ensures stable training from epoch 1.
+    loss = torch.clamp(loss, max=10.0)
+
     return loss
 
 
@@ -279,30 +286,36 @@ def calculate_local_spread_loss_vectorized(
     soft_iou = tp / denom.clamp(min=1.0)  # (N,)
     bonus = -spread_bonus * soft_iou.mean()
 
-    # 8. Physics loss (optional, kept simple/vectorized)
+    # 8. Physics loss (optional) — FULLY VECTORIZED (v9)
+    #    Replaces the slow per-cell Python loop with a single batched op.
+    #    The function des-normalizes wind/slope internally and clamps the
+    #    result to [0, lambda_physics] so it NEVER dominates the focal BCE.
     physics_term = torch.tensor(0.0, device=features.device)
     if sequence is not None and lambda_physics > 0:
         last_ts = sequence[0, -1]  # (C, H, W)
-        wind_grid = last_ts[4][burning_mask]  # (N,)
-        slope_grid = last_ts[0][burning_mask]  # (N,)
-        ffmc_grid = (
-            last_ts[16][burning_mask]
-            if last_ts.shape[0] > 16
-            else torch.full((N_burning,), 90.0, device=features.device)
+        wind_grid = last_ts[4][burning_mask]  # (N,) — NORMALIZED [0,1]
+        slope_grid = last_ts[0][burning_mask]  # (N,) — NORMALIZED [0,1]
+        if last_ts.shape[0] > 16:
+            ffmc_grid = last_ts[16][burning_mask]  # (N,)
+        else:
+            ffmc_grid = 90.0  # scalar fallback
+        probs_det = torch.sigmoid(burning_logits).detach()  # (N, 8)
+        physics_term = physics_loss_cell_vectorized(
+            probs_det,
+            wind_grid,
+            slope_grid,
+            ffmc=ffmc_grid,
+            lambda_physics=lambda_physics,
         )
-        probs_det = torch.sigmoid(burning_logits).detach()
-        # Vectorized physics loss per cell (mean over 8 neighbors)
-        for idx in range(N_burning):
-            physics_term += physics_loss_cell(
-                probs_det[idx],
-                float(wind_grid[idx]),
-                float(slope_grid[idx]),
-                ffmc=float(ffmc_grid[idx]),
-                lambda_physics=lambda_physics,
-            )
-        physics_term = physics_term / N_burning
 
-    return loss + bonus + physics_term
+    total_loss = loss + bonus + physics_term
+
+    # v10: HARD CLAMP on total loss to prevent explosion.
+    # focal BCE ≤ 10.0 + bonus ≥ -0.5 + physics ≤ 0.1 → max ≈ 10.6
+    # Clamp to 15.0 as absolute safety margin.
+    total_loss = torch.clamp(total_loss, max=15.0)
+
+    return total_loss
 
 
 def fine_tune_model(
