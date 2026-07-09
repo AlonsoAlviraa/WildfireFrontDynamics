@@ -117,8 +117,12 @@ print(f"Using device: {device}")
 # --------------------------------------------------------------------------- #
 model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
 pretrained_base = Path("models/v3.pt")
-print(f"\nLoading base weights from {pretrained_base} (non-strict, v1->v2 remap)...")
-load_pretrained_weights(model, pretrained_base)
+if pretrained_base.exists():
+    print(f"\nLoading base weights from {pretrained_base} (non-strict, v1->v2 remap)...")
+    load_pretrained_weights(model, pretrained_base)
+else:
+    print(f"\nWARNING: {pretrained_base} not found (likely .gitignored). Training from scratch.")
+    print("  Pre-trained conv/LSTM weights will be initialized randomly.")
 model.to(device)
 
 # --------------------------------------------------------------------------- #

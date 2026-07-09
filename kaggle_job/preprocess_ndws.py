@@ -12,19 +12,62 @@ import tensorflow as tf
 
 print(f"=== Starting Google NDWS TFRecord Preprocessing for split: {args.split} ===")
 
-# Paths on Kaggle
-input_dir = "/kaggle/input/next-day-wildfire-spread"
+# Paths on Kaggle — search multiple possible locations
+CANDIDATE_INPUT_DIRS = [
+    "/kaggle/input/next-day-wildfire-spread",
+    "/kaggle/input/next-day-wildfire-spread/next-day-wildfire-spread",
+]
+input_dir = None
+for d in CANDIDATE_INPUT_DIRS:
+    if os.path.isdir(d):
+        input_dir = d
+        break
+
+# Fallback: scan all /kaggle/input subdirs for any .tfrecord files
+if input_dir is None:
+    print(f"Neither candidate dir exists. Scanning /kaggle/input/ ...")
+    for root, dirs, files in os.walk("/kaggle/input"):
+        for f in files:
+            if f.endswith(".tfrecord"):
+                input_dir = os.path.dirname(os.path.join(root, f))
+                break
+        if input_dir:
+            break
+
+if input_dir is None:
+    print("Error: No input directory with TFRecord files found!")
+    print("Contents of /kaggle/input/:")
+    if os.path.exists("/kaggle/input"):
+        for item in os.listdir("/kaggle/input"):
+            print(f"  {item}")
+    sys.exit(1)
+
+print(f"Using input_dir: {input_dir}")
+
+# List contents for debugging
+print(f"Contents of {input_dir}:")
+for item in sorted(os.listdir(input_dir)):
+    print(f"  {item}")
+
 output_dir = os.path.join("/tmp/ndws_npz", args.split)
 os.makedirs(output_dir, exist_ok=True)
 
-# Find all training tfrecords
-all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*train*.tfrecord")))
-if not all_tfrecord_files:
-    all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "*.tfrecord")))
+# Find all tfrecord files (recursive — NDWS may nest them in subdirs)
+all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "**", "*.tfrecord"), recursive=True))
+
+# Prefer files with 'train' in the name (NDWS convention), but accept all
+train_named = [f for f in all_tfrecord_files if "train" in os.path.basename(f).lower()]
+if train_named:
+    all_tfrecord_files = train_named
 
 if not all_tfrecord_files:
     print("Error: No TFRecord files found!")
+    print(f"Searched: {input_dir}/**/*.tfrecord")
     sys.exit(1)
+
+print(f"Found {len(all_tfrecord_files)} TFRecord files:")
+for f in all_tfrecord_files:
+    print(f"  {os.path.basename(f)}")
 
 # --- LEAK-FREE 3-WAY SPLIT -----------------------------------------------
 # NDWS ships ~15 tfrecord shards. We partition them into disjoint groups so
