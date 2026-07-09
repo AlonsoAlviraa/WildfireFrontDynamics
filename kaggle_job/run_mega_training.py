@@ -204,22 +204,40 @@ def evaluate_loss(model, loader, device):
     return total / steps if steps else 0.0
 
 
+# --- NaN DETECTION COUNTERS (v8 NaN-fix) ---
+nan_skipped_batches = 0
+total_batches_seen = 0
+
 for epoch in range(EPOCHS):
     model.train()
     epoch_loss, steps = 0.0, 0
     t0 = time.time()
     for sequence, current_fire, target_fire in train_loader:
+        total_batches_seen += 1
         sequence = sequence.to(device)
         current_fire = current_fire.to(device)
         target_fire = target_fire.to(device)
+
+        # --- INPUT NaN GUARD: skip batches with corrupted data ---
+        if torch.isnan(sequence).any() or torch.isinf(sequence).any():
+            nan_skipped_batches += 1
+            continue
 
         # Forward in AMP (fp16) for speed, loss in fp32 for stability
         with torch.amp.autocast('cuda', enabled=USE_AMP):
             features, _ = model.forward(sequence, current_fire)
         features = features.float()  # CRITICAL: cast to fp32 before loss
+
+        # --- FEATURES NaN GUARD: skip if forward pass produced NaN ---
+        if torch.isnan(features).any() or torch.isinf(features).any():
+            nan_skipped_batches += 1
+            if nan_skipped_batches <= 5:
+                print(f"  WARNING: NaN/Inf in features at batch {total_batches_seen}, skipping")
+            continue
+
         loss = calculate_local_spread_loss_vectorized(model, features, current_fire, target_fire, sequence=sequence)
 
-        if loss is not None:
+        if loss is not None and not torch.isnan(loss) and not torch.isinf(loss):
             optimizer.zero_grad()
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
@@ -228,9 +246,13 @@ for epoch in range(EPOCHS):
             scaler.update()
             epoch_loss += loss.item()
             steps += 1
+        elif loss is not None:
+            nan_skipped_batches += 1
 
     scheduler.step()
     train_loss = epoch_loss / steps if steps else 0.0
+    if nan_skipped_batches > 0:
+        print(f"  [v8 NaN-guard] Skipped {nan_skipped_batches}/{total_batches_seen} batches due to NaN/Inf")
     val_loss = evaluate_loss(model, val_loader, device)
     lr_now = scheduler.get_last_lr()[0]
     elapsed = time.time() - t0

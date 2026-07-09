@@ -249,6 +249,15 @@ for file_path in tfrecord_files:
             prev_fire = get_field('prev_fire_mask')
             fire = get_field('fire_mask')
 
+            # --- CRITICAL FIX: Convert NDWS Kelvin temperatures to Celsius ---
+            # NDWS ships temperatures in Kelvin (~250-330K). Using them as-is
+            # caused a 10x magnitude mismatch that overflowed fp16 → NaN loss.
+            # Heuristic: if values > 200, assume Kelvin and subtract 273.15.
+            if np.max(max_temp) > 200:
+                max_temp = max_temp - 273.15
+            if np.max(min_temp) > 200:
+                min_temp = min_temp - 273.15
+
             # Compute slope and aspect from elevation using numpy gradients
             dy, dx = np.gradient(elevation)
             slope = np.arctan(np.sqrt(dx**2 + dy**2))
@@ -281,6 +290,21 @@ for file_path in tfrecord_files:
             channels[14] = 0.0
             channels[15] = 0.0
             channels[16] = ffmc           # Fine Fuel Moisture Code (Sprint 4)
+
+            # --- CRITICAL FIX: Normalize ALL channels to ~[0,1] before saving ---
+            # Without this, pressure=1013 vs slope=0.3 causes a 3-order-of-magnitude
+            # spread that overflows fp16 (AMP) → NaN loss on epoch 1.
+            # Sanitize NaN/Inf first, then apply per-channel affine transform.
+            channels = np.where(np.isfinite(channels), channels, 0.0)
+            _NORM = [
+                (0.0, 1.5708), (3.14159, 6.28318), (15.0, 20.0), (0.0, 100.0),
+                (0.0, 20.0), (0.0, 360.0), (0.0, 10.0), (1000.0, 50.0),
+                (0.0, 100.0), (0.0, 20.0), (5.0, 15.0), (0.0, 1.0),
+                (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (50.0, 51.0),
+            ]
+            for _ci, (_sub, _div) in enumerate(_NORM):
+                channels[_ci] = (channels[_ci] - _sub) / _div
+            channels = np.clip(channels, -10.0, 10.0).astype(np.float32)
 
             # Extract sliding patches of 30x30 to fit our model's input expectations
             # Strides of 10 over the 64x64 grid

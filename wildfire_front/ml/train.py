@@ -41,6 +41,13 @@ def focal_loss_with_logits(
     on hard-to-detect fire spread cells. Combined with ``pos_weight`` to
     further penalize false negatives (missed ignitions).
     """
+    # --- NaN GUARD: sanitize logits before loss computation ---
+    # If logits contain Inf/NaN (from upstream overflow), clamp to safe range.
+    # Sigmoid(±10) ≈ 1.0/0.0 — any value beyond is numerically unstable.
+    logits = torch.clamp(logits, -10.0, 10.0)
+    # Replace any residual NaN with 0 (neutral logit = probability 0.5)
+    logits = torch.where(torch.isnan(logits), torch.zeros_like(logits), logits)
+
     # Per-element BCE without reduction
     bce = F.binary_cross_entropy_with_logits(
         logits, targets, reduction="none", pos_weight=torch.tensor(pos_weight, device=logits.device)
@@ -49,7 +56,12 @@ def focal_loss_with_logits(
     p = torch.sigmoid(logits)
     p_t = p * targets + (1.0 - p) * (1.0 - targets)
     focal_factor = (1.0 - p_t) ** gamma
-    return (focal_factor * bce).mean()
+    loss = (focal_factor * bce).mean()
+
+    # Final safety: if loss is NaN (shouldn't happen after guards), return 0
+    if torch.isnan(loss):
+        return torch.tensor(0.0, device=logits.device, requires_grad=True)
+    return loss
 
 
 def calculate_local_spread_loss(

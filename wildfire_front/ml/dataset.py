@@ -15,6 +15,7 @@ import torch
 from torch.utils.data import Dataset
 
 from ..ingestion.geotiff import TIFF_EXTENSIONS, _find_mask, infer_timestamp
+from .normalization import normalize_channels_inplace
 
 
 class WildfireDataset(Dataset):
@@ -226,7 +227,9 @@ class WildfireDataset(Dataset):
         ffmc_raw = self.weather_data.get("ffmc", 85.0)
         channels[16] = np.clip(ffmc_raw / 101.0, 0.0, 1.0)
 
-        return channels
+        # --- CRITICAL FIX: Normalize ALL channels to ~[0,1] ---
+        # Prevents NaN loss from raw magnitudes (pressure=1013 vs slope=0.3).
+        return normalize_channels_inplace(channels)
 
     def _generate_sequence_patches(self) -> list[dict[str, int]]:
         """Identify all spatial patches containing active fire sequences.
@@ -332,7 +335,10 @@ class NpzWildfireDataset(Dataset):
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         file_path = self.files[idx]
         with np.load(file_path) as data:
-            sequence = torch.from_numpy(data["sequence"].astype(np.float32))
+            # --- NaN/Inf guard: sanitize before converting to tensor ---
+            seq_np = data["sequence"].astype(np.float32)
+            seq_np = np.where(np.isfinite(seq_np), seq_np, 0.0)
+            sequence = torch.from_numpy(seq_np)
             current_fire = torch.from_numpy(data["current_fire"].astype(np.float32))
             target_fire = torch.from_numpy(data["target_fire"].astype(np.float32))
 
