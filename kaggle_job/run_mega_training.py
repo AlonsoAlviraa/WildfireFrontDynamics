@@ -29,6 +29,13 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 # --------------------------------------------------------------------------- #
+# Helper: unwrap DataParallel to access base model methods
+# --------------------------------------------------------------------------- #
+def base_model(model):
+    """Return the underlying model whether or not it's wrapped in DataParallel."""
+    return model.module if isinstance(model, nn.DataParallel) else model
+
+# --------------------------------------------------------------------------- #
 # 1. Clone repository + install deps
 # --------------------------------------------------------------------------- #
 print("=" * 70)
@@ -76,9 +83,14 @@ print(f"\nDataset sizes -> train={len(train_dataset)}  val={len(val_dataset)}  t
 if len(test_dataset) == 0:
     raise SystemExit("TEST split is empty — cannot guarantee leak-free evaluation. Aborting.")
 
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=2)
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+# Multi-GPU: use both T4s if available. Batch size scales with GPU count.
+N_GPUS = torch.cuda.device_count() if torch.cuda.is_available() else 0
+BATCH_SIZE = max(1, 4 * N_GPUS)  # 4 per GPU: 8 total with 2x T4
+print(f"Multi-GPU setup: {N_GPUS} GPU(s) detected, batch_size={BATCH_SIZE}")
+
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # --------------------------------------------------------------------------- #
 # Robust device selection: verify GPU compute-capability is supported by PyTorch
@@ -125,6 +137,12 @@ else:
     print("  Pre-trained conv/LSTM weights will be initialized randomly.")
 model.to(device)
 
+# Wrap in DataParallel for multi-GPU (2x T4). forward() is parallelized;
+# custom methods (get_burning_cells, predict_8_neighbors) are accessed via base_model().
+if N_GPUS > 1 and device.type == "cuda":
+    print(f"\nWrapping model in nn.DataParallel ({N_GPUS} GPUs)")
+    model = nn.DataParallel(model)
+
 # --------------------------------------------------------------------------- #
 # 5. FASE 2: Pre-training on NDWS train split with validation-based selection
 # --------------------------------------------------------------------------- #
@@ -157,13 +175,14 @@ history = []
 @torch.no_grad()
 def evaluate_loss(model, loader, device):
     model.eval()
+    _bm = base_model(model)
     total, steps = 0.0, 0
     for sequence, current_fire, target_fire in loader:
         sequence = sequence.to(device)
         current_fire = current_fire.to(device)
         target_fire = target_fire.to(device)
         features, _ = model.forward(sequence, current_fire)
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        loss = calculate_local_spread_loss(_bm, features, current_fire, target_fire, sequence=sequence)
         if loss is not None:
             total += loss.item()
             steps += 1
@@ -181,7 +200,7 @@ for epoch in range(EPOCHS):
         target_fire = target_fire.to(device)
 
         features, _ = model.forward(sequence, current_fire)
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        loss = calculate_local_spread_loss(base_model(model), features, current_fire, target_fire, sequence=sequence)
 
         if loss is not None:
             optimizer.zero_grad()
@@ -205,7 +224,7 @@ for epoch in range(EPOCHS):
         best_val_loss = val_loss
         best_epoch = epoch + 1
         no_improve = 0
-        torch.save(model.state_dict(), "../weights_pretrained_best.pt")
+        torch.save(base_model(model).state_dict(), "../weights_pretrained_best.pt")
         print(f"  -> new best val_loss; checkpoint saved")
     else:
         no_improve += 1
@@ -215,8 +234,8 @@ for epoch in range(EPOCHS):
 
 # Load best checkpoint
 print(f"\nLoading best checkpoint from epoch {best_epoch} (val_loss={best_val_loss:.5f})")
-model.load_state_dict(torch.load("../weights_pretrained_best.pt", map_location=device))
-torch.save(model.state_dict(), "../weights_pretrained.pt")
+base_model(model).load_state_dict(torch.load("../weights_pretrained_best.pt", map_location=device))
+torch.save(base_model(model).state_dict(), "../weights_pretrained.pt")
 print("Pre-trained weights saved to ../weights_pretrained.pt")
 
 # Save training history for offline analysis
@@ -242,7 +261,7 @@ if local_images.is_dir() and local_masks.is_dir():
             current_fire = current_fire.to(device)
             target_fire = target_fire.to(device)
             features, _ = model.forward(sequence, current_fire)
-            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+            loss = calculate_local_spread_loss(base_model(model), features, current_fire, target_fire, sequence=sequence)
             if loss is not None:
                 optimizer.zero_grad()
                 loss.backward()
@@ -252,7 +271,7 @@ if local_images.is_dir() and local_masks.is_dir():
                 steps += 1
         print(f"Fine-tune {epoch+1:02d}/{FT_EPOCHS}  loss={epoch_loss/steps if steps else 0:.5f}")
 
-    torch.save(model.state_dict(), "../weights_fine_tuned.pt")
+    torch.save(base_model(model).state_dict(), "../weights_fine_tuned.pt")
     print("Fine-tuned weights saved to ../weights_fine_tuned.pt")
 else:
     print("\n=== FASE 3: SKIPPED (no local tactical dataset found) ===")
@@ -267,6 +286,7 @@ meta_labeler = WildfireMetaLabeler(n_estimators=100, max_depth=10, random_state=
 def collect_meta_features(model, loader, device):
     """Return (X, y, preds, labels) for every neighbor of every burning cell."""
     model.eval()
+    _bm = base_model(model)
     X_all, y_all = [], []
     with torch.no_grad():
         for sequence, current_fire, target_fire in loader:
@@ -274,7 +294,7 @@ def collect_meta_features(model, loader, device):
             current_fire = current_fire.to(device)
             target_fire = target_fire.to(device)
             features, _ = model.forward(sequence, current_fire)
-            burning_cells = model.get_burning_cells(current_fire)
+            burning_cells = _bm.get_burning_cells(current_fire)
             if not burning_cells:
                 continue
             H, W = current_fire.shape[1], current_fire.shape[2]
@@ -284,10 +304,10 @@ def collect_meta_features(model, loader, device):
             humidity = float(sequence[0, -1, 3, 0, 0].cpu().item())
             wind_speed = float(sequence[0, -1, 4, 0, 0].cpu().item())
             for i, j in burning_cells:
-                logits_8d = model.predict_8_neighbors(features, i, j).squeeze(0)
+                logits_8d = _bm.predict_8_neighbors(features, i, j).squeeze(0)
                 probs_8d = torch.sigmoid(logits_8d).cpu().numpy()
                 labels_8d = np.zeros(8, dtype=np.float32)
-                neighbors = model.get_8_neighbor_coords(i, j, H, W)
+                neighbors = _bm.get_8_neighbor_coords(i, j, H, W)
                 for n_idx, neighbor in enumerate(neighbors):
                     if neighbor is not None:
                         ni, nj = neighbor
