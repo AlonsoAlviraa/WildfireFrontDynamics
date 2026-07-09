@@ -4,14 +4,15 @@
   "framework": "pytorch",
 
   "input": {
-    "in_channels": 16,
+    "in_channels": 17,
     "sequence_length": 3,
     "spatial_size": [30, 30],
     "feature_description": {
       "0-1": "DEM (slope, aspect)",
       "2-10": "Weather features (temp, humidity, wind_speed, wind_dir, precip, pressure, cloud, visibility, dew_point)",
-      "11": "NDVI",
-      "12-15": "FSM (forest susceptibility, one-hot or categorical)"
+      "11": "NDVI / Thermal (LWIR z-score if available)",
+      "12-15": "FSM (forest susceptibility, one-hot or categorical)",
+      "16": "FFMC (Fine Fuel Moisture Code from AEMET, normalized 0-1)"
     }
   },
 

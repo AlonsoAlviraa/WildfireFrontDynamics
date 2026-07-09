@@ -38,8 +38,8 @@ class MLPipelineTests(unittest.TestCase):
         sequence, current_fire, target_fire = dataset[0]
 
         # Assert shapes:
-        # sequence: (3, 16, 30, 30)
-        self.assertEqual(sequence.shape, (3, 16, 30, 30))
+        # sequence: (3, 17, 30, 30)
+        self.assertEqual(sequence.shape, (3, 17, 30, 30))
         # current_fire: (30, 30)
         self.assertEqual(current_fire.shape, (30, 30))
         # target_fire: (30, 30)
@@ -132,6 +132,160 @@ class MLPipelineTests(unittest.TestCase):
             output_weights.parent.rmdir()
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
+    def test_focal_loss_penalizes_false_negatives_more(self) -> None:
+        """Focal loss with pos_weight should produce higher loss for FN than FP."""
+        import torch
+
+        from wildfire_front.ml.train import focal_loss_with_logits
+
+        # Simulated logits: model predicts "no spread" (logit=-2 → p≈0.12)
+        logits = torch.tensor([-2.0])
+        # Case 1: False Negative — actual spread occurred (target=1)
+        target_fn = torch.tensor([1.0])
+        loss_fn = focal_loss_with_logits(logits, target_fn, gamma=2.0, pos_weight=3.0)
+
+        # Case 2: False Positive — no spread occurred (target=0)
+        target_fp = torch.tensor([0.0])
+        loss_fp = focal_loss_with_logits(logits, target_fp, gamma=2.0, pos_weight=3.0)
+
+        # FN loss should be significantly higher than FP loss (pos_weight=3×)
+        self.assertGreater(
+            loss_fn.item(), loss_fp.item(),
+            "False negative loss should exceed false positive loss with pos_weight=3.0"
+        )
+        # And the ratio should be meaningful (at least 2×)
+        self.assertGreater(
+            loss_fn.item() / max(loss_fp.item(), 1e-8), 2.0,
+            "FN/FP loss ratio should be >= 2× with pos_weight=3.0"
+        )
+
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
+    def test_focal_loss_gamma_zero_equals_weighted_bce(self) -> None:
+        """With gamma=0, focal loss should reduce to pos_weighted BCE."""
+        import torch
+        import torch.nn.functional as F
+
+        from wildfire_front.ml.train import focal_loss_with_logits
+
+        logits = torch.tensor([1.0, -2.0, 0.5])
+        targets = torch.tensor([1.0, 1.0, 0.0])
+        pw = torch.tensor(2.0)
+
+        focal = focal_loss_with_logits(logits, targets, gamma=0.0, pos_weight=2.0)
+        bce = F.binary_cross_entropy_with_logits(logits, targets, pos_weight=pw)
+
+        self.assertAlmostEqual(focal.item(), bce.item(), places=5)
+
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
+    def test_smart_init_fusion_layers_preserves_features(self) -> None:
+        """After smart init, refine should be near-identity and fusion_gate near-zero."""
+        import torch
+
+        from models.model import A3C_PerCellModel_LSTM
+        from wildfire_front.ml.weights import _smart_init_fusion_layers
+
+        model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
+        initialized = _smart_init_fusion_layers(model)
+
+        # All three layers should be initialized
+        self.assertIn("fusion_gate", initialized)
+        self.assertIn("refine", initialized)
+        self.assertIn("temporal_projection", initialized)
+
+        # fusion_gate bias should be large negative → sigmoid ≈ 0
+        gate_bias = None
+        for name, param in model.fusion_gate.named_parameters():
+            if "bias" in name:
+                gate_bias = param
+                break
+        self.assertIsNotNone(gate_bias)
+        self.assertTrue(torch.all(gate_bias < -3.0), "Gate bias should be < -3 for passthrough")
+
+        # refine conv should be near-identity (center weight ≈ 1)
+        refine_conv = None
+        for name, module in model.refine.named_modules():
+            import torch.nn as nn
+            if isinstance(module, nn.Conv2d):
+                refine_conv = module
+                break
+        self.assertIsNotNone(refine_conv)
+        center = refine_conv.kernel_size[0] // 2
+        # Check diagonal center weights are 1
+        for c in range(min(refine_conv.out_channels, refine_conv.in_channels)):
+            self.assertAlmostEqual(
+                refine_conv.weight[c, c, center, center].item(), 1.0, places=4
+            )
+
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
+    def test_load_pretrained_weights_filters_smart_init_from_warnings(self) -> None:
+        """Loading v1 weights into a v2 model must NOT warn about smart-init layers.
+
+        Regression test for Sprint 2: ``fusion_gate``, ``refine`` and
+        ``temporal_projection`` are intentionally handled by smart-init, so
+        they must be excluded from the ``missing`` / ``shape_mismatch`` lists
+        returned by ``load_pretrained_weights``.
+        """
+        import tempfile
+        import warnings as _warnings
+
+        import torch
+
+        from models.model import A3C_PerCellModel_LSTM
+        from wildfire_front.ml.weights import load_pretrained_weights
+
+        # Build a v2 model to get the canonical v2 state_dict, then craft a
+        # v1-style checkpoint (rename temporal_projection → upsample) so that
+        # the loader exercises the remap + smart-init path.
+        model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
+        v2_state = model.state_dict()
+
+        v1_state: dict[str, torch.Tensor] = {}
+        for key, value in v2_state.items():
+            if key.startswith("temporal_projection."):
+                # Rename to v1 legacy key; the loader should remap it back.
+                v1_key = "upsample." + key[len("temporal_projection."):]
+                v1_state[v1_key] = value.clone()
+            elif key.startswith("fusion_gate.") or key.startswith("refine."):
+                # Skip: these layers don't exist in v1 checkpoints.
+                continue
+            else:
+                v1_state[key] = value.clone()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ckpt_path = Path(tmpdir) / "v1_checkpoint.pt"
+            torch.save({"model_state_dict": v1_state}, ckpt_path)
+
+            fresh_model = A3C_PerCellModel_LSTM(
+                in_channels=17, lstm_hidden=256, sequence_length=3
+            )
+
+            # Capture any warnings emitted during load.
+            with _warnings.catch_warnings(record=True) as caught:
+                _warnings.simplefilter("always")
+                report = load_pretrained_weights(fresh_model, ckpt_path)
+
+            warning_msgs = [str(w.message) for w in caught]
+
+            # Smart-init layers must NOT appear in missing or shape_mismatch.
+            smart_layers = {"fusion_gate", "refine", "temporal_projection"}
+            for layer in smart_layers:
+                self.assertFalse(
+                    any(k.startswith(layer + ".") for k in report["missing"]),
+                    f"{layer} keys leaked into missing: {report['missing']}",
+                )
+                self.assertFalse(
+                    any(k.startswith(layer + ".") for k in report["shape_mismatch"]),
+                    f"{layer} keys leaked into shape_mismatch: {report['shape_mismatch']}",
+                )
+                self.assertFalse(
+                    any(layer in msg for msg in warning_msgs),
+                    f"{layer} appeared in a warning: {warning_msgs}",
+                )
+
+            # Smart-init must have run on all three layers.
+            self.assertEqual(set(report["smart_init"]), smart_layers)
+
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_npz_wildfire_dataset(self) -> None:
         import tempfile
 
@@ -141,7 +295,7 @@ class MLPipelineTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create a dummy NPZ file
-            seq_dummy = np.random.randn(3, 16, 30, 30).astype(np.float32)
+            seq_dummy = np.random.randn(3, 17, 30, 30).astype(np.float32)
             curr_dummy = np.random.randint(0, 2, size=(30, 30)).astype(np.float32)
             target_dummy = np.random.randint(0, 2, size=(30, 30)).astype(np.float32)
 
@@ -157,7 +311,7 @@ class MLPipelineTests(unittest.TestCase):
             self.assertEqual(len(dataset), 1)
 
             seq, curr, target = dataset[0]
-            self.assertEqual(seq.shape, (3, 16, 30, 30))
+            self.assertEqual(seq.shape, (3, 17, 30, 30))
             self.assertEqual(curr.shape, (30, 30))
             self.assertEqual(target.shape, (30, 30))
 

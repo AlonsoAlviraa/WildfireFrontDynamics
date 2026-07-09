@@ -1,0 +1,25 @@
+{
+  "weights": "weights_pretrained_best.pt",
+  "dataset": "semireal_controlled_001",
+  "n_samples": 18,
+  "metrics": {
+    "iou_mean": 0.21830719685575115,
+    "iou_std": 0.17115250517704353,
+    "dice_mean": 0.3253446429950716,
+    "dice_std": 0.23665796681012155,
+    "precision_mean": 0.6759084538799967,
+    "precision_std": 0.387853717913993,
+    "recall_mean": 0.2384451334810324,
+    "recall_std": 0.1895248831888921,
+    "accuracy_mean": 0.8662962962000412,
+    "accuracy_std": 0.11996684497205619,
+    "specificity_mean": 0.9919828964780221,
+    "specificity_std": 0.013556295523612434,
+    "micro_iou": 0.3378171812797977,
+    "micro_dice": 0.5050274222919326,
+    "micro_precision": 0.9208333332565971,
+    "micro_recall": 0.3479219143467279,
+    "n_samples": 18.0,
+    "n_valid": 18.0
+  }
+}

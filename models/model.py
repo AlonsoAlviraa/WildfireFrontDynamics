@@ -38,15 +38,15 @@ class A3C_PerCellModel_LSTM(nn.Module):
         # Input: (batch, 16, 30, 30) -> Output: (batch, 256, 30, 30)
         self.conv1 = nn.Conv2d(in_channels, 64, kernel_size=3, padding=1)
         self.norm1 = nn.GroupNorm(8, 64) if use_groupnorm else nn.Identity()
-        self.dropout1 = nn.Dropout2d(0.1)
+        self.dropout1 = nn.Dropout2d(0.2)  # Sprint 3.4: increased from 0.1 to 0.2
 
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.norm2 = nn.GroupNorm(16, 128) if use_groupnorm else nn.Identity()
-        self.dropout2 = nn.Dropout2d(0.1)
+        self.dropout2 = nn.Dropout2d(0.2)  # Sprint 3.4: increased from 0.1 to 0.2
 
         self.conv3 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
         self.norm3 = nn.GroupNorm(32, 256) if use_groupnorm else nn.Identity()
-        self.dropout3 = nn.Dropout2d(0.1)
+        self.dropout3 = nn.Dropout2d(0.2)  # Sprint 3.4: increased from 0.1 to 0.2
 
         # Spatial pooling to get per-timestep feature vector
         # (batch, 256, 30, 30) -> (batch, 256) — used ONLY as global temporal context

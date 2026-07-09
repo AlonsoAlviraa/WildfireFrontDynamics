@@ -68,9 +68,9 @@ train_dir = "/tmp/ndws_npz/train"
 val_dir = "/tmp/ndws_npz/val"
 test_dir = "/tmp/ndws_npz/test"
 
-train_dataset = NpzWildfireDataset(train_dir)
-val_dataset = NpzWildfireDataset(val_dir)
-test_dataset = NpzWildfireDataset(test_dir)
+train_dataset = NpzWildfireDataset(train_dir, augment=True)  # Sprint 3.2: data augmentation
+val_dataset = NpzWildfireDataset(val_dir, augment=False)
+test_dataset = NpzWildfireDataset(test_dir, augment=False)
 
 print(f"\nDataset sizes -> train={len(train_dataset)}  val={len(val_dataset)}  test={len(test_dataset)}")
 if len(test_dataset) == 0:
@@ -115,7 +115,7 @@ print(f"Using device: {device}")
 # --------------------------------------------------------------------------- #
 # 4. Model + backward-compatible weight loading
 # --------------------------------------------------------------------------- #
-model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
+model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
 pretrained_base = Path("models/v3.pt")
 print(f"\nLoading base weights from {pretrained_base} (non-strict, v1->v2 remap)...")
 load_pretrained_weights(model, pretrained_base)
@@ -125,11 +125,23 @@ model.to(device)
 # 5. FASE 2: Pre-training on NDWS train split with validation-based selection
 # --------------------------------------------------------------------------- #
 print("\n=== FASE 2: PRE-ENTRENAMIENTO MASIVO (NDWS train) ===")
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
-from torch.optim.lr_scheduler import CosineAnnealingLR
+# Focal loss + pos_weight is now built into calculate_local_spread_loss (train.py).
+# This penalizes false negatives 3x more than false positives → higher recall.
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=3e-4)
 
-EPOCHS = 12
-scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS, eta_min=1e-6)
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+
+EPOCHS = 15  # increased from 12 → more training with focal loss
+WARMUP_EPOCHS = 2  # linear warmup to stabilize early gradients
+
+# Warmup (2 epochs linear to lr=1e-4) then cosine decay to lr_min=1e-6
+warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=WARMUP_EPOCHS)
+cosine_scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS - WARMUP_EPOCHS, eta_min=1e-6)
+scheduler = SequentialLR(
+    optimizer,
+    schedulers=[warmup_scheduler, cosine_scheduler],
+    milestones=[WARMUP_EPOCHS],
+)
 
 best_val_loss = float("inf")
 best_epoch = -1
@@ -147,7 +159,7 @@ def evaluate_loss(model, loader, device):
         current_fire = current_fire.to(device)
         target_fire = target_fire.to(device)
         features, _ = model.forward(sequence, current_fire)
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire)
+        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
         if loss is not None:
             total += loss.item()
             steps += 1
@@ -165,7 +177,7 @@ for epoch in range(EPOCHS):
         target_fire = target_fire.to(device)
 
         features, _ = model.forward(sequence, current_fire)
-        loss = calculate_local_spread_loss(model, features, current_fire, target_fire)
+        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
 
         if loss is not None:
             optimizer.zero_grad()
@@ -226,7 +238,7 @@ if local_images.is_dir() and local_masks.is_dir():
             current_fire = current_fire.to(device)
             target_fire = target_fire.to(device)
             features, _ = model.forward(sequence, current_fire)
-            loss = calculate_local_spread_loss(model, features, current_fire, target_fire)
+            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
             if loss is not None:
                 optimizer.zero_grad()
                 loss.backward()

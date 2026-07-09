@@ -1,8 +1,8 @@
 """PyTorch Dataset for Wildfire Front Propagation.
 
-Constructs 16-channel spatiotemporal tensors from GeoTIFF inputs, aligning
-topographic and meteorological features, and partitioning them into 30x30 patches
-for the A3C-LSTM architecture.
+Constructs 17-channel spatiotemporal tensors from GeoTIFF inputs, aligning
+topographic, meteorological, and fuel-moisture (FFMC) features, and partitioning
+them into 30x30 patches for the A3C-LSTM architecture.
 """
 
 from __future__ import annotations
@@ -67,6 +67,9 @@ class WildfireDataset(Dataset):
             "cloud": 10.0,
             "visibility": 10.0,
             "dew_point": 12.0,
+            # Sprint 5.3: FFMC (Fine Fuel Moisture Code). Range 0-101.
+            # 85 = moderately dry default. Updated via AEMET data when available.
+            "ffmc": 85.0,
         }
 
         # Identify and match all image and mask pairs
@@ -177,8 +180,8 @@ class WildfireDataset(Dataset):
             robust_sigma = 1.0
         return np.asarray((band - median) / robust_sigma, dtype=np.float32)
 
-    def _build_16_channels(self, img_path: Path) -> np.ndarray:
-        """Construct the 16-channel array for a single timestep.
+    def _build_17_channels(self, img_path: Path) -> np.ndarray:
+        """Construct the 17-channel array for a single timestep.
 
         When the source image is a thermal LWIR raster (as is the case for the
         Tobarra dataset), band 1 is z-score normalized and injected into
@@ -186,9 +189,13 @@ class WildfireDataset(Dataset):
         model sees real fire signal during both fine-tuning and inference.
         Channels 0-10 and 12-15 remain DEM/weather/FSM as defined by
         ``config.json``.
+
+        Channel 16: FFMC (Fine Fuel Moisture Code). If a ``weather_data["ffmc"]``
+        value is provided it is normalized to [0, 1] as ``ffmc / 101``. Otherwise
+        a neutral default of 85/101 ≈ 0.84 is used.
         """
 
-        channels = np.zeros((16, self.height, self.width), dtype=np.float32)
+        channels = np.zeros((17, self.height, self.width), dtype=np.float32)
 
         # 0-1: DEM (slope, aspect)
         channels[0] = self.dem_slope
@@ -214,6 +221,10 @@ class WildfireDataset(Dataset):
 
         # 12-15: FSM
         channels[12:16] = self.fsm
+
+        # 16: FFMC (Fine Fuel Moisture Code), normalized to [0, 1]
+        ffmc_raw = self.weather_data.get("ffmc", 85.0)
+        channels[16] = np.clip(ffmc_raw / 101.0, 0.0, 1.0)
 
         return channels
 
@@ -259,13 +270,13 @@ class WildfireDataset(Dataset):
         row = patch_info["row"]
         col = patch_info["col"]
 
-        # 1. Build the input sequence of shape (seq_len, 16, patch_size, patch_size)
+        # 1. Build the input sequence of shape (seq_len, 17, patch_size, patch_size)
         sequence_data = np.zeros(
-            (self.sequence_length, 16, self.patch_size, self.patch_size), dtype=np.float32
+            (self.sequence_length, 17, self.patch_size, self.patch_size), dtype=np.float32
         )
         for t in range(self.sequence_length):
             img_path, _, _ = self.samples[start_idx + t]
-            channels = self._build_16_channels(img_path)
+            channels = self._build_17_channels(img_path)
             # Crop to the spatial patch
             sequence_data[t] = channels[:, row : row + self.patch_size, col : col + self.patch_size]
 
@@ -290,11 +301,30 @@ class NpzWildfireDataset(Dataset):
     """
     High-speed PyTorch dataset loading pre-processed .npz spatiotemporal sequences.
     Optimized for cloud container runs (like Kaggle) avoiding GIS/GDAL dependencies.
+
+    Data Augmentation (Sprint 3.2)
+    ------------------------------
+    When ``augment=True``, each sample is randomly transformed with:
+    - **Horizontal flip** (p=0.5): flips sequence, current_fire, target_fire.
+    - **Vertical flip** (p=0.5): flips sequence, current_fire, target_fire.
+    - **Random noise** (p=0.3): adds Gaussian noise to weather channels.
+    - **Temporal dropout** (p=0.2): zeros one random timestep in the sequence.
+
+    These augmentations are physically valid because fire spread is
+    rotation-invariant in the abstract grid (the model learns direction from
+    wind/slope channels, not pixel position).
     """
 
-    def __init__(self, directory: Path | str) -> None:
+    def __init__(
+        self,
+        directory: Path | str,
+        augment: bool = False,
+        noise_std: float = 0.05,
+    ) -> None:
         self.directory = Path(directory)
         self.files = sorted(self.directory.glob("*.npz"))
+        self.augment = augment
+        self.noise_std = noise_std
 
     def __len__(self) -> int:
         return len(self.files)
@@ -305,4 +335,41 @@ class NpzWildfireDataset(Dataset):
             sequence = torch.from_numpy(data["sequence"].astype(np.float32))
             current_fire = torch.from_numpy(data["current_fire"].astype(np.float32))
             target_fire = torch.from_numpy(data["target_fire"].astype(np.float32))
+
+        if self.augment:
+            sequence, current_fire, target_fire = self._augment(
+                sequence, current_fire, target_fire
+            )
+
+        return sequence, current_fire, target_fire
+
+    def _augment(
+        self,
+        sequence: torch.Tensor,
+        current_fire: torch.Tensor,
+        target_fire: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Apply random physically-valid augmentations."""
+        # 1. Horizontal flip (p=0.5)
+        if np.random.random() < 0.5:
+            sequence = torch.flip(sequence, dims=[-1])  # flip last dim (W)
+            current_fire = torch.flip(current_fire, dims=[-1])
+            target_fire = torch.flip(target_fire, dims=[-1])
+
+        # 2. Vertical flip (p=0.5)
+        if np.random.random() < 0.5:
+            sequence = torch.flip(sequence, dims=[-2])  # flip H dim
+            current_fire = torch.flip(current_fire, dims=[-2])
+            target_fire = torch.flip(target_fire, dims=[-2])
+
+        # 3. Gaussian noise on weather channels (2-10), p=0.3
+        if np.random.random() < 0.3 and self.noise_std > 0:
+            noise = torch.randn_like(sequence[:, 2:11, :, :]) * self.noise_std
+            sequence[:, 2:11, :, :] = sequence[:, 2:11, :, :] + noise
+
+        # 4. Temporal dropout: zero one random timestep (p=0.2)
+        if np.random.random() < 0.2 and sequence.shape[0] > 1:
+            t_drop = np.random.randint(0, sequence.shape[0])
+            sequence[t_drop] = sequence[t_drop] * 0.0
+
         return sequence, current_fire, target_fire

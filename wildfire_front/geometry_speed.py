@@ -182,16 +182,33 @@ def match_components(
     )
 
 
+# Coordinate systems that are valid for metric geometry computations.
+# ``local_cartesian_m`` (used by synthetic.py) is a local tangential plane in
+# meters — geometrically equivalent to a projected metric CRS for distance/
+# area calculations, so we accept both.
+_PROJECTED_SYSTEMS = frozenset({"projected_metric", "local_cartesian_m"})
+
+
 def _validate_observation_pair(previous: FrontObservation, current: FrontObservation) -> float:
     previous.validate()
     current.validate()
     if (
-        previous.coordinate_system != "projected_metric"
-        or current.coordinate_system != "projected_metric"
+        previous.coordinate_system not in _PROJECTED_SYSTEMS
+        or current.coordinate_system not in _PROJECTED_SYSTEMS
     ):
-        raise ValueError("geometry speed requires projected metric coordinates")
-    if not previous.crs or previous.crs != current.crs:
-        raise ValueError("geometry speed requires matching non-empty CRS")
+        raise ValueError(
+            f"geometry speed requires projected metric coordinates; "
+            f"got previous='{previous.coordinate_system}', "
+            f"current='{current.coordinate_system}'"
+        )
+    # CRS must be consistent across both observations.  Both ``None`` is OK
+    # (e.g. synthetic local-cartesian data).  Mixed None/non-None or different
+    # EPSG codes is rejected because it would yield wrong distances.
+    if previous.crs != current.crs:
+        raise ValueError(
+            f"geometry speed requires matching CRS; "
+            f"got previous='{previous.crs}', current='{current.crs}'"
+        )
     dt_min = (current.time_s - previous.time_s) / 60.0
     if dt_min <= 0:
         raise ValueError("geometry speed requires strictly increasing timestamps")

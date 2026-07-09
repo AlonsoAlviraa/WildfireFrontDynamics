@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> None:
 
     # 2. Setup model
     model: LocalSpreadModel = A3C_PerCellModel_LSTM(  # type: ignore[assignment]
-        in_channels=16, lstm_hidden=256, sequence_length=3
+        in_channels=17, lstm_hidden=256, sequence_length=3
     )
     print(f"Loading pre-trained weights from {args.weights}...")
     load_pretrained_weights(model, args.weights)

@@ -90,13 +90,13 @@ def main() -> int:
     print()
 
     # Base model
-    base_model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
+    base_model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
     load_pretrained_weights(base_model, base_weights)
     base_model.to(device)
     evaluate(base_model, dataloader, device, "BASE")
 
     # Fine-tuned model
-    ft_model = A3C_PerCellModel_LSTM(in_channels=16, lstm_hidden=256, sequence_length=3)
+    ft_model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
     load_pretrained_weights(ft_model, ft_weights)
     ft_model.to(device)
     evaluate(ft_model, dataloader, device, "FINE-TUNED")

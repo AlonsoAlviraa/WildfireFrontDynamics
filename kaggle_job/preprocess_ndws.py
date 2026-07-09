@@ -117,6 +117,55 @@ for req_key, actual_key in mapped_keys.items():
 def parse_proto(example_proto):
     return tf.io.parse_single_example(example_proto, feature_description)
 
+# --------------------------------------------------------------------------- #
+# FFMC (Fine Fuel Moisture Code) — Van Wagner (1987)
+# --------------------------------------------------------------------------- #
+def compute_ffmc(temp_c, rh, wind_kmh, precip_mm, prev_ffmc=85.0):
+    """Compute FFMC from weather arrays. Range [0, 101]."""
+    temp_c = np.asarray(temp_c, dtype=np.float64)
+    rh = np.asarray(rh, dtype=np.float64)
+    wind_kmh = np.asarray(wind_kmh, dtype=np.float64)
+    precip_mm = np.asarray(precip_mm, dtype=np.float64)
+    prev = np.full_like(temp_c, prev_ffmc, dtype=np.float64)
+
+    rf = np.where(precip_mm > 0.5, precip_mm - 0.5, 0.0)
+    mo_prev = 147.2 * (101.0 - prev) / (59.5 + prev)
+    mo_rain = mo_prev + 100.0 * rf / (10.0 + rf) * np.exp(
+        -100.0 / (25.04 - 0.0759 * rf) - 8.62 / (1.0 + rf)
+    )
+    mo_rain = np.clip(mo_rain, 0.0, 250.0)
+
+    ed = (
+        0.942 * np.power(rh, 0.679)
+        + 11.0 * np.exp((rh - 100.0) / 10.0)
+        + 0.18 * (21.1 - temp_c) * (1.0 - np.exp(-0.115 * rh))
+    )
+    ew = (
+        0.618 * np.power(rh, 0.753)
+        + 10.0 * np.exp((rh - 100.0) / 10.0)
+        + 0.18 * (21.1 - temp_c) * (1.0 - np.exp(-0.115 * rh))
+    )
+
+    is_drying = mo_rain > ed
+    ko = np.where(is_drying, 1.0, ew / np.maximum(ed, 1e-6))
+
+    k0 = (
+        0.424 * (1.0 - np.power(rh / 100.0, 1.7))
+        + 0.0694 * np.sqrt(np.maximum(wind_kmh, 0.0))
+        * (1.0 - np.power(rh / 100.0, 8.0))
+    )
+    kd = ko * k0 * 0.581 * np.exp(21.06 - 0.0495 * mo_rain)
+
+    mo_new = np.where(
+        is_drying,
+        ed + (mo_rain - ed) * np.power(10.0, -kd),
+        ew - (ew - mo_rain) * np.power(10.0, -kd),
+    )
+    mo_new = np.clip(mo_new, 0.0, 250.0)
+    ffmc = 59.5 * (250.0 - mo_new) / (147.2 + mo_new)
+    return np.clip(ffmc, 0.0, 101.0).astype(np.float32)
+
+
 patch_count = 0
 sequence_count = 0
 
@@ -124,26 +173,26 @@ sequence_count = 0
 for file_path in tfrecord_files:
     if patch_count >= max_patches:
         break
-    
+
     print(f"Processing: {os.path.basename(file_path)}")
     try:
         if is_gzip:
             raw_dataset = tf.data.TFRecordDataset(file_path, compression_type='GZIP')
         else:
             raw_dataset = tf.data.TFRecordDataset(file_path)
-            
+
         parsed_dataset = raw_dataset.map(parse_proto)
-        
+
         for record in parsed_dataset:
             if patch_count >= max_patches:
                 break
-            
+
             # Helper to get parsed field or return zeros
             def get_field(name, default_val=0.0):
                 if name in mapped_keys:
                     return record[mapped_keys[name]].numpy()
                 return np.full((64, 64), default_val, dtype=np.float32)
-            
+
             # Extract features dynamically
             elevation = get_field('elevation')
             wind_dir = get_field('wind_direction')
@@ -156,48 +205,54 @@ for file_path in tfrecord_files:
             erc = get_field('erc', default_val=40.0)
             prev_fire = get_field('prev_fire_mask')
             fire = get_field('fire_mask')
-            
+
             # Compute slope and aspect from elevation using numpy gradients
             dy, dx = np.gradient(elevation)
             slope = np.arctan(np.sqrt(dx**2 + dy**2))
             aspect = np.arctan2(-dy, dx)
-            
-            # Build 16 channels
-            channels = np.zeros((16, 64, 64), dtype=np.float32)
+
+            # Compute FFMC (channel 16) — #1 predictor of ignition probability
+            temp_c = 0.5 * (min_temp + max_temp)
+            wind_kmh = wind_speed * 3.6  # m/s -> km/h for FFMC formula
+            ffmc = compute_ffmc(temp_c, humidity, wind_kmh, precip, prev_ffmc=85.0)
+
+            # Build 17 channels (channel 16 = FFMC for physics-informed loss)
+            channels = np.zeros((17, 64, 64), dtype=np.float32)
             channels[0] = slope
             channels[1] = aspect
-            channels[2] = 0.5 * (min_temp + max_temp) # Average temperature
+            channels[2] = temp_c          # Average temperature
             channels[3] = humidity
             channels[4] = wind_speed
             channels[5] = wind_dir
             channels[6] = precip
-            channels[7] = 1013.0 # Default pressure
-            channels[8] = 10.0   # Default cloud cover
-            channels[9] = 10.0   # Default visibility
-            channels[10] = 12.0  # Default dew point
-            channels[11] = veg   # NDVI
-            
+            channels[7] = 1013.0          # Default pressure
+            channels[8] = 10.0            # Default cloud cover
+            channels[9] = 10.0            # Default visibility
+            channels[10] = 12.0           # Default dew point
+            channels[11] = veg            # NDVI
+
             # FSM (One-hot mapping or susceptibility proxy based on normalized ERC)
             erc_norm = np.clip(erc / 100.0, 0.0, 1.0)
             channels[12] = erc_norm
             channels[13] = 1.0 - erc_norm
             channels[14] = 0.0
             channels[15] = 0.0
-            
+            channels[16] = ffmc           # Fine Fuel Moisture Code (Sprint 4)
+
             # Extract sliding patches of 30x30 to fit our model's input expectations
             # Strides of 10 over the 64x64 grid
             for row in [0, 10, 20, 34]:
                 for col in [0, 10, 20, 34]:
                     patch_prev_fire = prev_fire[row:row+30, col:col+30]
                     patch_fire = fire[row:row+30, col:col+30]
-                    
+
                     # Only save patches that contain active fire spreading transitions
                     if np.sum(patch_prev_fire) > 0 and np.sum(patch_fire) > 0:
                         patch_channels = channels[:, row:row+30, col:col+30]
-                        
+
                         # Replicate channels 3 times to build the temporal sequence length of 3
                         sequence_data = np.stack([patch_channels] * 3, axis=0)
-                        
+
                         # Save the patch data
                         np.savez_compressed(
                             os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
@@ -206,9 +261,9 @@ for file_path in tfrecord_files:
                             target_fire=patch_fire
                         )
                         patch_count += 1
-                        
+
             sequence_count += 1
-            
+
     except Exception as e:
         print(f"Error reading file {file_path}: {e}")
 

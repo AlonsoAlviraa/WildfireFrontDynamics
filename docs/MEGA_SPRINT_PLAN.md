@@ -298,14 +298,188 @@ Cada sprint termina con: **tests verdes + PR mergeable**.
 
 ---
 
-## 📋 Orden de Ejecución Recomendado
+## 🤖 ML SPRINT — Mejora del Modelo (POST-EVALUACIÓN 2026-07-09)
+
+> **Trigger:** Resultados de `docs/ML_BASELINE_METRICS.md` muestran déficits críticos
+> **Base:** Evaluación con 18 patches semireal → IoU 0.22, Recall 0.24, Precision 0.68
+
+### Diagnóstico ML (Sprint 0 — COMPLETADO)
+
+| Métrica | Valor Baseline | Objetivo | Diagnóstico |
+|---------|---------------|----------|-------------|
+| IoU (mean) | **0.2183** | ≥0.50 | 🔴 Crítico — modelo no captura bien el frente |
+| IoU (micro) | 0.3378 | ≥0.55 | 🟡 Pooled algo mejor pero insuficiente |
+| Dice/F1 (mean) | 0.3253 | ≥0.60 | 🔴 Bajo |
+| Precision | **0.6759** | ≥0.70 | 🟡 Aceptable — pocas falsas alarmas |
+| Recall | **0.2384** | ≥0.60 | 🔴 **Crítico** — se pierde 76% de fuegos reales |
+| Specificity | ~0.95 | ≥0.90 | ✅ Bien — clasifica no-fuego correctamente |
+
+**Conclusión:** El modelo es excesivamente conservador. Predice muy pocas celdas
+como "fuego" y por eso pierde la mayoría de las igniciones reales (bajo recall).
+La precision es decente porque cuando predice fuego, suele acertar.
+
+**Artefactos creados en Sprint 0:**
+- ✅ `wildfire_front/evaluation.py` — métricas segmentación + propagación
+- ✅ `scripts/evaluate_current_model.py` — evaluación reproducible
+- ✅ `scripts/package_real_data_for_kaggle.py` — empaquetar datos reales
+- ✅ `docs/ML_BASELINE_METRICS.md` — reporte baseline
+
+---
+
+### ML-Sprint 1: Data Pipeline de Incendios Reales (ALTA PRIORIDAD)
+
+> **Objetivo:** Convertir los 7 incendios reales (2,353 archivos) en patches
+> entrenables compatibles con el modelo A3C-LSTM.
+
+**Datos disponibles:**
+
+| Incendio | Fotos | KMZ/KML | Total |
+|----------|-------|---------|-------|
+| RETUERTA | ~80 | ~26 | 106 |
+| BRAZATORTAS | ~105 | ~34 | 139 |
+| POLAN | ~67 | ~22 | 89 |
+| CARDOSO (2 sesiones) | ~660 | ~213 | 873 |
+| HELLIN | ~145 | ~112 | 415 |
+| LA_ESTRELLA_ACOM2 | ~300 | ~175 | 475 |
+| TOBARRA | ~60+ | ~30+ | ~100+ |
+
+**Acciones:**
+
+1. **Pipeline KMZ → GeoTIFF masks** (`scripts/kmz_to_geotiff_masks.py`):
+   - Parsear KMZ → extraer polígonos de perímetro
+   - Rasterizar a GeoTIFF con CRS consistente (EPSG:25830 para Albacete)
+   - Generar máscaras binarias por timestamp
+
+2. **Pipeline GeoTIFF → Patches 30×30** (`scripts/geotiff_to_patches.py`):
+   - Recortar imágenes infrared/EO a grilla de 30×30 celdas
+   - Construir secuencias temporales (3 frames por sample)
+   - Generar 16 canales de entrada (NDWI, elevación, pendiente, etc.)
+
+3. **Subida a Kaggle**:
+   - Ejecutar `python scripts/package_real_data_for_kaggle.py`
+   - Subir como Kaggle Dataset versionado
+   - Configurar kernel para leer de ahí
+
+4. **Augmentation**: flip horizontal/vertical, rotación 90°, variación temporal
+
+**Criterio de aceptación:**
+- [ ] ≥500 patches de datos reales listos para entrenamiento
+- [ ] Manifest CSV con provenance (incendio, timestamp, coords)
+- [ ] Subido a Kaggle y accesible desde kernel
+
+---
+
+### ML-Sprint 2: Reward Shaping & Fine-Tuning (CRÍTICO PARA RECALL) — ✅ COMPLETADO
+
+> **Objetivo:** Corregir el bajo recall (0.24 → ≥0.60) mediante ajuste del
+> reward y re-entrenamiento.
+> **Estado:** Implementación de código completada (2026-07-09). Pendiente: lanzar
+> mega-entrenamiento en Kaggle para validar métricas reales.
+
+**Acciones implementadas:**
+
+1. **Focal Loss + pos_weight** en `wildfire_front/ml/train.py`:
+   - ✅ Focal loss con `gamma=2.0` que down-weighta ejemplos fáciles
+   - ✅ `pos_weight=3.0` que penaliza false negatives 3× más que false positives
+   - ✅ Spread-direction bonus (soft IoU) que recompensa capturar propagación correcta
+   - ✅ Tests unitarios verifican que FN > FP loss y que gamma=0 reduce a BCE ponderado
+
+2. **Smart initialization de capas v2** en `wildfire_front/ml/weights.py`:
+   - ✅ `fusion_gate`: bias inicializado a -4.0 → sigmoid≈0 → passthrough espacial
+   - ✅ `refine`: conv inicializada como identidad (kernel center=1) → no-op inicial
+   - ✅ `temporal_projection`: Xavier con gain=0.1 → ruido temporal mínimo inicial
+   - ✅ Test verifica que refine es near-identity y gate bias < -3.0
+
+3. **Learning rate warmup + cosine decay** en `kaggle_job/run_mega_training.py`:
+   - ✅ 2 epochs de warmup lineal (start_factor=0.1)
+   - ✅ Cosine decay sobre 13 epochs restantes hasta lr_min=1e-6
+   - ✅ Epochs aumentados de 12 → 15 para aprovechar focal loss
+
+**Acciones pendientes (futuras iteraciones):**
+
+4. **Curriculum learning** (ML-Sprint 2b):
+   - Fase 1 (5 epochs): synthetic puro — aprender dinámica básica
+   - Fase 2 (5 epochs): mixto 50/50 synthetic + real
+   - Fase 3 (5 epochs): real puro — adaptación a dominio real
+
+5. **Entropy bonus tuning** (ML-Sprint 2b):
+   - Aumentar entropy coefficient de 0.01 → 0.05 para forzar más exploración
+
+**Criterio de aceptación:**
+- [x] Código de Focal Loss + pos_weight implementado y testeado
+- [x] Smart init de capas v2 implementado y testeado
+- [x] LR warmup + cosine decay configurado en mega training
+- [x] 83/83 tests pasando (3 tests nuevos añadidos)
+- [ ] Recall ≥ 0.50 en datos semireal (requiere lanzar Kaggle)
+- [ ] IoU ≥ 0.35 (requiere lanzar Kaggle)
+
+---
+
+### ML-Sprint 3: Arquitectura — Attention + Multi-Scale (MEDIANA PRIORIDAD)
+
+> **Objetivo:** Mejorar captura de patrones espaciales multi-escala del fuego.
+
+**Acciones:**
+
+1. **Spatial attention module** en `models/model.py`:
+   - Añadir bloque self-attention después del CNN encoder
+   - Permite al modelo enfocar en bordes del frente
+
+2. **Multi-scale feature pyramid**:
+   - FPN-style con skips a múltiples resoluciones
+   - Captura tanto fuegos pequeños (1-2 celdas) como grandes frentes
+
+3. **Temporal attention en LSTM**:
+   - Attention sobre los 3 timesteps de la secuencia
+   - Ponderar frames más recientes con más peso
+
+**Criterio de aceptación:**
+- [ ] Nuevo modelo supera baseline en IoU por ≥5 puntos
+- [ ] Misma latencia de inferencia (<50ms/patch en CPU)
+
+---
+
+### ML-Sprint 4: Meteodatos y Physics-Informed Loss (BAJA PRIORIDAD)
+
+> **Objetivo:** Integrar datos meteorológicos como canales adicionales y
+> añadir restricciones físicas al loss.
+
+**Acciones:**
+
+1. **Canales de meteorología** (de AEMET/OpenMeteo):
+   - Velocidad y dirección del viento (2 canales)
+   - Temperatura y humedad relativa
+   - Esto eleva in_channels de 16 → 20
+
+2. **Physics-informed loss term**:
+   - Penalizar predicciones que violen la ecuación de propagación de Rothermel
+   - vmax = f(fuel, wind, slope) → restricción de velocidad máxima
+
+3. **Topografía** (de MDT5 de IGN):
+   - Pendiente y orientación (ya parcialmente en canal 14-15)
+
+**Criterio de aceptación:**
+- [ ] Modelo con 20 canales entrena sin errores de dimensionalidad
+- [ ] Physics loss mejora velocidad de propagación predicha vs observada
+
+---
+
+## 📋 Orden de Ejecución Recomendado (ACTUALIZADO)
 
 ```
-1. Phase 1A (CRS contract)     ← bloqueante, hace primero
-2. Phase 1B (radial samples)   ← rápido, junto con 1A
-3. Phase 2A (models/__init__)  ← rápido
-4. Phase 3A (CI básico)        ← para tener feedback loop
-5. Phase 4A (tests gap)        ← aprovechar CI
-6. Phase 2B (type stubs)       ← con tests de respaldo
-7. Phase 5A (scripts)          ← no bloqueante
-8. Phase 6 (docs)              ← al final
+ Prioridad ALTA (impacta ML directamente):
+ 1. ML-Sprint 1  (data pipeline reales)    ← desbloquea entrenamiento real
+ 2. ML-Sprint 2  (reward + fine-tuning)    ← corrige recall crítico
+ 3. Phase 1A     (CRS contract)            ← bloqueante para pipeline real
+
+ Prioridad MEDIA (calidad e infraestructura):
+ 4. Phase 3A     (CI básico)               ← feedback loop para todo
+ 5. Phase 2A     (models/__init__)         ← rápido
+ 6. Phase 4A     (tests gap)               ← aprovechar CI
+ 7. ML-Sprint 3  (attention multi-scale)   ← mejora incremental
+
+ Prioridad BAJA (pulido):
+ 8. Phase 2B     (type stubs)              ← con tests de respaldo
+ 9. ML-Sprint 4  (meteo + physics loss)    ← enrichment
+10. Phase 5A     (scripts cleanup)         ← no bloqueante
+11. Phase 6      (docs)                    ← al final

@@ -105,8 +105,12 @@ class GeometrySpeedTests(unittest.TestCase):
         current = FrontObservation(**{**current.__dict__, "coordinate_system": "geographic"})
         result = estimate_geometry_speeds([previous, current])
         self.assertEqual(0, len(result.estimates))
-        self.assertIn(
-            "geometry speed requires projected metric coordinates", result.pair_abstentions
+        self.assertTrue(
+            any(
+                "geometry speed requires projected metric coordinates" in reason
+                for reason in result.pair_abstentions
+            ),
+            f"Expected coordinate-system abstention, got {result.pair_abstentions}",
         )
 
     def test_resampling_and_orientation_are_stable(self) -> None:
@@ -114,6 +118,66 @@ class GeometrySpeedTests(unittest.TestCase):
         sampled = resample_closed_component(ring, 2.0)
         self.assertGreater(len(sampled), 10)
         self.assertGreater(signed_area(ring), 0)
+
+    def test_local_cartesian_crs_none_is_accepted(self) -> None:
+        """Synthetic data uses coordinate_system='local_cartesian_m' + crs=None.
+
+        This must be accepted by the geometry-speed estimator (it's metric and
+        both observations share the same None CRS).
+        """
+        previous = FrontObservation(
+            observation_id="syn_prev",
+            event_id="syn",
+            sensor_id="thermal",
+            time_s=0.0,
+            observed_at="2026-07-09T12:00:00Z",
+            components=(rectangle(0, 0, 20, 10),),
+            estimated_error_m=0.1,
+            crs=None,
+            coordinate_system="local_cartesian_m",
+            resolution_m=1.0,
+            method="synthetic",
+        )
+        current = FrontObservation(
+            observation_id="syn_cur",
+            event_id="syn",
+            sensor_id="thermal",
+            time_s=60.0,
+            observed_at="2026-07-09T12:01:00Z",
+            components=(rectangle(-2, -2, 22, 12),),
+            estimated_error_m=0.1,
+            crs=None,
+            coordinate_system="local_cartesian_m",
+            resolution_m=1.0,
+            method="synthetic",
+        )
+        result = estimate_geometry_speeds([previous, current])
+        summary = summarize_geometry_speeds(result)
+        self.assertEqual("estimated", summary["speed_status"])
+        self.assertGreater(summary["num_observable"], 0)
+
+    def test_mixed_crs_none_and_real_is_rejected(self) -> None:
+        """crs=None mixed with a real EPSG code must be rejected."""
+        previous = observation(0.0, (rectangle(0, 0, 10, 10),))  # EPSG:32630
+        current = FrontObservation(
+            observation_id="syn_cur",
+            event_id="syn",
+            sensor_id="thermal",
+            time_s=60.0,
+            observed_at="2026-07-09T12:01:00Z",
+            components=(rectangle(-1, -1, 11, 11),),
+            estimated_error_m=0.1,
+            crs=None,
+            coordinate_system="local_cartesian_m",
+            resolution_m=1.0,
+            method="synthetic",
+        )
+        result = estimate_geometry_speeds([previous, current])
+        self.assertEqual(0, len(result.estimates))
+        self.assertTrue(
+            any("matching CRS" in reason for reason in result.pair_abstentions),
+            f"Expected CRS mismatch abstention, got {result.pair_abstentions}",
+        )
 
 
 if __name__ == "__main__":
