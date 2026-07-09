@@ -184,9 +184,11 @@ def evaluate_loss(model, loader, device):
         sequence = sequence.to(device)
         current_fire = current_fire.to(device)
         target_fire = target_fire.to(device)
+        # Forward in AMP (fp16), loss computed in fp32 to avoid NaN
         with torch.amp.autocast('cuda', enabled=USE_AMP):
             features, _ = model.forward(sequence, current_fire)
-            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        features = features.float()  # cast back to fp32 for stable loss
+        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
         if loss is not None:
             total += loss.item()
             steps += 1
@@ -203,9 +205,11 @@ for epoch in range(EPOCHS):
         current_fire = current_fire.to(device)
         target_fire = target_fire.to(device)
 
+        # Forward in AMP (fp16) for speed, loss in fp32 for stability
         with torch.amp.autocast('cuda', enabled=USE_AMP):
             features, _ = model.forward(sequence, current_fire)
-            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+        features = features.float()  # CRITICAL: cast to fp32 before loss
+        loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
 
         if loss is not None:
             optimizer.zero_grad()
@@ -269,7 +273,8 @@ if local_images.is_dir() and local_masks.is_dir():
             target_fire = target_fire.to(device)
             with torch.amp.autocast('cuda', enabled=USE_AMP):
                 features, _ = model.forward(sequence, current_fire)
-                loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
+            features = features.float()
+            loss = calculate_local_spread_loss(model, features, current_fire, target_fire, sequence=sequence)
             if loss is not None:
                 optimizer.zero_grad()
                 scaler.scale(loss).backward()

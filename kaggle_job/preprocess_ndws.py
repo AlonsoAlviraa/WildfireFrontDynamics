@@ -94,13 +94,13 @@ if not (train_cut >= 4 and val_cut > train_cut and val_cut < n):
 
 if args.split == "train":
     tfrecord_files = all_tfrecord_files[:train_cut]
-    max_patches = 80000
+    max_patches = 12000  # Reduced from 80k — 80k took 9910s/epoch (2.75h!), infeasible in 9h Kaggle
 elif args.split == "val":
     tfrecord_files = all_tfrecord_files[train_cut:val_cut]
-    max_patches = 15000
+    max_patches = 5000
 else:  # test
     tfrecord_files = all_tfrecord_files[val_cut:]
-    max_patches = 15000
+    max_patches = 5000
 
 print(f"Leak-free split: {args.split} = shards [{0 if args.split=='train' else train_cut if args.split=='val' else val_cut}"
       f"..{train_cut if args.split=='train' else val_cut if args.split=='val' else n}] "
