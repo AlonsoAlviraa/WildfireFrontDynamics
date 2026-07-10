@@ -18,18 +18,49 @@ import time
 from pathlib import Path
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 
 # --------------------------------------------------------------------------- #
-# 1. Clone repository
+# 0. FIX P100 sm_60 compatibility — MUST happen before `import torch`
 # --------------------------------------------------------------------------- #
 print("=" * 70)
 print("WILDFIRE U-NET TRAINING v13 — INDUSTRY STANDARD")
 print("=" * 70)
 
+# Kaggle's P100 GPU (sm_60) needs PyTorch <= 2.1.x.
+# Current Kaggle PyTorch (2.3+) only supports sm_70+ → CUDA kernel errors.
+# We detect P100 via nvidia-smi BEFORE importing torch, install compatible
+# version, then import. This avoids "no kernel image" runtime crashes.
+def _check_gpu_compat():
+    """Check if GPU needs older PyTorch. Returns True if P100 (sm_60) detected."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0 and "P100" in result.stdout:
+            print(f"  P100 GPU detected: {result.stdout.strip()}")
+            return True
+    except Exception:
+        pass
+    return False
+
+if _check_gpu_compat():
+    print("  Installing PyTorch 2.1.2 (supports P100 sm_60)...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q",
+                    "torch==2.1.2", "torchvision==0.16.2"],
+                   check=True, capture_output=True)
+    print("  PyTorch 2.1.2 installed successfully.")
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+
+print(f"PyTorch version: {torch.__version__}")
+
+# --------------------------------------------------------------------------- #
+# 1. Clone repository
+# --------------------------------------------------------------------------- #
 if not Path("WildfireFrontDynamics").exists():
     print("Cloning repository...")
     subprocess.run(
