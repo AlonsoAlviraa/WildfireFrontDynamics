@@ -39,15 +39,15 @@ import numpy as np
 # --------------------------------------------------------------------------- #
 # 0. CLI args (works both as Kaggle script and standalone)
 # --------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description="Wildfire U-Net v14 training")
+parser = argparse.ArgumentParser(description="Wildfire U-Net v16 training")
 parser.add_argument("--epochs", type=int, default=50)
 parser.add_argument("--batch-size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--loss", choices=["combined", "composite", "tversky", "focal", "bce"],
                     default="composite")
 parser.add_argument("--pos-weight", type=float, default=5.0)
-parser.add_argument("--model", choices=["full", "small"], default="small")
-parser.add_argument("--se-attention", action="store_true", default=False)
+parser.add_argument("--model", choices=["full", "small"], default="full")
+parser.add_argument("--se-attention", action="store_true", default=True)
 parser.add_argument("--norm", choices=["group", "batch", "instance"], default="group")
 parser.add_argument("--grad-accum", type=int, default=1, help="Gradient accumulation steps.")
 parser.add_argument("--ema-decay", type=float, default=0.999, help="EMA decay (0=disabled).")
@@ -62,7 +62,7 @@ parser.add_argument("--output-dir", type=str, default="../",
 args, _unknown = parser.parse_known_args()
 
 print("=" * 70)
-print(f"WILDFIRE U-NET TRAINING v14 — LOOP ENGINEERING EDITION")
+print(f"WILDFIRE U-NET TRAINING v16 — RESIDUAL ARCHITECTURE")
 print("=" * 70)
 print(f"Config: {vars(args)}")
 
@@ -95,11 +95,8 @@ def _check_gpu_compat():
     return False
 
 if _check_gpu_compat():
-    print("  Installing PyTorch 2.1.2 (supports P100 sm_60)...")
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q",
-                    "torch==2.1.2", "torchvision==0.16.2"],
-                   check=True, capture_output=True)
-    print("  PyTorch 2.1.2 installed successfully.")
+    print("  P100 detected — using pre-installed PyTorch (sm_60 supported since torch>=2.0)")
+    print("  Skipping pip install (torch 2.1.2 not available for Python 3.12)")
 
 import torch
 import torch.nn as nn
@@ -630,7 +627,7 @@ best_epoch = -1
 no_improve = 0
 history = []
 
-log_msg(f"\n--- U-Net v14 started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
+log_msg(f"\n--- U-Net v16 RESIDUAL started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
 log_msg(f"Config: epochs={args.epochs}, batch={args.batch_size}, lr={args.lr}, "
         f"loss={args.loss}, model={model_cls.__name__}, params={n_params:,}")
 
@@ -753,7 +750,7 @@ EVAL_FILE = OUTPUT_DIR / "evaluation_metrics.json"
 EVAL_FILE.write_text(json.dumps(test_results, indent=2, default=str))
 
 summary = {
-    "version": "v14",
+    "version": "v16",
     "architecture": model_cls.__name__,
     "best_epoch": best_epoch,
     "best_val_loss": best_val_loss,
@@ -774,4 +771,4 @@ summary = {
 SUMMARY_FILE = OUTPUT_DIR / "training_summary.json"
 SUMMARY_FILE.write_text(json.dumps(summary, indent=2, default=str))
 print(json.dumps(summary, indent=2, default=str))
-print("\n=== U-NET v14 COMPLETED ===")
+print("\n=== U-NET v16 RESIDUAL COMPLETED ===")
