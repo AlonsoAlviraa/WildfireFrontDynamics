@@ -1,7 +1,7 @@
 @echo off
 REM Polls Kaggle job status every 60s and downloads output when COMPLETE.
 setlocal
-set KERNEL=alonsoalvira/wildfire-front-training
+set KERNEL=alonsoalviraaaa/wildfire-front-training
 set OUTDIR=c:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\kaggle_output
 set LOGFILE=c:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\kaggle_output\monitor.log
 
