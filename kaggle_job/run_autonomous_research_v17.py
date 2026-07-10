@@ -45,6 +45,19 @@ def _check_gpu():
     except: pass
 _check_gpu()
 
+# FIX: P100 sm_60 compatibility — detect BEFORE importing torch
+def _install_pt_for_p100():
+    try:
+        r = subprocess.run(["nvidia-smi","--query-gpu=name","--format=csv,noheader"],
+                          capture_output=True, text=True, timeout=10)
+        if r.returncode==0 and "P100" in r.stdout:
+            print("  P100 detected — installing PyTorch 2.1.2 (supports sm_60)...")
+            subprocess.run([sys.executable,"-m","pip","install","-q","torch==2.1.2","torchvision==0.16.2"],
+                          check=True, capture_output=True)
+            print("  PyTorch 2.1.2 installed.")
+    except Exception: pass
+_install_pt_for_p100()
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
