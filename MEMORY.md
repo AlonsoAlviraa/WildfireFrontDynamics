@@ -19,11 +19,24 @@
 
 ## Experiment History (Chronological)
 
-### v13b: U-Net Small — PENDING
+### v13c: U-Net Small + P100 fix — RUNNING
 - **Date:** 2026-07-10
-- **Change:** New architecture (U-Net), batch_size=32, PyTorch downgrade for P100
-- **Status:** Launched, awaiting results
-- **Fixes applied:** Inlined model (v13 ModuleNotFoundError), PyTorch 2.1.2 install (sm_60 CUDA error)
+- **Change:** New architecture (U-Net), batch_size=32, PyTorch 2.1.2 auto-install for P100
+- **Status:** Launched on Kaggle (alonsoalviraaaa/wildfire-front-training-v13c)
+- **Fixes applied:**
+  - v13: ModuleNotFoundError → model inlined
+  - v13b: CUDA sm_60 error → PyTorch 2.1.2 install (but import order wrong)
+  - v13c: nvidia-smi detection BEFORE `import torch`, then pip install, then import
+
+### v13b: U-Net Small — FAILED (CUDA sm_60)
+- **Date:** 2026-07-10
+- **Error:** `no kernel image is available for execution on the device`
+- **Cause:** PyTorch 2.3+ doesn't support P100 sm_60; import torch happened before fix
+
+### v13: U-Net Small — FAILED (ModuleNotFoundError)
+- **Date:** 2026-07-10
+- **Error:** `No module named 'models.unet_model'`
+- **Cause:** External import failed on cloned repo
 
 ### v12: Freeze Conv + pos_weight=8 — FAILED
 - **Date:** 2026-07-10
