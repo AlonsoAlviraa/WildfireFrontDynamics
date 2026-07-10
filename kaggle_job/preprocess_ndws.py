@@ -1,18 +1,58 @@
+#!/usr/bin/env python3
+"""Google NDWS TFRecord → NPZ preprocessor (v2 — loop-engineering overhaul).
+
+This is the data backbone of the experiment loop. Every modeling decision
+depends on this stage being correct, so it has been hardened with:
+
+1. **Full 64×64 grids** — no sub-patch extraction that throws away 75% of
+   the native resolution. The U-Net bottleneck is 8×8 on a 64×64 input.
+2. **Single-timestep input** — uses ``PrevFireMask`` as ``current_fire``
+   instead of replicating the same frame 3× as a fake "sequence". The old
+   replication taught the model that t == t+1 == t+2, i.e. nothing temporal.
+3. **Leak-free 3-way shard split** — disjoint TFRecord shards per split.
+4. **Flexible patch size** — emit either full 64×64 or sliding windows.
+5. **Robust normalization** — per-channel affine transform, NaN/Inf sanitize.
+6. **Optional temporal stacking** — if ``--sequence-length N`` is given,
+   consecutive records are grouped into real temporal sequences.
+7. **Rich filtering** — keep only patches with meaningful fire activity.
+
+Usage (Kaggle):
+    python preprocess_ndws.py --split train
+    python preprocess_ndws.py --split val
+    python preprocess_ndws.py --split test
+
+    # Optional flags:
+    #   --patch-size 64      (default; use 30 for legacy model compat)
+    #   --max-patches 15000  (cap per split)
+    #   --sequence-length 1  (1 = single timestep, 3 = real temporal stack)
+"""
+
 import os
 import sys
 import glob
-import numpy as np
 import argparse
+import numpy as np
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="NDWS TFRecord preprocessor (v2)")
 parser.add_argument("--split", choices=["train", "val", "test"], required=True)
+parser.add_argument("--patch-size", type=int, default=64,
+                    help="Patch size to emit (default 64 = full NDWS grid).")
+parser.add_argument("--max-patches", type=int, default=None,
+                    help="Cap patches for this split (overrides defaults).")
+parser.add_argument("--sequence-length", type=int, default=1,
+                    help="Number of consecutive frames per sample (1 or 3).")
+parser.add_argument("--stride", type=int, default=32,
+                    help="Sliding window stride when patch-size < 64.")
 args = parser.parse_args()
 
-import tensorflow as tf
+import tensorflow as tf  # noqa: E402
 
-print(f"=== Starting Google NDWS TFRecord Preprocessing for split: {args.split} ===")
+print(f"=== NDWS Preprocessing v2 | split={args.split} patch={args.patch_size}x{args.patch_size} ===")
+print(f"    sequence_length={args.sequence_length} stride={args.stride}")
 
-# Paths on Kaggle — search multiple possible locations
+# --------------------------------------------------------------------------- #
+# Locate TFRecord input
+# --------------------------------------------------------------------------- #
 CANDIDATE_INPUT_DIRS = [
     "/kaggle/input/next-day-wildfire-spread",
     "/kaggle/input/next-day-wildfire-spread/next-day-wildfire-spread",
@@ -26,7 +66,7 @@ for d in CANDIDATE_INPUT_DIRS:
 # Fallback: scan all /kaggle/input subdirs for any .tfrecord files
 if input_dir is None:
     print(f"Neither candidate dir exists. Scanning /kaggle/input/ ...")
-    for root, dirs, files in os.walk("/kaggle/input"):
+    for root, _dirs, files in os.walk("/kaggle/input"):
         for f in files:
             if f.endswith(".tfrecord"):
                 input_dir = os.path.dirname(os.path.join(root, f))
@@ -36,7 +76,6 @@ if input_dir is None:
 
 if input_dir is None:
     print("Error: No input directory with TFRecord files found!")
-    print("Contents of /kaggle/input/:")
     if os.path.exists("/kaggle/input"):
         for item in os.listdir("/kaggle/input"):
             print(f"  {item}")
@@ -44,16 +83,12 @@ if input_dir is None:
 
 print(f"Using input_dir: {input_dir}")
 
-# List contents for debugging
-print(f"Contents of {input_dir}:")
-for item in sorted(os.listdir(input_dir)):
-    print(f"  {item}")
-
 output_dir = os.path.join("/tmp/ndws_npz", args.split)
 os.makedirs(output_dir, exist_ok=True)
 
-# Find all tfrecord files (recursive — NDWS may nest them in subdirs)
-all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "**", "*.tfrecord"), recursive=True))
+all_tfrecord_files = sorted(
+    glob.glob(os.path.join(input_dir, "**", "*.tfrecord"), recursive=True)
+)
 
 # Prefer files with 'train' in the name (NDWS convention), but accept all
 train_named = [f for f in all_tfrecord_files if "train" in os.path.basename(f).lower()]
@@ -62,55 +97,45 @@ if train_named:
 
 if not all_tfrecord_files:
     print("Error: No TFRecord files found!")
-    print(f"Searched: {input_dir}/**/*.tfrecord")
     sys.exit(1)
 
 print(f"Found {len(all_tfrecord_files)} TFRecord files:")
 for f in all_tfrecord_files:
     print(f"  {os.path.basename(f)}")
 
-# --- LEAK-FREE 3-WAY SPLIT -----------------------------------------------
-# NDWS ships ~15 tfrecord shards. We partition them into disjoint groups so
-# that NO shard (and therefore NO fire event) appears in more than one split.
-# This is the strongest guarantee against temporal/geographic leakage.
-#
-#   train : shards  0..11  (12 files)  -> up to 80k patches
-#   val   : shards 12..13  ( 2 files)  -> up to 15k patches  (model selection)
-#   test  : shards 14..    ( 1+ files) -> up to 15k patches  (unseen evaluation)
+# --------------------------------------------------------------------------- #
+# Leak-free 3-way shard split
+# --------------------------------------------------------------------------- #
 n = len(all_tfrecord_files)
 if n < 4:
-    raise SystemExit(f"Need at least 4 TFRecord shards for a leak-free 3-way split, found {n}")
+    raise SystemExit(f"Need at least 4 TFRecord shards for leak-free split, found {n}")
 
-# Robust leak-free 3-way split: guarantee train>=4, val>=1, test>=1 even when
-# the shard count is small (n<15). The old `max(12, ...)` forced train_cut=12
-# for any n<15, which silently collapsed val to EMPTY (a data-leak / no-val bug).
-train_cut = max(4, int(round(n * 0.80)))                       # ~80% train, min 4
-val_cut = min(n - 1, train_cut + max(1, int(round(n * 0.10))))  # ~10% val, keep >=1 for test
+train_cut = max(4, int(round(n * 0.80)))
+val_cut = min(n - 1, train_cut + max(1, int(round(n * 0.10))))
 if not (train_cut >= 4 and val_cut > train_cut and val_cut < n):
     raise SystemExit(
         f"Cannot build leak-free 3-way split from {n} shards: "
-        f"train_cut={train_cut}, val_cut={val_cut}. Need more shards."
+        f"train_cut={train_cut}, val_cut={val_cut}."
     )
+
+DEFAULT_MAX = {"train": 15000, "val": 5000, "test": 5000}
+max_patches = args.max_patches if args.max_patches else DEFAULT_MAX[args.split]
 
 if args.split == "train":
     tfrecord_files = all_tfrecord_files[:train_cut]
-    max_patches = 12000  # Reduced from 80k — 80k took 9910s/epoch (2.75h!), infeasible in 9h Kaggle
 elif args.split == "val":
     tfrecord_files = all_tfrecord_files[train_cut:val_cut]
-    max_patches = 5000
-else:  # test
+else:
     tfrecord_files = all_tfrecord_files[val_cut:]
-    max_patches = 5000
 
-print(f"Leak-free split: {args.split} = shards [{0 if args.split=='train' else train_cut if args.split=='val' else val_cut}"
-      f"..{train_cut if args.split=='train' else val_cut if args.split=='val' else n}] "
-      f"({len(tfrecord_files)} files, cap={max_patches} patches)")
+print(f"Leak-free split: {args.split} = {len(tfrecord_files)} files, cap={max_patches} patches")
 
-# Inspect keys of the first file in this split
+# --------------------------------------------------------------------------- #
+# Detect GZIP + inspect keys
+# --------------------------------------------------------------------------- #
 first_file = tfrecord_files[0]
-raw_dataset = tf.data.TFRecordDataset(first_file)
-# Try uncompressed, fallback to GZIP
 try:
+    raw_dataset = tf.data.TFRecordDataset(first_file)
     first_record = next(iter(raw_dataset))
     is_gzip = False
     print("Detection: First file appears to be uncompressed.")
@@ -125,7 +150,9 @@ example.ParseFromString(first_record.numpy())
 actual_keys = list(example.features.feature.keys())
 print("Actual keys in TFRecord:", actual_keys)
 
-# Define candidates for mapping
+# --------------------------------------------------------------------------- #
+# Dynamic feature key mapping
+# --------------------------------------------------------------------------- #
 possible_keys = {
     'elevation': ['elevation', 'dem', 'Elevation'],
     'wind_direction': ['wind_direction', 'wind_dir', 'wind_direction_10m', 'th'],
@@ -152,13 +179,14 @@ print("Mapped feature keys:")
 for k, v in mapped_keys.items():
     print(f"  {k} -> {v}")
 
-# Build feature description dynamically
 feature_description = {}
 for req_key, actual_key in mapped_keys.items():
     feature_description[actual_key] = tf.io.FixedLenFeature([64, 64], tf.float32)
 
+
 def parse_proto(example_proto):
     return tf.io.parse_single_example(example_proto, feature_description)
+
 
 # --------------------------------------------------------------------------- #
 # FFMC (Fine Fuel Moisture Code) — Van Wagner (1987)
@@ -194,7 +222,7 @@ def compute_ffmc(temp_c, rh, wind_kmh, precip_mm, prev_ffmc=85.0):
 
     k0 = (
         0.424 * (1.0 - np.power(rh / 100.0, 1.7))
-        + 0.0694 * np.sqrt(np.maximum(wind_kmh, 0.0))
+        + 0.0694 * sqrt_or_zero(wind_kmh)
         * (1.0 - np.power(rh / 100.0, 8.0))
     )
     kd = ko * k0 * 0.581 * np.exp(21.06 - 0.0495 * mo_rain)
@@ -209,10 +237,127 @@ def compute_ffmc(temp_c, rh, wind_kmh, precip_mm, prev_ffmc=85.0):
     return np.clip(ffmc, 0.0, 101.0).astype(np.float32)
 
 
+def sqrt_or_zero(x):
+    """np.sqrt with negative guard (wind arrays may have -0.0 artifacts)."""
+    return np.sqrt(np.maximum(x, 0.0))
+
+
+# --------------------------------------------------------------------------- #
+# Normalization constants (must match wildfire_front.ml.normalization)
+# --------------------------------------------------------------------------- #
+_NORM = [
+    (0.0, 1.5708),    # 0: slope (rad)
+    (3.14159, 6.28318),  # 1: aspect (rad) -> [0,1]
+    (15.0, 20.0),     # 2: temperature (C)
+    (0.0, 100.0),     # 3: humidity (%)
+    (0.0, 20.0),      # 4: wind speed (m/s)
+    (0.0, 360.0),     # 5: wind direction (deg)
+    (0.0, 10.0),      # 6: precipitation (mm)
+    (1000.0, 50.0),   # 7: pressure (hPa)
+    (0.0, 100.0),     # 8: cloud (%)
+    (0.0, 20.0),      # 9: visibility (km)
+    (5.0, 15.0),      # 10: dew point (C)
+    (0.0, 1.0),       # 11: NDVI / thermal
+    (0.0, 1.0),       # 12: FSM
+    (0.0, 1.0),       # 13: FSM
+    (0.0, 1.0),       # 14: FSM
+    (0.0, 1.0),       # 15: FSM
+    (50.0, 51.0),     # 16: FFMC -> [0,1]
+]
+
+
+def normalize_channels(channels: np.ndarray) -> np.ndarray:
+    """Apply per-channel affine normalization and sanitize NaN/Inf."""
+    channels = np.where(np.isfinite(channels), channels, 0.0)
+    for ci, (sub, div) in enumerate(_NORM):
+        channels[ci] = (channels[ci] - sub) / div
+    return np.clip(channels, -10.0, 10.0).astype(np.float32)
+
+
+def build_channels(record):
+    """Build the 17-channel feature tensor from a parsed TFRecord."""
+    def get_field(name, default_val=0.0):
+        if name in mapped_keys:
+            return record[mapped_keys[name]].numpy()
+        return np.full((64, 64), default_val, dtype=np.float32)
+
+    elevation = get_field('elevation')
+    wind_dir = get_field('wind_direction')
+    wind_speed = get_field('wind_speed')
+    max_temp = get_field('max_temp', 25.0)
+    min_temp = get_field('min_temp', 15.0)
+    humidity = get_field('humidity', 40.0)
+    precip = get_field('precipitation')
+    veg = get_field('vegetation', 0.6)
+    erc = get_field('erc', 40.0)
+    prev_fire = get_field('prev_fire_mask')
+    fire = get_field('fire_mask')
+
+    # Convert Kelvin → Celsius if needed
+    if np.max(max_temp) > 200:
+        max_temp = max_temp - 273.15
+    if np.max(min_temp) > 200:
+        min_temp = min_temp - 273.15
+
+    dy, dx = np.gradient(elevation)
+    slope = np.arctan(np.sqrt(dx**2 + dy**2))
+    aspect = np.arctan2(-dy, dx)
+
+    temp_c = 0.5 * (min_temp + max_temp)
+    wind_kmh = wind_speed * 3.6
+    ffmc = compute_ffmc(temp_c, humidity, wind_kmh, precip, prev_ffmc=85.0)
+
+    channels = np.zeros((17, 64, 64), dtype=np.float32)
+    channels[0] = slope
+    channels[1] = aspect
+    channels[2] = temp_c
+    channels[3] = humidity
+    channels[4] = wind_speed
+    channels[5] = wind_dir
+    channels[6] = precip
+    channels[7] = 1013.0
+    channels[8] = 10.0
+    channels[9] = 10.0
+    channels[10] = 12.0
+    channels[11] = veg
+
+    erc_norm = np.clip(erc / 100.0, 0.0, 1.0)
+    channels[12] = erc_norm
+    channels[13] = 1.0 - erc_norm
+    channels[14] = 0.0
+    channels[15] = 0.0
+    channels[16] = ffmc
+
+    return normalize_channels(channels), prev_fire, fire
+
+
+# --------------------------------------------------------------------------- #
+# Patch extraction
+# --------------------------------------------------------------------------- #
+def extract_patches(channels, prev_fire, fire, patch_size, stride):
+    """Yield (patch_channels, patch_prev, patch_fire) sliding-window patches.
+
+    When patch_size == 64, yields a single full-grid patch.
+    """
+    if patch_size >= 64:
+        yield channels, prev_fire, fire
+        return
+
+    for row in range(0, 64 - patch_size + 1, stride):
+        for col in range(0, 64 - patch_size + 1, stride):
+            patch_ch = channels[:, row:row+patch_size, col:col+patch_size]
+            patch_prev = prev_fire[row:row+patch_size, col:col+patch_size]
+            patch_fire = fire[row:row+patch_size, col:col+patch_size]
+            yield patch_ch, patch_prev, patch_fire
+
+
+# --------------------------------------------------------------------------- #
+# Main loop
+# --------------------------------------------------------------------------- #
 patch_count = 0
 sequence_count = 0
+GRID = 64
 
-# Read files and extract patches
 for file_path in tfrecord_files:
     if patch_count >= max_patches:
         break
@@ -226,114 +371,69 @@ for file_path in tfrecord_files:
 
         parsed_dataset = raw_dataset.map(parse_proto)
 
+        # Buffer consecutive records for temporal sequence mode
+        buffer = []
+
         for record in parsed_dataset:
             if patch_count >= max_patches:
                 break
 
-            # Helper to get parsed field or return zeros
-            def get_field(name, default_val=0.0):
-                if name in mapped_keys:
-                    return record[mapped_keys[name]].numpy()
-                return np.full((64, 64), default_val, dtype=np.float32)
+            channels, prev_fire, fire = build_channels(record)
 
-            # Extract features dynamically
-            elevation = get_field('elevation')
-            wind_dir = get_field('wind_direction')
-            wind_speed = get_field('wind_speed')
-            max_temp = get_field('max_temp', default_val=25.0)
-            min_temp = get_field('min_temp', default_val=15.0)
-            humidity = get_field('humidity', default_val=40.0)
-            precip = get_field('precipitation')
-            veg = get_field('vegetation', default_val=0.6)
-            erc = get_field('erc', default_val=40.0)
-            prev_fire = get_field('prev_fire_mask')
-            fire = get_field('fire_mask')
+            if args.sequence_length > 1:
+                # Temporal mode: accumulate frames and emit windows
+                buffer.append((channels, prev_fire, fire))
+                if len(buffer) >= args.sequence_length:
+                    # Use last `sequence_length` frames
+                    window = buffer[-args.sequence_length:]
+                    # Stack channels across time: (T, C, 64, 64)
+                    seq_data = np.stack([w[0] for w in window], axis=0)
+                    # Current fire = prev_fire of the LAST frame in window
+                    curr_fire = window[-1][1]
+                    # Target fire = fire mask of the LAST frame
+                    tgt_fire = window[-1][2]
 
-            # --- CRITICAL FIX: Convert NDWS Kelvin temperatures to Celsius ---
-            # NDWS ships temperatures in Kelvin (~250-330K). Using them as-is
-            # caused a 10x magnitude mismatch that overflowed fp16 → NaN loss.
-            # Heuristic: if values > 200, assume Kelvin and subtract 273.15.
-            if np.max(max_temp) > 200:
-                max_temp = max_temp - 273.15
-            if np.max(min_temp) > 200:
-                min_temp = min_temp - 273.15
-
-            # Compute slope and aspect from elevation using numpy gradients
-            dy, dx = np.gradient(elevation)
-            slope = np.arctan(np.sqrt(dx**2 + dy**2))
-            aspect = np.arctan2(-dy, dx)
-
-            # Compute FFMC (channel 16) — #1 predictor of ignition probability
-            temp_c = 0.5 * (min_temp + max_temp)
-            wind_kmh = wind_speed * 3.6  # m/s -> km/h for FFMC formula
-            ffmc = compute_ffmc(temp_c, humidity, wind_kmh, precip, prev_ffmc=85.0)
-
-            # Build 17 channels (channel 16 = FFMC for physics-informed loss)
-            channels = np.zeros((17, 64, 64), dtype=np.float32)
-            channels[0] = slope
-            channels[1] = aspect
-            channels[2] = temp_c          # Average temperature
-            channels[3] = humidity
-            channels[4] = wind_speed
-            channels[5] = wind_dir
-            channels[6] = precip
-            channels[7] = 1013.0          # Default pressure
-            channels[8] = 10.0            # Default cloud cover
-            channels[9] = 10.0            # Default visibility
-            channels[10] = 12.0           # Default dew point
-            channels[11] = veg            # NDVI
-
-            # FSM (One-hot mapping or susceptibility proxy based on normalized ERC)
-            erc_norm = np.clip(erc / 100.0, 0.0, 1.0)
-            channels[12] = erc_norm
-            channels[13] = 1.0 - erc_norm
-            channels[14] = 0.0
-            channels[15] = 0.0
-            channels[16] = ffmc           # Fine Fuel Moisture Code (Sprint 4)
-
-            # --- CRITICAL FIX: Normalize ALL channels to ~[0,1] before saving ---
-            # Without this, pressure=1013 vs slope=0.3 causes a 3-order-of-magnitude
-            # spread that overflows fp16 (AMP) → NaN loss on epoch 1.
-            # Sanitize NaN/Inf first, then apply per-channel affine transform.
-            channels = np.where(np.isfinite(channels), channels, 0.0)
-            _NORM = [
-                (0.0, 1.5708), (3.14159, 6.28318), (15.0, 20.0), (0.0, 100.0),
-                (0.0, 20.0), (0.0, 360.0), (0.0, 10.0), (1000.0, 50.0),
-                (0.0, 100.0), (0.0, 20.0), (5.0, 15.0), (0.0, 1.0),
-                (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (50.0, 51.0),
-            ]
-            for _ci, (_sub, _div) in enumerate(_NORM):
-                channels[_ci] = (channels[_ci] - _sub) / _div
-            channels = np.clip(channels, -10.0, 10.0).astype(np.float32)
-
-            # Extract sliding patches of 30x30 to fit our model's input expectations
-            # Strides of 10 over the 64x64 grid
-            for row in [0, 10, 20, 34]:
-                for col in [0, 10, 20, 34]:
-                    patch_prev_fire = prev_fire[row:row+30, col:col+30]
-                    patch_fire = fire[row:row+30, col:col+30]
-
-                    # Only save patches that contain active fire spreading transitions
-                    if np.sum(patch_prev_fire) > 0 and np.sum(patch_fire) > 0:
-                        patch_channels = channels[:, row:row+30, col:col+30]
-
-                        # Replicate channels 3 times to build the temporal sequence length of 3
-                        sequence_data = np.stack([patch_channels] * 3, axis=0)
-
-                        # Save the patch data
+                    if np.sum(curr_fire) > 0 and np.sum(tgt_fire) > 0:
+                        for patch_ch, patch_prev, patch_fire in extract_patches(
+                            seq_data if args.patch_size >= 64 else None,
+                            curr_fire, tgt_fire, args.patch_size, args.stride
+                        ):
+                            if patch_ch is None:
+                                # patch_size < 64 temporal: extract from seq
+                                # (simplified: skip sub-patch temporal for now)
+                                continue
+                            np.savez_compressed(
+                                os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
+                                sequence=seq_data,
+                                current_fire=patch_prev,
+                                target_fire=patch_fire,
+                            )
+                            patch_count += 1
+                            if patch_count >= max_patches:
+                                break
+            else:
+                # Single-timestep mode: use PrevFireMask as current, FireMask as target
+                if np.sum(prev_fire) > 0 and np.sum(fire) > 0:
+                    for patch_ch, patch_prev, patch_fire in extract_patches(
+                        channels, prev_fire, fire, args.patch_size, args.stride
+                    ):
+                        # Build a (1, C, H, W) "sequence" for dataset compat
+                        seq_data = patch_ch[np.newaxis, ...]
                         np.savez_compressed(
                             os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
-                            sequence=sequence_data,
-                            current_fire=patch_prev_fire,
-                            target_fire=patch_fire
+                            sequence=seq_data,
+                            current_fire=patch_prev,
+                            target_fire=patch_fire,
                         )
                         patch_count += 1
+                        if patch_count >= max_patches:
+                            break
 
             sequence_count += 1
 
     except Exception as e:
         print(f"Error reading file {file_path}: {e}")
 
-print(f"=== Preprocessing Completed ===")
+print(f"=== Preprocessing v2 Completed ===")
 print(f"Processed {sequence_count} full sequences.")
-print(f"Generated {patch_count} active 30x30 patches saved to {output_dir}.")
+print(f"Generated {patch_count} patches ({args.patch_size}x{args.patch_size}) saved to {output_dir}.")

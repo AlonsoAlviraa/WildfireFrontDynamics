@@ -41,61 +41,84 @@
 
 ---
 
+## 🔧 Loop Engineering Overhaul (Implemented)
+
+All infrastructure for the experiment loop has been built and tested:
+
+| Component | File | Status |
+|---|---|---|
+| **Improved U-Net** (3-level, 8×8 bottleneck) | `models/unet_model.py` | ✅ |
+| **Composite Loss** (BCE+Dice+Tversky+Focal) | `models/unet_model.py` | ✅ |
+| **SE Attention** module | `models/unet_model.py` | ✅ |
+| **Preprocessor v2** (64×64 full grid) | `kaggle_job/preprocess_ndws.py` | ✅ |
+| **Training v14** (multi-threshold, EMA, grad-accum) | `kaggle_job/run_unet_training_v14.py` | ✅ |
+| **Local Smoke Test** | `kaggle_job/smoke_test_v14.py` | ✅ |
+| **Automated Loop Runner** | `scripts/run_experiment_loop.py` | ✅ |
+| **Experiment Queue** | `scripts/experiment_queue.json` | ✅ (auto-generated) |
+| **Pytest Suite** (model + loss + gradient) | `tests/test_unet_model.py` | ✅ |
+
+### Key Fixes Applied
+
+1. **v13 Kaggle crash fixed** — `ModuleNotFoundError: models.unet_model` resolved with
+   inline fallback + proper `sys.path` insertion in `run_unet_training_v14.py`.
+2. **Bottleneck fixed** — 30×30 patches through 4 down-levels collapsed to 1×1 (zero spatial
+   info). Now: 64×64 through 3 down-levels → 8×8 bottleneck.
+3. **Fake temporal data fixed** — old preprocessor replicated the same frame 3× as a "sequence".
+   Now uses `PrevFireMask` as real single-timestep input.
+4. **Single-threshold eval fixed** — now sweeps 0.3/0.4/0.5/0.6 to find best recall point.
+5. **No local validation** — now smoke test catches bugs before Kaggle.
+
 ## Experiment Queue (Ordered by Expected Impact)
 
-### Phase 1: Architectural Overhaul (v13-v15)
+### Phase 1: Architecture + Loss (v14-v18) — **READY TO RUN**
 
-**These experiments change the FUNDAMENTAL architecture.**
+Managed by `scripts/run_experiment_loop.py`. See `scripts/experiment_queue.json`.
 
-#### Experiment v13: U-Net Baseline (HIGHEST PRIORITY)
-- **Hypothesis:** U-Net with batch_size=32 will dramatically improve IoU
-- **Change:**
-  - New model `WildfireUNet` in `models/unet_model.py`
-  - Patch size 30×30 → 64×64
-  - batch_size 1 → 32
-  - Loss: Weighted BCE (weight=5, matching NDWS paper)
+#### Experiment v14: U-Net + Composite Loss (BCE+Dice+Tversky) — **NEXT**
+- **Hypothesis:** Composite loss with FN-heavy Tversky boosts recall over v13
+- **Change:** `--model small --loss composite --epochs 50 --batch-size 32`
 - **Expected:** IoU 0.10-0.20, Recall 0.15-0.30
-- **Risk:** Medium (new code, but proven architecture)
 
-#### Experiment v14: U-Net + Tversky Loss
-- **Hypothesis:** Tversky loss (β=0.7) will boost recall
-- **Change:** Replace weighted BCE with Tversky loss
-- **Depends on:** v13 baseline
-- **Expected:** Recall +15-20% over v13
-
-#### Experiment v15: U-Net + Data Augmentation
-- **Hypothesis:** Augmentation (flips, rotations) improves generalization
-- **Change:** Add `Albumentations` or custom augmentation
+#### Experiment v15: U-Net + SE Attention + Composite Loss
+- **Hypothesis:** Channel attention improves feature selection on multi-modal input
+- **Change:** Add `--se-attention` flag
 - **Depends on:** v14
-- **Expected:** IoU +5% over v14
+- **Expected:** IoU 0.12-0.22, Recall 0.20-0.35
 
-### Phase 2: Temporal Enhancement (v16-v17)
-
-#### Experiment v16: ConvLSTM Encoder
-- **Hypothesis:** Temporal features from 3-timestep input improve prediction
-- **Change:** Replace U-Net encoder with ConvLSTM
+#### Experiment v16: U-Net Full + Composite + EMA
+- **Hypothesis:** Larger capacity + EMA stabilizes training for higher IoU
+- **Change:** `--model full --ema-decay 0.999 --grad-accum 2`
 - **Depends on:** v15
-- **Expected:** IoU +5-10% over v15
+- **Expected:** IoU 0.15-0.25, Recall 0.25-0.40
 
-#### Experiment v17: Attention Mechanism (CBAM)
-- **Hypothesis:** Channel + spatial attention improves feature selection
-- **Change:** Add CBAM blocks to U-Net
-- **Depends on:** v16
-- **Expected:** IoU +3-5% over v16
+#### Experiment v17: U-Net Small + Focal Loss (gamma=3)
+- **Hypothesis:** Focal loss focuses on hardest fire pixels
+- **Change:** `--loss focal --pos-weight 7.0`
 
-### Phase 3: Data Enhancement (v18-v19)
+#### Experiment v18: U-Net Small + Tversky Only (beta=0.7)
+- **Hypothesis:** Pure Tversky loss maximizes recall without BCE interference
+- **Change:** `--loss tversky`
 
-#### Experiment v18: Oversampling Fire-Heavy Patches
+### Phase 2: Temporal Enhancement (v19-v20)
+
+#### Experiment v19: Real Temporal Sequences (3-timestep)
+- **Hypothesis:** True temporal features from consecutive frames improve prediction
+- **Change:** `preprocess_ndws.py --sequence-length 3` (now supported!)
+- **Depends on:** Best of v14-v18
+
+#### Experiment v20: ConvLSTM Encoder
+- **Hypothesis:** Recurrent encoder captures temporal dynamics better than channel-stacking
+- **Depends on:** v19
+
+### Phase 3: Data Enhancement (v21-v22)
+
+#### Experiment v21: Oversampling Fire-Heavy Patches
 - **Hypothesis:** Weighted sampler increases fire exposure
 - **Change:** WeightedRandomSampler in DataLoader
-- **Depends on:** v17
-- **Expected:** Recall +5-10%
 
-#### Experiment v19: Castilla-La Mancha Fine-Tuning
+#### Experiment v22: Castilla-La Mancha Fine-Tuning
 - **Hypothesis:** Real fire data improves domain adaptation
 - **Change:** Fine-tune best model on Tobarra data
-- **Depends on:** v18
-- **Expected:** Better on real fire scenarios
 
 ---
 

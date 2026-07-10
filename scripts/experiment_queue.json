@@ -1,0 +1,128 @@
+[
+  {
+    "version": "v14",
+    "name": "U-Net + Composite Loss (BCE+Dice+Tversky)",
+    "hypothesis": "Composite loss with FN-heavy Tversky boosts recall over v13",
+    "script": "kaggle_job/run_unet_training_v14.py",
+    "flags": [
+      "--model",
+      "small",
+      "--loss",
+      "composite",
+      "--epochs",
+      "50",
+      "--batch-size",
+      "32",
+      "--lr",
+      "1e-3",
+      "--pos-weight",
+      "5.0"
+    ],
+    "expected": {
+      "iou": "0.10-0.20",
+      "recall": "0.15-0.30"
+    },
+    "status": "pending"
+  },
+  {
+    "version": "v15",
+    "name": "U-Net + SE Attention + Composite Loss",
+    "hypothesis": "Channel attention improves feature selection on multi-modal input",
+    "script": "kaggle_job/run_unet_training_v14.py",
+    "flags": [
+      "--model",
+      "small",
+      "--loss",
+      "composite",
+      "--se-attention",
+      "--epochs",
+      "50",
+      "--batch-size",
+      "32",
+      "--lr",
+      "1e-3"
+    ],
+    "expected": {
+      "iou": "0.12-0.22",
+      "recall": "0.20-0.35"
+    },
+    "depends_on": "v14",
+    "status": "pending"
+  },
+  {
+    "version": "v16",
+    "name": "U-Net Full + Composite + EMA",
+    "hypothesis": "Larger model capacity + EMA stabilizes training for higher IoU",
+    "script": "kaggle_job/run_unet_training_v14.py",
+    "flags": [
+      "--model",
+      "full",
+      "--loss",
+      "composite",
+      "--ema-decay",
+      "0.999",
+      "--epochs",
+      "50",
+      "--batch-size",
+      "16",
+      "--grad-accum",
+      "2",
+      "--lr",
+      "1e-3"
+    ],
+    "expected": {
+      "iou": "0.15-0.25",
+      "recall": "0.25-0.40"
+    },
+    "depends_on": "v15",
+    "status": "pending"
+  },
+  {
+    "version": "v17",
+    "name": "U-Net Small + Focal Loss (gamma=3)",
+    "hypothesis": "Focal loss with high gamma focuses on hardest fire pixels",
+    "script": "kaggle_job/run_unet_training_v14.py",
+    "flags": [
+      "--model",
+      "small",
+      "--loss",
+      "focal",
+      "--pos-weight",
+      "7.0",
+      "--epochs",
+      "50",
+      "--batch-size",
+      "32",
+      "--lr",
+      "1e-3"
+    ],
+    "expected": {
+      "iou": "0.10-0.20",
+      "recall": "0.20-0.40"
+    },
+    "status": "pending"
+  },
+  {
+    "version": "v18",
+    "name": "U-Net Small + Tversky Only (beta=0.7)",
+    "hypothesis": "Pure Tversky loss maximizes recall without BCE interference",
+    "script": "kaggle_job/run_unet_training_v14.py",
+    "flags": [
+      "--model",
+      "small",
+      "--loss",
+      "tversky",
+      "--epochs",
+      "50",
+      "--batch-size",
+      "32",
+      "--lr",
+      "1e-3"
+    ],
+    "expected": {
+      "iou": "0.08-0.18",
+      "recall": "0.30-0.50"
+    },
+    "status": "pending"
+  }
+]

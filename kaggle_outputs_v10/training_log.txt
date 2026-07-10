@@ -1,0 +1,18 @@
+
+--- Training run started at 2026-07-09 20:20:53 ---
+Config: EPOCHS=50, WARMUP=3, GRAD_ACCUM=4, patience=8, AMP=True
+Epoch 01/50  train=0.42475  val=0.29007  lr=4.00e-05  (252s)
+  -> new best val_loss; checkpoint saved
+Epoch 02/50  train=0.27226  val=0.28878  lr=7.00e-05  (246s)
+  -> new best val_loss; checkpoint saved
+Epoch 03/50  train=0.27711  val=0.28493  lr=1.00e-04  (244s)
+  -> new best val_loss; checkpoint saved
+Epoch 04/50  train=0.27741  val=0.28896  lr=9.99e-05  (244s)
+Epoch 05/50  train=0.27645  val=0.28612  lr=9.96e-05  (245s)
+Epoch 06/50  train=0.27997  val=0.32828  lr=9.90e-05  (252s)
+Epoch 07/50  train=0.28709  val=0.30525  lr=9.82e-05  (253s)
+Epoch 08/50  train=0.28506  val=0.30049  lr=9.73e-05  (248s)
+Epoch 09/50  train=0.28315  val=0.29864  lr=9.61e-05  (246s)
+Epoch 10/50  train=0.28121  val=0.30172  lr=9.47e-05  (243s)
+Epoch 11/50  train=0.27972  val=0.39373  lr=9.31e-05  (245s)
+  -> early stopping at epoch 11 (no improvement 8 epochs)

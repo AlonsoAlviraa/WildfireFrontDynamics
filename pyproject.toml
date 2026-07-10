@@ -78,6 +78,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]   # assert False is fine in tests
 "kaggle_job/*" = ["E402"]  # late imports are intentional in training scripts
+"scripts/run_experiment_loop.py" = ["E402"]
 "scripts/batch_process_fires.py" = ["E402"]  # sys.path manipulation before imports
 "scripts/process_one_fire.py" = ["E402"]  # sys.path manipulation before imports
 "scripts/compare_base_vs_finetuned.py" = ["E402"]
