@@ -173,8 +173,8 @@ WARMUP_EPOCHS = 5  # v11: warmup más largo (3→5) para estabilizar gradientes
 GRAD_ACCUM_STEPS = 4  # simulate batch_size=4 via gradient accumulation
 patience = 12  # v11: más paciencia (8→12) para dar tiempo al cosine decay
 
-# Warmup (5 epochs linear to peak LR) then cosine decay to lr_min=1e-6
-warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=WARMUP_EPOCHS)
+# v12: Warmup start más bajo (0.01 en lugar de 0.1) para proteger pesos v3.pt
+warmup_scheduler = LinearLR(optimizer, start_factor=0.01, total_iters=WARMUP_EPOCHS)
 cosine_scheduler = CosineAnnealingLR(optimizer, T_max=EPOCHS - WARMUP_EPOCHS, eta_min=1e-6)
 scheduler = SequentialLR(
     optimizer,
@@ -190,6 +190,29 @@ best_val_loss = float("inf")
 best_epoch = -1
 no_improve = 0
 history = []
+
+# v12: FREEZE conv layers during warmup to protect pre-trained v3.pt features
+# Solo entrenar LSTM + policy head durante las primeras WARMUP_EPOCHS
+FREEZE_CONV_EPOCHS = WARMUP_EPOCHS  # Congelar conv durante todo el warmup
+conv_frozen = False
+
+
+def freeze_conv_layers(model, freeze: bool):
+    """Freeze/unfreeze conv1/conv2/conv3 to protect pre-trained features."""
+    global conv_frozen
+    for name in ["conv1", "conv2", "conv3"]:
+        if hasattr(model, name):
+            layer = getattr(model, name)
+            for param in layer.parameters():
+                param.requires_grad = not freeze
+    conv_frozen = freeze
+    n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    status = "FROZEN" if freeze else "UNFROZEN"
+    print(f"  Conv layers {status} — {n_trainable:,} trainable params")
+
+
+# v12: Freeze conv layers at start to protect v3.pt features
+freeze_conv_layers(model, freeze=True)
 
 if RESUME_CKPT.exists() and RESUME_META.exists():
     try:
@@ -248,6 +271,9 @@ log_msg(f"Config: EPOCHS={EPOCHS}, WARMUP={WARMUP_EPOCHS}, GRAD_ACCUM={GRAD_ACCU
         f"patience={patience}, AMP={USE_AMP}")
 
 for epoch in range(start_epoch, EPOCHS):
+    # v12: Unfreeze conv layers after warmup
+    if conv_frozen and epoch >= FREEZE_CONV_EPOCHS:
+        freeze_conv_layers(model, freeze=False)
     model.train()
     epoch_loss, steps = 0.0, 0
     accum_count = 0
@@ -289,7 +315,8 @@ for epoch in range(start_epoch, EPOCHS):
             # Every GRAD_ACCUM_STEPS: step optimizer + zero grad
             if accum_count >= GRAD_ACCUM_STEPS:
                 scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+                # v12: gradient clipping más agresivo (0.5 → 0.3)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.3)
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad()
@@ -300,7 +327,8 @@ for epoch in range(start_epoch, EPOCHS):
     # Flush remaining accumulated gradients at epoch end
     if accum_count > 0:
         scaler.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+        # v12: gradient clipping más agresivo (0.5 → 0.3)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.3)
         scaler.step(optimizer)
         scaler.update()
         optimizer.zero_grad()

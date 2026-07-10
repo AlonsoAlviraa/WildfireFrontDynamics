@@ -21,9 +21,10 @@ from .weights import load_pretrained_weights
 
 # --- Loss helpers ---
 
-# pos_weight penalizes false negatives 3× more than false positives.
-# In wildfire spread, missing a fire cell (FN) is far more costly than a false alarm (FP).
-DEFAULT_POS_WEIGHT = 3.0
+# v12: pos_weight subido de 3.0 a 8.0 para forzar al modelo a predecir más fuego.
+# Análisis v11 mostró recall=4.2% (catastrófico). El 91% de células son negativas,
+# por lo que necesitamos penalizar MUCHO más los falsos negativos.
+DEFAULT_POS_WEIGHT = 8.0
 DEFAULT_FOCAL_GAMMA = 2.0  # 0.0 disables focal, standard range 1.0-5.0
 DEFAULT_LAMBDA_PHYSICS = 0.1  # Weight for physics-informed loss (Rothermel ROS)
 
