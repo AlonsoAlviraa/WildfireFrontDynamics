@@ -1,130 +1,105 @@
-# 🔄 Loop Engineering Plan — Until We Hit Acceptable Results
+# Loop Engineering Plan — Beat the Copy Baseline
 
-> **Goal:** Systematic iteration loop until we achieve **IoU > 0.15** and **Recall > 0.30** (NDWS minimum viable)
-> **Method:** Each experiment is ONE change, measured against the previous baseline
-> **Rule:** Never change 2 things at once — isolate variables
+> **Goal:** Beat the naive copy baseline (PrevFireMask → FireMask, IoU ~0.79) on **changed pixels**, not just hit NDWS minimum viable thresholds.
+> **Method:** Each experiment changes ONE scientific variable, measured against v14 baseline AND copy baseline.
+> **Rule:** Never change 2 things at once — isolate variables.
 
 ---
 
-## Acceptance Criteria (The "Definition of Done")
+## Acceptance Criteria (Revised — Post-Audit)
 
-| Metric | Current (v12) | Minimum Viable | Competitive | SOTA |
+| Metric | v14 | v18 | **Primary Target** | NDWS Minimum |
 |---|---|---|---|---|
-| **IoU** | 0.002 | **>0.15** | >0.30 | >0.42 |
-| **Recall** | 0.002 | **>0.30** | >0.50 | >0.57 |
-| **Precision** | 0.161 | **>0.30** | >0.50 | >0.60 |
-| **F1 (Dice)** | 0.004 | **>0.25** | >0.40 | >0.50 |
-| **best_epoch** | 2 | **>10** | >20 | >30 |
-| **val_loss** | 0.274 | **<0.20** | <0.15 | <0.10 |
+| **IoU (full grid)** | 0.239 | 0.239 | >0.30 | >0.15 |
+| **Recall@0.5** | 0.564 | 0.534 | >0.50 | >0.30 |
+| **Copy baseline IoU** | ~0.79 | ~0.79 | — | — |
+| **Δ vs copy (full)** | -0.55 | -0.55 | **>0** | — |
+| **Δ vs copy (changed px)** | negative | negative | **>0** | — |
+| **best_epoch** | 8 | 34 | >10 | >10 |
 
-**We do NOT stop until ALL minimum viable criteria are met.**
+**NDWS minimum viable: MET since v14.** Architecture tweaks (v15/v16/v18 residual) did not move the needle because the bottleneck is **problem formulation**, not model capacity.
 
 ---
 
-## The Loop (Repeat Until Green)
+## Root Cause (Why We Were Stuck)
+
+1. **87% spatial correlation** — model learns to copy yesterday's fire mask
+2. **Biased preprocessing** — `prev_fire>0 AND fire>0` filter oversamples active-fire patches
+3. **Wrong optimization target** — early stopping on `val_loss` (BCE), not vs copy baseline
+4. **5 constant channels** in preprocessor (pressure, cloud, etc.) add noise, not signal
+5. **Script duplication** — v14–v18 are ~3000 lines of copy-paste, hard to iterate
+
+---
+
+## Scientific Pivot (v19+)
+
+```
+OLD: predict absolute fire mask, optimize val_loss
+NEW: upweight changed pixels, optimize improvement_vs_copy_iou_changed
+```
+
+### Phase 1: Problem Reformulation (v19–v21) — **ACTIVE**
+
+| Version | Hypothesis | Change | Status |
+|---|---|---|---|
+| **v19** | Changed-pixel loss beats copy on dynamic pixels | `changed_weighted` loss + `any_fire` filter + WeightedRandomSampler | **NEXT** |
+| v20 | Delta target (growth mask only) | `--target-mode delta` | queued |
+| v21 | Official 12-channel NDWS schema | Remove constant channels from preprocess | queued |
+
+### Phase 2: Infrastructure Consolidation — **DONE**
+
+| Component | File | Status |
+|---|---|---|
+| Consolidated trainer | `wildfire_front/ml/unet_train.py` | ✅ |
+| NDWS metrics (copy + changed) | `wildfire_front/ml/ndws_metrics.py` | ✅ |
+| Preprocess filter modes | `kaggle_job/preprocess_ndws.py --filter-mode` | ✅ |
+| v19 Kaggle kernel | `kaggle_job/run_unet_training_v19.py` | ✅ |
+
+### Phase 3: Temporal Enhancement (v22–v23)
+
+- v22: Real 3-timestep sequences (`--sequence-length 3`)
+- v23: ConvLSTM encoder
+
+### Phase 4: Domain Adaptation (v24)
+
+- Fine-tune best NDWS model on Castilla-La Mancha (Tobarra) data
+
+---
+
+## The Loop
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  1. HYPOTHESIS: Change ONE thing                 │
-│  2. IMPLEMENT: Code the change                   │
-│  3. TEST LOCAL: Unit tests pass?                 │
-│  4. PUSH: Send to Kaggle (GPU)                   │
-│  5. WAIT: Kernel runs (~2-4h)                    │
-│  6. DOWNLOAD: Get results                        │
-│  7. ANALYZE: Compare metrics to previous         │
+│  1. HYPOTHESIS: Change ONE scientific variable     │
+│  2. IMPLEMENT: unet_train.py config flag         │
+│  3. TEST LOCAL: pytest + smoke_test              │
+│  4. PUSH: Kaggle kernel (T4 GPU)                 │
+│  5. WAIT: ~10 min preprocess + ~2h train         │
+│  6. DOWNLOAD: training_summary.json              │
+│  7. ANALYZE: Δ vs copy (changed pixels)        │
 │  8. DECISION: Better? → new baseline             │
-│                 Worse? → revert, new hypothesis  │
-│  9. DOCUMENT: Log in EXPERIMENT_TRACKER.md       │
+│                 Worse? → revert, next hypothesis │
+│  9. DOCUMENT: EXPERIMENT_TRACKER.md              │
 │ 10. REPEAT                                       │
 └──────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔧 Loop Engineering Overhaul (Implemented)
+## Completed Experiments (v14–v18)
 
-All infrastructure for the experiment loop has been built and tested:
-
-| Component | File | Status |
+| Ver | Result | Verdict |
 |---|---|---|
-| **Improved U-Net** (3-level, 8×8 bottleneck) | `models/unet_model.py` | ✅ |
-| **Composite Loss** (BCE+Dice+Tversky+Focal) | `models/unet_model.py` | ✅ |
-| **SE Attention** module | `models/unet_model.py` | ✅ |
-| **Preprocessor v2** (64×64 full grid) | `kaggle_job/preprocess_ndws.py` | ✅ |
-| **Training v14** (multi-threshold, EMA, grad-accum) | `kaggle_job/run_unet_training_v14.py` | ✅ |
-| **Local Smoke Test** | `kaggle_job/smoke_test_v14.py` | ✅ |
-| **Automated Loop Runner** | `scripts/run_experiment_loop.py` | ✅ |
-| **Experiment Queue** | `scripts/experiment_queue.json` | ✅ (auto-generated) |
-| **Pytest Suite** (model + loss + gradient) | `tests/test_unet_model.py` | ✅ |
-
-### Key Fixes Applied
-
-1. **v13 Kaggle crash fixed** — `ModuleNotFoundError: models.unet_model` resolved with
-   inline fallback + proper `sys.path` insertion in `run_unet_training_v14.py`.
-2. **Bottleneck fixed** — 30×30 patches through 4 down-levels collapsed to 1×1 (zero spatial
-   info). Now: 64×64 through 3 down-levels → 8×8 bottleneck.
-3. **Fake temporal data fixed** — old preprocessor replicated the same frame 3× as a "sequence".
-   Now uses `PrevFireMask` as real single-timestep input.
-4. **Single-threshold eval fixed** — now sweeps 0.3/0.4/0.5/0.6 to find best recall point.
-5. **No local validation** — now smoke test catches bugs before Kaggle.
-
-## Experiment Queue (Ordered by Expected Impact)
-
-### Phase 1: Architecture + Loss (v14-v18) — **READY TO RUN**
-
-Managed by `scripts/run_experiment_loop.py`. See `scripts/experiment_queue.json`.
-
-#### Experiment v14: U-Net + Composite Loss (BCE+Dice+Tversky) — **NEXT**
-- **Hypothesis:** Composite loss with FN-heavy Tversky boosts recall over v13
-- **Change:** `--model small --loss composite --epochs 50 --batch-size 32`
-- **Expected:** IoU 0.10-0.20, Recall 0.15-0.30
-
-#### Experiment v15: U-Net + SE Attention + Composite Loss
-- **Hypothesis:** Channel attention improves feature selection on multi-modal input
-- **Change:** Add `--se-attention` flag
-- **Depends on:** v14
-- **Expected:** IoU 0.12-0.22, Recall 0.20-0.35
-
-#### Experiment v16: U-Net Full + Composite + EMA
-- **Hypothesis:** Larger capacity + EMA stabilizes training for higher IoU
-- **Change:** `--model full --ema-decay 0.999 --grad-accum 2`
-- **Depends on:** v15
-- **Expected:** IoU 0.15-0.25, Recall 0.25-0.40
-
-#### Experiment v17: U-Net Small + Focal Loss (gamma=3)
-- **Hypothesis:** Focal loss focuses on hardest fire pixels
-- **Change:** `--loss focal --pos-weight 7.0`
-
-#### Experiment v18: U-Net Small + Tversky Only (beta=0.7)
-- **Hypothesis:** Pure Tversky loss maximizes recall without BCE interference
-- **Change:** `--loss tversky`
-
-### Phase 2: Temporal Enhancement (v19-v20)
-
-#### Experiment v19: Real Temporal Sequences (3-timestep)
-- **Hypothesis:** True temporal features from consecutive frames improve prediction
-- **Change:** `preprocess_ndws.py --sequence-length 3` (now supported!)
-- **Depends on:** Best of v14-v18
-
-#### Experiment v20: ConvLSTM Encoder
-- **Hypothesis:** Recurrent encoder captures temporal dynamics better than channel-stacking
-- **Depends on:** v19
-
-### Phase 3: Data Enhancement (v21-v22)
-
-#### Experiment v21: Oversampling Fire-Heavy Patches
-- **Hypothesis:** Weighted sampler increases fire exposure
-- **Change:** WeightedRandomSampler in DataLoader
-
-#### Experiment v22: Castilla-La Mancha Fine-Tuning
-- **Hypothesis:** Real fire data improves domain adaptation
-- **Change:** Fine-tune best model on Tobarra data
+| v14 | IoU 0.239, Recall 0.564 | ✅ Baseline breakthrough |
+| v15 | IoU 0.235 (SE attention) | ⚖️ Neutral |
+| v16 | IoU 0.237 (full + EMA) | ⚖️ Neutral |
+| v17 | ERROR (0 samples) | ❌ Fixed in v17d |
+| v18 | IoU 0.239 (residual delta) | ⚖️ Neutral — same as v14 |
 
 ---
 
 ## Revert Protocol
 
-If an experiment makes things WORSE:
 1. `git revert <commit>` to undo the change
 2. Document WHY it failed in `EXPERIMENT_TRACKER.md`
 3. Move to next hypothesis
@@ -134,56 +109,36 @@ If an experiment makes things WORSE:
 
 ## Kaggle Resource Budget
 
-| Resource | Limit per kernel | Our usage |
+| Resource | Limit | Our usage |
 |---|---|---|
-| GPU time | 12h/week (free) / 30h (uni) | ~2-4h per experiment |
-| CPU time | 12h | ~0.5h preprocessing |
-| Disk | 20GB | ~5GB (dataset + repo) |
-| RAM | 16GB | ~4GB |
-
-**Expected:** We can run ~7-10 experiments per week with uni account.
+| GPU time | 12–30h/week | ~2–4h per experiment |
+| Disk | 20GB | ~5GB |
+| **GPU type** | T4 required | P100 incompatible with PyTorch 2.10 |
 
 ---
 
-## Decision Tree
+## File Structure
 
-```
-v13 (U-Net baseline)
-  ├── IoU > 0.15? → YES → v14 (Tversky) → v15 (augmentation) → ...
-  │                 NO   → Check: batch_size actually 32?
-  │                       Check: patch size actually 64?
-  │                       Check: preprocessing correct?
-  │
-  └── val_loss still ~0.27? → Architecture not the issue
-                               → Investigate data pipeline
-```
-
----
-
-## File Structure for Experiments
-
-Each experiment needs:
-1. **Model code:** `models/experiment_vXX.py` or modification of existing
-2. **Training script:** Update `kaggle_job/run_mega_training.py` or new
-3. **Results:** `kaggle_outputs_vXX/training_summary.json`
-4. **Analysis:** Entry in `EXPERIMENT_TRACKER.md`
-5. **Plots:** `docs/analysis_plots_vXX/`
-6. **Weights:** `models/weights_vXX_best.pt`
+| Purpose | Path |
+|---|---|
+| Canonical trainer | `wildfire_front/ml/unet_train.py` |
+| NDWS metrics | `wildfire_front/ml/ndws_metrics.py` |
+| Model | `models/unet_model.py` |
+| Preprocess | `kaggle_job/preprocess_ndws.py` |
+| Kaggle wrapper | `kaggle_job/run_unet_training_v19.py` |
+| Experiment queue | `scripts/experiment_queue.json` |
+| Results | `kaggle_outputs_vXX/training_summary.json` |
 
 ---
 
-## Success Metrics Per Experiment
-
-After each experiment, fill this template:
+## Success Template
 
 ```markdown
-### vX: [Experiment Name]
+### vX: [Name]
 - **Date:** YYYY-MM-DD
 - **Hypothesis:** [What we expected]
-- **Change:** [What we changed]
-- **IoU:** [value] (prev: [value], Δ: [value])
-- **Recall:** [value] (prev: [value], Δ: [value])
-- **best_epoch:** [value]
-- **val_loss:** [value]
-- **Verdict:** ✅ Better / ❌ Worse / ⚖️ Neutral
-- **Next:** [What to try next]
+- **Change:** [Single variable changed]
+- **IoU:** [value] (copy: [value], Δchanged: [value])
+- **Verdict:** ✅ / ❌ / ⚖️
+- **Next:** [Next experiment]
+```

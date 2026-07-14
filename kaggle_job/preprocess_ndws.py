@@ -43,12 +43,22 @@ parser.add_argument("--sequence-length", type=int, default=1,
                     help="Number of consecutive frames per sample (1 or 3).")
 parser.add_argument("--stride", type=int, default=32,
                     help="Sliding window stride when patch-size < 64.")
+parser.add_argument(
+    "--filter-mode",
+    choices=["both_fire", "any_fire", "changed", "none"],
+    default="any_fire",
+    help=(
+        "Patch filter: both_fire=legacy (prev>0 AND fire>0, biased); "
+        "any_fire=prev OR fire active; changed=at least one pixel differs; "
+        "none=keep all grids."
+    ),
+)
 args = parser.parse_args()
 
 import tensorflow as tf  # noqa: E402
 
 print(f"=== NDWS Preprocessing v2 | split={args.split} patch={args.patch_size}x{args.patch_size} ===")
-print(f"    sequence_length={args.sequence_length} stride={args.stride}")
+print(f"    sequence_length={args.sequence_length} stride={args.stride} filter={args.filter_mode}")
 
 # --------------------------------------------------------------------------- #
 # Locate TFRecord input
@@ -334,6 +344,50 @@ def build_channels(record):
 # --------------------------------------------------------------------------- #
 # Patch extraction
 # --------------------------------------------------------------------------- #
+def _fire_bin(mask: np.ndarray, threshold: float = 0.5) -> np.ndarray:
+    m = np.where(mask < 0.0, 0.0, mask)
+    return (m >= threshold).astype(bool)
+
+
+def should_keep_patch(prev_fire: np.ndarray, fire: np.ndarray, filter_mode: str) -> bool:
+    """Decide whether a 64x64 grid passes the configured filter."""
+    prev_bin = _fire_bin(prev_fire)
+    fire_bin = _fire_bin(fire)
+    if filter_mode == "both_fire":
+        return bool(np.any(prev_bin) and np.any(fire_bin))
+    if filter_mode == "any_fire":
+        return bool(np.any(prev_bin) or np.any(fire_bin))
+    if filter_mode == "changed":
+        return bool(np.any(prev_bin != fire_bin))
+    if filter_mode == "none":
+        return True
+    raise ValueError(f"Unknown filter_mode: {filter_mode}")
+
+
+def patch_change_fraction(prev_fire: np.ndarray, fire: np.ndarray) -> float:
+    prev_bin = _fire_bin(prev_fire)
+    fire_bin = _fire_bin(fire)
+    return float(np.mean(prev_bin != fire_bin))
+
+
+def save_patch_npz(
+    output_dir: str,
+    patch_count: int,
+    seq_data: np.ndarray,
+    patch_prev: np.ndarray,
+    patch_fire: np.ndarray,
+) -> int:
+    change_fraction = patch_change_fraction(patch_prev, patch_fire)
+    np.savez_compressed(
+        os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
+        sequence=seq_data,
+        current_fire=patch_prev,
+        target_fire=patch_fire,
+        change_fraction=np.float32(change_fraction),
+    )
+    return patch_count + 1
+
+
 def extract_patches(channels, prev_fire, fire, patch_size, stride):
     """Yield (patch_channels, patch_prev, patch_fire) sliding-window patches.
 
@@ -393,7 +447,7 @@ for file_path in tfrecord_files:
                     # Target fire = fire mask of the LAST frame
                     tgt_fire = window[-1][2]
 
-                    if np.sum(curr_fire) > 0 and np.sum(tgt_fire) > 0:
+                    if should_keep_patch(curr_fire, tgt_fire, args.filter_mode):
                         for patch_ch, patch_prev, patch_fire in extract_patches(
                             seq_data if args.patch_size >= 64 else None,
                             curr_fire, tgt_fire, args.patch_size, args.stride
@@ -402,30 +456,22 @@ for file_path in tfrecord_files:
                                 # patch_size < 64 temporal: extract from seq
                                 # (simplified: skip sub-patch temporal for now)
                                 continue
-                            np.savez_compressed(
-                                os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
-                                sequence=seq_data,
-                                current_fire=patch_prev,
-                                target_fire=patch_fire,
+                            patch_count = save_patch_npz(
+                                output_dir, patch_count, seq_data, patch_prev, patch_fire
                             )
-                            patch_count += 1
                             if patch_count >= max_patches:
                                 break
             else:
                 # Single-timestep mode: use PrevFireMask as current, FireMask as target
-                if np.sum(prev_fire) > 0 and np.sum(fire) > 0:
+                if should_keep_patch(prev_fire, fire, args.filter_mode):
                     for patch_ch, patch_prev, patch_fire in extract_patches(
                         channels, prev_fire, fire, args.patch_size, args.stride
                     ):
                         # Build a (1, C, H, W) "sequence" for dataset compat
                         seq_data = patch_ch[np.newaxis, ...]
-                        np.savez_compressed(
-                            os.path.join(output_dir, f"patch_{patch_count:06d}.npz"),
-                            sequence=seq_data,
-                            current_fire=patch_prev,
-                            target_fire=patch_fire,
+                        patch_count = save_patch_npz(
+                            output_dir, patch_count, seq_data, patch_prev, patch_fire
                         )
-                        patch_count += 1
                         if patch_count >= max_patches:
                             break
 
