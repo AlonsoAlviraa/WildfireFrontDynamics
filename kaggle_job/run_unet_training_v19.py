@@ -60,13 +60,22 @@ parser.add_argument(
 )
 args, _ = parser.parse_known_args()
 
-# Auto-detect CLM dataset on Kaggle
+# Auto-detect CLM dataset on Kaggle (handles train/ dir or train.zip)
 if args.clm_data_dir is None:
+    import zipfile
+
     for candidate in (
         "/kaggle/input/clm-wildfire-patches",
         "/kaggle/input/datasets/alonsoalviraaaa/clm-wildfire-patches",
     ):
-        if os.path.isdir(candidate):
+        if not os.path.isdir(candidate):
+            continue
+        train_zip = Path(candidate) / "train.zip"
+        if train_zip.exists() and not (Path(candidate) / "train").exists():
+            print(f"[clm] Extracting {train_zip} ...")
+            with zipfile.ZipFile(train_zip, "r") as zf:
+                zf.extractall(candidate)
+        if (Path(candidate) / "train").is_dir():
             args.clm_data_dir = candidate
             print(f"[clm] Found dataset at {candidate}")
             break
