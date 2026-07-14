@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""U-Net training v19 — Changed-pixel pivot (consolidated module).
+"""U-Net training v19 — Changed-pixel pivot + CLM data (Kaggle-safe).
 
-Scientific pivot after v14–v18 plateau:
-  - Train with upweighted loss on pixels where fire mask changes
-  - Early-stop on improvement_vs_copy_iou_changed (not raw val_loss)
-  - Preprocess with --filter-mode any_fire (removes biased both_fire filter)
-  - WeightedRandomSampler favors high-change patches
-
-All training logic lives in ``wildfire_front.ml.unet_train``.
+Kaggle only uploads this single script; companion .py files are NOT available.
+All helpers are inlined. Training logic is imported after cloning the repo.
 """
 
 from __future__ import annotations
@@ -16,6 +11,7 @@ import argparse
 import os
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Wildfire U-Net v19 — changed-pixel pivot")
@@ -60,39 +56,66 @@ parser.add_argument(
 )
 args, _ = parser.parse_known_args()
 
-# Auto-detect CLM dataset on Kaggle (handles train/ dir or train.zip)
-if args.clm_data_dir is None:
-    import zipfile
 
+# --------------------------------------------------------------------------- #
+# Inline Kaggle helpers (companion .py files are NOT uploaded to Kaggle)
+# --------------------------------------------------------------------------- #
+def _default_output_dir() -> str:
+    if os.path.isdir("/kaggle/working"):
+        return "/kaggle/working"
+    return "."
+
+
+def _install_pytorch_p100_compat() -> None:
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode != 0 or "P100" not in result.stdout:
+            return
+        print("  P100 detected — attempting PyTorch 2.1.2 (sm_60 support)...")
+        pip_result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q",
+             "torch==2.1.2", "torchvision==0.16.2"],
+            capture_output=True, text=True, timeout=600,
+        )
+        if pip_result.returncode == 0:
+            print("  PyTorch 2.1.2 installed.")
+        else:
+            print("  [WARN] PyTorch 2.1.2 unavailable — using preinstalled PyTorch.")
+    except Exception as exc:
+        print(f"  [WARN] P100 PyTorch fix skipped: {exc}")
+
+
+def _detect_clm_dataset() -> str | None:
     for candidate in (
         "/kaggle/input/clm-wildfire-patches",
         "/kaggle/input/datasets/alonsoalviraaaa/clm-wildfire-patches",
     ):
-        if not os.path.isdir(candidate):
+        root = Path(candidate)
+        if not root.is_dir():
             continue
-        train_zip = Path(candidate) / "train.zip"
-        if train_zip.exists() and not (Path(candidate) / "train").exists():
+        train_zip = root / "train.zip"
+        if train_zip.exists() and not (root / "train").is_dir():
             print(f"[clm] Extracting {train_zip} ...")
             with zipfile.ZipFile(train_zip, "r") as zf:
-                zf.extractall(candidate)
-        if (Path(candidate) / "train").is_dir():
-            args.clm_data_dir = candidate
+                zf.extractall(root)
+        if (root / "train").is_dir():
             print(f"[clm] Found dataset at {candidate}")
-            break
+            return candidate
+    return None
+
+
+if args.clm_data_dir is None:
+    args.clm_data_dir = _detect_clm_dataset()
 
 print("=" * 70)
 print("WILDFIRE U-NET v19 — CHANGED-PIXEL PIVOT")
 print("=" * 70)
 print(f"Config: {vars(args)}")
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from kaggle_common import (  # noqa: E402
-    default_output_dir,
-    install_pytorch_p100_compat,
-    run_preprocess_ndws,
-)
-
-install_pytorch_p100_compat()
+_install_pytorch_p100_compat()
 
 if not Path("WildfireFrontDynamics").exists():
     print("Cloning repository...")
@@ -109,13 +132,13 @@ if Path("WildfireFrontDynamics").exists():
     sys.path.insert(0, os.getcwd())
 
 if args.output_dir is None:
-    args.output_dir = default_output_dir()
+    args.output_dir = _default_output_dir()
 
 data_root = Path(args.data_dir)
 if not args.smoke_test:
     script = Path("kaggle_job/preprocess_ndws.py")
     if not script.exists():
-        script = Path(__file__).resolve().parent / "preprocess_ndws.py"
+        raise FileNotFoundError(f"preprocess_ndws.py not found at {script}")
     total = sum(
         len(list((data_root / s).glob("*.npz")))
         for s in ("train", "val", "test")
@@ -135,7 +158,12 @@ if not args.smoke_test:
                 "--patch-size", "64",
                 "--filter-mode", args.filter_mode,
             ]
-            subprocess.run(cmd, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                tail = (result.stderr or result.stdout)[-800:]
+                raise RuntimeError(f"preprocess_ndws failed for {split}:\n{tail}")
+            count = len(list(out_split.glob("*.npz")))
+            print(f"  {split}: {count} patches")
     else:
         print(f"Data already preprocessed ({total} patches)")
 
@@ -146,4 +174,4 @@ summary = run_training(config)
 print("\n=== U-NET v19 COMPLETED ===")
 print(f"  Model IoU: {summary['test_iou']:.4f}")
 print(f"  Copy baseline IoU: {summary['copy_baseline_iou']:.4f}")
-print(f"  Δ vs copy (changed pixels): {summary['improvement_vs_copy_iou_changed']:+.4f}")
+print(f"  delta vs copy (changed px): {summary['improvement_vs_copy_iou_changed']:+.4f}")
