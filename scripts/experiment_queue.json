@@ -24,7 +24,13 @@
       "improvement_vs_copy_iou_changed": ">0.5",
       "iou_full": ">0.15"
     },
-    "status": "running"
+    "status": "completed",
+    "results": {
+      "iou_full": 0.050,
+      "improvement_vs_copy_iou": -0.100,
+      "improvement_vs_copy_iou_changed": 0.714,
+      "verdict": "failed_go_criteria"
+    }
   },
   {
     "version": "v21",
@@ -34,7 +40,11 @@
     "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v21",
     "flags": ["--architecture", "residual", "--target-mode", "delta"],
     "parent": "v20",
-    "status": "queued"
+    "expected": {
+      "improvement_vs_copy_iou": ">0",
+      "iou_full": ">0.15"
+    },
+    "status": "running"
   },
   {
     "version": "v22",
