@@ -44,7 +44,14 @@
       "improvement_vs_copy_iou": ">0",
       "iou_full": ">0.15"
     },
-    "status": "running"
+    "status": "completed",
+    "results": {
+      "iou_full": 0.226,
+      "improvement_vs_copy_iou": 0.076,
+      "improvement_vs_copy_iou_changed": 0.041,
+      "legacy_improvement_vs_naive_copy_iou_changed": 0.214,
+      "verdict": "production_candidate"
+    }
   },
   {
     "version": "v22",
