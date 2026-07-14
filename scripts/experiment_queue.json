@@ -50,16 +50,22 @@
       "improvement_vs_copy_iou": 0.076,
       "improvement_vs_copy_iou_changed": 0.041,
       "legacy_improvement_vs_naive_copy_iou_changed": 0.214,
-      "verdict": "production_candidate"
+      "verdict": "production"
     }
   },
   {
     "version": "v22",
     "name": "Changed-only training filter",
     "hypothesis": "Training only on patches with fire movement maximizes signal",
+    "script": "kaggle_job/run_unet_training_v22.py",
+    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v22",
     "flags": ["--filter-mode", "changed"],
-    "parent": "best",
-    "status": "queued"
+    "parent": "v21",
+    "expected": {
+      "iou_full": ">=0.226",
+      "improvement_vs_copy_iou_changed": ">0.041"
+    },
+    "status": "running"
   },
   {
     "version": "v23",

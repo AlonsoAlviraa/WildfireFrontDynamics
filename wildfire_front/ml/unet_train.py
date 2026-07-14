@@ -380,7 +380,17 @@ def evaluate_loader(
             results["improvement_vs_copy_iou_changed"] = agg.get(
                 "improvement_vs_copy_iou_changed", 0.0
             )
+            results["legacy_improvement_vs_naive_copy_iou_changed"] = agg.get(
+                "legacy_improvement_vs_naive_copy_iou_changed", 0.0
+            )
             results["copy_baseline_iou"] = agg.get("copy_baseline_iou", 0.0)
+            results["dilated_copy_baseline_iou"] = agg.get("dilated_copy_baseline_iou", 0.0)
+            results["improvement_vs_dilated_copy_iou"] = agg.get(
+                "improvement_vs_dilated_copy_iou", 0.0
+            )
+            results["model_iou"] = agg.get("model_iou", 0.0)
+            results["model_iou_changed"] = agg.get("model_iou_changed", 0.0)
+            results["model_iou_growth"] = agg.get("model_iou_growth", 0.0)
 
     return results
 

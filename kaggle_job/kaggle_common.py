@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+REPO_URL = "https://github.com/AlonsoAlviraa/WildfireFrontDynamics.git"
+REPO_CLONE_DIR = Path("/tmp/WildfireFrontDynamics")
 
 
 def default_output_dir() -> str:
@@ -109,6 +113,70 @@ def run_preprocess_ndws(
             f"(expected >= {min_total})"
         )
     return total
+
+
+def clone_repo_fresh(
+    url: str = REPO_URL,
+    dest: Path | str = REPO_CLONE_DIR,
+) -> Path:
+    """Clone repo under /tmp so /kaggle/working stays artifact-only."""
+    dest = Path(dest)
+    if dest.exists():
+        shutil.rmtree(dest)
+    print("Cloning repository...")
+    subprocess.run(["git", "clone", "--depth", "1", url, str(dest)], check=True)
+    rev = subprocess.run(
+        ["git", "-C", str(dest), "rev-parse", "--short", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    print(f"  Repo at commit {rev.stdout.strip()}")
+    return dest
+
+
+def enter_repo(repo_dir: Path | str) -> None:
+    """Add repo to sys.path and chdir (never use /kaggle/working for clone)."""
+    repo_dir = Path(repo_dir)
+    os.chdir(repo_dir)
+    root = str(repo_dir.resolve())
+    if root not in sys.path:
+        sys.path.insert(0, root)
+
+
+def verify_residual_imports(repo_dir: Path | str) -> None:
+    repo_dir = Path(repo_dir)
+    unet_model = repo_dir / "models" / "unet_model.py"
+    unet_train = repo_dir / "wildfire_front" / "ml" / "unet_train.py"
+    if not unet_model.is_file() or not unet_train.is_file():
+        raise RuntimeError(f"Repo layout invalid under {repo_dir}")
+    model_src = unet_model.read_text(encoding="utf-8")
+    train_src = unet_train.read_text(encoding="utf-8")
+    if "ResidualWildfireUNetSmall" in train_src.split("def build_model", 1)[0]:
+        raise RuntimeError("unet_train.py top-level-imports ResidualWildfireUNetSmall")
+    if "class ResidualWildfireUNetSmall" not in model_src:
+        raise RuntimeError("models/unet_model.py missing ResidualWildfireUNetSmall")
+
+
+def detect_clm_dataset() -> str | None:
+    import zipfile
+
+    for candidate in (
+        "/kaggle/input/clm-wildfire-patches",
+        "/kaggle/input/datasets/alonsoalviraaaa/clm-wildfire-patches",
+    ):
+        root = Path(candidate)
+        if not root.is_dir():
+            continue
+        train_zip = root / "train.zip"
+        if train_zip.exists() and not (root / "train").is_dir():
+            print(f"[clm] Extracting {train_zip} ...")
+            with zipfile.ZipFile(train_zip, "r") as zf:
+                zf.extractall(root)
+        if (root / "train").is_dir():
+            print(f"[clm] Found dataset at {candidate}")
+            return candidate
+    return None
 
 
 def validate_dataset_sizes(train_n: int, val_n: int, test_n: int) -> None:

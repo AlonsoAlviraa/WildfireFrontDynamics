@@ -1,0 +1,22 @@
+{
+  "version": "v21",
+  "architecture": "residual",
+  "target_mode": "delta",
+  "in_channels": 18,
+  "sequence_timesteps": 1,
+  "sequence_channels": 17,
+  "patch_size": 64,
+  "threshold": 0.5,
+  "filter_mode": "any_fire",
+  "weights_file": "weights_v21_best.pt",
+  "repo_commit": "c5f583d",
+  "kernel": "alonsoalviraaaa/wildfire-front-training-v21",
+  "metrics": {
+    "test_iou": 0.2256,
+    "copy_baseline_iou": 0.1500,
+    "improvement_vs_copy_iou": 0.0756,
+    "improvement_vs_copy_iou_changed": 0.0409,
+    "cross_protocol_v14_iou": 0.2271
+  },
+  "notes": "Copy weights_pretrained_best.pt from kaggle_outputs_v21 to this directory as weights_v21_best.pt"
+}
