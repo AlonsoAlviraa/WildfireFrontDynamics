@@ -22,7 +22,6 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from models.unet_model import (
-    ResidualWildfireUNetSmall,
     WildfireUNet,
     WildfireUNetSmall,
     count_parameters,
@@ -148,6 +147,8 @@ class EMA:
 def build_model(config: UNetTrainConfig, in_channels: int) -> nn.Module:
     """Instantiate U-Net variant from config."""
     if config.architecture == "residual":
+        from models.unet_model import ResidualWildfireUNetSmall
+
         return ResidualWildfireUNetSmall(
             in_channels=in_channels,
             bilinear=True,
@@ -180,6 +181,27 @@ def model_forward(
     if architecture == "residual":
         return model(x, current_fire)
     return model(x)
+
+
+def select_device() -> tuple[torch.device, bool]:
+    """Pick CUDA only if a probe kernel actually runs (P100 + PyTorch 2.10 fails)."""
+    if not torch.cuda.is_available():
+        print("No CUDA available — using CPU.")
+        return torch.device("cpu"), False
+    try:
+        probe = torch.zeros(2, 2, device="cuda")
+        probe = probe @ probe
+        torch.cuda.synchronize()
+        name = torch.cuda.get_device_name(0)
+        cap = torch.cuda.get_device_capability(0)
+        print(f"GPU OK: {name} (sm_{cap[0]}{cap[1]})")
+        torch.backends.cudnn.benchmark = True
+        return torch.device("cuda"), True
+    except Exception as exc:
+        name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "unknown"
+        print(f"[WARN] CUDA probe failed on {name}: {exc}")
+        print("[WARN] Falling back to CPU (use T4 GPU on Kaggle for training).")
+        return torch.device("cpu"), False
 
 
 def _sample_change_weight(npz_path: Path) -> float:
@@ -387,13 +409,13 @@ def run_training(config: UNetTrainConfig) -> dict:
     train_loader, val_loader, test_loader, _, train_ds, val_ds, test_ds = build_dataloaders(config)
     log(f"Dataset sizes -> train={len(train_ds)} val={len(val_ds)} test={len(test_ds)}")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    use_amp = device.type == "cuda"
-    if use_amp:
-        torch.backends.cudnn.benchmark = True
+    device, use_amp = select_device()
+    if device.type == "cuda":
         log(f"GPU: {torch.cuda.get_device_name(0)}")
+    else:
+        log("Device: CPU (reduced epochs recommended on Kaggle P100)")
 
-    sample_seq, sample_curr, _ = train_loader.dataset[0]
+    sample_seq, sample_curr, _ = train_ds[0]
     in_channels = sample_seq.shape[0] * sample_seq.shape[1] + 1
     model = build_model(config, in_channels).to(device)
     n_params = count_parameters(model)

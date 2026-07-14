@@ -263,6 +263,40 @@ class WildfireUNetSmall(nn.Module):
         return torch.sigmoid(self.forward(x))
 
 
+class ResidualWildfireUNetSmall(nn.Module):
+    """U-Net that predicts a logit-space correction over the copy baseline.
+
+    Output logits = logit(prev_fire) + delta_logits, so the model only needs
+    to learn the *change* from yesterday's fire mask rather than the full map.
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 12,
+        bilinear: bool = True,
+        norm: str = "group",
+        se_attention: bool = False,
+    ):
+        super().__init__()
+        self.backbone = WildfireUNetSmall(
+            in_channels=in_channels,
+            out_channels=1,
+            bilinear=bilinear,
+            norm=norm,
+            se_attention=se_attention,
+        )
+
+    def forward(self, x: torch.Tensor, prev_fire: torch.Tensor) -> torch.Tensor:
+        if prev_fire.dim() == 3:
+            prev_fire = prev_fire.unsqueeze(1)
+        prev_fire = prev_fire.float()
+        copy_logits = torch.logit(prev_fire.clamp(1e-4, 1.0 - 1e-4))
+        return copy_logits + self.backbone(x)
+
+    def predict(self, x: torch.Tensor, prev_fire: torch.Tensor) -> torch.Tensor:
+        return torch.sigmoid(self.forward(x, prev_fire))
+
+
 def count_parameters(model: nn.Module) -> int:
     """Return total number of trainable parameters."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
