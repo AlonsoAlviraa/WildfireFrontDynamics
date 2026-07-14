@@ -8,76 +8,117 @@
 
 ## Current Baseline
 
-| Version | Date | IoU | Recall | Precision | F1 | best_epoch | val_loss | Status |
+| Version | Date | IoU@0.5 | Recall@0.5 | Precision@0.5 | F1 | best_epoch | val_loss | Status |
 |---|---|---|---|---|---|---|---|---|
-| v10 | 2026-07-09 | N/A | N/A | N/A | N/A | 3 | 0.2849 | Superseded |
-| v11 | 2026-07-09 | 0.035 | 0.042 | 0.183 | 0.058 | 1 | 0.2712 | Superseded |
-| v12 | 2026-07-10 | 0.002 | 0.002 | 0.161 | 0.004 | 2 | 0.2740 | **Current** |
+| v12 | 2026-07-10 | 0.002 | 0.002 | 0.161 | 0.004 | 2 | 0.2740 | Superseded |
+| **v14** | 2026-07-10 | **0.239** | **0.564** | 0.293 | 0.385 | 8 | 0.1124 | **Production baseline** |
+| v15 | 2026-07-10 | 0.235 | 0.548 | 0.292 | 0.381 | 6 | 0.1087 | Neutral |
+| v16 | 2026-07-10 | 0.237 | 0.589 | 0.284 | 0.383 | 6 | 0.1079 | Neutral |
 
-**Acceptance threshold:** IoU > 0.15, Recall > 0.30
+**NDWS acceptance threshold:** IoU > 0.15, Recall > 0.30 — **MET since v14**
+
+**Scientific target (copy baseline):** IoU > 0.788 (naive PrevFireMask copy) — **NOT MET**
+
+**Tier-1 baseline (changed pixels):** v19 — Δ vs copy **+0.877**  
+**Tier-2 baseline (full grid):** v14 — IoU **0.239**  
+**Next experiment:** v20 (Residual + changed-weighted)
 
 ---
 
 ## Experiment Log
 
-### v10: Baseline A3C-LSTM (Original)
-- **Date:** 2026-07-09
-- **Kernel:** `alonsoalvira/wildfire-front-training-v10`
-- **Hypothesis:** A3C-LSTM with focal BCE + physics loss would learn fire spread
-- **Architecture:** A3C_PerCellModel_LSTM (per-cell iteration, batch_size=1)
-- **Config:** LR=1e-4, pos_weight=3.0, warmup=3, patience=8
-- **IoU:** N/A (not computed)
-- **Recall:** N/A (not computed)
-- **best_epoch:** 3
-- **val_loss:** 0.2849
-- **test_loss:** 0.2771
-- **Verdict:** ⚖️ Baseline — no segmentation metrics computed
-- **Key finding:** Model peaks at epoch 3, then degrades. Focal loss is stable.
-- **Next:** Reduce LR, add segmentation metrics
-
----
-
-### v11: LR Reduction + Segmentation Metrics
-- **Date:** 2026-07-09
-- **Kernel:** `alonsoalvira/wildfire-front-training-v11`
-- **Hypothesis:** Lower LR (1e-4 → 5e-5) + longer warmup (3→5) would extend training
-- **Change:** LR halved, warmup extended, patience increased, added IoU/Recall/Precision eval
-- **IoU:** 0.035 (first measurement)
-- **Recall:** 0.042 (catastrophic — model predicts "no fire" 96% of time)
-- **Precision:** 0.183
-- **F1:** 0.058
-- **best_epoch:** 1 (WORSE than v10's epoch 3)
-- **val_loss:** 0.2712 (best ever)
-- **test_loss:** 0.2726
-- **meta_labeler_acc:** 90.1% (excellent)
-- **Verdict:** ⚖️ Mixed — val_loss improved but best_epoch regressed to 1
-- **Key finding:** LR was NOT the problem. The model peaks BEFORE learning starts (v3.pt weights are better than fine-tuning).
-- **Root cause identified:** batch_size=1 creates noisy gradients; training destroys pre-trained features
-- **Next:** Freeze conv layers, increase pos_weight
-
----
-
-### v12: Freeze Conv + pos_weight=8 + Clipping 0.3
+### v14: U-Net Small + Composite Loss — ✅ BREAKTHROUGH
 - **Date:** 2026-07-10
-- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v12` (NEW UNI ACCOUNT)
-- **Hypothesis:** Freeze conv during warmup + higher pos_weight would protect features and boost recall
-- **Change:**
-  - pos_weight 3.0 → 8.0
-  - Freeze conv1/conv2/conv3 during warmup (5 epochs)
-  - start_factor 0.1 → 0.01
-  - Gradient clipping 0.5 → 0.3
-- **IoU:** 0.002 (75x below minimum viable threshold)
-- **Recall:** 0.002 (WORSE than v11's 0.042)
-- **Precision:** 0.161
-- **F1:** 0.004
-- **best_epoch:** 2 (marginal improvement over v11's epoch 1)
-- **val_loss:** 0.2740 (slightly worse than v11's 0.2712)
-- **test_loss:** 0.3016 (WORSE — overfitting)
-- **meta_labeler_acc:** 63.6% (much worse than v11's 90.1%)
-- **Verdict:** ❌ WORSE — pos_weight=8 paradoxically reduced recall further
-- **Key finding:** Higher pos_weight does NOT help — it makes the model MORE conservative. The problem is NOT class imbalance, it's the architecture.
-- **Conclusion:** 3 experiments confirm the problem is architectural (per-cell, batch_size=1)
-- **Next:** U-Net architecture overhaul (v13)
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v14`
+- **Hypothesis:** U-Net + composite loss (BCE+Dice+Tversky) fixes v10-v12 architectural failure
+- **Change:** 64×64 patches, batch=32, WildfireUNetSmall, composite loss, EMA, multi-threshold eval
+- **IoU:** 0.239 (prev: 0.002, Δ: +0.237)
+- **Recall:** 0.564 (prev: 0.002, Δ: +0.562)
+- **Precision:** 0.293
+- **F1:** 0.385
+- **best_epoch:** 8
+- **val_loss:** 0.1124
+- **Copy baseline IoU:** 0.788 (model 3× worse — learns to copy poorly)
+- **Verdict:** ✅ Better — new production baseline, all NDWS criteria met
+- **Next:** Test SE attention (v15), then residual delta (v18)
+
+---
+
+### v15: U-Net Full + SE Attention — ⚖️ NEUTRAL
+- **Date:** 2026-07-10
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v15`
+- **Hypothesis:** SE attention improves multi-modal feature selection
+- **Change:** WildfireUNet (4.3M params) + SE + composite loss
+- **IoU:** 0.235 (prev: 0.239, Δ: -0.004)
+- **Recall:** 0.548 (prev: 0.564, Δ: -0.016)
+- **best_epoch:** 6
+- **val_loss:** 0.1087 (lower, but IoU flat)
+- **Verdict:** ⚖️ Neutral — SE + larger model does not improve IoU
+- **Next:** Do not retry without architectural change
+
+---
+
+### v16: U-Net Full + SE + EMA — ⚖️ NEUTRAL
+- **Date:** 2026-07-10
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v16`
+- **Hypothesis:** Full model + EMA stabilizes training for higher IoU
+- **Change:** Same as v15 with EMA decay=0.999
+- **IoU:** 0.237 (prev: 0.235, Δ: +0.002)
+- **Recall:** 0.589 (prev: 0.548, Δ: +0.041)
+- **best_epoch:** 6
+- **val_loss:** 0.1079
+- **Verdict:** ⚖️ Neutral — recall up slightly, IoU still below v14
+- **Next:** Pivot to residual delta learning
+
+---
+
+### v17: Autonomous Research Pipeline — ❌ FAILED
+- **Date:** 2026-07-10
+- **Kernel:** `alonsoalviraaaa/wildfire-autonomous-research-v17`
+- **Hypothesis:** 16h Optuna sweep finds config beating copy baseline
+- **Change:** ResidualWildfireUNet + inline TFRecord preprocessor
+- **Error:** Inline preprocessor required `downward_shortwave_radiation_flux` → 0 train/val/test samples → IndexError
+- **Secondary:** PyTorch 2.1.2 install failed on P100 (ran 2.10 incompatible)
+- **Verdict:** ❌ Failed — preprocessing broken
+- **Fix applied (v17d):** Use `preprocess_ndws.py` via `kaggle_common.py`, P100 fix before import
+- **Next:** Relaunch v17d OR run v18 first (simpler, higher priority)
+
+---
+
+### v18: Residual Delta U-Net Small — ⚖️ NEUTRAL
+- **Date:** 2026-07-10
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v18`
+- **Hypothesis:** logit(prev_fire) + delta_logits forces model to learn propagation, not copy
+- **Change:** `ResidualWildfireUNetSmall` + composite loss (absolute target, `both_fire` filter)
+- **IoU:** 0.239 (same as v14)
+- **Verdict:** ⚖️ Neutral — residual alone insufficient without changed-pixel loss
+- **Next:** Combine with v19 formulation (v20)
+
+---
+
+### v19: Changed-Pixel Weighted U-Net — ✅ TIER-1 BREAKTHROUGH
+- **Date:** 2026-07-14
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v19`
+- **Parent:** v14
+- **Hypothesis:** Upweight changed pixels + `any_fire` filter beats copy on dynamic cells
+- **Change:** `changed_weighted` loss, WeightedRandomSampler, CLM merge (890 patches)
+- **IoU full @0.5:** 0.052 (copy: 0.150)
+- **Δ vs copy (changed px):** **+0.877** (copy changed IoU: 0.0)
+- **model_iou_changed @0.5:** 0.877
+- **best_epoch:** 9 | **train time:** 418s (T4)
+- **Verdict:** ✅ Tier-1 target met; full-grid IoU sacrificed (over-predicts spread)
+- **Next:** v20 — residual architecture + same changed-pixel setup
+
+---
+
+### v20: Residual + Changed-Pixel — 🔴 RUNNING
+- **Date:** 2026-07-14
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v20`
+- **Parent:** v19
+- **Hypothesis:** Copy-anchored residual U-Net recovers full IoU while keeping Δ changed > 0.5
+- **Change:** `--architecture residual` (only variable vs v19)
+- **Go criteria:** Δ changed > 0.5 AND IoU full > 0.15
+- **Status:** Pushed to Kaggle
 
 ---
 
@@ -85,9 +126,11 @@
 
 | # | Hypothesis | Why it failed | Evidence |
 |---|---|---|---|
-| 1 | "LR too high" | v11 halved LR, best_epoch went from 3→1 | v11 results |
-| 2 | "Class imbalance causes low recall" | v12 increased pos_weight 3→8, recall went 4.2%→0.2% | v12 results |
-| 3 | "Freeze conv protects features" | v12 froze conv for 5 epochs, result was worse than v11 | v12 results |
+| 1 | "LR too high" | v11 halved LR, best_epoch went 3→1 | v11 |
+| 2 | "pos_weight fixes recall" | v12 pos_weight 3→8, recall 4.2%→0.2% | v12 |
+| 3 | "SE attention improves IoU" | v15/v16 IoU ≈ v14 | v15, v16 |
+| 4 | "More params = better IoU" | v16 (4.3M) = v14 (1.08M) | v16 |
+| 5 | "Inline TFRecord parser" | Wrong feature schema, 0 samples | v17 |
 
 ---
 
@@ -95,38 +138,26 @@
 
 | # | Hypothesis | Evidence |
 |---|---|---|
-| 1 | "Meta-labeler works well with 12 features" | v11 achieved 90.1% accuracy | v11 results |
-| 2 | "Problem is architectural (batch_size=1)" | 3 experiments all peak at epoch 1-3 | v10-v12 pattern |
-
----
-
-## Next Experiments (Queue)
-
-| Version | Experiment | Priority | Expected IoU |
-|---|---|---|---|
-| **v13** | **U-Net baseline (batch=32, patch=64, weighted BCE)** | 🔴 CRITICAL | 0.10-0.20 |
-| v14 | U-Net + Tversky loss | High | +0.05 |
-| v15 | U-Net + data augmentation | High | +0.03 |
-| v16 | ConvLSTM temporal encoder | Medium | +0.05 |
-| v17 | CBAM attention | Medium | +0.03 |
-| v18 | Oversampling fire-heavy patches | Medium | +0.03 |
-| v19 | Castilla-La Mancha fine-tuning | Low | Domain-specific |
+| 1 | "U-Net >> A3C-LSTM" | IoU 0.002→0.239 | v12→v14 |
+| 2 | "Composite loss >> BCE alone" | Convergence epoch 3 IoU 0.177 | v14 curves |
+| 3 | "64×64 patches >> 30×30" | Bottleneck 8×8 preserves spatial info | v14 vs v13 |
+| 4 | "Copy baseline is the real benchmark" | IoU 0.788 vs model 0.239 | leakage analysis |
 
 ---
 
 ## Resource Tracking
 
-| Week | Experiments run | GPU hours used | GPU hours remaining |
+| Week | Experiments | GPU hours | Notes |
 |---|---|---|---|
-| 2026-W28 (Jul 8-14) | v10, v11, v12 (3 runs) | ~8h | ~22h (uni: 30h/week) |
-| 2026-W29 (Jul 15-21) | v13 planned | ~4h estimated | — |
+| 2026-W28 | v10-v17 (10 runs) | ~12h | v14-v16 success, v17 failed |
+| 2026-W29 | v18 planned | ~4h est. | Residual delta |
 
 ---
 
 ## Metric Definitions
 
-- **IoU (Intersection over Union):** `TP / (TP + FP + FN)` — primary metric
-- **Recall (Sensitivity):** `TP / (TP + FN)` — ability to detect fire
-- **Precision:** `TP / (TP + FP)` — accuracy of fire predictions
-- **F1 (Dice):** `2*P*R / (P+R)` — harmonic mean
-- **best_epoch:** Epoch with lowest val_loss (indicator of learning capacity)
+- **IoU:** `TP / (TP + FP + FN)` — primary NDWS metric
+- **Copy baseline IoU:** IoU when prediction = PrevFireMask
+- **improvement_vs_copy:** model IoU − copy baseline IoU (scientific target)
+- **Recall:** `TP / (TP + FN)`
+- **best_epoch:** Epoch with lowest val_loss

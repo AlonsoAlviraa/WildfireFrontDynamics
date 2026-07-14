@@ -1,133 +1,121 @@
-# Loop Engineering Plan — Beat the Copy Baseline
+# Loop Engineering Plan — Two-Tier Wildfire Spread Model
 
-> **Goal:** Beat the naive copy baseline (PrevFireMask → FireMask, IoU ~0.79) on **changed pixels**, not just hit NDWS minimum viable thresholds.
-> **Method:** Each experiment changes ONE scientific variable, measured against v14 baseline AND copy baseline.
-> **Rule:** Never change 2 things at once — isolate variables.
+> **Updated:** 2026-07-14 after v19 Kaggle run  
+> **Method:** One scientific variable per experiment, measured against copy baseline on **two tiers**.  
+> **Rule:** Never change two variables at once.
 
 ---
 
-## Acceptance Criteria (Revised — Post-Audit)
+## What v19 Proved
 
-| Metric | v14 | v18 | **Primary Target** | NDWS Minimum |
+| Metric | v14 | v18 | **v19** | Copy baseline |
 |---|---|---|---|---|
-| **IoU (full grid)** | 0.239 | 0.239 | >0.30 | >0.15 |
-| **Recall@0.5** | 0.564 | 0.534 | >0.50 | >0.30 |
-| **Copy baseline IoU** | ~0.79 | ~0.79 | — | — |
-| **Δ vs copy (full)** | -0.55 | -0.55 | **>0** | — |
-| **Δ vs copy (changed px)** | negative | negative | **>0** | — |
-| **best_epoch** | 8 | 34 | >10 | >10 |
+| IoU full @0.5 | 0.239 | 0.239 | **0.052** | 0.150 |
+| Δ vs copy (full) | -0.55 | -0.55 | -0.10 | — |
+| **Δ vs copy (changed px)** | negative | negative | **+0.877** | 0.0 |
+| Train samples | 12k | 12k | **12,890** (+CLM) | — |
+| best_epoch | 8 | 34 | 9 | — |
 
-**NDWS minimum viable: MET since v14.** Architecture tweaks (v15/v16/v18 residual) did not move the needle because the bottleneck is **problem formulation**, not model capacity.
+**Verdict:** The changed-pixel pivot works. The model now beats the copy baseline where fires actually move. Full-grid IoU collapsed because the standard U-Net over-predicts spread (recall 0.73, precision 0.05) while static pixels dominate the metric.
 
----
-
-## Root Cause (Why We Were Stuck)
-
-1. **87% spatial correlation** — model learns to copy yesterday's fire mask
-2. **Biased preprocessing** — `prev_fire>0 AND fire>0` filter oversamples active-fire patches
-3. **Wrong optimization target** — early stopping on `val_loss` (BCE), not vs copy baseline
-4. **5 constant channels** in preprocessor (pressure, cloud, etc.) add noise, not signal
-5. **Script duplication** — v14–v18 are ~3000 lines of copy-paste, hard to iterate
+**New baseline:** v19 on `improvement_vs_copy_iou_changed`. Do not discard v14 for full-grid comparisons until v20+ recovers it.
 
 ---
 
-## Scientific Pivot (v19+)
+## Acceptance Criteria (Realistic — Two Tiers)
 
-```
-OLD: predict absolute fire mask, optimize val_loss
-NEW: upweight changed pixels, optimize improvement_vs_copy_iou_changed
-```
+### Tier 1 — Dynamic pixels (primary, achieved)
 
-### Phase 1: Problem Reformulation (v19–v21) — **ACTIVE**
-
-| Version | Hypothesis | Change | Status |
-|---|---|---|---|
-| **v19** | Changed-pixel loss beats copy on dynamic pixels | `changed_weighted` loss + `any_fire` filter + WeightedRandomSampler | **NEXT** |
-| v20 | Delta target (growth mask only) | `--target-mode delta` | queued |
-| v21 | Official 12-channel NDWS schema | Remove constant channels from preprocess | queued |
-
-### Phase 2: Infrastructure Consolidation — **DONE**
-
-| Component | File | Status |
+| Metric | Target | v19 |
 |---|---|---|
-| Consolidated trainer | `wildfire_front/ml/unet_train.py` | ✅ |
-| NDWS metrics (copy + changed) | `wildfire_front/ml/ndws_metrics.py` | ✅ |
-| Preprocess filter modes | `kaggle_job/preprocess_ndws.py --filter-mode` | ✅ |
-| v19 Kaggle kernel | `kaggle_job/run_unet_training_v19.py` | ✅ |
+| `improvement_vs_copy_iou_changed` @0.5 | **> 0** | **+0.877** |
+| `model_iou_changed` @0.5 | > 0.70 | **0.877** |
 
-### Phase 3: Temporal Enhancement (v22–v23)
+### Tier 2 — Operational full grid (in progress)
 
-- v22: Real 3-timestep sequences (`--sequence-length 3`)
-- v23: ConvLSTM encoder
+| Metric | v14 | Target next | Stretch |
+|---|---|---|---|
+| IoU full @0.5 | 0.239 | **> 0.20** | > 0.35 |
+| Δ vs copy (full) | -0.55 | **> -0.20** | > 0 |
+| Recall @0.5 | 0.564 | 0.45–0.55 | > 0.55 |
+| Precision @0.5 | 0.293 | **> 0.25** | > 0.35 |
 
-### Phase 4: Domain Adaptation (v24)
+Beating copy IoU ~0.79 on the **full grid** remains the long-term goal. Expect stepped gains (0.05–0.10 IoU per successful experiment), not a single jump.
 
-- Fine-tune best NDWS model on Castilla-La Mancha (Tobarra) data
+---
+
+## Root Cause (Updated)
+
+1. **87% spatial correlation** — naive copy is strong; model must learn *corrections*, not redraw the map.
+2. **Metric mismatch** — optimizing full IoU with a model that excels only on ~4% changed pixels misled v14–v18 early stopping.
+3. **Architecture** — standard U-Net predicts absolute masks; v18 residual alone did not help without changed-pixel loss (v19).
+4. **Preprocessing** — `both_fire` filter biased training; `any_fire` + CLM mix is now canonical.
+5. **Infrastructure** — consolidated in `unet_train.py`; Kaggle clones fresh repo each run.
+
+---
+
+## Experiment Queue (Realistic)
+
+Each row changes **one** variable relative to its parent.
+
+| Ver | Parent | Single change | Hypothesis | Go if |
+|---|---|---|---|---|
+| **v19** | v14 | `changed_weighted` + `any_fire` + CLM | Beat copy on changed pixels | Δ changed > 0 |
+| **v20** | v19 | `--architecture residual` | Copy-anchored logits recover full IoU while keeping Δ changed | Δ changed > 0.5 **and** IoU full > 0.15 |
+| v21 | v20 | `--target-mode delta` | Growth-only target reduces false positives on static cells | IoU full > v20 |
+| v22 | best | `--filter-mode changed` train only | Train exclusively on patches with fire movement | Δ changed ≥ v20 |
+| v23 | best | 12-channel NDWS schema | Drop constant preprocessor channels | val_loss ↓, IoU ≥ parent |
+| v24 | best | CLM fine-tune 10 epochs | Tobarra/Cardoso domain adaptation | real-fire eval ↑ |
+
+**Active:** v20  
+**Do not run:** v18-style residual without changed-pixel loss (already neutral).
 
 ---
 
 ## The Loop
 
 ```
-┌──────────────────────────────────────────────────┐
-│  1. HYPOTHESIS: Change ONE scientific variable     │
-│  2. IMPLEMENT: unet_train.py config flag         │
-│  3. TEST LOCAL: pytest + smoke_test              │
-│  4. PUSH: Kaggle kernel (T4 GPU)                 │
-│  5. WAIT: ~10 min preprocess + ~2h train         │
-│  6. DOWNLOAD: training_summary.json              │
-│  7. ANALYZE: Δ vs copy (changed pixels)        │
-│  8. DECISION: Better? → new baseline             │
-│                 Worse? → revert, next hypothesis │
-│  9. DOCUMENT: EXPERIMENT_TRACKER.md              │
-│ 10. REPEAT                                       │
-└──────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  1. HYPOTHESIS — one flag in unet_train / Kaggle script │
+│  2. SMOKE — pytest + local smoke_test (optional)        │
+│  3. PUSH — kernel to Kaggle (T4, fresh git clone)       │
+│  4. WAIT — ~10 min preprocess + ~7 min train (v19)      │
+│  5. PULL — training_summary.json + log                  │
+│  6. SCORE — Tier-1 Δ changed, then Tier-2 IoU full     │
+│  7. DECIDE — promote baseline / revert / queue next     │
+│  8. LOG — EXPERIMENT_TRACKER.md + experiment_queue    │
+│  9. REPEAT                                               │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
+**Promotion rules**
 
-## Completed Experiments (v14–v18)
-
-| Ver | Result | Verdict |
-|---|---|---|
-| v14 | IoU 0.239, Recall 0.564 | ✅ Baseline breakthrough |
-| v15 | IoU 0.235 (SE attention) | ⚖️ Neutral |
-| v16 | IoU 0.237 (full + EMA) | ⚖️ Neutral |
-| v17 | ERROR (0 samples) | ❌ Fixed in v17d |
-| v18 | IoU 0.239 (residual delta) | ⚖️ Neutral — same as v14 |
+- **New Tier-1 baseline:** `improvement_vs_copy_iou_changed` improves by ≥ 0.05.
+- **New Tier-2 baseline:** full IoU improves by ≥ 0.03 without Tier-1 dropping below 0.
+- **Revert:** Tier-1 < 0 or full IoU drops > 0.05 vs parent.
 
 ---
 
-## Revert Protocol
-
-1. `git revert <commit>` to undo the change
-2. Document WHY it failed in `EXPERIMENT_TRACKER.md`
-3. Move to next hypothesis
-4. Do NOT retry the same change without modification
-
----
-
-## Kaggle Resource Budget
-
-| Resource | Limit | Our usage |
-|---|---|---|
-| GPU time | 12–30h/week | ~2–4h per experiment |
-| Disk | 20GB | ~5GB |
-| **GPU type** | T4 required | P100 incompatible with PyTorch 2.10 |
-
----
-
-## File Structure
+## Infrastructure (Stable — Do Not Fork)
 
 | Purpose | Path |
 |---|---|
-| Canonical trainer | `wildfire_front/ml/unet_train.py` |
-| NDWS metrics | `wildfire_front/ml/ndws_metrics.py` |
-| Model | `models/unet_model.py` |
+| Trainer | `wildfire_front/ml/unet_train.py` |
+| Metrics | `wildfire_front/ml/ndws_metrics.py` |
+| Model | `models/unet_model.py` (`ResidualWildfireUNetSmall`) |
 | Preprocess | `kaggle_job/preprocess_ndws.py` |
-| Kaggle wrapper | `kaggle_job/run_unet_training_v19.py` |
-| Experiment queue | `scripts/experiment_queue.json` |
-| Results | `kaggle_outputs_vXX/training_summary.json` |
+| Kaggle wrappers | `kaggle_job/run_unet_training_v19.py`, `v20.py` |
+| Queue | `scripts/experiment_queue.json` |
+| MCP monitor | Kaggle MCP / `kaggle kernels status` |
+
+---
+
+## Kaggle Checklist
+
+- GPU: **T4** (`machine_shape: NvidiaTeslaT4`)
+- Datasets: `fantineh/next-day-wildfire-spread`, `alonsoalviraaaa/clm-wildfire-patches`
+- Output: `/kaggle/working/training_summary.json` only (no repo bloat in output)
+- Auth: `KAGGLE_API_TOKEN` + GitHub MCP for CI
 
 ---
 
@@ -136,9 +124,10 @@ NEW: upweight changed pixels, optimize improvement_vs_copy_iou_changed
 ```markdown
 ### vX: [Name]
 - **Date:** YYYY-MM-DD
-- **Hypothesis:** [What we expected]
-- **Change:** [Single variable changed]
-- **IoU:** [value] (copy: [value], Δchanged: [value])
+- **Parent:** vY
+- **Change:** [single variable]
+- **Tier-1 Δ changed:** [value] (target > 0)
+- **Tier-2 IoU full:** [value] (target > 0.20)
 - **Verdict:** ✅ / ❌ / ⚖️
-- **Next:** [Next experiment]
+- **Next:** vZ
 ```

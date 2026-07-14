@@ -1,82 +1,54 @@
 [
   {
-    "version": "v14",
-    "name": "U-Net Small + Composite Loss",
-    "hypothesis": "Composite loss with FN-heavy Tversky boosts recall over v13",
-    "script": "kaggle_job/run_unet_training_v14.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v14",
-    "flags": ["--model", "small", "--loss", "composite", "--epochs", "50", "--batch-size", "32", "--lr", "1e-3", "--pos-weight", "5.0"],
-    "expected": {"iou": "0.10-0.20", "recall": "0.15-0.30"},
-    "status": "completed",
-    "results": {"iou": 0.239, "recall": 0.564, "verdict": "baseline_breakthrough"}
-  },
-  {
-    "version": "v15",
-    "name": "U-Net Full + SE Attention + Composite Loss",
-    "hypothesis": "Channel attention improves feature selection on multi-modal input",
-    "script": "kaggle_job/run_unet_training_v15.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v15",
-    "flags": ["--model", "full", "--loss", "composite", "--se-attention", "--epochs", "50", "--batch-size", "32"],
-    "expected": {"iou": "0.12-0.22", "recall": "0.20-0.35"},
-    "depends_on": "v14",
-    "status": "completed",
-    "results": {"iou": 0.235, "recall": 0.548, "verdict": "neutral_no_improvement"}
-  },
-  {
-    "version": "v16",
-    "name": "U-Net Full + SE + Composite + EMA",
-    "hypothesis": "Larger model capacity + EMA stabilizes training for higher IoU",
-    "script": "kaggle_job/run_unet_training_v16.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v16",
-    "flags": ["--model", "full", "--loss", "composite", "--ema-decay", "0.999", "--epochs", "50", "--batch-size", "32"],
-    "expected": {"iou": "0.15-0.25", "recall": "0.25-0.40"},
-    "depends_on": "v15",
-    "status": "completed",
-    "results": {"iou": 0.237, "recall": 0.589, "verdict": "neutral_no_improvement"}
-  },
-  {
-    "version": "v17",
-    "name": "Autonomous Research Pipeline (Optuna + Residual U-Net)",
-    "hypothesis": "Automated sweep finds config that beats copy baseline",
-    "script": "kaggle_job/run_autonomous_research_v17.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-autonomous-research-v17",
-    "flags": [],
-    "expected": {"iou": "0.25-0.40", "recall": "0.50-0.70"},
-    "status": "failed",
-    "results": {"error": "inline preprocessor produced 0 samples — fixed in v17d"}
-  },
-  {
-    "version": "v18",
-    "name": "Residual Delta U-Net Small + Composite Loss",
-    "hypothesis": "Predict logit-space delta over copy baseline to beat IoU 0.79 naive copy",
-    "script": "kaggle_job/run_unet_training_v18.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v18",
-    "flags": ["--model", "small", "--loss", "composite", "--epochs", "50", "--batch-size", "32", "--lr", "1e-3", "--pos-weight", "5.0"],
-    "expected": {"iou": "0.30-0.50", "recall": "0.55-0.75"},
-    "depends_on": "v14",
-    "status": "completed",
-    "results": {"iou": 0.239, "recall": 0.534, "verdict": "neutral_no_improvement", "note": "residual arch did not beat v14"}
-  },
-  {
     "version": "v19",
-    "name": "Changed-Pixel Weighted U-Net (Scientific Pivot)",
-    "hypothesis": "Upweighting loss on changed pixels + any_fire filter beats copy baseline on dynamic pixels",
+    "name": "Changed-Pixel Weighted U-Net",
+    "hypothesis": "Upweight changed pixels + any_fire filter beats copy on dynamic pixels",
     "script": "kaggle_job/run_unet_training_v19.py",
     "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v19",
-    "flags": [
-      "--model", "small",
-      "--loss", "composite",
-      "--target-mode", "changed_weighted",
-      "--change-loss-weight", "5.0",
-      "--weighted-sampler",
-      "--early-stop-metric", "improvement_vs_copy_iou_changed",
-      "--filter-mode", "any_fire",
-      "--epochs", "50",
-      "--batch-size", "32",
-      "--clm-data-dir", "/kaggle/input/clm-wildfire-patches"
-    ],
-    "expected": {"improvement_vs_copy_iou_changed": ">0", "iou": "0.25-0.35"},
-    "depends_on": "v14",
-    "status": "pending"
+    "status": "completed",
+    "results": {
+      "iou_full": 0.052,
+      "improvement_vs_copy_iou_changed": 0.877,
+      "verdict": "tier1_breakthrough"
+    }
+  },
+  {
+    "version": "v20",
+    "name": "Residual + Changed-Pixel U-Net",
+    "hypothesis": "Copy-anchored residual logits recover full IoU while keeping Tier-1 gains",
+    "script": "kaggle_job/run_unet_training_v20.py",
+    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v20",
+    "flags": ["--architecture", "residual"],
+    "parent": "v19",
+    "expected": {
+      "improvement_vs_copy_iou_changed": ">0.5",
+      "iou_full": ">0.15"
+    },
+    "status": "running"
+  },
+  {
+    "version": "v21",
+    "name": "Delta target + Residual",
+    "hypothesis": "Growth-only target reduces false positives on static cells",
+    "script": "kaggle_job/run_unet_training_v21.py",
+    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v21",
+    "flags": ["--architecture", "residual", "--target-mode", "delta"],
+    "parent": "v20",
+    "status": "queued"
+  },
+  {
+    "version": "v22",
+    "name": "Changed-only training filter",
+    "hypothesis": "Training only on patches with fire movement maximizes signal",
+    "flags": ["--filter-mode", "changed"],
+    "parent": "best",
+    "status": "queued"
+  },
+  {
+    "version": "v23",
+    "name": "12-channel NDWS schema",
+    "hypothesis": "Removing constant preprocessor channels reduces noise",
+    "parent": "best",
+    "status": "queued"
   }
 ]
