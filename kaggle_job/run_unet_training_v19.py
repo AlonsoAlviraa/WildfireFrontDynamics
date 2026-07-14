@@ -9,10 +9,14 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import zipfile
 from pathlib import Path
+
+REPO_URL = "https://github.com/AlonsoAlviraa/WildfireFrontDynamics.git"
+REPO_DIR = Path("WildfireFrontDynamics")
 
 parser = argparse.ArgumentParser(description="Wildfire U-Net v19 — changed-pixel pivot")
 parser.add_argument("--epochs", type=int, default=50)
@@ -117,19 +121,47 @@ print(f"Config: {vars(args)}")
 
 _install_pytorch_p100_compat()
 
-if not Path("WildfireFrontDynamics").exists():
+
+def _clone_repo_fresh() -> None:
+    """Always clone latest main — stale /kaggle/working copies caused ImportError."""
+    if REPO_DIR.exists():
+        print("Removing stale WildfireFrontDynamics clone...")
+        shutil.rmtree(REPO_DIR)
     print("Cloning repository...")
-    subprocess.run(
-        [
-            "git", "clone", "--depth", "1",
-            "https://github.com/AlonsoAlviraa/WildfireFrontDynamics.git",
-        ],
+    subprocess.run(["git", "clone", "--depth", "1", REPO_URL], check=True)
+    rev = subprocess.run(
+        ["git", "-C", str(REPO_DIR), "rev-parse", "--short", "HEAD"],
+        capture_output=True,
+        text=True,
         check=True,
     )
+    print(f"  Repo at commit {rev.stdout.strip()}")
 
-if Path("WildfireFrontDynamics").exists():
-    os.chdir("WildfireFrontDynamics")
-    sys.path.insert(0, os.getcwd())
+
+def _verify_repo_imports() -> None:
+    """Fail fast if cloned repo is missing classes the trainer may need."""
+    unet_model = REPO_DIR / "models" / "unet_model.py"
+    unet_train = REPO_DIR / "wildfire_front" / "ml" / "unet_train.py"
+    if not unet_model.is_file() or not unet_train.is_file():
+        raise RuntimeError(f"Repo layout invalid under {REPO_DIR.resolve()}")
+    model_src = unet_model.read_text(encoding="utf-8")
+    train_src = unet_train.read_text(encoding="utf-8")
+    if "ResidualWildfireUNetSmall" in train_src.split("def build_model", 1)[0]:
+        raise RuntimeError(
+            "unet_train.py still top-level-imports ResidualWildfireUNetSmall; "
+            "push lazy-import fix to GitHub main."
+        )
+    if "class ResidualWildfireUNetSmall" not in model_src:
+        raise RuntimeError(
+            "models/unet_model.py missing ResidualWildfireUNetSmall; "
+            "push model class to GitHub main."
+        )
+
+
+_clone_repo_fresh()
+_verify_repo_imports()
+os.chdir(REPO_DIR)
+sys.path.insert(0, os.getcwd())
 
 if args.output_dir is None:
     args.output_dir = _default_output_dir()
