@@ -57,7 +57,7 @@ class UNetTrainConfig:
     change_loss_weight: float = 5.0
     weighted_sampler: bool = False
     clm_data_dir: str | None = None
-    early_stop_metric: str = "improvement_vs_copy_iou_changed"
+    early_stop_metric: str = "improvement_vs_copy_iou"
     eval_thresholds: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6)
     primary_threshold: float = 0.5
 
@@ -516,13 +516,16 @@ def run_training(config: UNetTrainConfig) -> dict:
         primary = val_results.get(f"thresh_{config.primary_threshold}", {})
         val_iou = float(primary.get("model_iou", 0.0))
         val_recall = float(primary.get("model_full", {}).get("micro_recall", 0.0))
-        improvement = float(primary.get("improvement_vs_copy_iou_changed", 0.0))
+        delta_full = float(primary.get("improvement_vs_copy_iou", 0.0))
+        delta_changed = float(primary.get("improvement_vs_copy_iou_changed", 0.0))
+        legacy_delta = float(primary.get("legacy_improvement_vs_naive_copy_iou_changed", 0.0))
         copy_iou = float(primary.get("copy_baseline_iou", 0.0))
         score = _early_stop_score(val_results, config.early_stop_metric)
 
         log(
             f"Epoch {epoch + 1:02d}/{config.epochs}  train={train_loss:.5f}  val={val_loss:.5f}  "
-            f"IoU@0.5={val_iou:.4f}  copy={copy_iou:.4f}  delta_changed={improvement:+.4f}  "
+            f"IoU@0.5={val_iou:.4f}  copy={copy_iou:.4f}  delta_full={delta_full:+.4f}  "
+            f"delta_changed={delta_changed:+.4f}  legacy={legacy_delta:+.4f}  "
             f"lr={scheduler.get_last_lr()[0]:.2e}  ({time.time() - t0:.0f}s)"
         )
 
@@ -533,7 +536,9 @@ def run_training(config: UNetTrainConfig) -> dict:
                 "val_loss": val_loss,
                 "val_iou_0.5": val_iou,
                 "val_recall_0.5": val_recall,
-                "improvement_vs_copy_iou_changed": improvement,
+                "improvement_vs_copy_iou": delta_full,
+                "improvement_vs_copy_iou_changed": delta_changed,
+                "legacy_improvement_vs_naive_copy_iou_changed": legacy_delta,
                 "copy_baseline_iou": copy_iou,
             }
         )
@@ -576,6 +581,16 @@ def run_training(config: UNetTrainConfig) -> dict:
         "improvement_vs_copy_iou_changed": float(
             primary_test.get("improvement_vs_copy_iou_changed", 0.0)
         ),
+        "legacy_improvement_vs_naive_copy_iou_changed": float(
+            primary_test.get("legacy_improvement_vs_naive_copy_iou_changed", 0.0)
+        ),
+        "dilated_copy_baseline_iou": float(
+            primary_test.get("dilated_copy_baseline_iou", 0.0)
+        ),
+        "improvement_vs_dilated_copy_iou": float(
+            primary_test.get("improvement_vs_dilated_copy_iou", 0.0)
+        ),
+        "model_iou_growth": float(primary_test.get("model_iou_growth", 0.0)),
     }
 
     summary_path = output_dir / "training_summary.json"
@@ -586,7 +601,11 @@ def run_training(config: UNetTrainConfig) -> dict:
 
     log(f"Copy baseline IoU: {summary['copy_baseline_iou']:.4f}")
     log(f"Model IoU: {summary['test_iou']:.4f}")
-    log(f"Improvement vs copy (changed pixels): {summary['improvement_vs_copy_iou_changed']:+.4f}")
+    log(
+        f"Improvement vs dilated copy (changed): "
+        f"{summary['improvement_vs_copy_iou_changed']:+.4f}  "
+        f"(legacy naive: {summary['legacy_improvement_vs_naive_copy_iou_changed']:+.4f})"
+    )
     return summary
 
 
@@ -613,6 +632,6 @@ def config_from_namespace(args) -> UNetTrainConfig:
         target_mode=getattr(args, "target_mode", "absolute"),
         change_loss_weight=getattr(args, "change_loss_weight", 5.0),
         weighted_sampler=getattr(args, "weighted_sampler", False),
-        early_stop_metric=getattr(args, "early_stop_metric", "improvement_vs_copy_iou_changed"),
+        early_stop_metric=getattr(args, "early_stop_metric", "improvement_vs_copy_iou"),
         clm_data_dir=getattr(args, "clm_data_dir", None),
     )

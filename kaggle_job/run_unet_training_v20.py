@@ -34,8 +34,13 @@ parser.add_argument("--weighted-sampler", action="store_true", default=True)
 parser.add_argument("--no-weighted-sampler", action="store_false", dest="weighted_sampler")
 parser.add_argument(
     "--early-stop-metric",
-    choices=["improvement_vs_copy_iou_changed", "improvement_vs_copy_iou", "val_loss"],
-    default="improvement_vs_copy_iou_changed",
+    choices=[
+        "improvement_vs_copy_iou",
+        "improvement_vs_copy_iou_changed",
+        "improvement_vs_dilated_copy_iou",
+        "val_loss",
+    ],
+    default="improvement_vs_copy_iou",
 )
 parser.add_argument("--se-attention", action="store_true", default=False)
 parser.add_argument("--norm", choices=["group", "batch", "instance"], default="group")
@@ -201,4 +206,8 @@ summary = run_training(config)
 print("\n=== U-NET v20 COMPLETED ===")
 print(f"  Model IoU (full): {summary['test_iou']:.4f}")
 print(f"  Copy baseline IoU: {summary['copy_baseline_iou']:.4f}")
-print(f"  delta vs copy (changed px): {summary['improvement_vs_copy_iou_changed']:+.4f}")
+print(f"  delta vs copy (full): {summary['improvement_vs_copy_iou']:+.4f}")
+print(
+    f"  delta vs dilated copy (changed): {summary['improvement_vs_copy_iou_changed']:+.4f}  "
+    f"(legacy naive: {summary['legacy_improvement_vs_naive_copy_iou_changed']:+.4f})"
+)

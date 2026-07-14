@@ -1,9 +1,10 @@
 """NDWS-specific evaluation metrics for wildfire spread models.
 
-The copy baseline (predict PrevFireMask as next-day fire) achieves IoU ~0.79 on
-NDWS. Absolute-mask IoU (~0.24) is misleading because ~87% of pixels are
-stable day-to-day. These metrics expose whether the model beats copy where it
-matters: on pixels that actually change.
+The naive copy baseline (predict PrevFireMask as next-day fire) achieves IoU
+~0.79 on dense-fire NDWS patches. On pixels where prev != target, naive copy
+always scores IoU = 0 by definition — so ``model_iou - copy_iou`` on that subset
+is not a meaningful "improvement". Use dilated-copy and growth-only baselines
+instead (see ``improvement_vs_dilated_copy_iou_changed``).
 """
 
 from __future__ import annotations
@@ -16,6 +17,9 @@ from wildfire_front.evaluation import (
     compute_segmentation_metrics,
 )
 
+# Default 1-pixel morphological dilation for a non-trivial dynamic baseline.
+DEFAULT_DILATION_RADIUS = 1
+
 
 def sanitize_fire_mask(mask: np.ndarray, threshold: float = 0.5) -> np.ndarray:
     """Binarize NDWS fire masks, treating negative sentinels as no-fire."""
@@ -24,6 +28,23 @@ def sanitize_fire_mask(mask: np.ndarray, threshold: float = 0.5) -> np.ndarray:
     if m.max() > 1.0 or m.min() < 0.0:
         m = 1.0 / (1.0 + np.exp(-m))
     return (m >= threshold).astype(np.float64)
+
+
+def dilate_binary_mask(mask: np.ndarray, radius: int = DEFAULT_DILATION_RADIUS) -> np.ndarray:
+    """Binary dilation via max-filter (square structuring element)."""
+    m = np.asarray(mask, dtype=np.float64)
+    if radius <= 0:
+        return m.copy()
+    padded = np.pad(m, radius, mode="constant", constant_values=0.0)
+    h, w = m.shape
+    out = np.zeros_like(m)
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            out = np.maximum(
+                out,
+                padded[radius + dy : radius + dy + h, radius + dx : radius + dx + w],
+            )
+    return out
 
 
 def changed_pixel_mask(
@@ -35,6 +56,28 @@ def changed_pixel_mask(
     prev_bin = sanitize_fire_mask(prev_fire, threshold)
     tgt_bin = sanitize_fire_mask(target_fire, threshold)
     return (prev_bin != tgt_bin).astype(np.float64)
+
+
+def growth_pixel_mask(
+    prev_fire: np.ndarray,
+    target_fire: np.ndarray,
+    threshold: float = 0.5,
+) -> np.ndarray:
+    """Pixels where fire appears (prev=0, target=1)."""
+    prev_bin = sanitize_fire_mask(prev_fire, threshold)
+    tgt_bin = sanitize_fire_mask(target_fire, threshold)
+    return ((prev_bin == 0) & (tgt_bin == 1)).astype(np.float64)
+
+
+def shrink_pixel_mask(
+    prev_fire: np.ndarray,
+    target_fire: np.ndarray,
+    threshold: float = 0.5,
+) -> np.ndarray:
+    """Pixels where fire retreats (prev=1, target=0)."""
+    prev_bin = sanitize_fire_mask(prev_fire, threshold)
+    tgt_bin = sanitize_fire_mask(target_fire, threshold)
+    return ((prev_bin == 1) & (tgt_bin == 0)).astype(np.float64)
 
 
 def compute_segmentation_metrics_on_mask(
@@ -92,8 +135,17 @@ def compute_segmentation_metrics_on_mask(
 
 
 def copy_baseline_prediction(prev_fire: np.ndarray, threshold: float = 0.5) -> np.ndarray:
-    """Return the copy-baseline prediction (prev mask binarized)."""
+    """Return the naive copy-baseline prediction (prev mask binarized)."""
     return sanitize_fire_mask(prev_fire, threshold)
+
+
+def dilated_copy_baseline_prediction(
+    prev_fire: np.ndarray,
+    threshold: float = 0.5,
+    radius: int = DEFAULT_DILATION_RADIUS,
+) -> np.ndarray:
+    """Copy baseline with 1-pixel dilation (catches adjacent growth)."""
+    return dilate_binary_mask(copy_baseline_prediction(prev_fire, threshold), radius)
 
 
 def evaluate_sample(
@@ -101,19 +153,44 @@ def evaluate_sample(
     prev_fire: np.ndarray,
     target_fire: np.ndarray,
     threshold: float = 0.5,
+    *,
+    dilation_radius: int = DEFAULT_DILATION_RADIUS,
 ) -> dict[str, SegmentationMetrics]:
-    """Per-sample metrics: full grid, changed pixels only, and copy baseline."""
+    """Per-sample metrics: full grid, dynamic subsets, and copy baselines."""
     change = changed_pixel_mask(prev_fire, target_fire, threshold)
+    growth = growth_pixel_mask(prev_fire, target_fire, threshold)
+    shrink = shrink_pixel_mask(prev_fire, target_fire, threshold)
     copy_pred = copy_baseline_prediction(prev_fire, threshold)
+    dilated_copy_pred = dilated_copy_baseline_prediction(
+        prev_fire, threshold, radius=dilation_radius
+    )
 
     return {
         "model_full": compute_segmentation_metrics(prediction, target_fire, threshold),
         "model_changed": compute_segmentation_metrics_on_mask(
             prediction, target_fire, change, threshold
         ),
+        "model_growth": compute_segmentation_metrics_on_mask(
+            prediction, target_fire, growth, threshold
+        ),
+        "model_shrink": compute_segmentation_metrics_on_mask(
+            prediction, target_fire, shrink, threshold
+        ),
         "copy_full": compute_segmentation_metrics(copy_pred, target_fire, threshold),
         "copy_changed": compute_segmentation_metrics_on_mask(
             copy_pred, target_fire, change, threshold
+        ),
+        "copy_growth": compute_segmentation_metrics_on_mask(
+            copy_pred, target_fire, growth, threshold
+        ),
+        "dilated_copy_full": compute_segmentation_metrics(
+            dilated_copy_pred, target_fire, threshold
+        ),
+        "dilated_copy_changed": compute_segmentation_metrics_on_mask(
+            dilated_copy_pred, target_fire, change, threshold
+        ),
+        "dilated_copy_growth": compute_segmentation_metrics_on_mask(
+            dilated_copy_pred, target_fire, growth, threshold
         ),
     }
 
@@ -130,23 +207,61 @@ def aggregate_ndws_evaluation(
 
     model_full = _agg("model_full")
     model_changed = _agg("model_changed")
+    model_growth = _agg("model_growth")
+    model_shrink = _agg("model_shrink")
     copy_full = _agg("copy_full")
     copy_changed = _agg("copy_changed")
+    copy_growth = _agg("copy_growth")
+    dilated_copy_full = _agg("dilated_copy_full")
+    dilated_copy_changed = _agg("dilated_copy_changed")
+    dilated_copy_growth = _agg("dilated_copy_growth")
 
     model_iou = float(model_full.get("micro_iou", 0.0))
     copy_iou = float(copy_full.get("micro_iou", 0.0))
+    dilated_copy_iou = float(dilated_copy_full.get("micro_iou", 0.0))
     model_iou_changed = float(model_changed.get("micro_iou", 0.0))
-    copy_iou_changed = float(copy_changed.get("micro_iou", 0.0))
+    naive_copy_iou_changed = float(copy_changed.get("micro_iou", 0.0))
+    dilated_copy_iou_changed = float(dilated_copy_changed.get("micro_iou", 0.0))
+    model_iou_growth = float(model_growth.get("micro_iou", 0.0))
+    copy_iou_growth = float(copy_growth.get("micro_iou", 0.0))
+    dilated_copy_iou_growth = float(dilated_copy_growth.get("micro_iou", 0.0))
+
+    legacy_improvement_changed = model_iou_changed - naive_copy_iou_changed
 
     return {
         "model_full": model_full,
         "model_changed": model_changed,
+        "model_growth": model_growth,
+        "model_shrink": model_shrink,
         "copy_full": copy_full,
         "copy_changed": copy_changed,
+        "copy_growth": copy_growth,
+        "dilated_copy_full": dilated_copy_full,
+        "dilated_copy_changed": dilated_copy_changed,
+        "dilated_copy_growth": dilated_copy_growth,
         "improvement_vs_copy_iou": model_iou - copy_iou,
-        "improvement_vs_copy_iou_changed": model_iou_changed - copy_iou_changed,
+        "improvement_vs_dilated_copy_iou": model_iou - dilated_copy_iou,
+        "improvement_vs_dilated_copy_iou_changed": (
+            model_iou_changed - dilated_copy_iou_changed
+        ),
+        "improvement_vs_dilated_copy_iou_growth": (
+            model_iou_growth - dilated_copy_iou_growth
+        ),
+        "improvement_vs_copy_iou_growth": model_iou_growth - copy_iou_growth,
+        # Redefined: meaningful dynamic baseline (was tautological vs naive copy).
+        "improvement_vs_copy_iou_changed": (
+            model_iou_changed - dilated_copy_iou_changed
+        ),
+        "legacy_improvement_vs_naive_copy_iou_changed": legacy_improvement_changed,
         "copy_baseline_iou": copy_iou,
-        "copy_baseline_iou_changed": copy_iou_changed,
+        "dilated_copy_baseline_iou": dilated_copy_iou,
+        "copy_baseline_iou_changed": naive_copy_iou_changed,
+        "dilated_copy_baseline_iou_changed": dilated_copy_iou_changed,
+        "copy_baseline_iou_growth": copy_iou_growth,
+        "dilated_copy_baseline_iou_growth": dilated_copy_iou_growth,
         "model_iou": model_iou,
         "model_iou_changed": model_iou_changed,
+        "model_iou_growth": model_iou_growth,
+        "model_iou_shrink": float(model_shrink.get("micro_iou", 0.0)),
+        "naive_copy_iou_changed_is_tautological": True,
     }

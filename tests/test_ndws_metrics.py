@@ -7,7 +7,9 @@ from wildfire_front.ml.ndws_metrics import (
     aggregate_ndws_evaluation,
     changed_pixel_mask,
     copy_baseline_prediction,
+    dilated_copy_baseline_prediction,
     evaluate_sample,
+    growth_pixel_mask,
     sanitize_fire_mask,
 )
 
@@ -42,6 +44,24 @@ class TestCopyBaseline:
         model_sample = evaluate_sample(random_pred, prev, target)
         assert copy_sample["model_full"].iou > model_sample["model_full"].iou
 
+    def test_naive_copy_iou_changed_is_always_zero(self):
+        prev = np.zeros((16, 16), dtype=np.float32)
+        prev[4:12, 4:12] = 1.0
+        target = prev.copy()
+        target[12, 12] = 1.0
+        copy_pred = copy_baseline_prediction(prev)
+        sample = evaluate_sample(copy_pred, prev, target)
+        assert sample["copy_changed"].iou == pytest.approx(0.0, abs=1e-6)
+
+    def test_dilated_copy_can_score_on_adjacent_growth(self):
+        prev = np.zeros((16, 16), dtype=np.float32)
+        prev[4:12, 4:12] = 1.0
+        target = prev.copy()
+        target[12, 8] = 1.0
+        dilated = dilated_copy_baseline_prediction(prev)
+        sample = evaluate_sample(dilated, prev, target)
+        assert sample["dilated_copy_growth"].iou > 0.0
+
 
 class TestChangedPixels:
     def test_changed_mask_detects_growth(self):
@@ -52,6 +72,16 @@ class TestChangedPixels:
         change = changed_pixel_mask(prev, target)
         assert change[5, 5] == 1.0
         assert change[2, 2] == 0.0
+
+    def test_growth_mask_only_new_fire(self):
+        prev = np.zeros((8, 8), dtype=np.float32)
+        prev[2:5, 2:5] = 1.0
+        target = prev.copy()
+        target[5, 5] = 1.0
+        target[2, 2] = 0.0
+        growth = growth_pixel_mask(prev, target)
+        assert growth[5, 5] == 1.0
+        assert growth[2, 2] == 0.0
 
     def test_metrics_on_changed_subset(self):
         prev = np.zeros((8, 8), dtype=np.float32)
@@ -65,11 +95,12 @@ class TestChangedPixels:
 
 
 class TestAggregate:
-    def test_improvement_vs_copy(self):
-        prev = np.zeros((8, 8), dtype=np.float32)
+    def test_improvement_vs_dilated_copy_changed(self):
+        prev = np.zeros((12, 12), dtype=np.float32)
         prev[2:6, 2:6] = 1.0
         target = prev.copy()
-        target[6, 6] = 1.0
+        # Growth far from prev fire: dilated copy misses, perfect model hits.
+        target[10, 10] = 1.0
 
         perfect = evaluate_sample(target.astype(np.float32), prev, target)
         copy_only = evaluate_sample(prev, prev, target)
@@ -78,4 +109,8 @@ class TestAggregate:
         agg_copy = aggregate_ndws_evaluation([copy_only])
 
         assert agg_perfect["improvement_vs_copy_iou_changed"] > 0.0
-        assert agg_copy["improvement_vs_copy_iou_changed"] == pytest.approx(0.0, abs=1e-6)
+        assert agg_copy["improvement_vs_copy_iou_changed"] <= 0.0
+        assert agg_perfect["legacy_improvement_vs_naive_copy_iou_changed"] == pytest.approx(
+            agg_perfect["model_iou_changed"], abs=1e-6
+        )
+        assert agg_copy["copy_baseline_iou_changed"] == pytest.approx(0.0, abs=1e-6)
