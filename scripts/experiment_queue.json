@@ -1,77 +1,34 @@
 [
   {
-    "version": "v19",
-    "name": "Changed-Pixel Weighted U-Net",
-    "hypothesis": "Upweight changed pixels + any_fire filter beats copy on dynamic pixels",
-    "script": "kaggle_job/run_unet_training_v19.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v19",
-    "status": "completed",
-    "results": {
-      "iou_full": 0.052,
-      "improvement_vs_copy_iou_changed": 0.877,
-      "verdict": "tier1_breakthrough"
-    }
+    "version": "overnight_mega",
+    "name": "Overnight Mega v23-v30",
+    "hypothesis": "8 sequential experiments: EMA, long train, focal, LR, changed-filter, CLM fine-tune",
+    "script": "kaggle_job/run_overnight_mega.py",
+    "kernel_slug": "alonsoalviraaaa/wildfire-overnight-mega-training",
+    "status": "running",
+    "experiments": ["v23", "v25", "v27", "v28", "v24", "v26", "v29", "v30"]
   },
   {
-    "version": "v20",
-    "name": "Residual + Changed-Pixel U-Net",
-    "hypothesis": "Copy-anchored residual logits recover full IoU while keeping Tier-1 gains",
-    "script": "kaggle_job/run_unet_training_v20.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v20",
-    "flags": ["--architecture", "residual"],
-    "parent": "v19",
-    "expected": {
-      "improvement_vs_copy_iou_changed": ">0.5",
-      "iou_full": ">0.15"
-    },
+    "version": "v22",
+    "name": "Changed-only training filter",
+    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v22",
+    "parent": "v21",
     "status": "completed",
     "results": {
-      "iou_full": 0.050,
-      "improvement_vs_copy_iou": -0.100,
-      "improvement_vs_copy_iou_changed": 0.714,
-      "verdict": "failed_go_criteria"
+      "iou_full": 0.225,
+      "improvement_vs_copy_iou": 0.075,
+      "improvement_vs_copy_iou_changed": 0.081,
+      "verdict": "neutral_full_better_changed"
     }
   },
   {
     "version": "v21",
     "name": "Delta target + Residual",
-    "hypothesis": "Growth-only target reduces false positives on static cells",
-    "script": "kaggle_job/run_unet_training_v21.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v21",
-    "flags": ["--architecture", "residual", "--target-mode", "delta"],
-    "parent": "v20",
-    "expected": {
-      "improvement_vs_copy_iou": ">0",
-      "iou_full": ">0.15"
-    },
     "status": "completed",
     "results": {
       "iou_full": 0.226,
       "improvement_vs_copy_iou": 0.076,
-      "improvement_vs_copy_iou_changed": 0.041,
-      "legacy_improvement_vs_naive_copy_iou_changed": 0.214,
       "verdict": "production"
     }
-  },
-  {
-    "version": "v22",
-    "name": "Changed-only training filter",
-    "hypothesis": "Training only on patches with fire movement maximizes signal",
-    "script": "kaggle_job/run_unet_training_v22.py",
-    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v22",
-    "flags": ["--filter-mode", "changed"],
-    "parent": "v21",
-    "expected": {
-      "iou_full": ">=0.226",
-      "improvement_vs_copy_iou_changed": ">0.041"
-    },
-    "status": "running"
-  },
-  {
-    "version": "v23",
-    "name": "12-channel NDWS schema",
-    "hypothesis": "Removing constant preprocessor channels reduces noise",
-    "parent": "best",
-    "status": "queued"
   }
 ]

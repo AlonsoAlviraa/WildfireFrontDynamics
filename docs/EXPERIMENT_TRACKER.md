@@ -17,11 +17,20 @@
 **Inference:** `wildfire_front/ml/spread_predictor.py`  
 **Audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
 
-**Next experiment:** v22 (`--filter-mode changed`)
+**Overnight mega:** v23–v30 running on `alonsoalviraaaa/wildfire-overnight-mega-training`
+
+**Next manual check:** `overnight_report.json` + auto-promote via `scripts/run_overnight_monitor.py`
 
 ---
 
 ## Experiment Log
+
+### v22: Changed-Only Filter — NEUTRAL (better Δ changed)
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v22`
+- **Parent:** v21 | **Change:** `--filter-mode changed`
+- **IoU full:** 0.225 | **Δ full:** +0.075 | **Δ changed:** +0.081 (vs v21 +0.041)
+- **Val peak IoU:** 0.255 (epoch 38) — test did not beat v21
+- **Verdict:** Keep v21 production; v22 feeds overnight EMA/long experiments
 
 ### v21: Delta Target + Residual — PRODUCTION
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v21`

@@ -60,6 +60,7 @@ class UNetTrainConfig:
     early_stop_metric: str = "improvement_vs_copy_iou"
     eval_thresholds: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6)
     primary_threshold: float = 0.5
+    init_weights_path: str | None = None
 
 
 def prepare_input(sequence: torch.Tensor, current_fire: torch.Tensor) -> torch.Tensor:
@@ -437,6 +438,14 @@ def run_training(config: UNetTrainConfig) -> dict:
     sample_seq, sample_curr, _ = train_ds[0]
     in_channels = sample_seq.shape[0] * sample_seq.shape[1] + 1
     model = build_model(config, in_channels).to(device)
+    if config.init_weights_path:
+        init_path = Path(config.init_weights_path)
+        if init_path.is_file():
+            state = torch.load(init_path, map_location=device, weights_only=True)
+            model.load_state_dict(state, strict=True)
+            log(f"Warm-started from {init_path}")
+        else:
+            log(f"[WARN] init_weights_path missing: {init_path}")
     n_params = count_parameters(model)
     log(f"Model: {model.__class__.__name__}, params={n_params:,}, target_mode={config.target_mode}")
 

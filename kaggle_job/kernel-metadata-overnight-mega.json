@@ -1,0 +1,18 @@
+{
+  "id": "alonsoalviraaaa/wildfire-overnight-mega-training",
+  "title": "Wildfire Overnight Mega Training",
+  "code_file": "run_overnight_mega.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "fantineh/next-day-wildfire-spread",
+    "alonsoalviraaaa/clm-wildfire-patches",
+    "alonsoalviraaaa/wildfire-checkpoint-weights"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
