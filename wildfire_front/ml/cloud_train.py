@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
 
 import torch
 from torch.utils.data import DataLoader
@@ -87,8 +88,9 @@ def main(argv: list[str] | None = None) -> None:
     print(f"Dataset loaded. Total spatial sequence patches: {len(dataset)}")
 
     # 2. Setup model
-    model: LocalSpreadModel = A3C_PerCellModel_LSTM(  # type: ignore[assignment]
-        in_channels=17, lstm_hidden=256, sequence_length=3
+    model = cast(
+        LocalSpreadModel,
+        A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3),
     )
     print(f"Loading pre-trained weights from {args.weights}...")
     load_pretrained_weights(model, args.weights)

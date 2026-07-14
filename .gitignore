@@ -48,6 +48,7 @@ coverage.xml
 # ─── IDE / Editor ────────────────────────────────────────────
 .vscode/
 !.vscode/settings.json
+!.vscode/mcp.json
 .idea/
 *.swp
 *.swo
@@ -66,3 +67,6 @@ desktop.ini
 
 # ─── Kaggle jobs output ──────────────────────────────────────
 kaggle_output/
+kaggle_outputs_*/
+kaggle_outputs_*/WildfireFrontDynamics/
+kaggle_outputs_*/_fresh/

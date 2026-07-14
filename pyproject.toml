@@ -59,6 +59,7 @@ filterwarnings = [
     "ignore::rasterio.errors.NotGeoreferencedWarning",
 ]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 
 [tool.ruff]

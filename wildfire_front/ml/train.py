@@ -7,6 +7,7 @@ gradient descent using binary cross-entropy on local neighbor transitions.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 import torch
 import torch.nn.functional as F
@@ -338,8 +339,9 @@ def fine_tune_model(
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     # 2. Load model and restore pre-trained weights
-    model: LocalSpreadModel = A3C_PerCellModel_LSTM(  # type: ignore[assignment]
-        in_channels=17, lstm_hidden=256, sequence_length=3
+    model = cast(
+        LocalSpreadModel,
+        A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3),
     )
 
     print(f"Loading pre-trained weights from {weights_path}...")

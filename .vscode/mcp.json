@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "kaggle": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["kaggle-mcp-server"],
+      "env": {
+        "KAGGLE_API_TOKEN": "${env:KAGGLE_API_TOKEN}"
+      }
+    }
+  }
+}

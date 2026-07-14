@@ -297,16 +297,25 @@ def build_dataloaders(
         shuffle: bool,
         sampler: WeightedRandomSampler | None = None,
     ) -> DataLoader:
-        kwargs: dict[str, object] = {
-            "batch_size": config.batch_size,
-            "num_workers": num_workers,
-            "pin_memory": True,
-        }
-        if num_workers > 0:
-            kwargs["persistent_workers"] = True
+        persistent = num_workers > 0
         if sampler is not None:
-            return DataLoader(dataset, sampler=sampler, shuffle=False, **kwargs)  # type: ignore[arg-type]
-        return DataLoader(dataset, shuffle=shuffle, **kwargs)  # type: ignore[arg-type]
+            return DataLoader(
+                dataset,
+                batch_size=config.batch_size,
+                sampler=sampler,
+                shuffle=False,
+                num_workers=num_workers,
+                pin_memory=True,
+                persistent_workers=persistent,
+            )
+        return DataLoader(
+            dataset,
+            batch_size=config.batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            pin_memory=True,
+            persistent_workers=persistent,
+        )
 
     if config.weighted_sampler:
         weights = [_sample_change_weight(f) for f in train_ds.files]

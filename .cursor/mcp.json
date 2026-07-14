@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "kaggle": {
+      "command": "uvx",
+      "args": ["kaggle-mcp-server"],
+      "env": {
+        "KAGGLE_API_TOKEN": "${env:KAGGLE_API_TOKEN}"
+      }
+    }
+  }
+}
