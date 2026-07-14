@@ -129,8 +129,8 @@ for name, arch, mode in [
 if not checkpoints:
     raise RuntimeError("No checkpoint weights available — attach wildfire-checkpoint-weights dataset")
 
-out = Path(args.output_dir) / "cross_protocol_report.json"
-report = run_cross_protocol_eval(checkpoints, data_root, out)
+report_path = Path(_default_output_dir()) / "cross_protocol_report.json"
+report = run_cross_protocol_eval(checkpoints, data_root, report_path)
 
 print("\n=== CROSS-PROTOCOL RE-EVAL ===")
 for name, row in report["results"].items():
@@ -141,4 +141,4 @@ for name, row in report["results"].items():
         f"delta_changed={row['improvement_vs_copy_iou_changed']:+.4f}  "
         f"legacy={row['legacy_improvement_vs_naive_copy_iou_changed']:+.4f}"
     )
-print(f"Report: {out}")
+print(f"Report: {report_path}")
