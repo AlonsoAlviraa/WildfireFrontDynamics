@@ -91,8 +91,9 @@ Residual architecture anchors logits to prev_fire; delta target predicts growth 
 - [x] `SpreadPredictor` class with delta decode
 - [x] CLI `scripts/predict_spread.py`
 - [x] Install script for weights
-- [ ] TorchScript export for edge deployment
-- [ ] Docker image with pinned torch + weights
+- [x] TorchScript export — `scripts/export_production_model.py` → `spread_model_v21.pt`
+- [x] Docker inference target — `docker build --target inference -t wildfire-front-inference .`
+- [x] Production loop — `scripts/run_production_loop.py` (monitor Kaggle + re-export)
 - [ ] Real-fire validation (Tobarra/CLM) separate from NDWS test
 - [ ] Meta-labeler gate on production predictions
 - [ ] Monitoring: precision/recall drift vs copy baseline
@@ -117,6 +118,9 @@ Residual architecture anchors logits to prev_fire; delta target predicts growth 
 | Inference | `wildfire_front/ml/spread_predictor.py` |
 | Manifest | `models/production/manifest.json` |
 | Predict CLI | `scripts/predict_spread.py` |
+| TorchScript export | `scripts/export_production_model.py` |
+| Production loop | `scripts/run_production_loop.py` |
+| Docker inference | `Dockerfile` target `inference` |
 | Install weights | `scripts/install_production_weights.py` |
 | Trainer | `wildfire_front/ml/unet_train.py` |
 | Metrics | `wildfire_front/ml/ndws_metrics.py` |

@@ -9,7 +9,8 @@
   "threshold": 0.5,
   "filter_mode": "any_fire",
   "weights_file": "weights_v21_best.pt",
-  "repo_commit": "c5f583d",
+  "torchscript_file": "spread_model_v21.pt",
+  "repo_commit": "30211c7",
   "kernel": "alonsoalviraaaa/wildfire-front-training-v21",
   "metrics": {
     "test_iou": 0.2256,

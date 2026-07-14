@@ -35,6 +35,7 @@ RUN pip install --upgrade pip setuptools wheel
 # Copy only manifests to leverage Docker layer caching
 COPY pyproject.toml README.md ./
 COPY wildfire_front/ wildfire_front/
+COPY models/ models/
 
 # Build wheel
 RUN pip wheel . --no-deps -w /wheels && \
@@ -81,4 +82,26 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import wildfire_front; print('healthy')" || exit 1
 
 ENTRYPOINT ["python", "-m", "wildfire_front"]
+CMD ["--help"]
+
+# ─── Stage 3: NDWS spread inference (v21 production) ───────────────────────
+FROM runtime AS inference
+
+USER root
+
+# CPU-only PyTorch for slim inference image
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+COPY --chown=wfapp:wfapp models/production/ /app/models/production/
+
+ENV WILDFIRE_MANIFEST=/app/models/production/manifest.json \
+    WILDFIRE_TORCHSCRIPT=/app/models/production/spread_model_v21.pt \
+    PYTHONPATH=/app
+
+USER wfapp
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "import torch; import wildfire_front.ml.spread_predictor as s; print('inference-ok')" || exit 1
+
+ENTRYPOINT ["python", "/app/scripts/predict_spread.py"]
 CMD ["--help"]
