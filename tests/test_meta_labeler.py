@@ -211,7 +211,12 @@ class TestEnhancedFeatures(unittest.TestCase):
         aspect = np.array([180.0] * 8)
         bn = np.array([1, 1, 0, 0, 1, 0, 0, 1], dtype=np.float64)  # 4/8 = 0.5
         X = ml.build_enhanced_features(
-            prob, slope, aspect, wind_speed=5.0, humidity=50.0, temp=30.0,
+            prob,
+            slope,
+            aspect,
+            wind_speed=5.0,
+            humidity=50.0,
+            temp=30.0,
             burning_neighbors=bn,
         )
         # Column 7=prob_mean, 8=prob_std, 9=prob_max, 10=burning_density, 11=prob_gradient

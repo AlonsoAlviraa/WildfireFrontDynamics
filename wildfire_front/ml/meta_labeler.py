@@ -141,13 +141,15 @@ class WildfireMetaLabeler:
             burning_density_val = 0.0
 
         # All five spatial features are scalars replicated across rows
-        extra = np.column_stack([
-            np.full(N, prob_mean),
-            np.full(N, prob_std),
-            np.full(N, prob_max),
-            np.full(N, burning_density_val),
-            np.full(N, prob_gradient),
-        ])
+        extra = np.column_stack(
+            [
+                np.full(N, prob_mean),
+                np.full(N, prob_std),
+                np.full(N, prob_max),
+                np.full(N, burning_density_val),
+                np.full(N, prob_gradient),
+            ]
+        )
         return np.hstack([base, extra])
 
     def train(self, X: np.ndarray, y: np.ndarray) -> None:

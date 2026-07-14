@@ -14,12 +14,10 @@ Output:
     docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md
 """
 
-import os
-import sys
-import json
 import argparse
-from pathlib import Path
+import sys
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 
@@ -47,13 +45,15 @@ def load_split(data_dir, split_name, max_samples=500):
             with np.load(f) as data:
                 seq = data["sequence"]  # (T, C, H, W)
                 cf = data["current_fire"]  # (H, W) — PrevFireMask
-                tf = data["target_fire"]   # (H, W) — FireMask (target)
-                samples.append({
-                    "file": f.name,
-                    "sequence": seq.astype(np.float32),
-                    "current_fire": cf.astype(np.float32),
-                    "target_fire": tf.astype(np.float32),
-                })
+                tf = data["target_fire"]  # (H, W) — FireMask (target)
+                samples.append(
+                    {
+                        "file": f.name,
+                        "sequence": seq.astype(np.float32),
+                        "current_fire": cf.astype(np.float32),
+                        "target_fire": tf.astype(np.float32),
+                    }
+                )
         except Exception as e:
             print(f"  [WARN] Error loading {f}: {e}")
     return samples
@@ -102,7 +102,7 @@ def analyze_leakage(train_samples, val_samples, test_samples):
     content_tt = len(train_fps & test_fps)
     content_vt = len(val_fps & test_fps)
 
-    print(f"\n  Content fingerprint overlap:")
+    print("\n  Content fingerprint overlap:")
     print(f"    train<->val: {content_tv}")
     print(f"    train<->test: {content_tt}")
     print(f"    val<->test: {content_vt}")
@@ -146,7 +146,6 @@ def analyze_copy_baseline(samples):
         tp = np.sum((cf_bin == 1) & (tf_bin == 1))
         fp = np.sum((cf_bin == 1) & (tf_bin == 0))
         fn = np.sum((cf_bin == 0) & (tf_bin == 1))
-        tn = np.sum((cf_bin == 0) & (tf_bin == 0))
 
         eps = 1e-7
         iou = tp / (tp + fp + fn + eps)
@@ -155,21 +154,27 @@ def analyze_copy_baseline(samples):
         recall = tp / (tp + fn + eps)
 
         # Spatial correlation between input and target
-        correlation = np.corrcoef(cf.flatten(), tf.flatten())[0, 1] if np.std(cf) > 0 and np.std(tf) > 0 else 0.0
+        correlation = (
+            np.corrcoef(cf.flatten(), tf.flatten())[0, 1]
+            if np.std(cf) > 0 and np.std(tf) > 0
+            else 0.0
+        )
 
         # How much does the fire grow/shrink?
         fire_change = np.sum(tf_bin) - np.sum(cf_bin)
 
-        results["per_sample"].append({
-            "iou_copy": iou,
-            "dice_copy": dice,
-            "precision_copy": precision,
-            "recall_copy": recall,
-            "correlation": correlation,
-            "fire_change_px": fire_change,
-            "input_fire_px": np.sum(cf_bin),
-            "target_fire_px": np.sum(tf_bin),
-        })
+        results["per_sample"].append(
+            {
+                "iou_copy": iou,
+                "dice_copy": dice,
+                "precision_copy": precision,
+                "recall_copy": recall,
+                "correlation": correlation,
+                "fire_change_px": fire_change,
+                "input_fire_px": np.sum(cf_bin),
+                "target_fire_px": np.sum(tf_bin),
+            }
+        )
 
     # Aggregate
     ious = [r["iou_copy"] for r in results["per_sample"]]
@@ -191,28 +196,28 @@ def analyze_copy_baseline(samples):
         "n_samples": len(samples),
     }
 
-    print(f"  Copy-PrevFireMask baseline (IoU if model just copies input):")
+    print("  Copy-PrevFireMask baseline (IoU if model just copies input):")
     print(f"    IoU copy:     {summary['iou_copy_mean']:.4f} ± {summary['iou_copy_std']:.4f}")
     print(f"    Dice copy:    {summary['dice_copy_mean']:.4f}")
     print(f"    Recall copy:  {summary['recall_copy_mean']:.4f}")
     print(f"    Precision copy: {summary['precision_copy_mean']:.4f}")
-    print(f"  Spatial correlation (PrevFireMask <-> FireMask):")
+    print("  Spatial correlation (PrevFireMask <-> FireMask):")
     print(f"    Mean r:       {summary['correlation_mean']:.4f} ± {summary['correlation_std']:.4f}")
-    print(f"  Fire growth/shrink:")
+    print("  Fire growth/shrink:")
     print(f"    Mean D pixels: {summary['fire_change_mean_px']:.1f}")
 
     if summary["iou_copy_mean"] > 0.20:
         print(f"\n  [WARNING] Copy baseline IoU={summary['iou_copy_mean']:.4f} is HIGH.")
-        print(f"  The model may be learning 'copy input' rather than fire spread dynamics.")
+        print("  The model may be learning 'copy input' rather than fire spread dynamics.")
         print(f"  v14 model IoU=0.239 vs copy IoU={summary['iou_copy_mean']:.4f}")
         if summary["iou_copy_mean"] > 0.20:
             margin = 0.239 - summary["iou_copy_mean"]
             print(f"  Model improvement over copy: {margin:+.4f} IoU points")
             if margin < 0.02:
-                print(f"  [CRITICAL] Model barely beats copy baseline — likely learning identity!")
+                print("  [CRITICAL] Model barely beats copy baseline — likely learning identity!")
     else:
         print(f"\n  [OK] Copy baseline IoU={summary['iou_copy_mean']:.4f} is low enough")
-        print(f"  The model IS learning fire spread dynamics, not just copying.")
+        print("  The model IS learning fire spread dynamics, not just copying.")
 
     results["summary"] = summary
     return results
@@ -225,10 +230,23 @@ def analyze_channel_importance(samples):
     print("=" * 70)
 
     channel_names = [
-        "slope", "aspect", "temperature", "humidity", "wind_speed",
-        "wind_dir", "precipitation", "pressure_const", "cloud_const",
-        "visibility_const", "dewpoint_const", "vegetation_NDVI",
-        "ERC_norm", "1-ERC_norm", "padding_0", "padding_1", "FFMC",
+        "slope",
+        "aspect",
+        "temperature",
+        "humidity",
+        "wind_speed",
+        "wind_dir",
+        "precipitation",
+        "pressure_const",
+        "cloud_const",
+        "visibility_const",
+        "dewpoint_const",
+        "vegetation_NDVI",
+        "ERC_norm",
+        "1-ERC_norm",
+        "padding_0",
+        "padding_1",
+        "FFMC",
     ]
 
     # For each channel, compute mean correlation with target_fire
@@ -259,7 +277,7 @@ def analyze_channel_importance(samples):
 
     ranked.sort(key=lambda x: x[1], reverse=True)
 
-    print(f"\n  Channel importance (mean |r| with target_fire):")
+    print("\n  Channel importance (mean |r| with target_fire):")
     for name, mean_r in ranked:
         bar = "#" * int(mean_r * 100)
         print(f"    {name:25s} |r|={mean_r:.4f}  {bar}")
@@ -305,13 +323,16 @@ def analyze_fire_dynamics(samples):
         print(f"    {cat:12s}: {count:4d} ({pct:5.1f}%) {bar}")
 
     if growth_rates:
-        print(f"\n  Growth rate stats (when fire grows):")
+        print("\n  Growth rate stats (when fire grows):")
         print(f"    Mean growth: {np.mean(growth_rates):.1f}%")
         print(f"    Median growth: {np.median(growth_rates):.1f}%")
         print(f"    Max growth: {np.max(growth_rates):.1f}%")
 
-    return {"categories": categories, "total": total,
-            "growth_mean_pct": float(np.mean(growth_rates)) if growth_rates else 0.0}
+    return {
+        "categories": categories,
+        "total": total,
+        "growth_mean_pct": float(np.mean(growth_rates)) if growth_rates else 0.0,
+    }
 
 
 def generate_report(leakage, copy, channels, dynamics, output_path):
@@ -325,15 +346,15 @@ def generate_report(leakage, copy, channels, dynamics, output_path):
 
 | Check | Resultado |
 |-------|-----------|
-| Filename overlap (train<->val) | {leakage['filename_overlap']['train_val']} |
-| Filename overlap (train<->test) | {leakage['filename_overlap']['train_test']} |
-| Filename overlap (val<->test) | {leakage['filename_overlap']['val_test']} |
-| Content overlap (train<->val) | {leakage['content_overlap']['train_val']} |
-| Content overlap (train<->test) | {leakage['content_overlap']['train_test']} |
-| Content overlap (val<->test) | {leakage['content_overlap']['val_test']} |
-| **LEAK DETECTADO** | **{'SI' if leakage['leak_detected'] else 'NO'}** |
+| Filename overlap (train<->val) | {leakage["filename_overlap"]["train_val"]} |
+| Filename overlap (train<->test) | {leakage["filename_overlap"]["train_test"]} |
+| Filename overlap (val<->test) | {leakage["filename_overlap"]["val_test"]} |
+| Content overlap (train<->val) | {leakage["content_overlap"]["train_val"]} |
+| Content overlap (train<->test) | {leakage["content_overlap"]["train_test"]} |
+| Content overlap (val<->test) | {leakage["content_overlap"]["val_test"]} |
+| **LEAK DETECTADO** | **{"SI" if leakage["leak_detected"] else "NO"}** |
 
-**Conclusion:** {"FUGA DETECTADA - revisar splits" if leakage['leak_detected'] else "Splits son disjuntos, no hay fuga de datos."}
+**Conclusion:** {"FUGA DETECTADA - revisar splits" if leakage["leak_detected"] else "Splits son disjuntos, no hay fuga de datos."}
 
 ## 2. Copy Baseline (PrevFireMask como prediccion)
 
@@ -341,21 +362,21 @@ Esta es la prueba mas critica. Si el modelo solo copia el input, su IoU seria:
 
 | Metrica | Copy Baseline | v14 Model | Diferencia |
 |---------|--------------|-----------|------------|
-| IoU | {copy['summary']['iou_copy_mean']:.4f} | 0.239 | {0.239 - copy['summary']['iou_copy_mean']:+.4f} |
-| Dice | {copy['summary']['dice_copy_mean']:.4f} | 0.385 | {0.385 - copy['summary']['dice_copy_mean']:+.4f} |
-| Recall | {copy['summary']['recall_copy_mean']:.4f} | 0.564 | {0.564 - copy['summary']['recall_copy_mean']:+.4f} |
-| Precision | {copy['summary']['precision_copy_mean']:.4f} | 0.293 | {0.293 - copy['summary']['precision_copy_mean']:+.4f} |
+| IoU | {copy["summary"]["iou_copy_mean"]:.4f} | 0.239 | {0.239 - copy["summary"]["iou_copy_mean"]:+.4f} |
+| Dice | {copy["summary"]["dice_copy_mean"]:.4f} | 0.385 | {0.385 - copy["summary"]["dice_copy_mean"]:+.4f} |
+| Recall | {copy["summary"]["recall_copy_mean"]:.4f} | 0.564 | {0.564 - copy["summary"]["recall_copy_mean"]:+.4f} |
+| Precision | {copy["summary"]["precision_copy_mean"]:.4f} | 0.293 | {0.293 - copy["summary"]["precision_copy_mean"]:+.4f} |
 
-**Correlacion espacial (PrevFireMask vs FireMask):** r = {copy['summary']['correlation_mean']:.4f}
+**Correlacion espacial (PrevFireMask vs FireMask):** r = {copy["summary"]["correlation_mean"]:.4f}
 
 """
 
-    if copy['summary']['iou_copy_mean'] > 0.20:
-        margin = 0.239 - copy['summary']['iou_copy_mean']
+    if copy["summary"]["iou_copy_mean"] > 0.20:
+        margin = 0.239 - copy["summary"]["iou_copy_mean"]
         if margin < 0.02:
             report += f"""### [CRITICO] El modelo apenas supera el copy baseline
 
-El modelo v14 (IoU=0.239) apenas mejora sobre copiar el input (IoU={copy['summary']['iou_copy_mean']:.4f}).
+El modelo v14 (IoU=0.239) apenas mejora sobre copiar el input (IoU={copy["summary"]["iou_copy_mean"]:.4f}).
 **El modelo esta aprendiendo "copia el fuego anterior" en lugar de predecir propagacion.**
 
 **Que hacer:**
@@ -367,18 +388,18 @@ El modelo v14 (IoU=0.239) apenas mejora sobre copiar el input (IoU={copy['summar
         else:
             report += f"""### [WARN] Copy baseline alto pero modelo aporta valor extra
 
-El copy baseline tiene IoU={copy['summary']['iou_copy_mean']:.4f}, pero el modelo lo supera
+El copy baseline tiene IoU={copy["summary"]["iou_copy_mean"]:.4f}, pero el modelo lo supera
 por {margin:+.4f} puntos. Esto es esperado porque el fuego de manana se parece al de hoy,
 pero el modelo esta aprendiendo patrones de propagacion adicionales.
 """
     else:
         report += f"""### [OK] El modelo aprende dinamica real
 
-Copy baseline IoU={copy['summary']['iou_copy_mean']:.4f} es bajo, lo que confirma que
+Copy baseline IoU={copy["summary"]["iou_copy_mean"]:.4f} es bajo, lo que confirma que
 el modelo v14 (IoU=0.239) esta aprendiendo patrones de propagacion reales, no copiando.
 """
 
-    report += f"""
+    report += """
 ## 3. Importancia de Canales (Correlacion con target)
 
 | Rank | Canal | Correlacion | |
@@ -386,9 +407,9 @@ el modelo v14 (IoU=0.239) esta aprendiendo patrones de propagacion reales, no co
 """
     for i, (name, corr) in enumerate(channels["ranked_channels"]):
         bar = "#" * int(corr * 100)
-        report += f"| {i+1} | {name} | {corr:.4f} | {bar} |\n"
+        report += f"| {i + 1} | {name} | {corr:.4f} | {bar} |\n"
 
-    report += f"""
+    report += """
 **Interpretacion:** Los canales con mayor |r| son los que mas informacion aportan
 sobre donde estara el fuego manana. Si los canales meteorologicos (viento, temperatura)
 tienen baja correlacion, el modelo puede estar ignorandolos.
@@ -404,7 +425,7 @@ tienen baja correlacion, el modelo puede estar ignorandolos.
         report += f"| {cat} | {count} | {pct:.1f}% |\n"
 
     report += f"""
-**Crecimiento medio:** {dynamics['growth_mean_pct']:.1f}%
+**Crecimiento medio:** {dynamics["growth_mean_pct"]:.1f}%
 
 **Conclusion:** Si la mayoria de muestras son "stable" o "no_fire", el dataset
 esta desbalanceado hacia no-cambio, lo que explica por que el modelo tiende a copiar.
@@ -423,10 +444,10 @@ esta desbalanceado hacia no-cambio, lo que explica por que el modelo tiende a co
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", default="/tmp/ndws_npz",
-                        help="NPZ data directory")
-    parser.add_argument("--output", default="docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md",
-                        help="Output report path")
+    parser.add_argument("--data-dir", default="/tmp/ndws_npz", help="NPZ data directory")
+    parser.add_argument(
+        "--output", default="docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md", help="Output report path"
+    )
     args = parser.parse_args()
 
     print("=" * 70)
@@ -442,6 +463,7 @@ def main():
             print(f"  Data dir not found at {data_dir}, using synthetic data for demo")
         # Generate synthetic data for analysis
         import tempfile
+
         data_dir = Path(tempfile.mkdtemp(prefix="leakage_"))
         for split, n in [("train", 50), ("val", 20), ("test", 20)]:
             d = data_dir / split
@@ -454,20 +476,21 @@ def main():
                 # Random fire location
                 cy, cx = np.random.randint(10, 54, 2)
                 r = np.random.randint(5, 15)
-                cf[max(0,cy-r):cy+r, max(0,cx-r):cx+r] = 1.0
+                cf[max(0, cy - r) : cy + r, max(0, cx - r) : cx + r] = 1.0
 
                 # Fire grows/shrinks/stays
                 change = np.random.choice([-1, 0, 1], p=[0.2, 0.3, 0.5])
                 new_r = max(1, r + change * np.random.randint(0, 5))
-                tf[max(0,cy-new_r):cy+new_r, max(0,cx-new_r):cx+new_r] = 1.0
+                tf[max(0, cy - new_r) : cy + new_r, max(0, cx - new_r) : cx + new_r] = 1.0
 
                 # Random channels
                 seq = np.random.randn(1, 17, 64, 64).astype(np.float32) * 0.5
                 # Make temperature channel correlate with fire
                 seq[0, 2] += cf * 0.3
 
-                np.savez_compressed(d / f"patch_{i:06d}.npz",
-                                    sequence=seq, current_fire=cf, target_fire=tf)
+                np.savez_compressed(
+                    d / f"patch_{i:06d}.npz", sequence=seq, current_fire=cf, target_fire=tf
+                )
 
     # Load data
     print("\nLoading data...")
@@ -486,8 +509,7 @@ def main():
     dynamics = analyze_fire_dynamics(train)
 
     # Generate report
-    generate_report(leakage, copy, channels, dynamics,
-                    REPO_ROOT / args.output)
+    generate_report(leakage, copy, channels, dynamics, REPO_ROOT / args.output)
 
     print("\n" + "=" * 70)
     print("ANALYSIS COMPLETE")

@@ -442,8 +442,6 @@ def physics_loss_cell_vectorized(
         Scalar loss tensor (CLAMPED to [0, lambda_physics] so physics
         never dominates the focal BCE term).
     """
-    device = predicted_probs.device
-
     # --- Des-normalize to physical units ---
     wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
     slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT  # radians
@@ -462,9 +460,7 @@ def physics_loss_cell_vectorized(
     # violation_ratio: how much the physical limit is exceeded
     # If ros_max >= ros_implied → propagation is physical → ratio = 0 (no penalty)
     # If ros_max < ros_implied → impossible spread → ratio > 1 (penalty)
-    violation_ratio = torch.clamp(
-        ros_implied / (ros_max + 1e-6) - 1.0, min=0.0
-    )  # (N,)
+    violation_ratio = torch.clamp(ros_implied / (ros_max + 1e-6) - 1.0, min=0.0)  # (N,)
 
     # Weight penalty by predicted probability (only penalize if model predicts spread)
     # predicted_probs: (N, 8) — take mean prob per cell → (N,)

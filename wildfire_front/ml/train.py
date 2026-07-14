@@ -297,10 +297,7 @@ def calculate_local_spread_loss_vectorized(
         last_ts = sequence[0, -1]  # (C, H, W)
         wind_grid = last_ts[4][burning_mask]  # (N,) — NORMALIZED [0,1]
         slope_grid = last_ts[0][burning_mask]  # (N,) — NORMALIZED [0,1]
-        if last_ts.shape[0] > 16:
-            ffmc_grid = last_ts[16][burning_mask]  # (N,)
-        else:
-            ffmc_grid = 90.0  # scalar fallback
+        ffmc_grid = last_ts[16][burning_mask] if last_ts.shape[0] > 16 else 90.0
         probs_det = torch.sigmoid(burning_logits).detach()  # (N, 8)
         physics_term = physics_loss_cell_vectorized(
             probs_det,

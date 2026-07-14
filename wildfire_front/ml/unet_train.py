@@ -10,9 +10,9 @@ import json
 import os
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import torch
@@ -117,9 +117,7 @@ def apply_weighted_loss(
     """Element-wise loss with spatial weights, reduced to scalar mean."""
     logits = torch.clamp(logits, -10.0, 10.0)
     pw = torch.tensor(5.0, device=logits.device, dtype=logits.dtype)
-    bce = F.binary_cross_entropy_with_logits(
-        logits, targets, reduction="none", pos_weight=pw
-    )
+    bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none", pos_weight=pw)
     return (bce * weights).mean()
 
 
@@ -149,18 +147,28 @@ class EMA:
 
 def build_model(config: UNetTrainConfig, in_channels: int) -> nn.Module:
     """Instantiate U-Net variant from config."""
-    kwargs = dict(
+    if config.architecture == "residual":
+        return ResidualWildfireUNetSmall(
+            in_channels=in_channels,
+            bilinear=True,
+            norm=config.norm,
+            se_attention=config.se_attention,
+        )
+    if config.model == "full":
+        return WildfireUNet(
+            in_channels=in_channels,
+            out_channels=1,
+            bilinear=True,
+            norm=config.norm,
+            se_attention=config.se_attention,
+        )
+    return WildfireUNetSmall(
         in_channels=in_channels,
         out_channels=1,
         bilinear=True,
         norm=config.norm,
         se_attention=config.se_attention,
     )
-    if config.architecture == "residual":
-        return ResidualWildfireUNetSmall(**kwargs)
-    if config.model == "full":
-        return WildfireUNet(**kwargs)
-    return WildfireUNetSmall(**kwargs)
 
 
 def model_forward(
@@ -217,7 +225,17 @@ def merge_clm_patches(
     return merged
 
 
-def build_dataloaders(config: UNetTrainConfig) -> tuple[DataLoader, DataLoader, DataLoader, Path]:
+def build_dataloaders(
+    config: UNetTrainConfig,
+) -> tuple[
+    DataLoader,
+    DataLoader,
+    DataLoader,
+    Path,
+    NpzWildfireDataset,
+    NpzWildfireDataset,
+    NpzWildfireDataset,
+]:
     """Create train/val/test loaders from preprocessed NPZ directory."""
     data_root = Path(config.data_dir)
 
@@ -250,24 +268,34 @@ def build_dataloaders(config: UNetTrainConfig) -> tuple[DataLoader, DataLoader, 
         )
 
     num_workers = 0 if sys.platform == "win32" else min(4, os.cpu_count() or 2)
-    loader_kw = dict(num_workers=num_workers, pin_memory=True)
-    if num_workers > 0:
-        loader_kw["persistent_workers"] = True
+
+    def _loader(
+        dataset: NpzWildfireDataset,
+        *,
+        shuffle: bool,
+        sampler: WeightedRandomSampler | None = None,
+    ) -> DataLoader:
+        kwargs: dict[str, object] = {
+            "batch_size": config.batch_size,
+            "num_workers": num_workers,
+            "pin_memory": True,
+        }
+        if num_workers > 0:
+            kwargs["persistent_workers"] = True
+        if sampler is not None:
+            return DataLoader(dataset, sampler=sampler, shuffle=False, **kwargs)  # type: ignore[arg-type]
+        return DataLoader(dataset, shuffle=shuffle, **kwargs)  # type: ignore[arg-type]
 
     if config.weighted_sampler:
         weights = [_sample_change_weight(f) for f in train_ds.files]
         sampler = WeightedRandomSampler(weights, num_samples=len(weights), replacement=True)
-        train_loader = DataLoader(
-            train_ds, batch_size=config.batch_size, sampler=sampler, **loader_kw
-        )
+        train_loader = _loader(train_ds, shuffle=False, sampler=sampler)
     else:
-        train_loader = DataLoader(
-            train_ds, batch_size=config.batch_size, shuffle=True, **loader_kw
-        )
+        train_loader = _loader(train_ds, shuffle=True)
 
-    val_loader = DataLoader(val_ds, batch_size=config.batch_size, shuffle=False, **loader_kw)
-    test_loader = DataLoader(test_ds, batch_size=config.batch_size, shuffle=False, **loader_kw)
-    return train_loader, val_loader, test_loader, data_root
+    val_loader = _loader(val_ds, shuffle=False)
+    test_loader = _loader(test_ds, shuffle=False)
+    return train_loader, val_loader, test_loader, data_root, train_ds, val_ds, test_ds
 
 
 @torch.no_grad()
@@ -307,9 +335,7 @@ def evaluate_loader(
             prev_np = current_fire[i].cpu().numpy()
             tgt_np = target_fire[i].cpu().numpy()
             for t in config.eval_thresholds:
-                per_threshold[t].append(
-                    evaluate_sample(pred_np, prev_np, tgt_np, threshold=t)
-                )
+                per_threshold[t].append(evaluate_sample(pred_np, prev_np, tgt_np, threshold=t))
 
     model.train()
     results: dict = {"loss": total_loss / steps if steps else 0.0}
@@ -358,11 +384,8 @@ def run_training(config: UNetTrainConfig) -> dict:
     if config.clm_data_dir:
         merge_clm_patches(data_root, Path(config.clm_data_dir))
 
-    train_loader, val_loader, test_loader, _ = build_dataloaders(config)
-    log(
-        f"Dataset sizes -> train={len(train_loader.dataset)} "
-        f"val={len(val_loader.dataset)} test={len(test_loader.dataset)}"
-    )
+    train_loader, val_loader, test_loader, _, train_ds, val_ds, test_ds = build_dataloaders(config)
+    log(f"Dataset sizes -> train={len(train_ds)} val={len(val_ds)} test={len(test_ds)}")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_amp = device.type == "cuda"
@@ -461,28 +484,28 @@ def run_training(config: UNetTrainConfig) -> dict:
         val_loss = val_results["loss"]
         primary = val_results.get(f"thresh_{config.primary_threshold}", {})
         val_iou = float(primary.get("model_iou", 0.0))
-        val_recall = float(
-            primary.get("model_full", {}).get("micro_recall", 0.0)
-        )
+        val_recall = float(primary.get("model_full", {}).get("micro_recall", 0.0))
         improvement = float(primary.get("improvement_vs_copy_iou_changed", 0.0))
         copy_iou = float(primary.get("copy_baseline_iou", 0.0))
         score = _early_stop_score(val_results, config.early_stop_metric)
 
         log(
-            f"Epoch {epoch+1:02d}/{config.epochs}  train={train_loss:.5f}  val={val_loss:.5f}  "
+            f"Epoch {epoch + 1:02d}/{config.epochs}  train={train_loss:.5f}  val={val_loss:.5f}  "
             f"IoU@0.5={val_iou:.4f}  copy={copy_iou:.4f}  delta_changed={improvement:+.4f}  "
-            f"lr={scheduler.get_last_lr()[0]:.2e}  ({time.time()-t0:.0f}s)"
+            f"lr={scheduler.get_last_lr()[0]:.2e}  ({time.time() - t0:.0f}s)"
         )
 
-        history.append({
-            "epoch": epoch + 1,
-            "train_loss": train_loss,
-            "val_loss": val_loss,
-            "val_iou_0.5": val_iou,
-            "val_recall_0.5": val_recall,
-            "improvement_vs_copy_iou_changed": improvement,
-            "copy_baseline_iou": copy_iou,
-        })
+        history.append(
+            {
+                "epoch": epoch + 1,
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+                "val_iou_0.5": val_iou,
+                "val_recall_0.5": val_recall,
+                "improvement_vs_copy_iou_changed": improvement,
+                "copy_baseline_iou": copy_iou,
+            }
+        )
         history_file.write_text(json.dumps(history, indent=2))
 
         if score > best_score:
@@ -494,7 +517,7 @@ def run_training(config: UNetTrainConfig) -> dict:
         else:
             no_improve += 1
             if no_improve >= config.patience:
-                log(f"  -> early stopping at epoch {epoch+1}")
+                log(f"  -> early stopping at epoch {epoch + 1}")
                 break
 
     total_time = time.time() - start_time
@@ -510,9 +533,9 @@ def run_training(config: UNetTrainConfig) -> dict:
         "target_mode": config.target_mode,
         "best_epoch": best_epoch,
         "early_stop_metric": config.early_stop_metric,
-        "train_samples": len(train_loader.dataset),
-        "val_samples": len(val_loader.dataset),
-        "test_samples": len(test_loader.dataset),
+        "train_samples": len(train_ds),
+        "val_samples": len(val_ds),
+        "test_samples": len(test_ds),
         "total_train_time_s": total_time,
         "config": asdict(config),
         "test_metrics": test_results,

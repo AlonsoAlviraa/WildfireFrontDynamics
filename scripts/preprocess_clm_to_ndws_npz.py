@@ -26,7 +26,6 @@ sys.path.insert(0, str(ROOT))
 from wildfire_front.ingestion.geotiff import materialize_lwir_masks  # noqa: E402
 from wildfire_front.ml.dataset import WildfireDataset  # noqa: E402
 
-
 # Tobarra weather context (AEMET station 7103Y, 2024-08-02 afternoon)
 TOBARRA_WEATHER = {
     "temp": 38.0,
@@ -63,7 +62,13 @@ FIRE_SOURCES = [
     ("data/real_if/raw_dropbox/organized/13_09_2025_IF.POLAN", "POLAN"),
 ]
 
-TRAIN_FIRES = {"tobarra_20240802", "CARDOSO", "LA_ESTRELLA_ACOM1", "LA_ESTRELLA_ACOM2", "HELLIN20240719"}
+TRAIN_FIRES = {
+    "tobarra_20240802",
+    "CARDOSO",
+    "LA_ESTRELLA_ACOM1",
+    "LA_ESTRELLA_ACOM2",
+    "HELLIN20240719",
+}
 VAL_FIRES = {"RETUERTA", "POLAN"}
 TEST_FIRES = {"BRAZATORTAS"}
 
@@ -85,6 +90,7 @@ def _flatten_lwir_images(source_dir: Path, flat_dir: Path) -> Path:
             dest.symlink_to(src.resolve())
         except OSError:
             import shutil
+
             shutil.copy2(src, dest)
     return flat_dir
 
@@ -147,13 +153,15 @@ def export_fire_patches(
             source=np.array(fire_name),
         )
         patch_info = dataset.patches[i]
-        written.append({
-            "file": out_path.name,
-            "fire": fire_name,
-            "change_fraction": change_fraction,
-            "row": patch_info["row"],
-            "col": patch_info["col"],
-        })
+        written.append(
+            {
+                "file": out_path.name,
+                "fire": fire_name,
+                "change_fraction": change_fraction,
+                "row": patch_info["row"],
+                "col": patch_info["col"],
+            }
+        )
         idx += 1
 
     return idx, written
@@ -222,22 +230,26 @@ def main() -> int:
         split_counts[split] += n_written
         if records:
             changes = [r["change_fraction"] for r in records]
-            analysis["fires"].append({
-                "fire": fire_name,
-                "split": split,
-                "lwir_frames": len(lwir),
-                "masks": n_masks,
-                "patches": n_written,
-                "mean_change_fraction": float(np.mean(changes)),
-                "max_change_fraction": float(np.max(changes)),
-            })
+            analysis["fires"].append(
+                {
+                    "fire": fire_name,
+                    "split": split,
+                    "lwir_frames": len(lwir),
+                    "masks": n_masks,
+                    "patches": n_written,
+                    "mean_change_fraction": float(np.mean(changes)),
+                    "max_change_fraction": float(np.max(changes)),
+                }
+            )
         print(f"  patches written: {n_written}")
 
     analysis["totals"] = split_counts
     manifest_path = args.output_dir / "clm_analysis.json"
     manifest_path.write_text(json.dumps(analysis, indent=2), encoding="utf-8")
-    print(f"\n=== CLM preprocessing done ===")
-    print(f"  train={split_counts['train']}  val={split_counts['val']}  test={split_counts['test']}")
+    print("\n=== CLM preprocessing done ===")
+    print(
+        f"  train={split_counts['train']}  val={split_counts['val']}  test={split_counts['test']}"
+    )
     print(f"  analysis: {manifest_path}")
     return 0 if sum(split_counts.values()) > 0 else 1
 

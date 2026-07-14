@@ -60,9 +60,7 @@ def test_zero_penalty_when_physical():
     loss = physics_loss_cell_vectorized(probs, wind_norm, slope_norm, ffmc=ffmc)
 
     print(f"  Strong-wind scenario: loss = {loss.item():.6f} (should be ~0)")
-    assert loss.item() < 0.001, (
-        f"FAIL: expected ~0 loss with strong wind, got {loss.item()}"
-    )
+    assert loss.item() < 0.001, f"FAIL: expected ~0 loss with strong wind, got {loss.item()}"
     print("  [OK] Zero penalty when physical propagation is possible")
 
 
@@ -75,12 +73,13 @@ def test_desnormalization_correct():
     ffmc = 90.0
 
     wind_raw = 0.5 * 20.0
-    slope_raw = 0.2 * 1.5708
     slope_deg = 18.0
     moisture = 147.2 * (101.0 - 90.0) / (59.5 + 90.0)
     ros_max = _rothermel_ros_numpy(wind_raw, slope_deg, moisture, DEFAULT_FUEL)
     ros_implied = CELL_SIZE_M / DEFAULT_DT_MIN
-    print(f"  Manual: wind={wind_raw} m/s, ros_max={ros_max:.4f} m/min, ros_implied={ros_implied:.4f}")
+    print(
+        f"  Manual: wind={wind_raw} m/s, ros_max={ros_max:.4f} m/min, ros_implied={ros_implied:.4f}"
+    )
 
     loss = physics_loss_cell_vectorized(probs, wind_norm, slope_norm, ffmc=ffmc)
 
@@ -108,25 +107,28 @@ def test_speedup():
 
     t0 = time.time()
     for _ in range(10):
-        loss_v = physics_loss_cell_vectorized(probs, wind_norm, slope_norm, ffmc=ffmc)
+        physics_loss_cell_vectorized(probs, wind_norm, slope_norm, ffmc=ffmc)
     t_vec = (time.time() - t0) / 10
 
     t0 = time.time()
     for _ in range(10):
-        loss_legacy = sum(
-            physics_loss_cell(
-                probs[i],
-                float(wind_norm[i] * 20.0),
-                float(slope_norm[i] * 1.5708),
-                ffmc=90.0,
+        _ = (
+            sum(
+                physics_loss_cell(
+                    probs[i],
+                    float(wind_norm[i] * 20.0),
+                    float(slope_norm[i] * 1.5708),
+                    ffmc=90.0,
+                )
+                for i in range(N)
             )
-            for i in range(N)
-        ) / N
+            / N
+        )
     t_legacy = (time.time() - t0) / 10
 
     speedup = t_legacy / t_vec if t_vec > 0 else float("inf")
-    print(f"  Vectorized: {t_vec*1000:.2f} ms")
-    print(f"  Legacy loop: {t_legacy*1000:.2f} ms")
+    print(f"  Vectorized: {t_vec * 1000:.2f} ms")
+    print(f"  Legacy loop: {t_legacy * 1000:.2f} ms")
     print(f"  Speedup: {speedup:.1f}x")
     print("  [OK] Vectorized is faster (or equal on CPU with small N)")
 

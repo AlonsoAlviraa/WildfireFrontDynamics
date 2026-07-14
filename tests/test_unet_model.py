@@ -11,8 +11,8 @@ These tests validate the loop-engineering improvements:
 Run with: pytest tests/test_unet_model.py -v
 """
 
-import pytest
 import numpy as np
+import pytest
 
 torch = pytest.importorskip("torch")
 
@@ -24,6 +24,34 @@ def model_inputs():
     x = torch.randn(4, 18, 64, 64)
     targets = (torch.rand(4, 1, 64, 64) > 0.8).float()
     return x, targets
+
+
+class TestResidualWildfireUNetSmall:
+    """Test residual delta model over copy baseline."""
+
+    def test_forward_with_prev_fire(self):
+        from models.unet_model import ResidualWildfireUNetSmall
+
+        model = ResidualWildfireUNetSmall(in_channels=18)
+        x = torch.randn(2, 18, 64, 64)
+        prev = (torch.rand(2, 64, 64) > 0.5).float()
+        with torch.no_grad():
+            out = model(x, prev)
+        assert out.shape == (2, 1, 64, 64)
+        assert torch.isfinite(out).all()
+
+    def test_gradient_flow(self):
+        from models.unet_model import ResidualWildfireUNetSmall
+
+        model = ResidualWildfireUNetSmall(in_channels=18)
+        x = torch.randn(2, 18, 64, 64, requires_grad=True)
+        prev = torch.rand(2, 64, 64)
+        target = (torch.rand(2, 1, 64, 64) > 0.8).float()
+        logits = model(x, prev)
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(logits, target)
+        loss.backward()
+        assert x.grad is not None
+        assert torch.isfinite(x.grad).all()
 
 
 class TestWildfireUNet:
@@ -81,7 +109,7 @@ class TestWildfireUNet:
 
     def test_se_attention(self):
         """Test that SE attention can be enabled."""
-        from models.unet_model import WildfireUNet, SqueezeExcitation
+        from models.unet_model import SqueezeExcitation, WildfireUNet
 
         model = WildfireUNet(in_channels=18, se_attention=True)
         x = torch.randn(2, 18, 64, 64)
@@ -191,10 +219,7 @@ class TestLossFunctions:
         from models.unet_model import composite_loss
 
         logits, targets = loss_inputs
-        loss = composite_loss(
-            logits, targets,
-            pos_weight=5.0, dice_weight=0.3, tversky_weight=0.3
-        )
+        loss = composite_loss(logits, targets, pos_weight=5.0, dice_weight=0.3, tversky_weight=0.3)
         assert torch.isfinite(loss)
         loss.backward()
         assert logits.grad is not None
@@ -204,9 +229,13 @@ class TestLossFunctions:
 
         logits, targets = loss_inputs
         loss = composite_loss(
-            logits, targets,
-            pos_weight=5.0, dice_weight=0.3, tversky_weight=0.3,
-            focal_weight=0.2, focal_gamma=2.0
+            logits,
+            targets,
+            pos_weight=5.0,
+            dice_weight=0.3,
+            tversky_weight=0.3,
+            focal_weight=0.2,
+            focal_gamma=2.0,
         )
         assert torch.isfinite(loss)
         loss.backward()
@@ -228,13 +257,11 @@ class TestLossFunctions:
         # Perfect prediction: logits very high where target=1, very low where target=0
         targets = torch.zeros(1, 1, 8, 8)
         targets[0, 0, 2:6, 2:6] = 1.0
-        logits = torch.where(
-            targets > 0.5,
-            torch.tensor(100.0),
-            torch.tensor(-100.0)
-        )
+        logits = torch.where(targets > 0.5, torch.tensor(100.0), torch.tensor(-100.0))
         loss = dice_loss(logits, targets)
-        assert loss.item() < 0.01, f"Dice loss on perfect prediction should be ~0, got {loss.item()}"
+        assert loss.item() < 0.01, (
+            f"Dice loss on perfect prediction should be ~0, got {loss.item()}"
+        )
 
 
 class TestLossFactory:
@@ -247,7 +274,9 @@ class TestLossFactory:
         targets = (torch.rand(2, 1, 16, 16) > 0.8).float()
         return logits, targets
 
-    @pytest.mark.parametrize("loss_name", ["bce", "dynamic_bce", "dice", "tversky", "focal", "combined", "composite"])
+    @pytest.mark.parametrize(
+        "loss_name", ["bce", "dynamic_bce", "dice", "tversky", "focal", "combined", "composite"]
+    )
     def test_factory_creates_valid_loss(self, loss_name, loss_inputs):
         from models.unet_model import make_loss_fn
 
@@ -324,7 +353,6 @@ class TestNpzDataset:
     @pytest.fixture
     def synthetic_data(self, tmp_path):
         """Create synthetic NPZ files."""
-        import numpy as np
 
         for split, n in [("train", 8), ("val", 4), ("test", 4)]:
             d = tmp_path / split
@@ -336,8 +364,7 @@ class TestNpzDataset:
                 cf[20:40, 20:40] = 1.0
                 tf_[18:42, 18:42] = 1.0
                 np.savez_compressed(
-                    d / f"patch_{i:06d}.npz",
-                    sequence=seq, current_fire=cf, target_fire=tf_
+                    d / f"patch_{i:06d}.npz", sequence=seq, current_fire=cf, target_fire=tf_
                 )
         return tmp_path
 

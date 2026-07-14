@@ -120,13 +120,13 @@ def evaluate_sample(
 
 def aggregate_ndws_evaluation(
     per_sample: list[dict[str, SegmentationMetrics]],
-) -> dict[str, float | str]:
+) -> dict[str, float | str | dict[str, float | str]]:
     """Aggregate per-sample NDWS metrics into summary dict for logging/JSON."""
     if not per_sample:
         return {"note": "no samples"}
 
     def _agg(key: str) -> dict[str, float | str]:
-        return aggregate_segmentation_metrics([s[key] for s in per_sample])
+        return dict(aggregate_segmentation_metrics([s[key] for s in per_sample]))
 
     model_full = _agg("model_full")
     model_changed = _agg("model_changed")

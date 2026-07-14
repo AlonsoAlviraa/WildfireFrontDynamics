@@ -110,6 +110,10 @@ exclude = "kaggle_job/run_training\\.py"
 module = ["tests.*"]
 strict = false
 
+[[tool.mypy.overrides]]
+module = ["models.unet_model"]
+disable_error_code = ["assignment", "arg-type", "return-value"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["wildfire_front*", "models*"]

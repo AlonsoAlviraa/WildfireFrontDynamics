@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -41,7 +40,18 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TRACKER_FILE = REPO_ROOT / "docs" / "EXPERIMENT_TRACKER.md"
 QUEUE_FILE = REPO_ROOT / "scripts" / "experiment_queue.json"
-KAGGLE_KERNEL_SLUG = "wildfire-front-training"  # adjust to your kernel slug
+KAGGLE_USER = "alonsoalviraaaa"
+
+
+def kernel_slug_for(exp: dict) -> str:
+    """Resolve Kaggle kernel slug for an experiment."""
+    if exp.get("kernel_slug"):
+        return exp["kernel_slug"]
+    version = exp["version"]
+    if version == "v17":
+        return f"{KAGGLE_USER}/wildfire-autonomous-research-v17"
+    return f"{KAGGLE_USER}/wildfire-front-training-{version}"
+
 
 # Acceptance criteria from LOOP_ENGINEERING_PLAN.md
 ACCEPTANCE = {
@@ -63,8 +73,20 @@ DEFAULT_QUEUE = [
         "name": "U-Net + Composite Loss (BCE+Dice+Tversky)",
         "hypothesis": "Composite loss with FN-heavy Tversky boosts recall over v13",
         "script": "kaggle_job/run_unet_training_v14.py",
-        "flags": ["--model", "small", "--loss", "composite", "--epochs", "50",
-                  "--batch-size", "32", "--lr", "1e-3", "--pos-weight", "5.0"],
+        "flags": [
+            "--model",
+            "small",
+            "--loss",
+            "composite",
+            "--epochs",
+            "50",
+            "--batch-size",
+            "32",
+            "--lr",
+            "1e-3",
+            "--pos-weight",
+            "5.0",
+        ],
         "expected": {"iou": "0.10-0.20", "recall": "0.15-0.30"},
         "status": "pending",
     },
@@ -73,8 +95,19 @@ DEFAULT_QUEUE = [
         "name": "U-Net + SE Attention + Composite Loss",
         "hypothesis": "Channel attention improves feature selection on multi-modal input",
         "script": "kaggle_job/run_unet_training_v14.py",
-        "flags": ["--model", "small", "--loss", "composite", "--se-attention",
-                  "--epochs", "50", "--batch-size", "32", "--lr", "1e-3"],
+        "flags": [
+            "--model",
+            "small",
+            "--loss",
+            "composite",
+            "--se-attention",
+            "--epochs",
+            "50",
+            "--batch-size",
+            "32",
+            "--lr",
+            "1e-3",
+        ],
         "expected": {"iou": "0.12-0.22", "recall": "0.20-0.35"},
         "depends_on": "v14",
         "status": "pending",
@@ -84,9 +117,22 @@ DEFAULT_QUEUE = [
         "name": "U-Net Full + Composite + EMA",
         "hypothesis": "Larger model capacity + EMA stabilizes training for higher IoU",
         "script": "kaggle_job/run_unet_training_v14.py",
-        "flags": ["--model", "full", "--loss", "composite", "--ema-decay", "0.999",
-                  "--epochs", "50", "--batch-size", "16", "--grad-accum", "2",
-                  "--lr", "1e-3"],
+        "flags": [
+            "--model",
+            "full",
+            "--loss",
+            "composite",
+            "--ema-decay",
+            "0.999",
+            "--epochs",
+            "50",
+            "--batch-size",
+            "16",
+            "--grad-accum",
+            "2",
+            "--lr",
+            "1e-3",
+        ],
         "expected": {"iou": "0.15-0.25", "recall": "0.25-0.40"},
         "depends_on": "v15",
         "status": "pending",
@@ -96,8 +142,20 @@ DEFAULT_QUEUE = [
         "name": "U-Net Small + Focal Loss (gamma=3)",
         "hypothesis": "Focal loss with high gamma focuses on hardest fire pixels",
         "script": "kaggle_job/run_unet_training_v14.py",
-        "flags": ["--model", "small", "--loss", "focal", "--pos-weight", "7.0",
-                  "--epochs", "50", "--batch-size", "32", "--lr", "1e-3"],
+        "flags": [
+            "--model",
+            "small",
+            "--loss",
+            "focal",
+            "--pos-weight",
+            "7.0",
+            "--epochs",
+            "50",
+            "--batch-size",
+            "32",
+            "--lr",
+            "1e-3",
+        ],
         "expected": {"iou": "0.10-0.20", "recall": "0.20-0.40"},
         "status": "pending",
     },
@@ -106,8 +164,18 @@ DEFAULT_QUEUE = [
         "name": "U-Net Small + Tversky Only (beta=0.7)",
         "hypothesis": "Pure Tversky loss maximizes recall without BCE interference",
         "script": "kaggle_job/run_unet_training_v14.py",
-        "flags": ["--model", "small", "--loss", "tversky", "--epochs", "50",
-                  "--batch-size", "32", "--lr", "1e-3"],
+        "flags": [
+            "--model",
+            "small",
+            "--loss",
+            "tversky",
+            "--epochs",
+            "50",
+            "--batch-size",
+            "32",
+            "--lr",
+            "1e-3",
+        ],
         "expected": {"iou": "0.08-0.18", "recall": "0.30-0.50"},
         "status": "pending",
     },
@@ -117,6 +185,7 @@ DEFAULT_QUEUE = [
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
+
 
 def load_queue() -> list[dict]:
     """Load experiment queue, creating default if missing."""
@@ -133,16 +202,16 @@ def save_queue(queue: list[dict]):
 
 def list_queue(queue: list[dict]):
     """Pretty-print the experiment queue."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"{'Ver':<6} {'Status':<10} {'Name':<50} {'Expected IoU':<15}")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     for exp in queue:
         ver = exp["version"]
         status = exp.get("status", "pending")
         name = exp["name"][:48]
         exp_iou = exp.get("expected", {}).get("iou", "?")
         print(f"{ver:<6} {status:<10} {name:<50} {exp_iou:<15}")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     print(f"Acceptance criteria: IoU>{ACCEPTANCE['iou']}, Recall>{ACCEPTANCE['recall']}\n")
 
 
@@ -152,7 +221,10 @@ def run_smoke_test() -> bool:
     script = REPO_ROOT / "kaggle_job" / "smoke_test_v14.py"
     result = subprocess.run(
         [sys.executable, str(script)],
-        capture_output=True, text=True, timeout=300, cwd=str(REPO_ROOT)
+        capture_output=True,
+        text=True,
+        timeout=300,
+        cwd=str(REPO_ROOT),
     )
     if result.returncode != 0:
         print(f"[FAIL] Smoke test failed!\n{result.stdout}\n{result.stderr}")
@@ -170,8 +242,7 @@ def git_commit_push(version: str, message: str):
     print(f"\n[step] Git commit + push for {version}...")
     subprocess.run(["git", "add", "-A"], cwd=str(REPO_ROOT), check=True)
     subprocess.run(
-        ["git", "commit", "-m", f"exp({version}): {message}"],
-        cwd=str(REPO_ROOT), check=True
+        ["git", "commit", "-m", f"exp({version}): {message}"], cwd=str(REPO_ROOT), check=True
     )
     result = subprocess.run(["git", "push"], cwd=str(REPO_ROOT), capture_output=True, text=True)
     if result.returncode != 0:
@@ -180,21 +251,31 @@ def git_commit_push(version: str, message: str):
         print("[OK] Pushed to GitHub.")
 
 
-def kaggle_push_kernel(script_path: str) -> bool:
+def kaggle_push_kernel(exp: dict) -> bool:
     """Push the kernel to Kaggle. Requires kaggle CLI configured."""
+    script_path = REPO_ROOT / exp["script"]
+    version = exp["version"]
     print(f"\n[step] Pushing kernel to Kaggle: {script_path}")
-    # Update kernel-metadata.json source_file
-    metadata_path = REPO_ROOT / "kaggle_job" / "kernel-metadata.json"
-    if metadata_path.exists():
-        meta = json.loads(metadata_path.read_text())
-        meta["source_file"] = Path(script_path).name
-        meta["language"] = "python"
-        meta["kernel_type"] = "script"
-        metadata_path.write_text(json.dumps(meta, indent=2))
+
+    meta_candidates = [
+        REPO_ROOT / "kaggle_job" / f"kernel-metadata-{version}.json",
+        REPO_ROOT / "kaggle_job" / "kernel-metadata.json",
+    ]
+    metadata_path = next((p for p in meta_candidates if p.exists()), meta_candidates[-1])
+    meta = json.loads(metadata_path.read_text())
+    meta["source_file"] = script_path.name
+    meta["id"] = kernel_slug_for(exp)
+    meta["language"] = "python"
+    meta["kernel_type"] = "script"
+    # kaggle CLI reads kernel-metadata.json in the push folder
+    push_meta = REPO_ROOT / "kaggle_job" / "kernel-metadata.json"
+    push_meta.write_text(json.dumps(meta, indent=2))
 
     result = subprocess.run(
         ["kaggle", "kernels", "push", "-p", str(REPO_ROOT / "kaggle_job")],
-        capture_output=True, text=True, cwd=str(REPO_ROOT)
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
     )
     if result.returncode != 0:
         print(f"[FAIL] Kaggle push failed:\n{result.stdout}\n{result.stderr}")
@@ -204,17 +285,19 @@ def kaggle_push_kernel(script_path: str) -> bool:
     return True
 
 
-def kaggle_monitor(timeout: int = 14400, poll_interval: int = 120) -> bool:
+def kaggle_monitor(kernel_slug: str, timeout: int = 14400, poll_interval: int = 120) -> bool:
     """Monitor kernel status until complete. Default timeout: 4 hours."""
-    print(f"\n[step] Monitoring Kaggle kernel (timeout={timeout}s, poll={poll_interval}s)...")
+    print(f"\n[step] Monitoring {kernel_slug} (timeout={timeout}s, poll={poll_interval}s)...")
     start = time.time()
     while time.time() - start < timeout:
         result = subprocess.run(
-            ["kaggle", "kernels", "status", KAGGLE_KERNEL_SLUG],
-            capture_output=True, text=True, cwd=str(REPO_ROOT)
+            ["kaggle", "kernels", "status", kernel_slug],
+            capture_output=True,
+            text=True,
+            cwd=str(REPO_ROOT),
         )
         output = result.stdout.strip()
-        print(f"  [{int(time.time()-start)}s] {output}")
+        print(f"  [{int(time.time() - start)}s] {output}")
 
         if "complete" in output.lower() or "finished" in output.lower():
             return True
@@ -227,15 +310,17 @@ def kaggle_monitor(timeout: int = 14400, poll_interval: int = 120) -> bool:
     return False
 
 
-def kaggle_pull_output(version: str) -> dict | None:
+def kaggle_pull_output(version: str, kernel_slug: str) -> dict | None:
     """Download kernel output and parse metrics."""
     print(f"\n[step] Downloading Kaggle output for {version}...")
     out_dir = REPO_ROOT / f"kaggle_outputs_{version}"
     out_dir.mkdir(exist_ok=True)
 
     result = subprocess.run(
-        ["kaggle", "kernels", "output", "-p", str(out_dir)],
-        capture_output=True, text=True, cwd=str(REPO_ROOT)
+        ["kaggle", "kernels", "output", kernel_slug, "-p", str(out_dir)],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
     )
     if result.returncode != 0:
         print(f"[WARN] Download failed: {result.stderr}")
@@ -268,10 +353,7 @@ def analyze_results(version: str, results: dict, baseline: dict | None = None) -
     passes = []
     for key, threshold in ACCEPTANCE.items():
         val = analysis.get(key, 0)
-        if key == "val_loss":
-            ok = val < threshold
-        else:
-            ok = val > threshold
+        ok = val < threshold if key == "val_loss" else val > threshold
         passes.append(ok)
         symbol = "✅" if ok else "❌"
         comp = "<" if key == "val_loss" else ">"
@@ -304,31 +386,33 @@ def document_experiment(exp: dict, results: dict | None, analysis: dict | None):
     """Append experiment results to EXPERIMENT_TRACKER.md."""
     print(f"\n[step] Documenting {exp['version']} in EXPERIMENT_TRACKER.md...")
 
-    tracker = TRACKER_FILE if TRACKER_FILE.exists() else REPO_ROOT / "docs" / "EXPERIMENT_TRACKER.md"
+    tracker = (
+        TRACKER_FILE if TRACKER_FILE.exists() else REPO_ROOT / "docs" / "EXPERIMENT_TRACKER.md"
+    )
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     entry = f"""
-### {exp['version']}: {exp['name']}
+### {exp["version"]}: {exp["name"]}
 - **Date:** {timestamp}
-- **Hypothesis:** {exp['hypothesis']}
-- **Change:** `{exp['script']}` with flags: `{' '.join(exp.get('flags', []))}`
-- **Status:** {exp.get('status', 'pending')}
+- **Hypothesis:** {exp["hypothesis"]}
+- **Change:** `{exp["script"]}` with flags: `{" ".join(exp.get("flags", []))}`
+- **Status:** {exp.get("status", "pending")}
 """
 
     if results and analysis:
-        entry += f"""- **IoU:** {analysis['iou']:.4f}
-- **Recall:** {analysis['recall']:.4f}
-- **Precision:** {analysis['precision']:.4f}
-- **Dice/F1:** {analysis['dice']:.4f}
-- **best_epoch:** {analysis['best_epoch']}
-- **val_loss:** {analysis['val_loss']:.4f}
-- **Acceptance:** {'ALL MET ✅' if analysis['passes_acceptance'] else 'NOT YET ❌'}
-- **Verdict:** {analysis['verdict']}
+        entry += f"""- **IoU:** {analysis["iou"]:.4f}
+- **Recall:** {analysis["recall"]:.4f}
+- **Precision:** {analysis["precision"]:.4f}
+- **Dice/F1:** {analysis["dice"]:.4f}
+- **best_epoch:** {analysis["best_epoch"]}
+- **val_loss:** {analysis["val_loss"]:.4f}
+- **Acceptance:** {"ALL MET ✅" if analysis["passes_acceptance"] else "NOT YET ❌"}
+- **Verdict:** {analysis["verdict"]}
 """
     else:
         entry += "- **Results:** (pending or failed)\n"
 
-    entry += f"- **Next:** See experiment queue for next step\n\n"
+    entry += "- **Next:** See experiment queue for next step\n\n"
 
     with open(tracker, "a", encoding="utf-8") as f:
         f.write(entry)
@@ -339,11 +423,12 @@ def document_experiment(exp: dict, results: dict | None, analysis: dict | None):
 # Main loop
 # --------------------------------------------------------------------------- #
 
+
 def run_one_experiment(exp: dict, do_kaggle: bool = True) -> dict | None:
     """Run a single experiment end-to-end."""
-    print(f"\n{'#'*80}")
+    print(f"\n{'#' * 80}")
     print(f"# EXPERIMENT: {exp['version']} — {exp['name']}")
-    print(f"{'#'*80}")
+    print(f"{'#' * 80}")
     print(f"Hypothesis: {exp['hypothesis']}")
     print(f"Script: {exp['script']}")
     print(f"Flags: {' '.join(exp.get('flags', []))}")
@@ -362,18 +447,18 @@ def run_one_experiment(exp: dict, do_kaggle: bool = True) -> dict | None:
         return None
 
     # Step 3: Push to Kaggle
-    script_path = REPO_ROOT / exp["script"]
-    if not kaggle_push_kernel(str(script_path)):
+    slug = kernel_slug_for(exp)
+    if not kaggle_push_kernel(exp):
         exp["status"] = "push_failed"
         return None
 
     # Step 4: Monitor
-    if not kaggle_monitor():
+    if not kaggle_monitor(slug):
         exp["status"] = "run_failed"
         return None
 
     # Step 5: Download results
-    results = kaggle_pull_output(exp["version"])
+    results = kaggle_pull_output(exp["version"], slug)
     if results is None:
         exp["status"] = "download_failed"
         return None
@@ -391,15 +476,17 @@ def run_one_experiment(exp: dict, do_kaggle: bool = True) -> dict | None:
 
 def main():
     parser = argparse.ArgumentParser(description="Wildfire experiment loop runner")
-    parser.add_argument("--auto", action="store_true",
-                        help="Run all pending experiments automatically")
+    parser.add_argument(
+        "--auto", action="store_true", help="Run all pending experiments automatically"
+    )
     parser.add_argument("--list", action="store_true", help="List experiment queue")
-    parser.add_argument("--run", type=str, default=None,
-                        help="Run specific experiment version (e.g. v14)")
-    parser.add_argument("--no-kaggle", action="store_true",
-                        help="Run smoke test + git push only, skip Kaggle")
-    parser.add_argument("--reset-queue", action="store_true",
-                        help="Reset queue to defaults")
+    parser.add_argument(
+        "--run", type=str, default=None, help="Run specific experiment version (e.g. v14)"
+    )
+    parser.add_argument(
+        "--no-kaggle", action="store_true", help="Run smoke test + git push only, skip Kaggle"
+    )
+    parser.add_argument("--reset-queue", action="store_true", help="Reset queue to defaults")
     args = parser.parse_args()
 
     if args.reset_queue:
@@ -427,19 +514,17 @@ def main():
         print("[info] No pending experiments to run.")
         return
 
-    print(f"\n[info] Will run {len(queue_to_run)} experiment(s): "
-          f"{[e['version'] for e in queue_to_run]}")
+    print(
+        f"\n[info] Will run {len(queue_to_run)} experiment(s): "
+        f"{[e['version'] for e in queue_to_run]}"
+    )
 
-    baseline = None
     for exp in queue_to_run:
         analysis = run_one_experiment(exp, do_kaggle=not args.no_kaggle)
-        if analysis:
-            # Update baseline for comparison
-            baseline = analysis
-            if analysis["passes_acceptance"]:
-                print(f"\n🎉 ACCEPTANCE CRITERIA MET at {exp['version']}! 🎉")
-                print("Stopping experiment loop.")
-                break
+        if analysis and analysis["passes_acceptance"]:
+            print(f"\n🎉 ACCEPTANCE CRITERIA MET at {exp['version']}! 🎉")
+            print("Stopping experiment loop.")
+            break
         save_queue(queue)
 
     print("\n[info] Experiment loop complete.")

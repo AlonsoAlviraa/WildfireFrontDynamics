@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")  # no GUI
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,11 +75,14 @@ def plot_loss_curves(h10, h11, outdir: Path):
         ax.plot(e10, vl10, "s-", color="#2196F3", linewidth=2.5, label="v10 Val Loss")
         best10 = np.argmin(vl10)
         ax.axvline(e10[best10], color="#2196F3", linestyle=":", alpha=0.5)
-        ax.annotate(f"v10 best (epoch {e10[best10]})",
-                    xy=(e10[best10], vl10[best10]),
-                    xytext=(e10[best10] + 1.5, vl10[best10] + 0.02),
-                    fontsize=9, color="#2196F3",
-                    arrowprops=dict(arrowstyle="->", color="#2196F3"))
+        ax.annotate(
+            f"v10 best (epoch {e10[best10]})",
+            xy=(e10[best10], vl10[best10]),
+            xytext=(e10[best10] + 1.5, vl10[best10] + 0.02),
+            fontsize=9,
+            color="#2196F3",
+            arrowprops={"arrowstyle": "->", "color": "#2196F3"},
+        )
 
     if h11:
         e11, tr11, vl11, _ = extract_arrays(h11)
@@ -86,15 +90,20 @@ def plot_loss_curves(h10, h11, outdir: Path):
         ax.plot(e11, vl11, "s-", color="#F44336", linewidth=2.5, label="v11 Val Loss")
         best11 = np.argmin(vl11)
         ax.axvline(e11[best11], color="#F44336", linestyle=":", alpha=0.5)
-        ax.annotate(f"v11 best (epoch {e11[best11]})",
-                    xy=(e11[best11], vl11[best11]),
-                    xytext=(e11[best11] + 1.5, vl11[best11] - 0.03),
-                    fontsize=9, color="#F44336",
-                    arrowprops=dict(arrowstyle="->", color="#F44336"))
+        ax.annotate(
+            f"v11 best (epoch {e11[best11]})",
+            xy=(e11[best11], vl11[best11]),
+            xytext=(e11[best11] + 1.5, vl11[best11] - 0.03),
+            fontsize=9,
+            color="#F44336",
+            arrowprops={"arrowstyle": "->", "color": "#F44336"},
+        )
 
     ax.set_xlabel("Epoch", fontsize=13)
     ax.set_ylabel("Loss (Focal BCE + Physics)", fontsize=13)
-    ax.set_title("Curvas de Entrenamiento: v10 (LR=1e-4) vs v11 (LR=5e-5)", fontsize=14, fontweight="bold")
+    ax.set_title(
+        "Curvas de Entrenamiento: v10 (LR=1e-4) vs v11 (LR=5e-5)", fontsize=14, fontweight="bold"
+    )
     ax.legend(fontsize=11, loc="upper right")
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0.20, 0.50)
@@ -114,12 +123,16 @@ def plot_gap_analysis(h10, h11, outdir: Path):
 
     if h10:
         e10, _, _, g10 = extract_arrays(h10)
-        ax.plot(e10, g10, "s-", color="#2196F3", linewidth=2, markersize=8, label="v10 Gap (val−train)")
+        ax.plot(
+            e10, g10, "s-", color="#2196F3", linewidth=2, markersize=8, label="v10 Gap (val−train)"
+        )
         ax.axhline(0, color="gray", linestyle="--", alpha=0.3)
 
     if h11:
         e11, _, _, g11 = extract_arrays(h11)
-        ax.plot(e11, g11, "s-", color="#F44336", linewidth=2, markersize=8, label="v11 Gap (val−train)")
+        ax.plot(
+            e11, g11, "s-", color="#F44336", linewidth=2, markersize=8, label="v11 Gap (val−train)"
+        )
 
     ax.axhspan(-0.02, 0.02, alpha=0.1, color="green", label="Zona ideal (|gap|<0.02)")
     ax.set_xlabel("Epoch", fontsize=13)
@@ -160,7 +173,15 @@ def plot_lr_schedule(h10, h11, s10, s11, outdir: Path):
 
     if h10:
         e10, lr10 = reconstruct_lr(h10, peak_lr=1e-4, warmup=3)
-        ax.plot(e10, lr10, "o-", color="#2196F3", linewidth=2, markersize=6, label="v10 LR (peak=1e-4, warmup=3)")
+        ax.plot(
+            e10,
+            lr10,
+            "o-",
+            color="#2196F3",
+            linewidth=2,
+            markersize=6,
+            label="v10 LR (peak=1e-4, warmup=3)",
+        )
         best10 = np.argmin([h["val_loss"] for h in h10])
         ax.axvline(e10[best10], color="#2196F3", linestyle=":", alpha=0.5)
 
@@ -168,7 +189,15 @@ def plot_lr_schedule(h10, h11, s10, s11, outdir: Path):
         peak = s11.get("v11_config", {}).get("peak_lr", 5e-5) if s11 else 5e-5
         warmup = s11.get("v11_config", {}).get("warmup_epochs", 5) if s11 else 5
         e11, lr11 = reconstruct_lr(h11, peak_lr=peak, warmup=warmup)
-        ax.plot(e11, lr11, "s-", color="#F44336", linewidth=2, markersize=6, label=f"v11 LR (peak={peak:.0e}, warmup={warmup})")
+        ax.plot(
+            e11,
+            lr11,
+            "s-",
+            color="#F44336",
+            linewidth=2,
+            markersize=6,
+            label=f"v11 LR (peak={peak:.0e}, warmup={warmup})",
+        )
         best11 = np.argmin([h["val_loss"] for h in h11])
         ax.axvline(e11[best11], color="#F44336", linestyle=":", alpha=0.5)
 
@@ -211,15 +240,24 @@ def plot_segmentation_metrics(eval_path: Path, outdir: Path):
 
     fig, ax = plt.subplots(figsize=(8, 6))
     colors = ["#4CAF50", "#2196F3", "#FF9800", "#F44336"]
-    bars = ax.bar(labels, values, color=colors[:len(labels)], edgecolor="black", linewidth=0.5)
+    bars = ax.bar(labels, values, color=colors[: len(labels)], edgecolor="black", linewidth=0.5)
 
-    for bar, val in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                f"{val:.3f}", ha="center", va="bottom", fontsize=12, fontweight="bold")
+    for bar, val in zip(bars, values, strict=True):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.01,
+            f"{val:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            fontweight="bold",
+        )
 
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("Score", fontsize=13)
-    ax.set_title("Métricas de Segmentación v11 (TEST set, leak-free)", fontsize=14, fontweight="bold")
+    ax.set_title(
+        "Métricas de Segmentación v11 (TEST set, leak-free)", fontsize=14, fontweight="bold"
+    )
     ax.axhline(0.5, color="gray", linestyle="--", alpha=0.3, label="Random baseline")
     ax.axhline(0.7, color="green", linestyle="--", alpha=0.3, label="Buen nivel (>0.7)")
     ax.legend(fontsize=10)
@@ -255,13 +293,35 @@ def plot_summary_comparison(s10, s11, outdir: Path):
     width = 0.35
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    bars1 = ax.bar(x - width / 2, v10_vals, width, label="v10", color="#2196F3", edgecolor="black", linewidth=0.5)
-    bars2 = ax.bar(x + width / 2, v11_vals, width, label="v11", color="#F44336", edgecolor="black", linewidth=0.5)
+    bars1 = ax.bar(
+        x - width / 2,
+        v10_vals,
+        width,
+        label="v10",
+        color="#2196F3",
+        edgecolor="black",
+        linewidth=0.5,
+    )
+    bars2 = ax.bar(
+        x + width / 2,
+        v11_vals,
+        width,
+        label="v11",
+        color="#F44336",
+        edgecolor="black",
+        linewidth=0.5,
+    )
 
     for bars in [bars1, bars2]:
         for bar in bars:
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
-                    f"{bar.get_height():.4f}", ha="center", va="bottom", fontsize=10)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.005,
+                f"{bar.get_height():.4f}",
+                ha="center",
+                va="bottom",
+                fontsize=10,
+            )
 
     ax.set_ylabel("Valor", fontsize=13)
     ax.set_title("Comparativa de Métricas Clave: v10 vs v11", fontsize=14, fontweight="bold")
@@ -282,9 +342,15 @@ def plot_summary_comparison(s10, s11, outdir: Path):
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description="Análisis comparativo v10 vs v11")
-    parser.add_argument("--v10", type=Path, default=V10_HISTORY, help="Path to v10 training_history.json")
-    parser.add_argument("--v11", type=Path, default=V11_HISTORY, help="Path to v11 training_history.json")
-    parser.add_argument("--outdir", type=Path, default=OUTPUT_DIR, help="Output directory for plots")
+    parser.add_argument(
+        "--v10", type=Path, default=V10_HISTORY, help="Path to v10 training_history.json"
+    )
+    parser.add_argument(
+        "--v11", type=Path, default=V11_HISTORY, help="Path to v11 training_history.json"
+    )
+    parser.add_argument(
+        "--outdir", type=Path, default=OUTPUT_DIR, help="Output directory for plots"
+    )
     args = parser.parse_args()
 
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -330,7 +396,9 @@ def main():
     if h10 and h11:
         best10_epoch = min(h10, key=lambda x: x["val_loss"])
         best11_epoch = min(h11, key=lambda x: x["val_loss"])
-        print(f"\nBest epoch v10: {best10_epoch['epoch']} (val_loss={best10_epoch['val_loss']:.5f})")
+        print(
+            f"\nBest epoch v10: {best10_epoch['epoch']} (val_loss={best10_epoch['val_loss']:.5f})"
+        )
         print(f"Best epoch v11: {best11_epoch['epoch']} (val_loss={best11_epoch['val_loss']:.5f})")
         print(f"Total epochs v10: {len(h10)}")
         print(f"Total epochs v11: {len(h11)}")
