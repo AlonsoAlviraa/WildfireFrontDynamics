@@ -18,7 +18,7 @@ from typing import Literal
 
 import numpy as np
 
-SchemaName = Literal["legacy17", "clean12", "physics14"]
+SchemaName = Literal["legacy17", "clean12", "physics14", "physics15"]
 
 # Per-channel (subtract, divide) for clean12 — maps roughly to ~[0, 1] or [-1, 1].
 CLEAN12_CHANNEL_STATS: list[tuple[float, float]] = [
@@ -107,12 +107,20 @@ PHYSICS14_NAMES: tuple[str, ...] = (
     "drought_or_ffmc",
 )
 
+# physics15 = physics14 + wind_upslope interaction (wind aligned with slope aspect).
+PHYSICS15_CHANNEL_STATS: list[tuple[float, float]] = PHYSICS14_CHANNEL_STATS + [
+    (0.0, 1.0),  # 14 wind_upslope in [-1,1] approx
+]
+PHYSICS15_NAMES: tuple[str, ...] = PHYSICS14_NAMES + ("wind_upslope",)
+
 
 def schema_channel_count(schema: SchemaName) -> int:
     if schema == "clean12":
         return 12
     if schema == "physics14":
         return 14
+    if schema == "physics15":
+        return 15
     if schema == "legacy17":
         return 17
     raise ValueError(f"Unknown schema: {schema}")
@@ -123,6 +131,8 @@ def schema_channel_names(schema: SchemaName) -> tuple[str, ...]:
         return CLEAN12_NAMES
     if schema == "physics14":
         return PHYSICS14_NAMES
+    if schema == "physics15":
+        return PHYSICS15_NAMES
     if schema == "legacy17":
         return tuple(f"legacy_{i}" for i in range(17))
     raise ValueError(f"Unknown schema: {schema}")
@@ -355,6 +365,45 @@ def build_physics14_channels(
     return normalize_with_stats(channels, PHYSICS14_CHANNEL_STATS)
 
 
+def build_physics15_channels(
+    elevation: np.ndarray,
+    wind_dir: np.ndarray,
+    wind_speed: np.ndarray,
+    max_temp: np.ndarray,
+    min_temp: np.ndarray,
+    humidity: np.ndarray,
+    precip: np.ndarray,
+    veg: np.ndarray,
+    erc: np.ndarray,
+    drought: np.ndarray | None = None,
+) -> np.ndarray:
+    """physics14 + wind_upslope = cos(wind_dir - aspect) * wind_speed_norm proxy."""
+    base = build_physics14_channels(
+        elevation,
+        wind_dir,
+        wind_speed,
+        max_temp,
+        min_temp,
+        humidity,
+        precip,
+        veg,
+        erc,
+        drought=drought,
+    )
+    # Recompute terrain aspect for interaction in raw space before norm of extra ch
+    _, slope, aspect = _terrain_from_elevation(elevation)
+    wind_rad = np.deg2rad(np.asarray(wind_dir, dtype=np.float32))
+    # Upslope factor: alignment of wind-from direction with downslope aspect
+    align = np.cos(wind_rad - aspect).astype(np.float32)
+    ws = np.asarray(wind_speed, dtype=np.float32)
+    ws_n = np.clip(ws / 20.0, 0.0, 2.0)
+    wind_upslope = align * ws_n * np.clip(slope / 1.5708, 0.0, 1.0)
+    out = np.zeros((15, base.shape[1], base.shape[2]), dtype=np.float32)
+    out[:14] = base
+    out[14] = np.clip(wind_upslope, -2.0, 2.0)
+    return out
+
+
 def build_channels_from_fields(
     schema: SchemaName,
     *,
@@ -369,6 +418,19 @@ def build_channels_from_fields(
     erc: np.ndarray,
     drought: np.ndarray | None = None,
 ) -> np.ndarray:
+    if schema == "physics15":
+        return build_physics15_channels(
+            elevation,
+            wind_dir,
+            wind_speed,
+            max_temp,
+            min_temp,
+            humidity,
+            precip,
+            veg,
+            erc,
+            drought=drought,
+        )
     if schema == "physics14":
         return build_physics14_channels(
             elevation,

@@ -24,7 +24,8 @@ Implemented in `wildfire_front/ml/feature_schema.py`.
 |--------|---|-----|
 | `legacy17` | 17 | v10–v22 checkpoints; includes constant padding |
 | `clean12` | 12 | elevation, terrain, mean temp, meteo, wind sin/cos, veg, erc |
-| **`physics14`** | 14 | **preferred for v25+**: tmin/tmax split + drought/FFMC slot |
+| **`physics14`** | 14 | tmin/tmax + drought/FFMC (v25: no NDWS leap) |
+| **`physics15`** | 15 | physics14 + **wind_upslope** interaction (queued v26) |
 
 ### physics14 channel order
 

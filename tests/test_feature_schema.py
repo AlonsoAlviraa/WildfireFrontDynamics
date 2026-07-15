@@ -100,6 +100,16 @@ def test_physics14_shape_and_names() -> None:
     assert not np.allclose(ch[4], ch[5])
 
 
+def test_physics15_adds_upslope_channel() -> None:
+    fields = _synthetic_fields()
+    fields["wind_dir"] = np.full((16, 16), 45.0, dtype=np.float32)
+    fields["wind_speed"] = np.full((16, 16), 8.0, dtype=np.float32)
+    ch = build_channels_from_fields("physics15", **fields)
+    assert ch.shape[0] == 15
+    assert schema_channel_count("physics15") == 15
+    assert np.isfinite(ch[14]).all()
+
+
 def test_physics14_drought_slot_varies_with_ffmc_inputs() -> None:
     fields_wet = _synthetic_fields()
     fields_dry = _synthetic_fields()

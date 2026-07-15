@@ -33,6 +33,14 @@
 - **G2 v21 on CLM test:** IoU 0.798, copy 0.642, **Δ +0.157 → GO** (protocol `clm_holdout_test_seed42_v1`)
 - **Signal analysis:** `outputs/ml_eval/feature_signal_report.json` (CLM train sample)
 
+### v28_clm_ft: Transfer rail — BEST CLM result so far
+- **Script:** `scripts/run_clm_finetune_v28.py` (local CPU, 12 ep early-stop @6)
+- **Single change:** fine-tune v21 on CLM `holdout_v1/train`; eval **test**
+- **Test IoU:** **0.838** | copy **0.642** | **Δ +0.196**
+- **Zero-shot v21 same test:** IoU 0.798 | **Δ +0.157**
+- **Beats zero-shot:** yes (+0.039 Δ, +0.040 IoU)
+- **G2:** PASS | **Verdict:** promote as **CLM specialist weights** (not NDWS production)
+
 ### v25_physics14: Features rail — NO PROMOTE vs v21
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v25-physics14` COMPLETE
 - **Single change:** `--schema physics14` (tmin/tmax + drought/FFMC), residual+delta, any_fire

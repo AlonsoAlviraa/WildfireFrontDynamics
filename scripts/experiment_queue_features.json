@@ -37,9 +37,25 @@
   {
     "id": "v28-clm-ft",
     "rail": "transfer",
-    "single_change": "warm-start best NDWS on CLM train; eval test",
-    "go_if": "G2 on test; no NDWS test collapse",
-    "depends_on": ["clm-holdout-baseline", "v25-physics14"],
-    "status": "queued"
+    "single_change": "warm-start v21 on CLM holdout train; eval test",
+    "go_if": "G2 on test; beats zero-shot delta",
+    "depends_on": ["clm-holdout-baseline"],
+    "status": "completed",
+    "verdict": "GO_BEST_TRANSFER",
+    "results": {
+      "test_iou": 0.838,
+      "copy_iou": 0.642,
+      "delta": 0.196,
+      "zero_shot_delta": 0.157,
+      "best_epoch": 6
+    }
+  },
+  {
+    "id": "v26-physics15",
+    "rail": "features",
+    "single_change": "physics15 = physics14 + wind_upslope",
+    "go_if": "beats v21 on NDWS any_fire full IoU and delta",
+    "status": "queued",
+    "note": "schema implemented; train when GPU available"
   }
 ]
