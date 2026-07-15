@@ -63,7 +63,18 @@ parser.add_argument(
     choices=["legacy17", "clean12"],
     default="clean12",
 )
-parser.add_argument("--clm-data-dir", type=str, default=None)
+parser.add_argument(
+    "--clm-data-dir",
+    type=str,
+    default="",
+    help="CLM patches path; empty = do not merge (clean12 channels ≠ legacy CLM 17ch).",
+)
+parser.add_argument(
+    "--merge-clm",
+    action="store_true",
+    default=False,
+    help="Force CLM merge (only if CLM patches match clean12 sequence shape).",
+)
 args, _ = parser.parse_known_args()
 
 
@@ -110,8 +121,14 @@ from kaggle_job.kaggle_common import (  # noqa: E402
 
 verify_residual_imports(REPO_DIR)
 
-if args.clm_data_dir is None:
-    args.clm_data_dir = detect_clm_dataset()
+# clean12 (12ch) is incompatible with existing CLM patches (17ch legacy).
+# Only merge when explicitly requested AND a path is provided.
+if args.merge_clm:
+    if not args.clm_data_dir:
+        args.clm_data_dir = detect_clm_dataset() or ""
+else:
+    args.clm_data_dir = None
+    print("[v23] CLM merge disabled (schema clean12 ≠ legacy CLM 17-channel patches)")
 
 if args.output_dir is None:
     args.output_dir = default_output_dir()
@@ -127,6 +144,9 @@ if not args.smoke_test:
 from wildfire_front.ml.unet_train import config_from_namespace, run_training  # noqa: E402
 
 config = config_from_namespace(args)
+# Empty string from argparse must not enable merge.
+if not config.clm_data_dir:
+    config.clm_data_dir = None
 summary = run_training(config)
 print("\n=== U-NET v23 CLEAN12 COMPLETED ===")
 print(f"  Model IoU (full): {summary['test_iou']:.4f}")

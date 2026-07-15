@@ -222,12 +222,31 @@ def merge_clm_patches(
     *,
     splits: tuple[str, ...] = ("train", "val", "test"),
 ) -> dict[str, int]:
-    """Copy CLM NPZ patches into NDWS split directories for mixed training."""
+    """Copy CLM NPZ patches into NDWS split directories for mixed training.
+
+    Only merges patches whose ``sequence`` tensor shape matches an existing
+    NDWS sample (channel schema must agree — e.g. clean12 vs legacy17).
+    """
     import shutil
 
     clm_root = Path(clm_root)
     ndws_root = Path(ndws_root)
     merged: dict[str, int] = {}
+
+    ref_shape: tuple[int, ...] | None = None
+    for split in splits:
+        sample_dir = ndws_root / split
+        if not sample_dir.is_dir():
+            continue
+        for npz in sample_dir.glob("*.npz"):
+            with np.load(npz) as data:
+                ref_shape = tuple(data["sequence"].shape)
+            break
+        if ref_shape is not None:
+            break
+    if ref_shape is None:
+        print("[clm] skip merge: no NDWS reference patches found")
+        return merged
 
     for split in splits:
         src = clm_root / split
@@ -236,14 +255,29 @@ def merge_clm_patches(
         dst = ndws_root / split
         dst.mkdir(parents=True, exist_ok=True)
         n = 0
+        skipped = 0
         for npz in src.glob("*.npz"):
             target = dst / npz.name
-            if not target.exists():
-                shutil.copy2(npz, target)
-                n += 1
+            if target.exists():
+                continue
+            try:
+                with np.load(npz) as data:
+                    shape = tuple(data["sequence"].shape)
+            except Exception:
+                skipped += 1
+                continue
+            if shape != ref_shape:
+                skipped += 1
+                continue
+            shutil.copy2(npz, target)
+            n += 1
         merged[split] = n
         if n:
             print(f"[clm] merged {n} patches into {dst}")
+        if skipped:
+            print(
+                f"[clm] skipped {skipped} patches (shape != {ref_shape}) for {split}"
+            )
 
     return merged
 
