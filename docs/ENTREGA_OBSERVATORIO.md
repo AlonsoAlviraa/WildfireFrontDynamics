@@ -1,14 +1,14 @@
-# Entrega Observatorio — v3 estructural
+# Entrega Observatorio — v4 (loop execution)
 
 > **Abrir:** `outputs/observatorio/index.html`  
-> **Motor:** `front_dynamics_v1` (coregistro + ROS multi-estimador)  
-> **Fecha:** 2026-07-15
+> **Motor:** `front_dynamics_v1` + export operador  
+> **Fecha:** 2026-07-15 · sesión loop ~2h  
 
 ---
 
 ## El salto (una frase)
 
-Pasamos de **máscaras ruidosas con Vp inventada** a un **motor de dinámica de frente** que fusiona tres estimadores físicos y, en Tobarra, recupera **ROS ≈ 8.2 m/min frente a INFOCAM 7** (ratio **1.18**).
+Tobarra queda en **ROS 7.21 m/min vs INFOCAM 7 (ratio 1.03)**, con producto operador (capa + timeline + brief) y estabilidad temporal **2/3 ventanas** en banda [0.5, 2].
 
 ---
 
@@ -18,7 +18,8 @@ Pasamos de **máscaras ruidosas con Vp inventada** a un **motor de dinámica de 
 |------------|----------|------------------|--------------|-------|--------|
 | v1 | Pack crudo | **0.78** | ratio 0.11 | — | basura útil solo como demo de archivos |
 | v2 | Máscara limpia + filtro físico | **4.31** | ratio 0.62 | A | útil con cautela |
-| **v3** | **Motor multi-estimador** | **8.23** | ratio **1.18** | **A** | **mismo orden + multi-método** |
+| v3 | Motor multi-estimador | **8.23** | ratio **1.18** | A | multi-método |
+| **v4** | **+ ventanas + GIS operador** | **7.21** | ratio **1.03** | **A** | **casi calca el parte** |
 
 Eso es el salto estructural: no un hiperparámetro más, sino **otro producto científico**.
 
@@ -52,13 +53,23 @@ Coregistro **no** se aplica a ciegas: solo si el IoU mejora ≥0.05 y ≥0.15 ab
 
 ---
 
-## Resultados v3 (3 incendios)
+## Resultados v4 (3 incendios)
 
-| Incendio | Grado | ROS primaria | Métodos | vs INFOCAM | Para ellos |
-|----------|-------|--------------|---------|------------|------------|
-| **Tobarra** | **A** | **8.23 m/min** | area + radius + normal | **ratio 1.18** | Usable como orientación con ancla |
-| Cardoso | B | ~30 m/min | area | n/d | Orientativo; sin ancla local |
-| Hellín | B | ~35 m/min | radius | n/d | Orientativo; muestra corta |
+| Incendio | Grado | ROS primaria | Métodos | vs INFOCAM | Producto operador |
+|----------|-------|--------------|---------|------------|-------------------|
+| **Tobarra** | **A** | **7.21 m/min** | area + normal | **ratio 1.03** | brief + main_front + timeline |
+| Cardoso | B | ~28 m/min | area | n/d | ídem |
+| Hellín | B | ~30 m/min | area | n/d | ídem |
+
+### Estabilidad temporal Tobarra (O3)
+
+| Ventana | ROS | Ratio vs 7 | Banda [0.5, 2]? |
+|---------|-----|------------|-----------------|
+| early | 14.0 | 2.01 | FAIL (fase de crecimiento / máscara) |
+| mid | 3.52 | 0.50 | PASS |
+| late | 8.71 | 1.24 | PASS |
+
+**Veredicto O3:** GO_PARTIAL (2/3).
 
 **Mensaje honesto:** Tobarra es el caso ancla. Cardoso/Hellín demuestran el motor (área/radio) pero **sin parte INFOCAM no se validan** — grado B.
 

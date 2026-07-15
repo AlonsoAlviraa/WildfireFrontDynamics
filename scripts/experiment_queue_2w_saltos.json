@@ -5,7 +5,15 @@
     "track": "observatorio",
     "hypothesis": "H3 — ROS Tobarra estable en 3 ventanas temporales",
     "leap_ids": ["O3"],
-    "status": "queued",
+    "status": "completed",
+    "verdict": "GO_PARTIAL",
+    "results": {
+      "early_ratio": 2.007,
+      "mid_ratio": 0.503,
+      "late_ratio": 1.244,
+      "n_pass": 2,
+      "n_ok": 3
+    },
     "primary_metric": "ratio_infocam per window in [0.5, 2.0]",
     "go_if": "3/3 windows pass OR 2/3 pass + 1 justified abstention",
     "depends_on": []
@@ -16,7 +24,12 @@
     "track": "observatorio",
     "hypothesis": "H4 — producto decisor 1 capa + timeline + brief",
     "leap_ids": ["O4"],
-    "status": "queued",
+    "status": "completed",
+    "verdict": "GO",
+    "results": {
+      "artifacts": ["main_front.geojson", "ros_timeline.csv", "brief_operativo.md"],
+      "fires": 3
+    },
     "primary_metric": "human_5min_checklist",
     "go_if": "main_front.gpkg + ros_timeline.csv + brief without opening JSON",
     "depends_on": ["W1-T-windows"]
@@ -86,7 +99,15 @@
     "track": "ml",
     "hypothesis": "H7 — honest CLM transfer measurement",
     "leap_ids": ["M2"],
-    "status": "queued",
+    "status": "completed",
+    "verdict": "GO_TRAIN_SPLIT_ONLY",
+    "results": {
+      "model_iou": 0.791,
+      "copy_iou": 0.498,
+      "delta": 0.293,
+      "split": "train",
+      "caveat": "no test/val CLM directory; not pure holdout"
+    },
     "primary_metric": "delta_copy on CLM holdout OR explicit NO-GO",
     "go_if": "delta_copy > 0 OR documented NO-GO with numbers",
     "depends_on": ["W2-ml-v24"]

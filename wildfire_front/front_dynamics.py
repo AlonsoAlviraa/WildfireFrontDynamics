@@ -334,6 +334,12 @@ def _fuse_ros(
     if not vals:
         return None, "abstained", "C"
     fused = float(np.median(vals))
+    # High disagreement → conservative (lower quartile of candidates)
+    # Avoids early-window mask inflation dominating the headline ROS.
+    if len(vals) >= 2 and max(vals) > max(min(vals), 1e-6) * 2.5:
+        fused = float(np.percentile(vals, 35))
+        method = min(candidates, key=lambda t: abs(t[1] - fused))[0]
+        return fused, f"fused_conservative:{method}", "B"
     # Method label = closest candidate
     method = min(candidates, key=lambda t: abs(t[1] - fused))[0]
     grade = "A" if coreg_shift_m < 8 and len(candidates) >= 2 else "B"

@@ -148,6 +148,18 @@ def run_geotiff_ingest(
             encoding="utf-8",
         )
         write_operational_report_html(ops, event_id, output / "operational_report.html")
+        # Operator GIS + brief (O4)
+        try:
+            from .observatory_export import export_operator_bundle
+
+            export_operator_bundle(
+                list(result.observations),
+                ops,
+                output,
+                event_id=event_id,
+            )
+        except Exception as export_exc:  # noqa: BLE001 — pack must still succeed
+            summary["operator_export_error"] = str(export_exc)
         summary["operational"] = {
             "quality_grade": ops.get("quality_grade"),
             "quality_label_es": ops.get("quality_label_es"),
