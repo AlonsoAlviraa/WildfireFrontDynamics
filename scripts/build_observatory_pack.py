@@ -94,6 +94,14 @@ DEFAULT_FIRES: list[FireSpec] = [
         sensor_id="lwir_drone",
         estimated_error_m=2.0,
     ),
+    FireSpec(
+        fire_id="la_estrella_acom1_2024",
+        images=ROOT / "artifacts" / "la_estrella_acom1_2024_reprojected_lwir",
+        masks=ROOT / "artifacts" / "la_estrella_acom1_2024_lwir_masks",
+        sensor_id="lwir_drone",
+        estimated_error_m=2.0,
+        notes="La Estrella ACOM1 — sin ancla INFOCAM local en repo",
+    ),
 ]
 
 REQUIRED_ARTIFACTS = (

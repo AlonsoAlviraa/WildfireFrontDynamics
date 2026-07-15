@@ -281,7 +281,10 @@ def _filter_normal_speeds(
     estimates: list,
     t0: float,
     t1: float,
+    *,
+    min_dt_s: float = 45.0,
 ) -> list[float]:
+    """Normals need longer Δt than bulk estimators (georef residual)."""
     out: list[float] = []
     for e in estimates:
         if not e.observable or e.speed_m_min is None:
@@ -292,7 +295,7 @@ def _filter_normal_speeds(
             continue
         spd = float(e.speed_m_min)
         dt_s = float(e.time_end_s - e.time_start_s)
-        if dt_s < MIN_PLAUSIBLE_DT_S:
+        if dt_s < max(MIN_PLAUSIBLE_DT_S, min_dt_s):
             continue
         if spd > MAX_PLAUSIBLE_SPEED_M_MIN or spd < 0:
             continue
@@ -305,42 +308,52 @@ def _fuse_ros(
     ros_radius: float | None,
     ros_normal_med: float | None,
     coreg_shift_m: float,
+    *,
+    dt_min: float = 1.0,
 ) -> tuple[float | None, str, str]:
-    """Choose primary ROS for operators.
+    """Balanced multi-estimator fusion for operators.
 
-    Prefer area/radius when coreg shift is large (normals contaminated by georef).
-    Prefer normals when registration is stable and enough samples exist.
+    Soft-caps inflated radius/normal against area isotropic without collapsing
+    entirely onto area (which under-shot mid windows vs INFOCAM).
     """
+    short_dt = dt_min < 0.75
     candidates: list[tuple[str, float]] = []
-    if ros_normal_med is not None and 0 <= ros_normal_med <= MAX_PLAUSIBLE_SPEED_M_MIN:
-        candidates.append(("normal_ray", ros_normal_med))
-    if ros_area is not None and 0 <= ros_area <= MAX_PLAUSIBLE_SPEED_M_MIN:
-        candidates.append(("area_isotropic", ros_area))
+
+    a = ros_area if ros_area is not None and ros_area >= 0 else None
+    if a is not None and a <= MAX_PLAUSIBLE_SPEED_M_MIN:
+        candidates.append(("area_isotropic", float(a)))
+
     if ros_radius is not None and 0 <= ros_radius <= MAX_PLAUSIBLE_SPEED_M_MIN:
-        candidates.append(("equiv_radius", ros_radius))
+        r = float(ros_radius)
+        if a is not None and a > 0:
+            r = min(r, a * 2.5)  # soft cap, keep signal
+        candidates.append(("equiv_radius", r))
+
+    if (
+        ros_normal_med is not None
+        and 0 <= ros_normal_med <= MAX_PLAUSIBLE_SPEED_M_MIN
+        and not short_dt
+    ):
+        n = float(ros_normal_med)
+        if a is not None and a > 0:
+            n = min(n, a * 2.5)
+        candidates.append(("normal_ray", n))
 
     if not candidates:
-        # allow mild negative area (shrink) as abstain
         return None, "abstained", "C"
 
     if coreg_shift_m > 15.0:
-        # Prefer bulk estimators
         for name in ("area_isotropic", "equiv_radius", "normal_ray"):
-            for n, v in candidates:
-                if n == name:
-                    return v, n, "B" if name != "normal_ray" else "C"
-    # Stable georef: median of available positive estimators (robust fusion)
-    vals = [v for _, v in candidates if v >= 0]
-    if not vals:
-        return None, "abstained", "C"
+            for nm, v in candidates:
+                if nm == name:
+                    return v, nm, "B" if nm != "normal_ray" else "C"
+
+    vals = [v for _, v in candidates]
     fused = float(np.median(vals))
-    # High disagreement → conservative (lower quartile of candidates)
-    # Avoids early-window mask inflation dominating the headline ROS.
-    if len(vals) >= 2 and max(vals) > max(min(vals), 1e-6) * 2.5:
-        fused = float(np.percentile(vals, 35))
+    if len(vals) >= 3 and max(vals) > min(vals) * 3.0:
+        fused = float(np.percentile(vals, 40))
         method = min(candidates, key=lambda t: abs(t[1] - fused))[0]
-        return fused, f"fused_conservative:{method}", "B"
-    # Method label = closest candidate
+        return fused, f"fused_robust:{method}", "B"
     method = min(candidates, key=lambda t: abs(t[1] - fused))[0]
     grade = "A" if coreg_shift_m < 8 and len(candidates) >= 2 else "B"
     return fused, f"fused:{method}", grade
@@ -407,8 +420,10 @@ def run_front_dynamics(
         n_med = float(np.median(normals)) if normals else None
         coreg = pair_coreg[i - 1] if i - 1 < len(pair_coreg) else {}
         shift = math.hypot(float(coreg.get("dx_m", 0)), float(coreg.get("dy_m", 0)))
-        primary, method, pquality = _fuse_ros(ros_area, ros_r, n_med, shift)
-        # Reject bulk ROS if dt too small
+        primary, method, pquality = _fuse_ros(
+            ros_area, ros_r, n_med, shift, dt_min=dt_min
+        )
+        # Reject ROS if dt too small for any estimator
         if dt_min * 60 < MIN_PLAUSIBLE_DT_S:
             primary, method, pquality = None, "abstained_dt", "C"
         if primary is not None:

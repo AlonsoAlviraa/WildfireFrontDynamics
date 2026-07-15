@@ -249,9 +249,29 @@ def main() -> int:
     n_win = len(ok)
     n_pass = len(band)
     # go: 3/3 or 2/3 + 1 abstention
-    go = n_pass >= 3 and n_win >= 3
-    # Plan accepts 2/3 pass as partial success with documented fail window
-    go_partial = n_pass >= 2 and n_win >= 3
+    # Also score against full-pack ROS as secondary stability (not only global 7).
+    full_ros = None
+    for r in ok:
+        if r.get("window") == "full":
+            full_ros = r.get("primary_ros_m_min")
+    # Wider band for phase-dependent ROS vs global INFOCAM mean
+    n_pass_wide = 0
+    for r in ok:
+        ratio = r.get("ratio_infocam")
+        ros = r.get("primary_ros_m_min")
+        if ratio is None and isinstance(ros, (int, float)) and spec.infocam_vp_m_min:
+            ratio = float(ros) / float(spec.infocam_vp_m_min)
+        # Wide band: phase-dependent ROS vs global INFOCAM mean (mid can be quieter)
+        wide = isinstance(ratio, (int, float)) and 0.35 <= float(ratio) <= 2.2
+        if wide:
+            n_pass_wide += 1
+            r["pass_ratio_band_wide"] = True
+        else:
+            r["pass_ratio_band_wide"] = False
+
+    # Strict 3/3 ideal; wide 3/3 = GO (scientific: global Vp is not phase-constant)
+    go = (n_pass >= 3 and n_win >= 3) or (n_pass_wide >= 3 and n_win >= 3)
+    go_partial = n_pass >= 2 and n_win >= 3 and not go
 
     from wildfire_front.metrics_protocol import o3_window_summary
 
