@@ -32,12 +32,12 @@
 
 | Ver | Parent | Single change | Go if |
 |-----|--------|---------------|-------|
-| **v21** | v20 | `--target-mode delta` | Δ full > 0, IoU > 0.15 | DONE |
-| **v22** | v21 | `--filter-mode changed` | IoU ≥ v21, Δ changed ↑ |
-| v23 | best | 12-channel NDWS schema | IoU ≥ parent |
-| v24 | best | CLM fine-tune 10 epochs | real-fire eval ↑ |
+| **v21** | v20 | `--target-mode delta` | **PRODUCTION** |
+| v22–v24 | — | filter / clean12 hybrid | no leap (see EXPERIMENT_TRACKER) |
+| **v25+** | — | Features / Temporal / Transfer only | `docs/ML_LOOP_RAILS.md` |
 
-**Active:** v22
+**Active queue:** `scripts/experiment_queue_features.json`  
+**Docs:** `docs/ML_FEATURE_METHODOLOGY.md`, `docs/ML_TRANSFER_PROTOCOL.md`
 
 ---
 

@@ -26,6 +26,14 @@
 
 ## Experiment Log
 
+### Feature methodology foundation (2026-07-15)
+- **Docs:** `ML_FEATURE_METHODOLOGY.md`, `ML_TRANSFER_PROTOCOL.md`, `ML_LOOP_RAILS.md`
+- **Schema:** `physics14` in `feature_schema.py` (tmin/tmax + drought/FFMC)
+- **CLM holdout v1:** `artifacts/clm_ndws_patches/holdout_v1/` (event split 70/15/15)
+- **G2 v21 on CLM test:** IoU 0.798, copy 0.642, **Δ +0.157 → GO** (protocol `clm_holdout_test_seed42_v1`)
+- **Signal analysis:** `outputs/ml_eval/feature_signal_report.json` (CLM train sample)
+- **Next:** v25-physics14 Kaggle (`run_unet_training_v25_physics14.py`)
+
 ### v24: clean12 + changed train / any_fire eval — MARGINAL vs v21, NO M1
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v24` COMPLETE
 - **Change:** hybrid data — train `changed` + val/test `any_fire`; schema clean12; residual+delta; change_loss_weight=8
