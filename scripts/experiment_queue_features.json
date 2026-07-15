@@ -5,7 +5,18 @@
     "single_change": "schema=physics14 T=1 any_fire residual delta",
     "go_if": "test_iou >= 0.226 AND improvement_vs_copy_iou >= 0.076",
     "leap": "G1 approach",
-    "status": "queued"
+    "status": "completed",
+    "verdict": "NO_PROMOTE",
+    "results": {"test_iou": 0.224, "delta": 0.074, "vs_v21": "slightly_worse"}
+  },
+  {
+    "id": "clm-holdout-baseline",
+    "rail": "transfer",
+    "single_change": "eval v21 on CLM test holdout only",
+    "go_if": "report with delta on test; GO if delta>0 else NO-GO",
+    "status": "completed",
+    "verdict": "GO",
+    "results": {"model_iou": 0.798, "copy_iou": 0.642, "delta": 0.157, "protocol": "clm_holdout_test_seed42_v1"}
   },
   {
     "id": "v26-interactions",
@@ -21,13 +32,6 @@
     "single_change": "sequence_length=2 or 3 with best schema",
     "go_if": "IoU >= 0.25 AND delta >= 0.09 OR skip if no real temporal",
     "depends_on": ["v25-physics14"],
-    "status": "queued"
-  },
-  {
-    "id": "clm-holdout-baseline",
-    "rail": "transfer",
-    "single_change": "eval v21 on CLM test holdout only",
-    "go_if": "report with delta on test; GO if delta>0 else NO-GO",
     "status": "queued"
   },
   {

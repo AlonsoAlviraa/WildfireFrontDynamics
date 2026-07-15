@@ -32,7 +32,13 @@
 - **CLM holdout v1:** `artifacts/clm_ndws_patches/holdout_v1/` (event split 70/15/15)
 - **G2 v21 on CLM test:** IoU 0.798, copy 0.642, **Δ +0.157 → GO** (protocol `clm_holdout_test_seed42_v1`)
 - **Signal analysis:** `outputs/ml_eval/feature_signal_report.json` (CLM train sample)
-- **Next:** v25-physics14 Kaggle (`run_unet_training_v25_physics14.py`)
+
+### v25_physics14: Features rail — NO PROMOTE vs v21
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v25-physics14` COMPLETE
+- **Single change:** `--schema physics14` (tmin/tmax + drought/FFMC), residual+delta, any_fire
+- **IoU full:** 0.224 | **Δ full:** +0.074 | copy 0.150 | best_epoch 18 | test 979
+- **vs v21:** IoU −0.002, Δ −0.002 — does **not** beat production
+- **G1:** FAIL | **Verdict:** physics14 alone is not the leap; try interactions / temporal / keep v21
 
 ### v24: clean12 + changed train / any_fire eval — MARGINAL vs v21, NO M1
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v24` COMPLETE
