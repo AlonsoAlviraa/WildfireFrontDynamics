@@ -1,29 +1,24 @@
 {
   "version": "v28_clm_ft",
-  "domain": "CLM_Spain_holdout",
-  "architecture": "ResidualWildfireUNetSmall",
+  "architecture": "residual",
   "target_mode": "delta",
   "in_channels": 18,
+  "sequence_timesteps": 1,
+  "sequence_channels": 17,
+  "patch_size": 64,
+  "threshold": 0.5,
+  "filter_mode": "any_fire",
+  "domain": "CLM_Spain_holdout",
+  "weights_file": "weights_v28_clm_ft.pt",
+  "parent_ndws": "v21",
   "protocol": "clm_holdout_test_seed42_v1",
   "metrics": {
-    "version": "v28_clm_ft",
-    "rail": "transfer",
-    "single_change": "fine-tune v21 on CLM holdout train; eval test",
-    "init_weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\kaggle_outputs_v21\\weights_pretrained_best.pt",
-    "data_dir": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\artifacts\\clm_ndws_patches\\holdout_v1",
-    "test_iou": 0.8382488162450353,
-    "copy_baseline_iou": 0.6418021703446877,
-    "improvement_vs_copy_iou": 0.19644664590034766,
-    "improvement_vs_copy_iou_changed": 0.6146594635987254,
-    "best_epoch": 6,
-    "zero_shot_v21": {
-      "model_iou": 0.7983492684117911,
-      "delta": 0.15654709806710343,
-      "protocol": "clm_holdout_test_seed42_v1"
-    },
-    "g2": true,
-    "beats_zero_shot": true
+    "test_iou": 0.8382,
+    "copy_baseline_iou": 0.6418,
+    "improvement_vs_copy_iou": 0.1964,
+    "improvement_vs_copy_iou_changed": 0.6147,
+    "zero_shot_v21_iou": 0.7983,
+    "zero_shot_v21_delta": 0.1565
   },
-  "weights": "weights_v28_clm_ft.pt",
-  "parent_ndws": "v21"
+  "notes": "Fine-tuned from v21 on CLM holdout train; report G2 on holdout test only."
 }

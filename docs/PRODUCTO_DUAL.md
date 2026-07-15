@@ -1,0 +1,54 @@
+# Producto dual — NDWS v21 + CLM v28
+
+## Qué hay
+
+| Producto | ID CLI | Dominio | Métricas clave |
+|----------|--------|---------|----------------|
+| **NDWS global** | `ndws_v21` | Next-day patches Google NDWS | IoU **0.226**, Δ copy **+0.076** |
+| **CLM España** | `clm_v28` | Holdout incendios CLM | IoU **0.838**, Δ copy **+0.196** (test holdout) |
+| **Ops frente** | (no ML) | Secuencias LWIR reales | ROS multi-estimador (`front_dynamics_v1`) |
+
+**No mezclar:** ROS de dron ≠ predicción NDWS ≠ specialist CLM.
+
+Smoke local (2026-07-15): `clm_v28` en 20 parches holdout test → mean IoU **0.713**, Δ copy **+0.160**.
+
+## CLI
+
+```bash
+# Inventario + readiness (manifest + pesos)
+python scripts/predict_spread.py --list-products
+
+# Asegurar pesos en models/
+python scripts/install_dual_weights.py
+
+# NDWS (default)
+python scripts/predict_spread.py --product ndws_v21 --npz path/patch.npz --output pred.npz
+
+# CLM specialist (eval si hay target_fire)
+python scripts/predict_spread.py --product clm_v28 \
+  --npz artifacts/clm_ndws_patches/holdout_v1/test \
+  --eval --max-patches 50
+```
+
+## Rutas
+
+| | NDWS | CLM |
+|--|------|-----|
+| Manifest | `models/production/manifest.json` | `models/clm_specialist/manifest.json` |
+| Pesos | `models/production/weights_v21_best.pt` | `models/clm_specialist/weights_v28_clm_ft.pt` |
+| Catálogo | `models/catalog.json` | |
+| Código catálogo | `wildfire_front/ml/product_catalog.py` | |
+
+## Cuándo usar cada uno
+
+- **ndws_v21:** investigación / parches NDWS-like globales (protocolo any_fire legacy17).
+- **clm_v28:** parches schema legacy17 de incendios CLM (mismo preproceso holdout_v1).
+- **front_dynamics / observatorio packs:** velocidades y frentes desde GeoTIFF LWIR (ops). **No es un producto ML.**
+
+## Gates
+
+| Gate | Producto | Estado |
+|------|----------|--------|
+| G0 | ndws_v21 | GO (baseline) |
+| G1 | NDWS ≥0.25 / +0.09 | Pelea con physics15 (v26) — no promocionar sin métrica |
+| G2 | clm_v28 holdout test | **GO** (Δ +0.196) |

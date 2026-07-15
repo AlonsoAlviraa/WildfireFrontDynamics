@@ -1,0 +1,54 @@
+{
+  "protocol": "infocam_anchors_v1",
+  "notes": "Only values with explicit source are used for O1/O5. Placeholders marked pending_external are NOT valid for GO.",
+  "anchors": {
+    "tobarra_20240802": {
+      "fire_id": "tobarra_20240802",
+      "name": "Tobarra (AB) 2024-08-02",
+      "vp_m_min": 7.0,
+      "area_ha": 39.0,
+      "intensity": "Media-Alta",
+      "behavior": "Contraviento",
+      "source": "INFOCAM 2024 parte operativo",
+      "status": "confirmed",
+      "detection": "2024-08-02T16:42:00"
+    },
+    "cardoso_2025": {
+      "fire_id": "cardoso_2025",
+      "name": "Cardoso (GU) 2025",
+      "vp_m_min": null,
+      "area_ha": null,
+      "source": null,
+      "status": "pending_external",
+      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+    },
+    "hellin_2024": {
+      "fire_id": "hellin_2024",
+      "name": "Hellín 2024",
+      "vp_m_min": null,
+      "area_ha": null,
+      "source": null,
+      "status": "pending_external",
+      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+    },
+    "la_estrella_acom1_2024": {
+      "fire_id": "la_estrella_acom1_2024",
+      "name": "La Estrella ACOM1 2024",
+      "vp_m_min": null,
+      "area_ha": null,
+      "source": null,
+      "status": "pending_external",
+      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+    },
+    "retuerta_2025": {
+      "fire_id": "retuerta_2025",
+      "name": "Retuerta 2025",
+      "vp_m_min": null,
+      "area_ha": null,
+      "source": null,
+      "status": "pending_external"
+    }
+  },
+  "ratio_band": [0.5, 2.0],
+  "grade_a_requires_confirmed_anchor": true
+}

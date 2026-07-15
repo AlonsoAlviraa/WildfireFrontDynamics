@@ -111,3 +111,17 @@ Por incendio, leer en este orden:
 3. Feedback de si el informe operativo es el formato que usan.
 
 Con eso el grado A de Tobarra puede volverse **protocolo de validación multi-IF**, no un caso afortunado.
+
+---
+
+## Prioridad stack (2026-07-15) — tooling cerrado
+
+| # | Acción | Estado | Evidencia |
+|---|--------|--------|-----------|
+| 1 | Producto dual NDWS v21 + CLM v28 | **DONE** | `docs/PRODUCTO_DUAL.md`, `models/catalog.json`, `predict_spread.py --list-products` |
+| 2 | Anclas INFOCAM multi-A O1/O5 | **TOOLING DONE / DATA BLOCKED** | `data/infocam_anchors.json` + `anchor_scorecard.json` → O1 **PARTIAL**, O5 **NO_GO** |
+| 3 | Perímetro oficial Hausdorff O2 | **PROXY DONE / OFFICIAL BLOCKED** | `eval_perimeter_hausdorff.py` temporal 5 IF; official sin GeoJSON → **BLOCKED** |
+| 4 | ML physics15 pelea G1 | **QUEUED** | `run_unet_training_v26_physics15.py` + kernel metadata v26 |
+
+Scorecard unificado: `outputs/observatorio/priority_stack_scorecard.json`  
+Solicitud de datos: `docs/SOLICITUD_DATOS_OBSERVATORIO.md`

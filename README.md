@@ -68,6 +68,21 @@ pip install -e ".[all]"
 
 ## Usage
 
+### Dual ML products (NDWS + CLM)
+
+| Product | CLI id | When |
+|---------|--------|------|
+| NDWS global v21 | `ndws_v21` | Next-day spread on NDWS-like patches |
+| CLM Spain specialist v28 | `clm_v28` | CLM holdout-style Spain patches |
+
+```bash
+python scripts/install_dual_weights.py
+python scripts/predict_spread.py --list-products
+python scripts/predict_spread.py --product clm_v28 --npz path/to/patches --eval
+```
+
+See `docs/PRODUCTO_DUAL.md`. Ops ROS (drone fronts) is **not** ML — use `scripts/build_observatory_pack.py`.
+
 ### Synthetic Demo
 
 ```bash

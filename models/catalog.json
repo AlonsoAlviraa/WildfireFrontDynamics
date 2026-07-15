@@ -1,0 +1,25 @@
+{
+  "products": {
+    "ndws_v21": {
+      "id": "ndws_v21",
+      "label": "NDWS global next-day spread",
+      "domain": "NDWS_global",
+      "manifest": "models/production/manifest.json",
+      "weights": "models/production/weights_v21_best.pt",
+      "use_when": "Next-day fire mask prediction on NDWS-like 64x64 patches (legacy17+prev).",
+      "not_for": "Operational Spain drone ROS; emergency dispatch alone."
+    },
+    "clm_v28": {
+      "id": "clm_v28",
+      "label": "CLM Spain specialist (holdout-tuned)",
+      "domain": "CLM_Spain_holdout",
+      "manifest": "models/clm_specialist/manifest.json",
+      "weights": "models/clm_specialist/weights_v28_clm_ft.pt",
+      "use_when": "Patches built like CLM/legacy17 Spain fires; transfer-tuned.",
+      "not_for": "Raw NDWS paper protocol without re-export; ops ROS (use front_dynamics)."
+    }
+  },
+  "default_product": "ndws_v21",
+  "ops_product": "front_dynamics_v1",
+  "ops_note": "Observed front ROS is not either ML product; use scripts/build_observatory_pack.py"
+}
