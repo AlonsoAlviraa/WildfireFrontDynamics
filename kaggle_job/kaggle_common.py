@@ -103,12 +103,19 @@ def run_preprocess_ndws(
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            tail = (result.stderr or result.stdout)[-800:]
+            tail = ((result.stderr or "") + "\n" + (result.stdout or ""))[-1200:]
             raise RuntimeError(f"preprocess_ndws.py failed for {split}:\n{tail}")
-        count = len(list(out_split.glob("*.npz")))
+        count = len(list(out_split.glob("*.npz"))) if out_split.exists() else 0
         log(f"  {split}: {count} patches")
-        if count == 0 and result.stdout:
-            log(f"  [preprocess stdout tail]\n{(result.stdout or '')[-600:]}")
+        if count == 0:
+            # Surface why zero patches (path bugs, key mapping, filter) — never silent.
+            log(f"  [preprocess stdout tail]\n{(result.stdout or '')[-800:]}")
+            if result.stderr:
+                log(f"  [preprocess stderr tail]\n{(result.stderr or '')[-400:]}")
+            raise RuntimeError(
+                f"preprocess_ndws.py wrote 0 patches for split={split} "
+                f"output_root={data_root} filter={filter_mode} schema={schema}"
+            )
 
     total = sum(
         len(list((data_root / split).glob("*.npz")))
