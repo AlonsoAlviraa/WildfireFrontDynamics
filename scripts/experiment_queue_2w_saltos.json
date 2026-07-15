@@ -89,11 +89,20 @@
     "track": "ml",
     "hypothesis": "H6 — clean12 + changed train beats v21 on full any_fire",
     "leap_ids": ["M1"],
-    "status": "queued",
+    "status": "completed",
+    "verdict": "MARGINAL_NO_M1",
+    "results": {
+      "test_iou": 0.230,
+      "improvement_vs_copy_iou": 0.080,
+      "improvement_vs_copy_iou_changed": 0.072,
+      "best_epoch": 18,
+      "vs_v21": "iou+0.004 delta+0.004",
+      "m1_gate": false
+    },
     "primary_metric": "test IoU full + improvement_vs_copy_iou",
     "go_if": "IoU >= 0.25 AND delta_copy >= 0.09 (cross-protocol)",
     "depends_on": [],
-    "note": "Do not block observatorio track; run parallel after S1 gate"
+    "note": "Kernel COMPLETE; keep v21 production"
   },
   {
     "id": "W2-ml-clm",

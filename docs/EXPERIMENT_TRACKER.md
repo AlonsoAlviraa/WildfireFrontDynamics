@@ -26,6 +26,15 @@
 
 ## Experiment Log
 
+### v24: clean12 + changed train / any_fire eval — MARGINAL vs v21, NO M1
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v24` COMPLETE
+- **Change:** hybrid data — train `changed` + val/test `any_fire`; schema clean12; residual+delta; change_loss_weight=8
+- **IoU full:** **0.230** | **Δ full:** **+0.080** | **Δ changed:** +0.072
+- **copy:** 0.150 | **best_epoch:** 18 | train 11964 / test 979
+- **vs v21:** IoU +0.004, Δ +0.004 (slightly better)
+- **M1 gate (IoU≥0.25, Δ≥0.09):** **FAIL** (not a leap)
+- **Verdict:** Optional experimental checkpoint; **keep v21 production**. No promote.
+
 ### v23_clean12: Clean 12-channel schema — NO PROMOTE
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v23-clean12` (v2)
 - **Parent:** v21 | **Change:** `--schema clean12` (elevation, wind sin/cos, no constant channels); **no CLM merge** (17ch mismatch)
