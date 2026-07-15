@@ -154,15 +154,16 @@ Anexo técnico: métricas ML NDWS para I+D.
 | ENTREGA_OBSERVATORIO.md | ✅ | **v2 científica** — grado A Tobarra |
 | scientific_ops + operational_report | ✅ | máscara limpia, Vp plausible, A/B/C |
 
-### Resultados packs v2 (científicos) — canónicos en `outputs/observatorio/`
+### Resultados packs v3 (estructural) — canónicos en `outputs/observatorio/`
 
-| Incendio | Grado | Vp med | vs INFOCAM | N vel | Comp. med |
-|----------|-------|--------|------------|-------|-----------|
-| tobarra_20240802 | **A** | **4.31** | ratio **0.62** | 32 | 1.5 |
-| cardoso_2025 | B | abstención | n/d | 0 | 1.0 |
-| hellin_2024 | B | abstención | n/d | 0 | 1.0 |
+| Incendio | Grado | ROS primaria | Métodos | vs INFOCAM |
+|----------|-------|--------------|---------|------------|
+| tobarra_20240802 | **A** | **8.23** | area+radius+normal | ratio **1.18** |
+| cardoso_2025 | B | ~30 | area | n/d |
+| hellin_2024 | B | ~35 | radius | n/d |
 
-**Salto vs v1 Tobarra:** Vp 0.78→4.31 m/min; componentes 1264→~2; ratio INFOCAM 0.11→0.62.
+**Trayectoria Tobarra:** v1 0.78 → v2 4.31 → **v3 8.23** (INFOCAM 7).  
+**Motor:** `wildfire_front/front_dynamics.py`
 
 ### Gate checklist
 

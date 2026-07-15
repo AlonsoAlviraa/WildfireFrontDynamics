@@ -482,16 +482,18 @@ a{{color:#f5b942}}
 <section class="grid">
 <article><span>Frames aceptados</span><strong>{_fmt(metrics.get('num_observations'),0)}</strong></article>
 <article><span>Área máx. (ha)</span><strong>{_fmt(metrics.get('area_ha_max'),2)}</strong></article>
-<article><span>Vp mediana (m/min)</span><strong>{_fmt(metrics.get('speed_median_m_min'),2)}</strong></article>
-<article><span>IQR Vp (m/min)</span><strong>{_fmt(metrics.get('speed_iqr_m_min'),2)}</strong></article>
-<article><span>Puntos velocidad</span><strong>{_fmt(metrics.get('speed_n_observable'),0)}</strong></article>
-<article><span>Azimut dominante</span><strong>{_fmt(metrics.get('dominant_spread_bearing_deg'),0)}°</strong></article>
-<article><span>Componentes (mediana)</span><strong>{_fmt(metrics.get('component_count_median'),1)}</strong></article>
-<article><span>Estado velocidad</span><strong>{metrics.get('speed_status','—')}</strong></article>
+<article><span>ROS primaria (m/min)</span><strong>{_fmt(metrics.get('speed_median_m_min'),2)}</strong></article>
+<article><span>IQR / P25–P75</span><strong>{_fmt(metrics.get('speed_p25_m_min'),2)}–{_fmt(metrics.get('speed_p75_m_min'),2)}</strong></article>
+<article><span>Pares con ROS</span><strong>{_fmt(metrics.get('speed_n_observable'),0)}</strong></article>
+<article><span>Métodos</span><strong>{', '.join(metrics.get('primary_methods_used') or []) or '—'}</strong></article>
+<article><span>Coreg. medio (m)</span><strong>{_fmt(metrics.get('mean_coreg_shift_m'),1)}</strong></article>
+<article><span>Motor</span><strong>{metrics.get('engine','legacy')}</strong></article>
 </section>
 
 <h2>Calidad de la señal</h2>
 <ul>{reasons_html}</ul>
+<p class="note">Estimadores: <em>normal_ray</em> (locales), <em>area_isotropic</em> dA/(P·dt),
+<em>equiv_radius</em> d√(A/π)/dt; fusión con coregistro residual entre frames.</p>
 
 <h2>Evolución de área (proxy de máscara)</h2>
 <table><thead><tr><th>Timestamp</th><th>Área ha</th><th>Componentes</th></tr></thead>

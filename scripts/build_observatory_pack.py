@@ -100,6 +100,7 @@ REQUIRED_ARTIFACTS = (
     "report.html",
     "operational_report.html",
     "operational_metrics.json",
+    "front_dynamics.json",
     "fronts.geojson",
     "local_speeds.csv",
     "summary.json",
@@ -410,19 +411,23 @@ def process_fire(
 
     missing = [name for name in REQUIRED_ARTIFACTS if not (out_dir / name).is_file()]
     comp_stats = _manifest_component_stats(out_dir / "ingest_manifest.csv")
-    speed_median = metrics.get("speed_median_m_min")
+    ops = metrics.get("operational") if isinstance(metrics, dict) else None
+    # Prefer structural primary ROS over raw geometry-speed median (can be inflated).
+    speed_median = None
+    if isinstance(ops, dict):
+        speed_median = ops.get("speed_median_m_min")
+    if speed_median is None:
+        speed_median = metrics.get("speed_median_m_min")
     infocam = spec.infocam_vp_m_min
     ratio = None
-    if (
+    if isinstance(ops, dict) and ops.get("speed_vs_ref_ratio") is not None:
+        ratio = ops.get("speed_vs_ref_ratio")
+    elif (
         isinstance(speed_median, (int, float))
         and infocam is not None
         and float(infocam) > 0
     ):
         ratio = float(speed_median) / float(infocam)
-
-    ops = metrics.get("operational") if isinstance(metrics, dict) else None
-    if isinstance(ops, dict) and ops.get("speed_vs_ref_ratio") is not None:
-        ratio = ops.get("speed_vs_ref_ratio")
     entry.update(
         {
             "status": "ok" if not missing else "partial",

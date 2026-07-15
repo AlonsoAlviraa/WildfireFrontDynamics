@@ -129,21 +129,23 @@ def run_geotiff_ingest(
     )
 
     if write_operational or scientific_clean or operational_ref is not None:
-        from .scientific_ops import (
-            OperationalReference,
-            build_operational_metrics,
-            write_operational_report_html,
-        )
+        from .front_dynamics import build_structural_operational_bundle
+        from .scientific_ops import OperationalReference, write_operational_report_html
 
         ref = operational_ref if isinstance(operational_ref, OperationalReference) else None
-        ops = build_operational_metrics(
+        # Structural leap: coreg + dual ROS (area / radius / normal) fusion
+        ops = build_structural_operational_bundle(
             list(result.observations),
-            speed_result,
             summary,
+            speed_config=speed_config,
             ref=ref,
         )
         (output / "operational_metrics.json").write_text(
             json.dumps(ops, indent=2, default=str), encoding="utf-8"
+        )
+        (output / "front_dynamics.json").write_text(
+            json.dumps(ops.get("structural") or {}, indent=2, default=str),
+            encoding="utf-8",
         )
         write_operational_report_html(ops, event_id, output / "operational_report.html")
         summary["operational"] = {
@@ -154,6 +156,9 @@ def run_geotiff_ingest(
             "speed_n_observable": ops.get("speed_n_observable"),
             "speed_vs_ref_ratio": ops.get("speed_vs_ref_ratio"),
             "speed_vs_ref_grade": ops.get("speed_vs_ref_grade"),
+            "engine": ops.get("engine"),
+            "primary_methods_used": ops.get("primary_methods_used"),
+            "mean_coreg_shift_m": ops.get("mean_coreg_shift_m"),
         }
     return summary
 
