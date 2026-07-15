@@ -53,6 +53,12 @@ parser.add_argument(
         "none=keep all grids."
     ),
 )
+parser.add_argument(
+    "--output-root",
+    type=str,
+    default="/tmp/ndws_npz",
+    help="Root directory for train/val/test NPZ shards (default /tmp/ndws_npz).",
+)
 args = parser.parse_args()
 
 import tensorflow as tf  # noqa: E402
@@ -93,7 +99,7 @@ if input_dir is None:
 
 print(f"Using input_dir: {input_dir}")
 
-output_dir = os.path.join("/tmp/ndws_npz", args.split)
+output_dir = os.path.join(args.output_root, args.split)
 os.makedirs(output_dir, exist_ok=True)
 
 all_tfrecord_files = sorted(

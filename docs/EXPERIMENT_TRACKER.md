@@ -17,9 +17,11 @@
 **Inference:** `wildfire_front/ml/spread_predictor.py`  
 **Audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
 
-**Overnight mega:** v23–v30 running on `alonsoalviraaaa/wildfire-overnight-mega-training`
+**Overnight mega v1:** ERROR — preprocess wrote to `/tmp/ndws_npz` but mega expected `/tmp/ndws_npz_*` (0 patches).
 
-**Next manual check:** `overnight_report.json` + auto-promote via `scripts/run_overnight_monitor.py`
+**Overnight mega v2:** relaunch after `--output-root` fix on `preprocess_ndws.py` + `kaggle_common.py`.
+
+**Next manual check:** `kaggle_outputs_overnight/overnight_report.json` + `scripts/run_overnight_monitor.py`
 
 ---
 

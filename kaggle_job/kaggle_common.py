@@ -94,6 +94,8 @@ def run_preprocess_ndws(
             str(patch_size),
             "--filter-mode",
             filter_mode,
+            "--output-root",
+            str(data_root),
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
@@ -101,6 +103,8 @@ def run_preprocess_ndws(
             raise RuntimeError(f"preprocess_ndws.py failed for {split}:\n{tail}")
         count = len(list(out_split.glob("*.npz")))
         log(f"  {split}: {count} patches")
+        if count == 0 and result.stdout:
+            log(f"  [preprocess stdout tail]\n{(result.stdout or '')[-600:]}")
 
     total = sum(
         len(list((data_root / split).glob("*.npz")))

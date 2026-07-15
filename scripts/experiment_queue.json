@@ -6,6 +6,8 @@
     "script": "kaggle_job/run_overnight_mega.py",
     "kernel_slug": "alonsoalviraaaa/wildfire-overnight-mega-training",
     "status": "running",
+    "run": 2,
+    "note": "v1 failed: output-root mismatch; fixed preprocess --output-root",
     "experiments": ["v23", "v25", "v27", "v28", "v24", "v26", "v29", "v30"]
   },
   {
