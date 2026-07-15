@@ -150,8 +150,8 @@ Anexo técnico: métricas ML NDWS para I+D.
 | Packs multi-IF | ✅ | Tobarra + Cardoso + Hellín (A1) |
 | Scorecard gates A1/A2/A5 | ✅ | `outputs/observatorio/observatory_scorecard.json` |
 | clean12 schema | ✅ | `feature_schema.py` + preprocess `--schema clean12` + tests |
-| Train/eval clean12 | 🔄 | kernel v23 listo; requiere push GitHub+Kaggle |
-| ENTREGA_OBSERVATORIO.md | ✅ | números Tobarra rellenados |
+| Train/eval clean12 | ✅ | IoU 0.215 Δ+0.065 — **no supera v21**; no promote |
+| ENTREGA_OBSERVATORIO.md | ✅ | números Tobarra + scorecard + index.html |
 
 ### Resultados packs (resumen)
 
@@ -160,3 +160,14 @@ Anexo técnico: métricas ML NDWS para I+D.
 | tobarra_20240802 | 8 | estimated | 0.78 (vs INFOCAM 7) | completos |
 | cardoso_2025 | 5 | abstained | — | completos |
 | hellin_2024 | 5 | abstained | — | completos |
+
+### Gate checklist final (semana 1 cerrada en ejecución)
+
+| Gate | Resultado |
+|------|-----------|
+| A1 ≥3 incendios | ✅ PASS |
+| A2 artefactos | ✅ PASS |
+| A5 Tobarra anchor | ✅ PASS (ratio reportado, no calibrado a 7) |
+| A7 documento | ✅ PASS |
+| B1–B3 clean12 código | ✅ PASS |
+| B4 clean12 ≥ v21 | ❌ FAIL (0.215 < 0.226) — v21 sigue production |

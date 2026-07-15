@@ -17,15 +17,22 @@
 **Inference:** `wildfire_front/ml/spread_predictor.py`  
 **Audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
 
-**Overnight mega v1:** ERROR — preprocess wrote to `/tmp/ndws_npz` but mega expected `/tmp/ndws_npz_*` (0 patches).
+**Overnight mega v1:** ERROR — preprocess path mismatch (0 patches).  
+**Overnight mega v2:** COMPLETE but still 0 patches (root-cause: silent empty preprocess; fail-fast added in `kaggle_common`).
 
-**Overnight mega v2:** relaunch after `--output-root` fix on `preprocess_ndws.py` + `kaggle_common.py`.
-
-**Next manual check:** `kaggle_outputs_overnight/overnight_report.json` + `scripts/run_overnight_monitor.py`
+**Observatorio packs (2026-07-15):** Tobarra + Cardoso + Hellín en `outputs/observatorio/` — gates A1/A2/A5 PASS (scorecard).
 
 ---
 
 ## Experiment Log
+
+### v23_clean12: Clean 12-channel schema — NO PROMOTE
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v23-clean12` (v2)
+- **Parent:** v21 | **Change:** `--schema clean12` (elevation, wind sin/cos, no constant channels); **no CLM merge** (17ch mismatch)
+- **IoU full:** 0.215 | **Δ full:** +0.065 | **Δ changed:** **+0.074**
+- **copy:** 0.150 | **best_epoch:** 20 | train 12000 (NDWS only)
+- **vs v21:** IoU −0.011, Δ full −0.011, Δ changed **+0.033**
+- **Verdict:** Keep **v21** production. clean12 improves changed-pixels but not full-grid IoU; do not promote.
 
 ### v22: Changed-Only Filter — NEUTRAL (better Δ changed)
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v22`

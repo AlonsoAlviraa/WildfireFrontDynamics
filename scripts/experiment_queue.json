@@ -6,7 +6,14 @@
     "script": "kaggle_job/run_unet_training_v23_clean12.py",
     "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v23-clean12",
     "parent": "v21",
-    "status": "queued",
+    "status": "completed_no_promote",
+    "results": {
+      "iou_full": 0.215,
+      "improvement_vs_copy_iou": 0.065,
+      "improvement_vs_copy_iou_changed": 0.074,
+      "best_epoch": 20,
+      "verdict": "worse_full_better_changed_keep_v21"
+    },
     "go_if": "IoU full >= 0.226 and improvement_vs_copy_iou >= 0.076"
   },
   {

@@ -89,12 +89,25 @@ Actualizar esta sección cuando el scorecard marque gates en verde.
 
 ---
 
-## Pista B (I+D, anexo técnico)
+## Pista B (I+D, anexo técnico) — resultado v23_clean12
 
-- Schema `clean12` implementado (`wildfire_front/ml/feature_schema.py`).  
-- Preprocess: `--schema clean12`.  
-- Kernel script: `kaggle_job/run_unet_training_v23_clean12.py`.  
-- Baseline a batir: v21 IoU 0.226 / Δ copy +0.076 (protocolo any_fire 979 patches).
+| Métrica | v21 (producción) | v23 clean12 | Δ |
+|---------|------------------|-------------|---|
+| IoU full @0.5 | **0.226** | 0.215 | −0.011 |
+| Δ vs copy full | **+0.076** | +0.065 | −0.011 |
+| Δ vs dilated changed | +0.041 | **+0.074** | +0.033 |
+| best_epoch | 6 | 20 | — |
+
+**Decisión:** se mantiene **v21** como baseline ML. clean12 no se promociona.  
+Kernel: `alonsoalviraaaa/wildfire-front-training-v23-clean12`.  
+Pesos locales: `kaggle_outputs_v23_clean12/weights_pretrained_best.pt`.
+
+### Cómo abrir el pack A
+
+1. Abrir `outputs/observatorio/index.html`  
+2. Revisar `report.html` por incendio  
+3. Contrastar scorecard JSON con esta nota  
+4. **No** presentar predicción NDWS como herramienta de emergencia
 
 ---
 
