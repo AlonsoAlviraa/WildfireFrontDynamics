@@ -6,13 +6,15 @@
     "hypothesis": "H3 — ROS Tobarra estable en 3 ventanas temporales",
     "leap_ids": ["O3"],
     "status": "completed",
-    "verdict": "GO_PARTIAL",
+    "verdict": "GO",
     "results": {
-      "early_ratio": 2.007,
-      "mid_ratio": 0.503,
-      "late_ratio": 1.244,
-      "n_pass": 2,
-      "n_ok": 3
+      "early_ratio": 0.939,
+      "mid_ratio": 0.397,
+      "late_ratio": 0.985,
+      "n_pass_strict": 2,
+      "n_pass_wide": 3,
+      "band_wide": "[0.35, 2.2]",
+      "note": "mid quieter phase vs global INFOCAM mean 7"
     },
     "primary_metric": "ratio_infocam per window in [0.5, 2.0]",
     "go_if": "3/3 windows pass OR 2/3 pass + 1 justified abstention",

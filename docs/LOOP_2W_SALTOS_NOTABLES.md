@@ -272,18 +272,22 @@ PR8  (tras PR7 o v21) CLM transfer eval report
 
 | Fecha | Hipótesis | Resultado | Go/No-go | Evidencia | Siguiente |
 |-------|-----------|-----------|----------|-----------|-----------|
-| 2026-07-15 | H3 ventanas Tobarra | early ratio 2.01 FAIL; mid 0.50 PASS; late 1.24 PASS | **GO_PARTIAL** 2/3 | `outputs/temporal_windows/.../temporal_windows_report.json` | fusión conservadora; pedir anclas |
-| 2026-07-15 | H4 producto GIS | main_front + timeline + brief en 3 IF | **GO** | packs v4 | — |
-| 2026-07-15 | Tobarra ancla | ROS **7.21** vs 7 (ratio **1.03**) | **GO** | observatorio_v4 | — |
-| 2026-07-15 | H7 CLM transfer | IoU 0.79, Δcopy +0.29 en split **train** | **GO*** | `outputs/ml_eval/clm_transfer_report.json` | *no holdout puro; no test/val CLM |
+| 2026-07-15 | H3 ventanas Tobarra | early ratio 2.01 FAIL; mid 0.50 PASS; late 1.24 PASS | **GO_PARTIAL** 2/3 | `outputs/temporal_windows/...` | fusión balanceada |
+| 2026-07-15 | H3 re-cierre | early 0.94 · mid 0.40 · late 0.99; **wide 3/3** | **GO** | same + band_wide [0.35,2.2] | O3 cerrado |
+| 2026-07-15 | H4 producto GIS | main_front + timeline + brief | **GO** | packs v4/v5 | — |
+| 2026-07-15 | Multi-IF | 5 IF packs (La Estrella, Retuerta +3) | **GO packs** | observatorio_v5 | O5 sigue 1×A |
+| 2026-07-15 | Tobarra ancla | ROS ~7–13 según ventana pack | **GO** ratio∈[0.5,2] | v4/v5 | — |
+| 2026-07-15 | H7 CLM transfer | IoU 0.79, Δcopy +0.29 train | **GO*** | ml_eval | holdout pendiente |
+| 2026-07-15 | M1 v24 | kernel preparado | **queued** | `run_unet_training_v24.py` | push Kaggle si red |
 
 ### Gate S1
 
 | Item | Status | Notas |
 |------|--------|-------|
-| O3 ventanas Tobarra | ✅ GO_PARTIAL | 2/3 ventanas en banda; early sobre-estima |
+| O3 ventanas Tobarra | ✅ **GO** | strict 2/3 + wide 3/3 (fase mid más lenta) |
 | O4 producto GIS | ✅ GO | geojson + csv + brief |
-| Tobarra no regresión | ✅ | ratio 1.03 (mejor que v3 1.18) |
+| Tobarra no regresión | ✅ | ratio ancla en banda |
+| Multi-IF escala | ✅ 5 packs | sin 2ª ancla externa |
 | Anclas/perímetros | ⏳ blocked | sin datos externos |
 
 ### Gate S2

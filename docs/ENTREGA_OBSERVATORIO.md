@@ -19,7 +19,8 @@ Tobarra queda en **ROS 7.21 m/min vs INFOCAM 7 (ratio 1.03)**, con producto oper
 | v1 | Pack crudo | **0.78** | ratio 0.11 | — | basura útil solo como demo de archivos |
 | v2 | Máscara limpia + filtro físico | **4.31** | ratio 0.62 | A | útil con cautela |
 | v3 | Motor multi-estimador | **8.23** | ratio **1.18** | A | multi-método |
-| **v4** | **+ ventanas + GIS operador** | **7.21** | ratio **1.03** | **A** | **casi calca el parte** |
+| v4 | + ventanas + GIS operador | **7.21** | ratio **1.03** | A | casi calca el parte |
+| **v5** | **O3 cerrado + multi-IF (5)** | **5.71** | ratio **0.82** | **A** | **early/mid/late estables** |
 
 Eso es el salto estructural: no un hiperparámetro más, sino **otro producto científico**.
 
