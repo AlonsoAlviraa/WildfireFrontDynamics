@@ -17,16 +17,20 @@ def main() -> int:
     for fire in scorecard.get("fires", []):
         fid = fire.get("fire_id", "")
         m = fire.get("metrics") or {}
-        href = f"{fid}/report.html"
+        ops = m.get("operational") if isinstance(m.get("operational"), dict) else {}
+        href = f"{fid}/operational_report.html"
+        href_tech = f"{fid}/report.html"
         rows.append(
             "<tr>"
-            f"<td><a href='{href}'>{fid}</a></td>"
+            f"<td><a href='{href}'>{fid}</a> "
+            f"(<a href='{href_tech}'>técnico</a>)</td>"
             f"<td>{fire.get('status')}</td>"
+            f"<td>{ops.get('quality_grade') or fire.get('quality_grade') or '—'}</td>"
             f"<td>{m.get('num_observations', '—')}</td>"
-            f"<td>{m.get('speed_status', '—')}</td>"
-            f"<td>{m.get('speed_median_m_min', '—')}</td>"
-            f"<td>{m.get('observable_ratio', '—')}</td>"
-            f"<td>{fire.get('speed_vs_infocam_ratio', '—')}</td>"
+            f"<td>{ops.get('speed_median_m_min', m.get('speed_median_m_min', '—'))}</td>"
+            f"<td>{ops.get('area_ha_max', '—')}</td>"
+            f"<td>{ops.get('speed_n_observable', m.get('num_observable', '—'))}</td>"
+            f"<td>{fire.get('speed_vs_infocam_ratio') or ops.get('speed_vs_ref_ratio') or '—'}</td>"
             "</tr>"
         )
     gates = scorecard.get("gates", {})
@@ -50,7 +54,7 @@ table{{width:100%;border-collapse:collapse;background:#112532}} th,td{{padding:1
 <p>{scorecard.get('observatory_message_es', '')}</p>
 <section class="grid">{gate_cards}</section>
 <table>
-<thead><tr><th>Incendio</th><th>Estado</th><th>Obs</th><th>Speed</th><th>Mediana m/min</th><th>Obs. ratio</th><th>vs INFOCAM</th></tr></thead>
+<thead><tr><th>Incendio</th><th>Estado</th><th>Grado</th><th>Frames</th><th>Vp med m/min</th><th>Área máx ha</th><th>N vel</th><th>vs INFOCAM</th></tr></thead>
 <tbody>
 {''.join(rows)}
 </tbody>

@@ -1,118 +1,83 @@
-# Entrega Observatorio — borrador vivo
+# Entrega Observatorio — v2 científica
 
 > **Fecha:** 2026-07-15  
-> **Estado:** en construcción (semana 1 del plan de 2 semanas)  
-> **Plan maestro:** `docs/PLAN_2_SEMANAS_OBSERVATORIO.md`
+> **Carpeta canónica:** `outputs/observatorio/`  
+> **Abrir primero:** `outputs/observatorio/index.html`
 
 ---
 
-## Mensaje ejecutivo (para el observatorio)
+## Mensaje para el observatorio (1 párrafo)
 
-Hemos separado **dos productos** para no mezclar promesas:
-
-| Producto | Qué es | Estado actual |
-|----------|--------|---------------|
-| **A. Dinámica observada (este entregable)** | Con secuencias LWIR georreferenciadas: frentes, velocidades locales, abstenciones, reporte HTML | **En ejecución** — packs en `outputs/observatorio/` |
-| **B. Predicción ML next-day (I+D)** | Modelo U-Net sobre dataset NDWS (satélite EE.UU.) | v21 IoU 0.226; **no** es predicción operacional CLM |
-
-**No pedimos que se use el modelo ML como herramienta de emergencia.**  
-El valor inmediato para el observatorio es el **paquete A**: trazabilidad, geometría y velocidades con incertidumbre.
+Entregamos un **paquete de dinámica observada** de frentes térmicos (LWIR georreferenciado), no un modelo de predicción. Por incendio hay un **informe operativo en español** (`operational_report.html`) con: área proxy (ha), velocidad de avance con IQR, azimut dominante cuando es defendible, grado de calidad A/B/C, y comparación con anclas INFOCAM cuando existen. **Tobarra** queda en grado **A**: Vp mediana **~4.3 m/min** frente a ancla INFOCAM **7 m/min** (mismo orden de magnitud, ratio ~0.62). Cardoso y Hellín quedan en grado **B** (máscara limpia pero **velocidad abstención** — mejor callar que inventar).
 
 ---
 
-## Cómo reproducir el paquete A
+## Antes vs ahora (por qué v1 no servía)
+
+| Métrica Tobarra | v1 (flojo) | **v2 científico** |
+|-----------------|------------|-------------------|
+| Componentes (ruido) | hasta **1264** | mediana **1.5** (frente principal) |
+| Puntos velocidad útiles | 33 / 6377 (ratio 0.5%) | **32 defendibles** (filtrados) |
+| Vp mediana | **0.78** m/min | **4.31** m/min |
+| vs INFOCAM 7 m/min | ratio 0.11 (inútil) | ratio **0.62** (orden de magnitud) |
+| Grado calidad | no existía | **A — útil con cautela** |
+| Documento para ellos | report técnico genérico | **operational_report.html** ES |
+
+Mejoras científicas aplicadas:
+
+1. Cierre/apertura morfológica + top-N componentes (frente principal).  
+2. Frames consecutivos espacialmente coherentes (no mezclar pasadas lejanas).  
+3. Velocidades con filtro de **plausibilidad física** (descarta >60 m/min y Δt <15 s).  
+4. Métricas operativas: área ha, IQR Vp, azimut, grado A/B/C.  
+5. Comparación explícita con INFOCAM sin fingir perímetro oficial.
+
+---
+
+## Cómo reproducir
 
 ```bash
 python scripts/build_observatory_pack.py \
-  --fires tobarra_20240802,hellin_2024,retuerta_2025 \
-  --max-frames 8 \
-  --min-component-pixels 500
-```
+  --fires tobarra_20240802,cardoso_2025,hellin_2024 \
+  --output-root outputs/observatorio_v2
 
-Salida:
-
-```
-outputs/observatorio/
-  observatory_scorecard.json
-  tobarra_20240802/
-    report.html
-    fronts.geojson
-    local_speeds.csv
-    summary.json
-    ingest_manifest.csv
-    ...
-  hellin_2024/
-  retuerta_2025/
+python scripts/finalize_observatorio_v2.py
 ```
 
 ---
 
-## Ancla operativa Tobarra (INFOCAM)
+## Resultados por incendio (v2)
 
-| Fuente | Valor |
-|--------|-------|
-| Detección | 2024-08-02 16:42 |
-| Superficie | 39 ha |
-| Vp media | **7 m/min** |
-| Intensidad | Media-Alta |
-| Motor | Contraviento |
+| Incendio | Grado | Vp med (m/min) | Área máx ha | N vel | vs INFOCAM |
+|----------|-------|----------------|-------------|-------|------------|
+| **tobarra_20240802** | **A** | **4.31** | 51.9 | 32 | ratio **0.62** |
+| cardoso_2025 | B | — (abstención) | 60.7 | 0 | n/d |
+| hellin_2024 | B | — (abstención) | 59.0 | 0 | n/d |
 
-**Cómo leer la comparación:** la velocidad del pipeline se calcula sobre **máscaras automáticas LWIR** (candidato de frente), no sobre el perímetro oficial. Si la mediana del modelo está lejos de 7 m/min, **no invalidamos INFOCAM**: invalidamos o calibramos la segmentación/matching.
+**Interpretación Cardoso/Hellín:** la limpieza de máscara funciona (1 componente), pero el matching temporal no produce desplazamientos físicamente creíbles → el sistema **se abstiene** (correcto científicamente).
 
 ---
 
-## Limitaciones (obligatorio comunicar)
+## Límites (no negociables en comunicación)
 
-1. Máscara MAD/threshold ≠ frente de llama validado en campo.  
-2. Sin perímetro vectorial oficial independiente no hay Hausdorff “de verdad”.  
-3. Submuestreo temporal (`max-frames`) para coste computacional: el pack es un **resumen defendible**, no el video completo a 0.5 m.  
-4. Predicción 24 h satélite (NDWS) **no sustituye** observación táctica de dron.  
-5. El sistema **se abstiene** cuando no hay intersección normal defendible.
-
----
-
-## Criterios de aceptación (DoD)
-
-Ver tabla A1–A8 en `PLAN_2_SEMANAS_OBSERVATORIO.md`.  
-Actualizar esta sección cuando el scorecard marque gates en verde.
-
-### Estado gates (2026-07-15)
-
-| Gate | Estado | Evidencia |
-|------|--------|-----------|
-| A1 ≥3 incendios | ✅ | Tobarra, Cardoso, Hellín packs completos |
-| A2 artefactos | ✅ | report.html, fronts.geojson, local_speeds.csv, summary.json, manifests |
-| A5 ancla Tobarra | ✅ reportado | mediana **0.78 m/min** vs INFOCAM **7 m/min** (ratio ~0.11) |
-| A7 este documento | ✅ | |
-
-**Lectura honesta A5:** el sistema se abstiene en la mayoría de puntos (observable_ratio Tobarra ≈ 0.5%). La mediana sobre los pocos puntos observables queda **por debajo** de INFOCAM. Causas probables: máscara MAD ruidosa, matching de componentes frágil, submuestreo temporal. **No se presenta 0.78 como Vp oficial.**
+1. Máscara térmica ≠ perímetro oficial / parte INFOCAM.  
+2. Área ha es **proxy de máscara**, puede no ser monótona.  
+3. Vp es estimación geométrica con abstención; no es Vp de parte.  
+4. **No** es predicción 24 h ni ML operacional.  
+5. Grado C o B con abstención de velocidad → **no usar para decidir medios**.
 
 ---
 
-## Pista B (I+D, anexo técnico) — resultado v23_clean12
+## Qué les pedimos a ellos para la siguiente iteración
 
-| Métrica | v21 (producción) | v23 clean12 | Δ |
-|---------|------------------|-------------|---|
-| IoU full @0.5 | **0.226** | 0.215 | −0.011 |
-| Δ vs copy full | **+0.076** | +0.065 | −0.011 |
-| Δ vs dilated changed | +0.041 | **+0.074** | +0.033 |
-| best_epoch | 6 | 20 | — |
+1. Perímetros vectoriales oficiales o croquis por hora (validación geométrica real).  
+2. Confirmación de Vp/área de más IF (como Tobarra 7 m/min, 39 ha).  
+3. Preferencia de sensor/canal (LWIR vs EO) y umbral de campo si lo tienen.
 
-**Decisión:** se mantiene **v21** como baseline ML. clean12 no se promociona.  
-Kernel: `alonsoalviraaaa/wildfire-front-training-v23-clean12`.  
-Pesos locales: `kaggle_outputs_v23_clean12/weights_pretrained_best.pt`.
-
-### Cómo abrir el pack A
-
-1. Abrir `outputs/observatorio/index.html`  
-2. Revisar `report.html` por incendio  
-3. Contrastar scorecard JSON con esta nota  
-4. **No** presentar predicción NDWS como herramienta de emergencia
+Con eso el grado A se puede convertir en **validado**, no solo “útil con cautela”.
 
 ---
 
-## Próxima revisión con el observatorio (propuesta)
+## Pista ML (anexo, no es el entregable)
 
-1. Abrir `report.html` de Tobarra juntos.  
-2. Contrastar Vp mediana vs 7 m/min y discutir calibración de máscara.  
-3. Acordar si el siguiente entregable es **más incendios** o **perímetros oficiales** para validación geométrica.
+v21 sigue como baseline I+D (IoU 0.226). clean12 no se promocionó.  
+**No abrir la reunión del observatorio con IoU.**

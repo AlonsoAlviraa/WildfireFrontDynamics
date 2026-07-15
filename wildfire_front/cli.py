@@ -55,6 +55,13 @@ def run_geotiff_ingest(
     mad_z: float | None = None,
     respect_alpha: bool = False,
     min_component_pixels: int = 1,
+    scientific_clean: bool = False,
+    max_components: int = 5,
+    morph_close_pixels: int = 3,
+    min_component_area_m2: float = 100.0,
+    operational_ref: object | None = None,
+    arrival_max_cells: int = 4_000_000,
+    write_operational: bool = False,
 ) -> dict[str, object]:
     result = ingest_geotiff_sequence(
         images,
@@ -67,6 +74,10 @@ def run_geotiff_ingest(
         mad_z=mad_z,
         respect_alpha=respect_alpha,
         min_component_pixels=min_component_pixels,
+        scientific_clean=scientific_clean,
+        max_components=max_components,
+        morph_close_pixels=morph_close_pixels,
+        min_component_area_m2=min_component_area_m2,
     )
     output.mkdir(parents=True, exist_ok=True)
     write_ingest_manifest(result.records, output / "ingest_manifest.csv")
@@ -78,12 +89,30 @@ def run_geotiff_ingest(
     )
     if resolution is None:
         raise ValueError("accepted observations do not have metric resolution")
-    xx, yy, arrival = reconstruct_arrival_from_components(list(result.observations), resolution)
+
+    # Arrival grid can explode in memory on multi-pass footprints; coarsen or skip.
+    arrival_resolution = float(resolution)
+    try:
+        xx, yy, arrival = reconstruct_arrival_from_components(
+            list(result.observations), arrival_resolution
+        )
+        while arrival.size > arrival_max_cells and arrival_resolution < resolution * 32:
+            arrival_resolution *= 2.0
+            xx, yy, arrival = reconstruct_arrival_from_components(
+                list(result.observations), arrival_resolution
+            )
+    except MemoryError:
+        xx = np.zeros((1, 1))
+        yy = np.zeros((1, 1))
+        arrival = np.full((1, 1), np.nan)
+        arrival_resolution = float("nan")
+
     speed_result = estimate_geometry_speeds(list(result.observations), speed_config)
     summary: dict[str, object] = {
         "num_observations": len(result.observations),
         "num_components": sum(len(item.components) for item in result.observations),
         "arrival_cells_observed": int((~np.isnan(arrival)).sum()),
+        "arrival_resolution_m": arrival_resolution,
         **summarize_ingest_quality(result.records),
         **summarize_observation_quality(list(result.observations)),
         **summarize_geometry_speeds(speed_result),
@@ -98,6 +127,34 @@ def run_geotiff_ingest(
         arrival,
         summary,
     )
+
+    if write_operational or scientific_clean or operational_ref is not None:
+        from .scientific_ops import (
+            OperationalReference,
+            build_operational_metrics,
+            write_operational_report_html,
+        )
+
+        ref = operational_ref if isinstance(operational_ref, OperationalReference) else None
+        ops = build_operational_metrics(
+            list(result.observations),
+            speed_result,
+            summary,
+            ref=ref,
+        )
+        (output / "operational_metrics.json").write_text(
+            json.dumps(ops, indent=2, default=str), encoding="utf-8"
+        )
+        write_operational_report_html(ops, event_id, output / "operational_report.html")
+        summary["operational"] = {
+            "quality_grade": ops.get("quality_grade"),
+            "quality_label_es": ops.get("quality_label_es"),
+            "speed_median_m_min": ops.get("speed_median_m_min"),
+            "area_ha_max": ops.get("area_ha_max"),
+            "speed_n_observable": ops.get("speed_n_observable"),
+            "speed_vs_ref_ratio": ops.get("speed_vs_ref_ratio"),
+            "speed_vs_ref_grade": ops.get("speed_vs_ref_grade"),
+        }
     return summary
 
 

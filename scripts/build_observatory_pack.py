@@ -30,6 +30,7 @@ if str(ROOT) not in sys.path:
 
 from wildfire_front.cli import run_geotiff_ingest  # noqa: E402
 from wildfire_front.models import GeometrySpeedConfig  # noqa: E402
+from wildfire_front.scientific_ops import OperationalReference  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -97,6 +98,8 @@ DEFAULT_FIRES: list[FireSpec] = [
 
 REQUIRED_ARTIFACTS = (
     "report.html",
+    "operational_report.html",
+    "operational_metrics.json",
     "fronts.geojson",
     "local_speeds.csv",
     "summary.json",
@@ -150,17 +153,34 @@ def _pair_images_masks(images_dir: Path, masks_dir: Path) -> list[tuple[Path, Pa
     return pairs
 
 
+def _parse_timestamp_from_name(name: str) -> float | None:
+    """Parse YYYY-MM-DD_HH-MM-SS from common IF filenames → unix-ish sort key."""
+    import re
+    from datetime import datetime
+
+    m = re.search(r"(20\d{2}-\d{2}-\d{2})[_T](\d{2})-(\d{2})-(\d{2})", name)
+    if not m:
+        return None
+    try:
+        dt = datetime.strptime(
+            f"{m.group(1)} {m.group(2)}:{m.group(3)}:{m.group(4)}",
+            "%Y-%m-%d %H:%M:%S",
+        )
+        return dt.timestamp()
+    except ValueError:
+        return None
+
+
 def _select_coherent_pairs(
     pairs: list[tuple[Path, Path]],
     max_frames: int,
     max_side: int = 2500,
     max_center_sep_m: float = 800.0,
 ) -> list[tuple[Path, Path]]:
-    """Pick frames that share a similar footprint AND geographic center.
+    """Pick consecutive frames with shared footprint for defendable speeds.
 
-    Even temporal sampling across multi-pass drone flights mixes different
-    orthomosaic extents; arrival reconstruction then builds a giant union grid
-    and OOMs or hangs. We keep the largest spatial cluster of small frames.
+    Prefer the densest *temporal* run inside the largest *spatial* cluster so
+    Δt is minutes (spread physics) rather than multi-hour multi-pass jumps.
     """
     if not pairs:
         return []
@@ -170,7 +190,7 @@ def _select_coherent_pairs(
     except Exception:
         return pairs[:max_frames]
 
-    meta: list[tuple[Path, Path, int, int, float, float]] = []
+    meta: list[tuple[Path, Path, int, int, float, float, float]] = []
     for img, mask in pairs:
         try:
             with rasterio.open(img) as ds:
@@ -180,15 +200,13 @@ def _select_coherent_pairs(
                 cy = 0.5 * (b.bottom + b.top)
         except Exception:
             continue
-        if w <= 0 or h <= 0:
+        if w <= 0 or h <= 0 or max(w, h) > max_side:
             continue
-        if max(w, h) > max_side:
-            continue
-        meta.append((img, mask, w, h, cx, cy))
+        ts = _parse_timestamp_from_name(img.name) or 0.0
+        meta.append((img, mask, w, h, cx, cy, ts))
 
     if len(meta) < 2:
-        # smallest available
-        all_meta: list[tuple[Path, Path, int, int, float, float]] = []
+        all_meta: list[tuple[Path, Path, int, int, float, float, float]] = []
         for img, mask in pairs:
             try:
                 with rasterio.open(img) as ds:
@@ -198,12 +216,13 @@ def _select_coherent_pairs(
                     cy = 0.5 * (b.bottom + b.top)
             except Exception:
                 continue
-            all_meta.append((img, mask, w, h, cx, cy))
+            ts = _parse_timestamp_from_name(img.name) or 0.0
+            all_meta.append((img, mask, w, h, cx, cy, ts))
         all_meta.sort(key=lambda t: t[2] * t[3])
         return [(t[0], t[1]) for t in all_meta[: max(max_frames, 2)]]
 
-    # Greedy spatial clustering by center distance.
-    clusters: list[list[tuple[Path, Path, int, int, float, float]]] = []
+    # Spatial clustering
+    clusters: list[list[tuple[Path, Path, int, int, float, float, float]]] = []
     for item in meta:
         placed = False
         for cluster in clusters:
@@ -217,12 +236,34 @@ def _select_coherent_pairs(
             clusters.append([item])
 
     best = max(clusters, key=len)
-    best_sorted = sorted(best, key=lambda t: t[0].name)
+    best_sorted = sorted(best, key=lambda t: (t[6], t[0].name))
+
+    # Find longest consecutive window with median Δt < 15 minutes if possible.
     if len(best_sorted) <= max_frames:
         return [(t[0], t[1]) for t in best_sorted]
-    selected = _even_sample([Path(str(i)) for i in range(len(best_sorted))], max_frames)
-    idxs = [int(p.name) for p in selected]
-    return [(best_sorted[i][0], best_sorted[i][1]) for i in idxs]
+
+    best_window = best_sorted[:max_frames]
+    best_score = -1.0
+    for start in range(0, len(best_sorted) - max_frames + 1):
+        window = best_sorted[start : start + max_frames]
+        dts = [
+            window[i][6] - window[i - 1][6]
+            for i in range(1, len(window))
+            if window[i][6] and window[i - 1][6]
+        ]
+        if not dts:
+            score = 0.0
+        else:
+            med = float(sorted(dts)[len(dts) // 2])
+            # Prefer med dt between 30s and 15 min
+            if 30 <= med <= 900:
+                score = 1000.0 - abs(med - 180.0)
+            else:
+                score = 100.0 / (1.0 + med / 3600.0)
+        if score > best_score:
+            best_score = score
+            best_window = window
+    return [(t[0], t[1]) for t in best_window]
 
 
 def _stage_subset(
@@ -293,6 +334,9 @@ def process_fire(
     max_frames: int = 12,
     max_side: int = 2500,
     work_root: Path | None = None,
+    max_components: int = 5,
+    morph_close_pixels: int = 5,
+    min_component_area_m2: float = 250.0,
 ) -> dict[str, object]:
     out_dir = output_root / spec.fire_id
     n_img = _count_tifs(spec.images)
@@ -330,6 +374,14 @@ def process_fire(
             f"(from {n_img}/{n_mask}, max_frames={max_frames})",
             flush=True,
         )
+        ref = None
+        if spec.infocam_vp_m_min is not None:
+            ref = OperationalReference(
+                name="INFOCAM / parte operativo",
+                vp_m_min=spec.infocam_vp_m_min,
+                area_ha=spec.infocam_area_ha,
+                notes=spec.notes,
+            )
         metrics = run_geotiff_ingest(
             images=img_dir,
             masks=mask_dir,
@@ -343,6 +395,12 @@ def process_fire(
             mad_z=None,
             respect_alpha=True,
             min_component_pixels=min_component_pixels,
+            scientific_clean=True,
+            max_components=max_components,
+            morph_close_pixels=morph_close_pixels,
+            min_component_area_m2=min_component_area_m2,
+            operational_ref=ref,
+            write_operational=True,
         )
     except Exception as exc:  # noqa: BLE001 — pack must continue other fires
         entry["status"] = "failed"
@@ -362,6 +420,9 @@ def process_fire(
     ):
         ratio = float(speed_median) / float(infocam)
 
+    ops = metrics.get("operational") if isinstance(metrics, dict) else None
+    if isinstance(ops, dict) and ops.get("speed_vs_ref_ratio") is not None:
+        ratio = ops.get("speed_vs_ref_ratio")
     entry.update(
         {
             "status": "ok" if not missing else "partial",
@@ -372,6 +433,8 @@ def process_fire(
             "infocam_vp_m_min": infocam,
             "infocam_area_ha": spec.infocam_area_ha,
             "speed_vs_infocam_ratio": ratio,
+            "quality_grade": (ops or {}).get("quality_grade") if isinstance(ops, dict) else None,
+            "quality_label_es": (ops or {}).get("quality_label_es") if isinstance(ops, dict) else None,
         }
     )
     return entry
@@ -446,19 +509,21 @@ def parse_args() -> argparse.Namespace:
         default="tobarra_20240802,cardoso_2025,hellin_2024",
         help="Comma-separated fire_ids from catalog (default: 3 fires for A1)",
     )
-    p.add_argument("--min-component-pixels", type=int, default=400)
-    p.add_argument("--max-frames", type=int, default=10,
-                   help="Even temporal subsample per fire (geometry cost is high on full LWIR).")
+    p.add_argument("--min-component-pixels", type=int, default=800)
+    p.add_argument("--max-frames", type=int, default=8,
+                   help="Consecutive frames in densest temporal window (speed physics).")
     p.add_argument(
         "--max-side",
         type=int,
-        default=2500,
+        default=2800,
         help="Skip frames with width or height above this (prevents OOM on mixed footprints).",
     )
-    p.add_argument("--speed-sample-spacing-m", type=float, default=8.0)
-    p.add_argument("--speed-max-normal-distance-m", type=float, default=80.0)
-    p.add_argument("--speed-min-valid-fraction", type=float, default=0.25)
-    p.add_argument("--min-component-area-m2", type=float, default=25.0)
+    p.add_argument("--max-components", type=int, default=3)
+    p.add_argument("--morph-close-pixels", type=int, default=5)
+    p.add_argument("--speed-sample-spacing-m", type=float, default=12.0)
+    p.add_argument("--speed-max-normal-distance-m", type=float, default=120.0)
+    p.add_argument("--speed-min-valid-fraction", type=float, default=0.20)
+    p.add_argument("--min-component-area-m2", type=float, default=400.0)
     return p.parse_args()
 
 
@@ -481,6 +546,8 @@ def main() -> int:
         max_normal_distance_m=args.speed_max_normal_distance_m,
         min_valid_fraction=args.speed_min_valid_fraction,
         min_component_area_m2=args.min_component_area_m2,
+        max_component_centroid_distance_m=400.0,
+        observability_ratio=1.5,
     )
     args.output_root.mkdir(parents=True, exist_ok=True)
 
@@ -494,6 +561,9 @@ def main() -> int:
             speed_config=speed_config,
             max_frames=args.max_frames,
             max_side=args.max_side,
+            max_components=args.max_components,
+            morph_close_pixels=args.morph_close_pixels,
+            min_component_area_m2=args.min_component_area_m2,
         )
         results.append(entry)
         print(

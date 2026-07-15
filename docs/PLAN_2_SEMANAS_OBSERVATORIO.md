@@ -151,23 +151,26 @@ Anexo técnico: métricas ML NDWS para I+D.
 | Scorecard gates A1/A2/A5 | ✅ | `outputs/observatorio/observatory_scorecard.json` |
 | clean12 schema | ✅ | `feature_schema.py` + preprocess `--schema clean12` + tests |
 | Train/eval clean12 | ✅ | IoU 0.215 Δ+0.065 — **no supera v21**; no promote |
-| ENTREGA_OBSERVATORIO.md | ✅ | números Tobarra + scorecard + index.html |
+| ENTREGA_OBSERVATORIO.md | ✅ | **v2 científica** — grado A Tobarra |
+| scientific_ops + operational_report | ✅ | máscara limpia, Vp plausible, A/B/C |
 
-### Resultados packs (resumen)
+### Resultados packs v2 (científicos) — canónicos en `outputs/observatorio/`
 
-| Incendio | Frames usados | speed_status | mediana m/min | Artefactos |
-|----------|---------------|--------------|---------------|------------|
-| tobarra_20240802 | 8 | estimated | 0.78 (vs INFOCAM 7) | completos |
-| cardoso_2025 | 5 | abstained | — | completos |
-| hellin_2024 | 5 | abstained | — | completos |
+| Incendio | Grado | Vp med | vs INFOCAM | N vel | Comp. med |
+|----------|-------|--------|------------|-------|-----------|
+| tobarra_20240802 | **A** | **4.31** | ratio **0.62** | 32 | 1.5 |
+| cardoso_2025 | B | abstención | n/d | 0 | 1.0 |
+| hellin_2024 | B | abstención | n/d | 0 | 1.0 |
 
-### Gate checklist final (semana 1 cerrada en ejecución)
+**Salto vs v1 Tobarra:** Vp 0.78→4.31 m/min; componentes 1264→~2; ratio INFOCAM 0.11→0.62.
+
+### Gate checklist
 
 | Gate | Resultado |
 |------|-----------|
 | A1 ≥3 incendios | ✅ PASS |
-| A2 artefactos | ✅ PASS |
-| A5 Tobarra anchor | ✅ PASS (ratio reportado, no calibrado a 7) |
+| A2 artefactos + informe operativo ES | ✅ PASS |
+| A5 Tobarra mismo orden magnitud INFOCAM | ✅ PASS (ratio 0.62, grado A) |
 | A7 documento | ✅ PASS |
-| B1–B3 clean12 código | ✅ PASS |
-| B4 clean12 ≥ v21 | ❌ FAIL (0.215 < 0.226) — v21 sigue production |
+| Utilidad real (no basura) | ✅ Tobarra A; otros abstienen con honestidad |
+| B4 clean12 ≥ v21 | ❌ FAIL — v21 production ML |

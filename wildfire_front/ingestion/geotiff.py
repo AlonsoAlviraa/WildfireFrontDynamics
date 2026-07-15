@@ -345,6 +345,10 @@ def ingest_geotiff_sequence(
     min_component_pixels: int = 1,
     persist_masks_dir: Path | None = None,
     mask_suffix: str = "_mask.tif",
+    scientific_clean: bool = False,
+    max_components: int = 5,
+    morph_close_pixels: int = 3,
+    min_component_area_m2: float = 100.0,
 ) -> GeoTiffIngestResult:
     """Validate GeoTIFF inputs and convert accepted masks to observations.
 
@@ -566,6 +570,15 @@ def ingest_geotiff_sequence(
             binary_mask = np.asarray(
                 sieve(binary_mask, size=min_component_pixels, connectivity=8), dtype=np.uint8
             )
+        if scientific_clean:
+            from ..scientific_ops import clean_binary_mask
+
+            binary_mask = clean_binary_mask(
+                binary_mask,
+                min_component_pixels=min_component_pixels,
+                morph_close_pixels=morph_close_pixels,
+                max_components=max_components,
+            )
 
         positive_fraction = float(np.mean(binary_mask > 0))
         if positive_fraction == 0.0:
@@ -601,6 +614,14 @@ def ingest_geotiff_sequence(
         transform = image_meta["transform"]
         assert isinstance(transform, Affine)
         components = extract_mask_components(binary_mask, transform)
+        if scientific_clean and components:
+            from ..scientific_ops import filter_components_main_front
+
+            components = filter_components_main_front(
+                components,
+                max_components=max_components,
+                min_area_m2=min_component_area_m2,
+            )
         if not components:
             records.append(
                 _record(

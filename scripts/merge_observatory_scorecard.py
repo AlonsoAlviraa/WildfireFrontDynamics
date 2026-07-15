@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = ROOT / "outputs" / "observatorio"
 REQUIRED = (
     "report.html",
+    "operational_report.html",
+    "operational_metrics.json",
     "fronts.geojson",
     "local_speeds.csv",
     "summary.json",
