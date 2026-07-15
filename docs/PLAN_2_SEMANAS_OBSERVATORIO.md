@@ -3,7 +3,7 @@
 > **Rol:** Product Manager + ejecución técnica  
 > **Fecha inicio:** 2026-07-15  
 > **Cliente interno:** Observatorio / colaboradores INFOCAM–CLM  
-> **Estado:** EN EJECUCIÓN
+> **Estado:** v3 entregado · **siguiente loop:** [`LOOP_2W_SALTOS_NOTABLES.md`](LOOP_2W_SALTOS_NOTABLES.md)
 
 ---
 

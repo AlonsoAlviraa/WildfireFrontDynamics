@@ -1,0 +1,94 @@
+[
+  {
+    "id": "W1-T-windows",
+    "order": 1,
+    "track": "observatorio",
+    "hypothesis": "H3 — ROS Tobarra estable en 3 ventanas temporales",
+    "leap_ids": ["O3"],
+    "status": "queued",
+    "primary_metric": "ratio_infocam per window in [0.5, 2.0]",
+    "go_if": "3/3 windows pass OR 2/3 pass + 1 justified abstention",
+    "depends_on": []
+  },
+  {
+    "id": "W1-product-gis",
+    "order": 2,
+    "track": "observatorio",
+    "hypothesis": "H4 — producto decisor 1 capa + timeline + brief",
+    "leap_ids": ["O4"],
+    "status": "queued",
+    "primary_metric": "human_5min_checklist",
+    "go_if": "main_front.gpkg + ros_timeline.csv + brief without opening JSON",
+    "depends_on": ["W1-T-windows"]
+  },
+  {
+    "id": "W1-seg-cal",
+    "order": 3,
+    "track": "observatorio",
+    "hypothesis": "H5 — segmentación ROI mejora monotonía de área sin romper ratio",
+    "leap_ids": ["O3", "O1"],
+    "status": "queued",
+    "primary_metric": "area_non_monotonic down AND Tobarra ratio in [0.5, 2]",
+    "go_if": "both conditions",
+    "depends_on": ["W1-T-windows"],
+    "skip_if": "O3 already solid and area stable"
+  },
+  {
+    "id": "W1-multi-anchor",
+    "order": 4,
+    "track": "observatorio",
+    "hypothesis": "H1 — multi-ancla INFOCAM/parte en 2+ IF",
+    "leap_ids": ["O1", "O5"],
+    "status": "queued",
+    "primary_metric": "count IF with ratio in [0.5, 2.0]",
+    "go_if": ">=2 IF including Tobarra",
+    "depends_on": ["W1-product-gis"],
+    "blocked_on": "external_anchors_from_observatorio"
+  },
+  {
+    "id": "W2-perimeter",
+    "order": 5,
+    "track": "observatorio",
+    "hypothesis": "H2 — error geométrico vs perímetro oficial",
+    "leap_ids": ["O2"],
+    "status": "queued",
+    "primary_metric": "hausdorff_p50_m",
+    "go_if": "report produced; P50 < 50m ideal",
+    "depends_on": ["W1-product-gis"],
+    "blocked_on": "official_vector_perimeter"
+  },
+  {
+    "id": "W2-second-A",
+    "order": 6,
+    "track": "observatorio",
+    "hypothesis": "H1/H5 — segundo incendio grado A",
+    "leap_ids": ["O5"],
+    "status": "queued",
+    "primary_metric": "quality_grade == A on IF#2",
+    "go_if": ">=2 fires grade A",
+    "depends_on": ["W1-multi-anchor"]
+  },
+  {
+    "id": "W2-ml-v24",
+    "order": 7,
+    "track": "ml",
+    "hypothesis": "H6 — clean12 + changed train beats v21 on full any_fire",
+    "leap_ids": ["M1"],
+    "status": "queued",
+    "primary_metric": "test IoU full + improvement_vs_copy_iou",
+    "go_if": "IoU >= 0.25 AND delta_copy >= 0.09 (cross-protocol)",
+    "depends_on": [],
+    "note": "Do not block observatorio track; run parallel after S1 gate"
+  },
+  {
+    "id": "W2-ml-clm",
+    "order": 8,
+    "track": "ml",
+    "hypothesis": "H7 — honest CLM transfer measurement",
+    "leap_ids": ["M2"],
+    "status": "queued",
+    "primary_metric": "delta_copy on CLM holdout OR explicit NO-GO",
+    "go_if": "delta_copy > 0 OR documented NO-GO with numbers",
+    "depends_on": ["W2-ml-v24"]
+  }
+]
