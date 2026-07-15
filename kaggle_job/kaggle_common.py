@@ -59,6 +59,7 @@ def run_preprocess_ndws(
     *,
     patch_size: int = 64,
     filter_mode: str = "any_fire",
+    schema: str = "legacy17",
     min_total: int = 100,
     log=print,
 ) -> int:
@@ -78,6 +79,7 @@ def run_preprocess_ndws(
         script = Path(__file__).resolve().parent / "preprocess_ndws.py"
 
     log("\n=== PREPROCESSING via preprocess_ndws.py ===")
+    log(f"  schema={schema} filter_mode={filter_mode} patch_size={patch_size}")
     for split in ("train", "val", "test"):
         out_split = data_root / split
         existing = len(list(out_split.glob("*.npz"))) if out_split.exists() else 0
@@ -96,6 +98,8 @@ def run_preprocess_ndws(
             filter_mode,
             "--output-root",
             str(data_root),
+            "--schema",
+            schema,
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:

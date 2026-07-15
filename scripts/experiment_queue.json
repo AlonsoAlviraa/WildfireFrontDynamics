@@ -1,13 +1,23 @@
 [
   {
+    "version": "v23_clean12",
+    "name": "Clean12 feature schema (no constant channels)",
+    "hypothesis": "12 informative channels + wind sin/cos + elevation beat legacy17 v21 IoU",
+    "script": "kaggle_job/run_unet_training_v23_clean12.py",
+    "kernel_slug": "alonsoalviraaaa/wildfire-front-training-v23-clean12",
+    "parent": "v21",
+    "status": "queued",
+    "go_if": "IoU full >= 0.226 and improvement_vs_copy_iou >= 0.076"
+  },
+  {
     "version": "overnight_mega",
     "name": "Overnight Mega v23-v30",
     "hypothesis": "8 sequential experiments: EMA, long train, focal, LR, changed-filter, CLM fine-tune",
     "script": "kaggle_job/run_overnight_mega.py",
     "kernel_slug": "alonsoalviraaaa/wildfire-overnight-mega-training",
-    "status": "running",
+    "status": "failed",
     "run": 2,
-    "note": "v1 failed: output-root mismatch; fixed preprocess --output-root",
+    "note": "COMPLETE with 0 patches — preprocess still produced empty splits; requeue after root-cause",
     "experiments": ["v23", "v25", "v27", "v28", "v24", "v26", "v29", "v30"]
   },
   {

@@ -59,12 +59,35 @@ parser.add_argument(
     default="/tmp/ndws_npz",
     help="Root directory for train/val/test NPZ shards (default /tmp/ndws_npz).",
 )
+parser.add_argument(
+    "--schema",
+    choices=["legacy17", "clean12"],
+    default="legacy17",
+    help=(
+        "Feature schema: legacy17=historical 17ch with constant placeholders; "
+        "clean12=12 informative channels (elevation, terrain, meteo, wind vectors, veg, erc)."
+    ),
+)
 args = parser.parse_args()
 
 import tensorflow as tf  # noqa: E402
 
+# Prefer repo feature_schema when cloned next to this script (Kaggle / local).
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+try:
+    from wildfire_front.ml.feature_schema import build_channels_from_fields  # type: ignore
+    _HAS_FEATURE_SCHEMA = True
+except Exception:
+    _HAS_FEATURE_SCHEMA = False
+    build_channels_from_fields = None  # type: ignore
+
 print(f"=== NDWS Preprocessing v2 | split={args.split} patch={args.patch_size}x{args.patch_size} ===")
-print(f"    sequence_length={args.sequence_length} stride={args.stride} filter={args.filter_mode}")
+print(
+    f"    sequence_length={args.sequence_length} stride={args.stride} "
+    f"filter={args.filter_mode} schema={args.schema}"
+)
 
 # --------------------------------------------------------------------------- #
 # Locate TFRecord input
@@ -291,7 +314,7 @@ def normalize_channels(channels: np.ndarray) -> np.ndarray:
 
 
 def build_channels(record):
-    """Build the 17-channel feature tensor from a parsed TFRecord."""
+    """Build feature tensor from a parsed TFRecord (schema-aware)."""
     def get_field(name, default_val=0.0):
         if name in mapped_keys:
             return record[mapped_keys[name]].numpy()
@@ -306,10 +329,34 @@ def build_channels(record):
     precip = get_field('precipitation')
     veg = get_field('vegetation', 0.6)
     erc = get_field('erc', 40.0)
+    drought = get_field('drought_index', 0.0) if 'drought_index' in mapped_keys else None
     prev_fire = get_field('prev_fire_mask')
     fire = get_field('fire_mask')
 
-    # Convert Kelvin → Celsius if needed
+    schema = getattr(args, "schema", "legacy17")
+
+    if _HAS_FEATURE_SCHEMA and build_channels_from_fields is not None:
+        channels = build_channels_from_fields(
+            schema,
+            elevation=elevation,
+            wind_dir=wind_dir,
+            wind_speed=wind_speed,
+            max_temp=max_temp,
+            min_temp=min_temp,
+            humidity=humidity,
+            precip=precip,
+            veg=veg,
+            erc=erc,
+            drought=drought,
+        )
+        return channels, prev_fire, fire
+
+    # Fallback (no package import): legacy17 only, inlined.
+    if schema != "legacy17":
+        raise RuntimeError(
+            f"schema={schema} requires wildfire_front.ml.feature_schema on PYTHONPATH"
+        )
+
     if np.max(max_temp) > 200:
         max_temp = max_temp - 273.15
     if np.max(min_temp) > 200:
@@ -325,7 +372,7 @@ def build_channels(record):
 
     channels = np.zeros((17, 64, 64), dtype=np.float32)
     channels[0] = slope
-    channels[1] = aspect
+    channels[1] = aspect + np.pi  # align with (aspect+pi)/2pi via legacy stats
     channels[2] = temp_c
     channels[3] = humidity
     channels[4] = wind_speed
