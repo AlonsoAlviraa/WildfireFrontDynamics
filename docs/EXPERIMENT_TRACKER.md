@@ -22,6 +22,8 @@
 
 **Observatorio packs (2026-07-15):** Tobarra + Cardoso + Hellín en `outputs/observatorio/` — gates A1/A2/A5 PASS (scorecard).
 
+**Priority stack (2026-07-15, `ebdc9a0`):** Dual product `ndws_v21`+`clm_v28` shipped (`docs/PRODUCTO_DUAL.md`). Anchors tooling → O1 PARTIAL / O5 NO_GO (only Tobarra confirmed). Hausdorff official BLOCKED; temporal proxy 5 IF. **v26 physics15** Kaggle pushed for G1: `alonsoalviraaaa/wildfire-front-training-v26-physics15`.
+
 ---
 
 ## Experiment Log
