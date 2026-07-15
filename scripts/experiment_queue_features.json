@@ -1,0 +1,41 @@
+[
+  {
+    "id": "v25-physics14",
+    "rail": "features",
+    "single_change": "schema=physics14 T=1 any_fire residual delta",
+    "go_if": "test_iou >= 0.226 AND improvement_vs_copy_iou >= 0.076",
+    "leap": "G1 approach",
+    "status": "queued"
+  },
+  {
+    "id": "v26-interactions",
+    "rail": "features",
+    "single_change": "physics14 + wind_upslope channel",
+    "go_if": "beats v25 on full IoU and delta",
+    "depends_on": ["v25-physics14"],
+    "status": "queued"
+  },
+  {
+    "id": "v27-temporal",
+    "rail": "temporal",
+    "single_change": "sequence_length=2 or 3 with best schema",
+    "go_if": "IoU >= 0.25 AND delta >= 0.09 OR skip if no real temporal",
+    "depends_on": ["v25-physics14"],
+    "status": "queued"
+  },
+  {
+    "id": "clm-holdout-baseline",
+    "rail": "transfer",
+    "single_change": "eval v21 on CLM test holdout only",
+    "go_if": "report with delta on test; GO if delta>0 else NO-GO",
+    "status": "queued"
+  },
+  {
+    "id": "v28-clm-ft",
+    "rail": "transfer",
+    "single_change": "warm-start best NDWS on CLM train; eval test",
+    "go_if": "G2 on test; no NDWS test collapse",
+    "depends_on": ["clm-holdout-baseline", "v25-physics14"],
+    "status": "queued"
+  }
+]

@@ -1,13 +1,15 @@
 """NDWS feature schemas for wildfire spread models.
 
-Two schemas are supported:
+Schemas:
 
 * ``legacy17`` — historical 17-channel tensor with constant placeholders
   (pressure/cloud/visibility/dewpoint) kept for checkpoint compatibility.
 * ``clean12`` — informative channels only: elevation, terrain, meteo,
   wind vectors, vegetation, ERC. No constant padding.
+* ``physics14`` — preferred for v25+: tmin/tmax split + drought/FFMC slot.
 
 The trainer always appends ``prev_fire`` as an extra input channel.
+See ``docs/ML_FEATURE_METHODOLOGY.md``.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ from typing import Literal
 
 import numpy as np
 
-SchemaName = Literal["legacy17", "clean12"]
+SchemaName = Literal["legacy17", "clean12", "physics14"]
 
 # Per-channel (subtract, divide) for clean12 — maps roughly to ~[0, 1] or [-1, 1].
 CLEAN12_CHANNEL_STATS: list[tuple[float, float]] = [
@@ -70,12 +72,59 @@ CLEAN12_NAMES: tuple[str, ...] = (
     "erc",
 )
 
+# physics14: separate tmin/tmax + drought_or_ffmc (no constant padding).
+PHYSICS14_CHANNEL_STATS: list[tuple[float, float]] = [
+    (500.0, 1500.0),  # 0 elevation
+    (0.0, 1.5708),  # 1 slope
+    (0.0, 1.0),  # 2 aspect_sin
+    (0.0, 1.0),  # 3 aspect_cos
+    (15.0, 20.0),  # 4 tmin C
+    (15.0, 20.0),  # 5 tmax C
+    (0.0, 100.0),  # 6 humidity
+    (0.0, 20.0),  # 7 wind_speed
+    (0.0, 1.0),  # 8 wind_sin
+    (0.0, 1.0),  # 9 wind_cos
+    (0.0, 10.0),  # 10 precip
+    (0.0, 1.0),  # 11 vegetation
+    (0.0, 1.0),  # 12 erc
+    (50.0, 51.0),  # 13 drought_or_ffmc (FFMC scale default; PDSI mapped to ~[0,1] then *101)
+]
+
+PHYSICS14_NAMES: tuple[str, ...] = (
+    "elevation",
+    "slope",
+    "aspect_sin",
+    "aspect_cos",
+    "tmin",
+    "tmax",
+    "humidity",
+    "wind_speed",
+    "wind_sin",
+    "wind_cos",
+    "precipitation",
+    "vegetation",
+    "erc",
+    "drought_or_ffmc",
+)
+
 
 def schema_channel_count(schema: SchemaName) -> int:
     if schema == "clean12":
         return 12
+    if schema == "physics14":
+        return 14
     if schema == "legacy17":
         return 17
+    raise ValueError(f"Unknown schema: {schema}")
+
+
+def schema_channel_names(schema: SchemaName) -> tuple[str, ...]:
+    if schema == "clean12":
+        return CLEAN12_NAMES
+    if schema == "physics14":
+        return PHYSICS14_NAMES
+    if schema == "legacy17":
+        return tuple(f"legacy_{i}" for i in range(17))
     raise ValueError(f"Unknown schema: {schema}")
 
 
@@ -254,6 +303,58 @@ def build_clean12_channels(
     return normalize_with_stats(channels, CLEAN12_CHANNEL_STATS)
 
 
+def build_physics14_channels(
+    elevation: np.ndarray,
+    wind_dir: np.ndarray,
+    wind_speed: np.ndarray,
+    max_temp: np.ndarray,
+    min_temp: np.ndarray,
+    humidity: np.ndarray,
+    precip: np.ndarray,
+    veg: np.ndarray,
+    erc: np.ndarray,
+    drought: np.ndarray | None = None,
+) -> np.ndarray:
+    """Build 14-channel physics schema: tmin/tmax + drought_or_ffmc."""
+    elev, slope, aspect = _terrain_from_elevation(elevation)
+    max_temp = _as_celsius(max_temp)
+    min_temp = _as_celsius(min_temp)
+    temp_c = 0.5 * (min_temp + max_temp)
+    wind_sin, wind_cos = _wind_components(wind_speed, wind_dir)
+    aspect_sin = np.sin(aspect).astype(np.float32)
+    aspect_cos = np.cos(aspect).astype(np.float32)
+    erc_norm = np.clip(np.asarray(erc, dtype=np.float32) / 100.0, 0.0, 1.0)
+    wind_kmh = np.asarray(wind_speed, dtype=np.float32) * 3.6
+    ffmc = compute_ffmc(temp_c, humidity, wind_kmh, precip, prev_ffmc=85.0)
+
+    # Prefer varying drought (PDSI-like); else FFMC in physical units for norm stats.
+    drought_or_ffmc = ffmc.astype(np.float32)
+    if drought is not None:
+        d = np.asarray(drought, dtype=np.float32)
+        if float(np.nanstd(d)) > 1e-6:
+            d_min, d_max = float(np.nanmin(d)), float(np.nanmax(d))
+            d01 = np.clip((d - d_min) / (d_max - d_min + 1e-6), 0.0, 1.0)
+            drought_or_ffmc = (d01 * 101.0).astype(np.float32)
+
+    h, w = elev.shape
+    channels = np.zeros((14, h, w), dtype=np.float32)
+    channels[0] = elev
+    channels[1] = slope
+    channels[2] = aspect_sin
+    channels[3] = aspect_cos
+    channels[4] = min_temp
+    channels[5] = max_temp
+    channels[6] = humidity
+    channels[7] = wind_speed
+    channels[8] = wind_sin
+    channels[9] = wind_cos
+    channels[10] = precip
+    channels[11] = veg
+    channels[12] = erc_norm
+    channels[13] = drought_or_ffmc
+    return normalize_with_stats(channels, PHYSICS14_CHANNEL_STATS)
+
+
 def build_channels_from_fields(
     schema: SchemaName,
     *,
@@ -268,6 +369,19 @@ def build_channels_from_fields(
     erc: np.ndarray,
     drought: np.ndarray | None = None,
 ) -> np.ndarray:
+    if schema == "physics14":
+        return build_physics14_channels(
+            elevation,
+            wind_dir,
+            wind_speed,
+            max_temp,
+            min_temp,
+            humidity,
+            precip,
+            veg,
+            erc,
+            drought=drought,
+        )
     if schema == "clean12":
         return build_clean12_channels(
             elevation,

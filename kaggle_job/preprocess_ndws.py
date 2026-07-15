@@ -61,11 +61,11 @@ parser.add_argument(
 )
 parser.add_argument(
     "--schema",
-    choices=["legacy17", "clean12"],
+    choices=["legacy17", "clean12", "physics14"],
     default="legacy17",
     help=(
-        "Feature schema: legacy17=historical 17ch with constant placeholders; "
-        "clean12=12 informative channels (elevation, terrain, meteo, wind vectors, veg, erc)."
+        "Feature schema: legacy17=17ch + constants; clean12=12 informative; "
+        "physics14=tmin/tmax + drought/FFMC (preferred for v25+)."
     ),
 )
 args = parser.parse_args()

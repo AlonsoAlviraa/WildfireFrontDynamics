@@ -6,6 +6,7 @@ import numpy as np
 
 from wildfire_front.ml.feature_schema import (
     CLEAN12_NAMES,
+    PHYSICS14_NAMES,
     build_channels_from_fields,
     count_constant_channels,
     schema_channel_count,
@@ -82,3 +83,31 @@ def test_wind_vector_changes_with_direction() -> None:
     b = build_channels_from_fields("clean12", **fields_b)
     # wind_sin / wind_cos channels differ
     assert not np.allclose(a[7], b[7]) or not np.allclose(a[8], b[8])
+
+
+def test_physics14_shape_and_names() -> None:
+    fields = _synthetic_fields()
+    h, w = 16, 16
+    fields["wind_dir"] = (np.linspace(0, 350, h * w).reshape(h, w)).astype(np.float32)
+    fields["min_temp"] = np.full((h, w), 280.0, dtype=np.float32)
+    fields["max_temp"] = np.full((h, w), 305.0, dtype=np.float32)
+    ch = build_channels_from_fields("physics14", **fields)
+    assert ch.shape == (14, 16, 16)
+    assert schema_channel_count("physics14") == 14
+    assert len(PHYSICS14_NAMES) == 14
+    assert np.isfinite(ch).all()
+    # tmin/tmax not identical after norm when inputs differ
+    assert not np.allclose(ch[4], ch[5])
+
+
+def test_physics14_drought_slot_varies_with_ffmc_inputs() -> None:
+    fields_wet = _synthetic_fields()
+    fields_dry = _synthetic_fields()
+    fields_wet["precip"] = np.full((16, 16), 20.0, dtype=np.float32)
+    fields_dry["precip"] = np.zeros((16, 16), dtype=np.float32)
+    fields_wet["humidity"] = np.full((16, 16), 90.0, dtype=np.float32)
+    fields_dry["humidity"] = np.full((16, 16), 15.0, dtype=np.float32)
+    wet = build_channels_from_fields("physics14", **fields_wet)
+    dry = build_channels_from_fields("physics14", **fields_dry)
+    # drought_or_ffmc channel index 13
+    assert not np.allclose(wet[13], dry[13])

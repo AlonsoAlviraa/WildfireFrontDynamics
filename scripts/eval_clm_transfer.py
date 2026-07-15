@@ -19,34 +19,61 @@ if str(ROOT) not in sys.path:
 
 
 def main() -> int:
+    import argparse
+
     import torch
-    from torch.utils.data import DataLoader
 
     from wildfire_front.ml.dataset import NpzWildfireDataset
     from wildfire_front.ml.ndws_metrics import aggregate_ndws_evaluation, evaluate_sample
     from wildfire_front.ml.unet_train import UNetTrainConfig, build_model, prepare_input
 
+    parser = argparse.ArgumentParser(description="CLM transfer eval (holdout-aware)")
+    parser.add_argument(
+        "--split",
+        choices=["test", "val", "train"],
+        default="test",
+        help="Split under holdout_v1 (default test for G2)",
+    )
+    parser.add_argument(
+        "--allow-train-debug",
+        action="store_true",
+        help="Allow --split train (not valid for G2 go/no-go)",
+    )
+    parser.add_argument("--weights", type=Path, default=None)
+    parser.add_argument("--max-patches", type=int, default=400)
+    parser.add_argument(
+        "--holdout-root",
+        type=Path,
+        default=ROOT / "artifacts" / "clm_ndws_patches" / "holdout_v1",
+    )
+    args = parser.parse_args()
+
+    if args.split == "train" and not args.allow_train_debug:
+        print("ERROR: G2 forbids train split. Use --allow-train-debug only for debugging.")
+        return 2
+
     weight_candidates = [
+        args.weights,
         ROOT / "models" / "production" / "weights_v21_best.pt",
         ROOT / "kaggle_outputs_v21" / "weights_pretrained_best.pt",
         ROOT / "kaggle_outputs_v23_clean12" / "weights_pretrained_best.pt",
     ]
+    weights = next((p for p in weight_candidates if p is not None and Path(p).is_file()), None)
 
-    # Prefer held-out splits; fall back to train with explicit protocol label.
-    clm_dir = None
-    clm_split_label = "unknown"
-    base = ROOT / "artifacts" / "clm_ndws_patches"
-    for sub in ("test", "val", "train"):
-        d = base / sub
-        if d.is_dir() and list(d.glob("*.npz")):
-            clm_dir = d
-            clm_split_label = sub
-            break
-    if clm_dir is None and base.is_dir() and list(base.glob("*.npz")):
-        clm_dir = base
-        clm_split_label = "flat"
+    # Prefer frozen holdout_v1; fall back to legacy layout with warning.
+    clm_dir = args.holdout_root / args.split
+    clm_split_label = args.split
+    protocol = "clm_holdout_test_seed42_v1" if args.split == "test" else f"clm_holdout_{args.split}_v1"
+    if not clm_dir.is_dir() or not list(clm_dir.glob("*.npz")):
+        base = ROOT / "artifacts" / "clm_ndws_patches"
+        for sub in (args.split, "test", "val", "train"):
+            d = base / sub
+            if d.is_dir() and list(d.glob("*.npz")):
+                clm_dir = d
+                clm_split_label = f"legacy_{sub}"
+                protocol = f"clm_npz_{sub}_cap{args.max_patches}_LEGACY"
+                break
 
-    weights = next((p for p in weight_candidates if p.is_file()), None)
     out_dir = ROOT / "outputs" / "ml_eval"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -54,7 +81,8 @@ def main() -> int:
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "leap_id": "M2",
         "hypothesis": "H7 honest CLM transfer",
-        "protocol": f"clm_npz_{clm_split_label}_cap400",
+        "protocol": protocol,
+        "gate_g2_eligible": args.split == "test" and "LEGACY" not in protocol,
     }
 
     if clm_dir is None or weights is None:
@@ -75,7 +103,7 @@ def main() -> int:
 
     ds = NpzWildfireDataset(clm_dir, augment=False)
     # Cap for local CPU
-    n = min(len(ds), 400)
+    n = min(len(ds), args.max_patches)
     if n < 10:
         report.update({"status": "NO_GO", "go": False, "reason": "too_few_patches", "n": n})
         (out_dir / "clm_transfer_report.json").write_text(
@@ -152,12 +180,13 @@ def main() -> int:
     model_iou = float(agg.get("model_iou") or agg.get("model_full", {}).get("micro_iou") or 0.0)
     copy_iou = float(agg.get("copy_baseline_iou") or agg.get("copy_full", {}).get("micro_iou") or 0.0)
     delta = float(agg.get("improvement_vs_copy_iou", model_iou - copy_iou))
-    go = delta is not None and delta > 0
-
+    delta_positive = bool(delta is not None and delta > 0)
+    g2_ok = bool(report.get("gate_g2_eligible")) and delta_positive
     report.update(
         {
-            "status": "GO" if go else "NO_GO",
-            "go": go,
+            "status": "GO" if g2_ok else ("DEBUG_ONLY" if delta_positive else "NO_GO"),
+            "go": g2_ok,
+            "delta_positive": delta_positive,
             "weights": str(weights),
             "clm_dir": str(clm_dir),
             "n_patches": n,
@@ -168,15 +197,13 @@ def main() -> int:
             "aggregate": agg if isinstance(agg, dict) else str(agg),
             "clm_split": clm_split_label,
             "verdict_es": (
-                f"El modelo supera copy en CLM split={clm_split_label} "
-                f"(Δ={delta:.3f}). "
-                + (
-                    "OJO: split train no es holdout puro."
-                    if clm_split_label == "train"
-                    else "Split preferente test/val."
+                f"G2 PASS: Δ copy={delta:.3f} on protocol {protocol}."
+                if g2_ok
+                else (
+                    f"Δ positive ({delta:.3f}) but not G2-eligible (split={clm_split_label})."
+                    if delta_positive
+                    else "NO transfer defendible on this split."
                 )
-                if go
-                else "NO transfer defendible: no supera copy o datos incompatibles."
             ),
         }
     )
