@@ -152,3 +152,7 @@
 ### O3 temporal Tobarra
 - Strict band 2/3 GO; late ratio 0.478; wide band 3/3
 
+### v27_temporal_t2: COMPLETE — NO_PROMOTE
+- Test IoU **0.2253** | Δ **+0.0755** | best_epoch 30 | flat vs v21 (0.2256/+0.076)
+- G1: FAIL | next: v27b T=3 last temporal shot then KILL if fail
+

@@ -7,7 +7,11 @@
     "leap": "G1 approach",
     "status": "completed",
     "verdict": "NO_PROMOTE",
-    "results": {"test_iou": 0.224, "delta": 0.074, "vs_v21": "slightly_worse"}
+    "results": {
+      "test_iou": 0.224,
+      "delta": 0.074,
+      "vs_v21": "slightly_worse"
+    }
   },
   {
     "id": "clm-holdout-baseline",
@@ -16,7 +20,12 @@
     "go_if": "report with delta on test; GO if delta>0 else NO-GO",
     "status": "completed",
     "verdict": "GO",
-    "results": {"model_iou": 0.798, "copy_iou": 0.642, "delta": 0.157, "protocol": "clm_holdout_test_seed42_v1"}
+    "results": {
+      "model_iou": 0.798,
+      "copy_iou": 0.642,
+      "delta": 0.157,
+      "protocol": "clm_holdout_test_seed42_v1"
+    }
   },
   {
     "id": "v26-physics15",
@@ -28,7 +37,7 @@
     "results": {
       "test_iou": 0.221,
       "delta": 0.071,
-      "copy": 0.150,
+      "copy": 0.15,
       "best_epoch": 23,
       "vs_v21": "worse"
     }
@@ -38,7 +47,9 @@
     "rail": "transfer",
     "single_change": "warm-start v21 on CLM holdout train; eval test",
     "go_if": "G2 on test; beats zero-shot delta",
-    "depends_on": ["clm-holdout-baseline"],
+    "depends_on": [
+      "clm-holdout-baseline"
+    ],
     "status": "completed",
     "verdict": "GO_BEST_TRANSFER",
     "results": {
@@ -54,16 +65,27 @@
     "rail": "temporal",
     "single_change": "sequence_length=2 legacy17 residual delta any_fire",
     "go_if": "IoU >= 0.25 AND delta >= 0.09 OR beats v21",
-    "depends_on": ["v26-physics15"],
-    "status": "running",
-    "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2"
+    "depends_on": [
+      "v26-physics15"
+    ],
+    "status": "completed",
+    "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
+    "verdict": "NO_PROMOTE",
+    "results": {
+      "test_iou": 0.2253,
+      "delta": 0.0755,
+      "vs_v21": "flat"
+    }
   },
   {
     "id": "v27b-temporal-t3",
     "rail": "temporal",
     "single_change": "sequence_length=3 if T=2 shows signal",
     "go_if": "beats T=2 and G1",
-    "depends_on": ["v27-temporal-t2"],
-    "status": "queued"
+    "depends_on": [
+      "v27-temporal-t2"
+    ],
+    "status": "running",
+    "kernel": "alonsoalviraaaa/wildfire-front-training-v27b-temporal-t3"
   }
 ]
