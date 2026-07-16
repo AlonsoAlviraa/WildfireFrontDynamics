@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""One-command emergency briefing for an observatorio pack (default Tobarra).
+"""Emergency briefing + GIS envelope export (single entry, multi-IF capable).
 
-Writes a human-readable markdown brief with grade, ROS, sectors, envelope,
-and explicit blocked items (anchors / official perimeter).
+Examples:
+  python scripts/emergency_briefing.py
+  python scripts/emergency_briefing.py --fires tobarra_20240802,cardoso_2025
 """
 
 from __future__ import annotations
@@ -21,28 +22,44 @@ from wildfire_front.emergency_products import (  # noqa: E402
     expansion_bearing_deg_from_centroids,
     load_main_front_centroids,
     write_emergency_envelope_file,
+    write_envelope_geojson,
 )
 
 
-def _ensure_enriched(pack: Path) -> dict:
+def _ensure_enriched(pack: Path, fire_id: str) -> dict:
     ops_path = pack / "operational_metrics.json"
     if not ops_path.is_file():
         raise FileNotFoundError(f"missing {ops_path}")
     ops = json.loads(ops_path.read_text(encoding="utf-8"))
-    need = "sector_ros" not in ops or not (
-        ops.get("short_horizon_envelope") or {}
-    ).get("sector_aware")
+    env = ops.get("short_horizon_envelope") or {}
+    need = "sector_ros" not in ops or not env.get("sector_aware")
+    bearing = None
+    cents: list[tuple[float, float]] = []
+    mf = pack / "main_front.geojson"
+    if mf.is_file():
+        cents = load_main_front_centroids(mf)
+        bearing = expansion_bearing_deg_from_centroids(cents)
     if need:
-        bearing = None
-        mf = pack / "main_front.geojson"
-        if mf.is_file():
-            bearing = expansion_bearing_deg_from_centroids(load_main_front_centroids(mf))
         ops = enrich_ops_dict(ops, expansion_bearing_deg=bearing)
         ops_path.write_text(json.dumps(ops, indent=2), encoding="utf-8")
         write_emergency_envelope_file(
             ops.get("short_horizon_envelope") or {},
             pack / "emergency_envelope.json",
         )
+    # Always refresh GIS from current envelope numbers (single ROS source)
+    env = ops.get("short_horizon_envelope") or {}
+    center = cents[-1] if cents else None
+    if center is None and bearing is None:
+        # last chance from envelope bearing only
+        pass
+    write_envelope_geojson(
+        env,
+        pack / "emergency_envelope_guidance.geojson",
+        center_xy=center,
+        fire_id=fire_id,
+        expansion_bearing_deg=bearing
+        or (ops.get("sector_ros") or {}).get("expansion_bearing_deg"),
+    )
     return ops
 
 
@@ -91,7 +108,6 @@ def build_briefing_md(fire_id: str, ops: dict, pack: Path) -> str:
     else:
         lines.append(f"- Abstained: {env.get('reason')}")
 
-    # Reference / blocked
     lines += ["", "## Blocked / not claimed", ""]
     if ops.get("has_reference") or ops.get("reference_vp_m_min"):
         lines.append(
@@ -104,10 +120,12 @@ def build_briefing_md(fire_id: str, ops: dict, pack: Path) -> str:
         "- **Official perimeter Hausdorff (O2):** BLOCKED without official GeoJSON "
         "(KMZ image footprint is not a fire perimeter)"
     )
-    lines.append(
-        "- **15/30/60 envelope is NOT validated tactical dispatch**"
-    )
+    lines.append("- **15/30/60 envelope is NOT validated tactical dispatch**")
     lines.append("- **NDWS global ML is research-only** (G1 features+temporal KILL)")
+    lines.append(
+        "- **GIS layer emergency_envelope_guidance.geojson is extrapolated guidance, "
+        "NOT an official perimeter**"
+    )
 
     lines += [
         "",
@@ -115,6 +133,7 @@ def build_briefing_md(fire_id: str, ops: dict, pack: Path) -> str:
         "",
         f"- `{pack / 'operational_metrics.json'}`",
         f"- `{pack / 'emergency_envelope.json'}`",
+        f"- `{pack / 'emergency_envelope_guidance.geojson'}`",
         f"- `{pack / 'main_front.geojson'}`",
         f"- `{pack / 'operational_report.html'}`",
         "",
@@ -122,28 +141,55 @@ def build_briefing_md(fire_id: str, ops: dict, pack: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def process_fire(root: Path, fire_id: str) -> Path:
+    pack = root / fire_id
+    ops = _ensure_enriched(pack, fire_id)
+    md = build_briefing_md(fire_id, ops, pack)
+    out = pack / "emergency_briefing.md"
+    out.write_text(md, encoding="utf-8")
+    return out
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Emergency briefing (one command)")
-    ap.add_argument("--fire", default="tobarra_20240802")
+    ap = argparse.ArgumentParser(description="Emergency briefing multi-IF + GIS")
+    ap.add_argument(
+        "--fires",
+        default="tobarra_20240802,cardoso_2025",
+        help="Comma-separated fire pack ids under outputs/observatorio",
+    )
+    ap.add_argument(
+        "--fire",
+        default=None,
+        help="Single fire (overrides --fires if set)",
+    )
     ap.add_argument(
         "--root",
         type=Path,
         default=ROOT / "outputs" / "observatorio",
     )
-    ap.add_argument(
-        "--output",
-        type=Path,
-        default=None,
-        help="Default: pack/emergency_briefing.md",
-    )
     args = ap.parse_args()
-    pack = args.root / args.fire
-    ops = _ensure_enriched(pack)
-    md = build_briefing_md(args.fire, ops, pack)
-    out = args.output or (pack / "emergency_briefing.md")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(md, encoding="utf-8")
-    print(str(out.resolve()))
+    if args.fire:
+        fires = [args.fire.strip()]
+    else:
+        fires = [x.strip() for x in args.fires.split(",") if x.strip()]
+
+    written: list[Path] = []
+    for fid in fires:
+        pack = args.root / fid
+        if not pack.is_dir():
+            print(f"SKIP missing pack {fid}", file=sys.stderr)
+            continue
+        try:
+            written.append(process_fire(args.root, fid))
+        except Exception as exc:  # noqa: BLE001
+            print(f"FAIL {fid}: {exc}", file=sys.stderr)
+            return 1
+
+    if not written:
+        print("No briefings written", file=sys.stderr)
+        return 1
+    for p in written:
+        print(str(p.resolve()))
     return 0
 
 

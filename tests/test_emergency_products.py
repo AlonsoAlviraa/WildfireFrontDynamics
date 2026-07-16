@@ -11,6 +11,7 @@ from wildfire_front.emergency_products import (
     compute_sector_ros,
     compute_short_horizon_envelope,
     enrich_ops_dict,
+    envelope_to_geojson,
     expansion_bearing_deg_from_centroids,
     ring_centroid,
 )
@@ -95,31 +96,64 @@ def test_enrich_ops_dict():
     assert out["not_a_product"] == "validated_tactical_dispatch"
 
 
-def test_emergency_briefing_cli_tobarra():
-    pack = ROOT / "outputs" / "observatorio" / "tobarra_20240802"
-    if not (pack / "operational_metrics.json").is_file():
-        return  # skip if pack not present in environment
-    out = pack / "emergency_briefing.md"
+def test_envelope_to_geojson_feature_collection():
+    e = compute_short_horizon_envelope(
+        5.71,
+        head_ros_m_min=6.9,
+        flank_ros_m_min=5.71,
+        rear_ros_m_min=2.8,
+        expansion_bearing_deg=204.0,
+    )
+    gj = envelope_to_geojson(e, center_xy=(500000.0, 4200000.0), fire_id="test", expansion_bearing_deg=204.0)
+    assert gj["type"] == "FeatureCollection"
+    assert len(gj["features"]) >= 3  # flank + head + rear for at least one horizon
+    for feat in gj["features"]:
+        props = feat["properties"]
+        assert props.get("not_official_perimeter") is True
+        assert props.get("not_tactical_dispatch") is True
+        assert feat["geometry"]["type"] == "Polygon"
+        ring = feat["geometry"]["coordinates"][0]
+        assert len(ring) >= 4
+
+
+def test_emergency_briefing_cli_multi_if():
+    packs_root = ROOT / "outputs" / "observatorio"
+    if not (packs_root / "tobarra_20240802" / "operational_metrics.json").is_file():
+        return
+    second = None
+    for cand in ("cardoso_2025", "hellin_2024", "brazatortas_2025"):
+        if (packs_root / cand / "operational_metrics.json").is_file():
+            second = cand
+            break
+    fires = "tobarra_20240802" + (f",{second}" if second else "")
     r = subprocess.run(
         [
             sys.executable,
             str(ROOT / "scripts" / "emergency_briefing.py"),
-            "--fire",
-            "tobarra_20240802",
+            "--fires",
+            fires,
         ],
         capture_output=True,
         text=True,
         cwd=str(ROOT),
     )
-    assert r.returncode == 0, r.stderr
-    path = Path(r.stdout.strip().splitlines()[-1])
-    assert path.is_file()
-    text = path.read_text(encoding="utf-8").lower()
-    assert "grade" in text or "grado" in text or "quality" in text
-    assert "ros" in text
-    assert "head" in text and "flank" in text
-    assert "15" in text and "60" in text
-    assert "blocked" in text or "perimeter" in text or "perímetro" in text
+    assert r.returncode == 0, r.stderr + r.stdout
+    paths = [Path(line.strip()) for line in r.stdout.strip().splitlines() if line.strip()]
+    assert paths
+    for path in paths:
+        assert path.is_file()
+        text = path.read_text(encoding="utf-8").lower()
+        assert "ros" in text
+        assert "head" in text and "flank" in text
+        assert "15" in text and "60" in text
+        assert "blocked" in text or "perimeter" in text or "perímetro" in text
+        # GIS next to brief
+        gis = path.parent / "emergency_envelope_guidance.geojson"
+        assert gis.is_file(), f"missing GIS for {path.parent.name}"
+        gj = json.loads(gis.read_text(encoding="utf-8"))
+        assert gj["type"] == "FeatureCollection"
+        assert len(gj["features"]) > 0
+        assert gj["features"][0]["properties"].get("not_official_perimeter") is True
 
 
 def test_hausdorff_official_blocked_and_synthetic(tmp_path: Path):

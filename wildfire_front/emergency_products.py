@@ -241,3 +241,184 @@ def enrich_ops_dict(
 def write_emergency_envelope_file(envelope: dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
+
+
+def _circle_ring(
+    cx: float,
+    cy: float,
+    radius_m: float,
+    *,
+    n: int = 48,
+) -> list[list[float]]:
+    """Closed ring in projected meters (x east, y north)."""
+    if radius_m <= 0:
+        return [[cx, cy], [cx, cy]]
+    pts: list[list[float]] = []
+    for i in range(n):
+        ang = 2.0 * math.pi * i / n
+        # ang 0 = east; convert so 0 bearing north is +y
+        # For isotropic circle direction does not matter.
+        x = cx + radius_m * math.sin(ang)
+        y = cy + radius_m * math.cos(ang)
+        pts.append([round(x, 3), round(y, 3)])
+    pts.append(pts[0])
+    return pts
+
+
+def _sector_wedge_ring(
+    cx: float,
+    cy: float,
+    radius_m: float,
+    bearing_deg: float,
+    half_width_deg: float = 45.0,
+    *,
+    n: int = 24,
+) -> list[list[float]]:
+    """Wedge ring centered on bearing (deg from north, clockwise)."""
+    if radius_m <= 0:
+        return [[cx, cy], [cx, cy]]
+    b0 = math.radians((bearing_deg - half_width_deg) % 360.0)
+    b1 = math.radians((bearing_deg + half_width_deg) % 360.0)
+    # Walk clockwise from b0 to b1
+    start = (bearing_deg - half_width_deg) % 360.0
+    span = (2.0 * half_width_deg) % 360.0
+    if span <= 0:
+        span = 90.0
+    pts: list[list[float]] = [[cx, cy]]
+    for i in range(n + 1):
+        brg = math.radians((start + span * i / n) % 360.0)
+        # bearing 0 = +y (north), 90 = +x (east)
+        x = cx + radius_m * math.sin(brg)
+        y = cy + radius_m * math.cos(brg)
+        pts.append([round(x, 3), round(y, 3)])
+    pts.append([cx, cy])
+    return pts
+
+
+def envelope_to_geojson(
+    envelope: dict[str, Any],
+    *,
+    center_xy: tuple[float, float] | None,
+    fire_id: str = "",
+    expansion_bearing_deg: float | None = None,
+) -> dict[str, Any]:
+    """Build FeatureCollection of guidance rings from emergency envelope numbers.
+
+    Coordinates are in the same projected CRS as the pack (typically UTM meters).
+    Properties always state extrapolated / non-official guidance.
+    """
+    features: list[dict[str, Any]] = []
+    label = {
+        "guidance": "extrapolated_from_observed_ros",
+        "not_official_perimeter": True,
+        "not_tactical_dispatch": True,
+        "label_en": envelope.get("label_en"),
+        "label_es": envelope.get("label_es"),
+        "fire_id": fire_id,
+        "product": envelope.get("product") or "short_horizon_envelope_v2_sector",
+    }
+    if center_xy is None:
+        return {
+            "type": "FeatureCollection",
+            "features": [],
+            "properties": {**label, "status": "abstained", "reason": "no_center"},
+        }
+    cx, cy = float(center_xy[0]), float(center_xy[1])
+    bearing = expansion_bearing_deg
+    if bearing is None:
+        bearing = envelope.get("expansion_bearing_deg")
+
+    for e in envelope.get("envelopes") or []:
+        h = int(e.get("horizon_min") or 0)
+        # Flank isotropic circle (primary guidance)
+        r_flank = float(e.get("flank_radius_m") or e.get("radius_m") or 0)
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {
+                    **label,
+                    "horizon_min": h,
+                    "sector": "flank_isotropic",
+                    "radius_m": r_flank,
+                    "ros_m_min": e.get("flank_ros_m_min") or e.get("ros_m_min_used"),
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [_circle_ring(cx, cy, r_flank)],
+                },
+            }
+        )
+        r_head = float(e.get("head_radius_m") or r_flank)
+        if bearing is not None and r_head > 0:
+            features.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        **label,
+                        "horizon_min": h,
+                        "sector": "head",
+                        "radius_m": r_head,
+                        "bearing_deg": bearing,
+                        "ros_m_min": e.get("head_ros_m_min"),
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            _sector_wedge_ring(cx, cy, r_head, float(bearing), 45.0)
+                        ],
+                    },
+                }
+            )
+        r_rear = float(e.get("rear_radius_m") or 0)
+        if bearing is not None and r_rear > 0:
+            features.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        **label,
+                        "horizon_min": h,
+                        "sector": "rear",
+                        "radius_m": r_rear,
+                        "bearing_deg": (float(bearing) + 180.0) % 360.0,
+                        "ros_m_min": e.get("rear_ros_m_min"),
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            _sector_wedge_ring(
+                                cx, cy, r_rear, (float(bearing) + 180.0) % 360.0, 45.0
+                            )
+                        ],
+                    },
+                }
+            )
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "properties": {
+            **label,
+            "status": envelope.get("status") or "ok",
+            "n_features": len(features),
+            "center_xy": [cx, cy],
+        },
+    }
+
+
+def write_envelope_geojson(
+    envelope: dict[str, Any],
+    path: Path,
+    *,
+    center_xy: tuple[float, float] | None,
+    fire_id: str = "",
+    expansion_bearing_deg: float | None = None,
+) -> dict[str, Any]:
+    gj = envelope_to_geojson(
+        envelope,
+        center_xy=center_xy,
+        fire_id=fire_id,
+        expansion_bearing_deg=expansion_bearing_deg,
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(gj, indent=2), encoding="utf-8")
+    return gj

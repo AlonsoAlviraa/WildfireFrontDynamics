@@ -1,42 +1,42 @@
 # Emergency product status (lives first)
 
 **Updated:** 2026-07-16  
-**Smoke:** `python scripts/smoke_emergency_products.py`  
-**Briefing:** `python scripts/emergency_briefing.py --fire tobarra_20240802`
-
-## G1 / NDWS closed
-
-| Run | IoU | Δ copy | Verdict |
-|-----|-----|--------|---------|
-| v21 production | 0.226 | +0.076 | **FREEZE research baseline** |
-| v25/v26 features | ≤0.224 | ≤+0.074 | NO_PROMOTE |
-| v27 T=2 | 0.2253 | +0.0755 | NO_PROMOTE |
-| **v27b T=3** | **0.2249** | **+0.0751** | **NO_PROMOTE → KILL features+temporal** |
-
-Evidence: `docs/V27B_TEMPORAL_VERDICT.json`, `docs/G1_KILL_FEATURES_TEMPORAL.json`  
-**Emergency ML primary remains `clm_v28`.** NDWS is research-only.
-
-## Shippable for emergencies
-
-| Product | What it does |
-|---------|--------------|
-| **front_dynamics_v1** | Observed ROS, grade A/B/C, sector head/flank/rear + IQR |
-| **short_horizon_envelope_v2_sector** | 15/30/60 min **head/flank/rear radii** from observed ROS |
-| **emergency_briefing.md** | One-command human brief (grade, ROS, sectors, envelope, blocked items) |
-| **clm_v28** | Spain-like next-day ML (holdout + LOFO validated) |
-| **ndws_v21** | Research baseline only |
-
-## How to run
-
+**Unified launch:**  
 ```bash
-python scripts/enrich_emergency_ops.py
-python scripts/emergency_briefing.py --fire tobarra_20240802
+python scripts/emergency_briefing.py --fires tobarra_20240802,cardoso_2025
 python scripts/smoke_emergency_products.py
 ```
 
-## Explicitly blocked / not claimed
+## G1 / NDWS closed
+
+| Run | Verdict |
+|-----|---------|
+| v27b T=3 IoU 0.2249 Δ+0.0751 | **NO_PROMOTE → KILL** (`docs/G1_KILL_FEATURES_TEMPORAL.json`) |
+| Emergency ML primary | **`clm_v28`** |
+| NDWS | research baseline only |
+
+## Shippable artifacts (per pack)
+
+| File | Role |
+|------|------|
+| `emergency_briefing.md` | Human brief: grade, ROS, sectors, 15/30/60, blocked items |
+| `emergency_envelope.json` | Sector-aware numeric envelope |
+| `emergency_envelope_guidance.geojson` | **GIS rings/wedges** (extrapolated guidance, NOT official perimeter) |
+| `operational_metrics.json` | Full ops metrics + sector_ros |
+| `main_front.geojson` | Observed front |
+
+## Multi-IF briefing
+
+Default fires: Tobarra + Cardoso. Also works with hellin/brazatortas packs when present.
+
+GIS features properties always include:
+- `not_official_perimeter: true`
+- `not_tactical_dispatch: true`
+- sector: `flank_isotropic` | `head` | `rear`
+
+## Explicitly blocked
 
 - Multi-IF anchors without external Vp/ha  
-- Official Hausdorff without official GeoJSON (path BLOCKS honestly)  
-- Validated tactical 15/30/60 dispatch  
-- NDWS G1 “best model for emergencies”
+- Official Hausdorff without official GeoJSON  
+- Validated tactical dispatch  
+- NDWS as emergency “best model”

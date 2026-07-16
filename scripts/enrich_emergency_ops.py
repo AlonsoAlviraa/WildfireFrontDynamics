@@ -16,6 +16,7 @@ from wildfire_front.emergency_products import (  # noqa: E402
     expansion_bearing_deg_from_centroids,
     load_main_front_centroids,
     write_emergency_envelope_file,
+    write_envelope_geojson,
 )
 
 
@@ -33,6 +34,15 @@ def enrich_pack(pack_dir: Path) -> dict:
     ops_path.write_text(json.dumps(enriched, indent=2), encoding="utf-8")
     env = enriched.get("short_horizon_envelope") or {}
     write_emergency_envelope_file(env, pack_dir / "emergency_envelope.json")
+    cents = load_main_front_centroids(mf) if mf.is_file() else []
+    center = cents[-1] if cents else None
+    write_envelope_geojson(
+        env,
+        pack_dir / "emergency_envelope_guidance.geojson",
+        center_xy=center,
+        fire_id=pack_dir.name,
+        expansion_bearing_deg=bearing,
+    )
     sector = enriched.get("sector_ros") or {}
     return {
         "fire_id": pack_dir.name,
@@ -42,6 +52,7 @@ def enrich_pack(pack_dir: Path) -> dict:
         "sector_status": sector.get("status"),
         "envelope_status": env.get("status"),
         "bearing": bearing,
+        "gis": str(pack_dir / "emergency_envelope_guidance.geojson"),
     }
 
 
