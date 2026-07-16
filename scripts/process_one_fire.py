@@ -44,13 +44,16 @@ def main() -> int:
     try:
         summary = process_fire(fire_id, source_rel, event_id, error_m)
         print(f"\n✅ SUCCESS: {fire_id}")
-        print(f"   TIFs={summary.get('total_tifs', 0)}  "
-              f"Masks={summary.get('masks_persisted', 0)}  "
-              f"Skipped={summary.get('skipped', False)}")
+        print(
+            f"   TIFs={summary.get('total_tifs', 0)}  "
+            f"Masks={summary.get('masks_persisted', 0)}  "
+            f"Skipped={summary.get('skipped', False)}"
+        )
         return 0
     except Exception as exc:
         print(f"\n❌ FAILED: {fire_id}: {exc}")
         import traceback
+
         traceback.print_exc()
         return 1
 

@@ -39,15 +39,15 @@ import numpy as np
 # --------------------------------------------------------------------------- #
 # 0. CLI args (works both as Kaggle script and standalone)
 # --------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description="Wildfire U-Net v16 training")
+parser = argparse.ArgumentParser(description="Wildfire U-Net v14 training")
 parser.add_argument("--epochs", type=int, default=50)
 parser.add_argument("--batch-size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--loss", choices=["combined", "composite", "tversky", "focal", "bce"],
                     default="composite")
 parser.add_argument("--pos-weight", type=float, default=5.0)
-parser.add_argument("--model", choices=["full", "small"], default="full")
-parser.add_argument("--se-attention", action="store_true", default=True)
+parser.add_argument("--model", choices=["full", "small"], default="small")
+parser.add_argument("--se-attention", action="store_true", default=False)
 parser.add_argument("--norm", choices=["group", "batch", "instance"], default="group")
 parser.add_argument("--grad-accum", type=int, default=1, help="Gradient accumulation steps.")
 parser.add_argument("--ema-decay", type=float, default=0.999, help="EMA decay (0=disabled).")
@@ -57,12 +57,14 @@ parser.add_argument("--smoke-test", action="store_true", default=False,
                     help="Run 2 epochs on tiny data for validation.")
 parser.add_argument("--data-dir", type=str, default="/tmp/ndws_npz",
                     help="Preprocessed NPZ data directory.")
-parser.add_argument("--output-dir", type=str, default="../",
+parser.add_argument("--output-dir", type=str, default=None,
                     help="Where to save checkpoints, logs, metrics.")
+parser.add_argument("--version-tag", type=str, default="v14",
+                    help="Experiment version label for training_summary.json.")
 args, _unknown = parser.parse_known_args()
 
 print("=" * 70)
-print(f"WILDFIRE U-NET TRAINING v16 — RESIDUAL ARCHITECTURE")
+print(f"WILDFIRE U-NET TRAINING v14 — LOOP ENGINEERING EDITION")
 print("=" * 70)
 print(f"Config: {vars(args)}")
 
@@ -80,23 +82,10 @@ else:
 # --------------------------------------------------------------------------- #
 # 1. Fix P100 (sm_60) compatibility — MUST happen before `import torch`
 # --------------------------------------------------------------------------- #
-def _check_gpu_compat():
-    """Check if GPU needs older PyTorch. Returns True if P100 (sm_60) detected."""
-    try:
-        result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"],
-            capture_output=True, text=True, timeout=10
-        )
-        if result.returncode == 0 and "P100" in result.stdout:
-            print(f"  P100 GPU detected: {result.stdout.strip()}")
-            return True
-    except Exception:
-        pass
-    return False
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kaggle_common import install_pytorch_p100_compat  # noqa: E402
 
-if _check_gpu_compat():
-    print("  P100 detected — using pre-installed PyTorch (sm_60 supported since torch>=2.0)")
-    print("  Skipping pip install (torch 2.1.2 not available for Python 3.12)")
+install_pytorch_p100_compat()
 
 import torch
 import torch.nn as nn
@@ -124,6 +113,12 @@ if not Path("WildfireFrontDynamics").exists():
 if Path("WildfireFrontDynamics").exists():
     os.chdir("WildfireFrontDynamics")
     sys.path.insert(0, os.getcwd())
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kaggle_common import default_output_dir, validate_dataset_sizes  # noqa: E402
+
+if args.output_dir is None:
+    args.output_dir = default_output_dir()
 
 # --------------------------------------------------------------------------- #
 # 3. Preprocess NDWS (skip if data already exists)
@@ -445,6 +440,7 @@ train_dataset = NpzWildfireDataset(train_dir, augment=True)
 val_dataset = NpzWildfireDataset(val_dir, augment=False)
 test_dataset = NpzWildfireDataset(test_dir, augment=False)
 
+validate_dataset_sizes(len(train_dataset), len(val_dataset), len(test_dataset))
 print(f"\nDataset sizes -> train={len(train_dataset)}  val={len(val_dataset)}  test={len(test_dataset)}")
 print(f"Batch size: {args.batch_size} (grad_accum={args.grad_accum}, "
       f"effective={args.batch_size * args.grad_accum})")
@@ -627,7 +623,7 @@ best_epoch = -1
 no_improve = 0
 history = []
 
-log_msg(f"\n--- U-Net v16 RESIDUAL started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
+log_msg(f"\n--- U-Net v14 started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---")
 log_msg(f"Config: epochs={args.epochs}, batch={args.batch_size}, lr={args.lr}, "
         f"loss={args.loss}, model={model_cls.__name__}, params={n_params:,}")
 
@@ -750,7 +746,7 @@ EVAL_FILE = OUTPUT_DIR / "evaluation_metrics.json"
 EVAL_FILE.write_text(json.dumps(test_results, indent=2, default=str))
 
 summary = {
-    "version": "v16",
+    "version": args.version_tag,
     "architecture": model_cls.__name__,
     "best_epoch": best_epoch,
     "best_val_loss": best_val_loss,
@@ -771,4 +767,4 @@ summary = {
 SUMMARY_FILE = OUTPUT_DIR / "training_summary.json"
 SUMMARY_FILE.write_text(json.dumps(summary, indent=2, default=str))
 print(json.dumps(summary, indent=2, default=str))
-print("\n=== U-NET v16 RESIDUAL COMPLETED ===")
+print("\n=== U-NET v14 COMPLETED ===")

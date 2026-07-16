@@ -54,61 +54,23 @@ def log(msg):
         pass
 
 log("=" * 80)
-log("AUTONOMOUS WILDFIRE RESEARCH PIPELINE v17c — MEGA NIGHT")
+log("AUTONOMOUS WILDFIRE RESEARCH PIPELINE v17d — MEGA NIGHT")
 log("=" * 80)
 log(f"Start time: {datetime.now().isoformat()}")
 log(f"Max hours: {MAX_HOURS}")
 log(f"Output dir: {OUT_DIR}")
 
 # =================================================================== #
-# 0. GPU CHECK + PyTorch COMPATIBILITY FIX
+# 0. GPU CHECK + PyTorch COMPATIBILITY FIX (before import torch)
 # =================================================================== #
-def setup_gpu():
-    """Detect GPU and install compatible PyTorch."""
-    try:
-        r = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"],
-            capture_output=True, text=True, timeout=10
-        )
-        if r.returncode == 0:
-            gpu_info = r.stdout.strip()
-            log(f"GPU detected: {gpu_info}")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kaggle_common import (  # noqa: E402
+    install_pytorch_p100_compat,
+    run_preprocess_ndws,
+    validate_dataset_sizes,
+)
 
-            # P100 (sm_60) needs PyTorch <= 2.1.x
-            if "P100" in gpu_info:
-                log("P100 detected — checking PyTorch version...")
-                try:
-                    import torch as _t
-                    ver = _t.__version__
-                    log(f"  Current PyTorch: {ver}")
-                    major, minor = int(ver.split(".")[0]), int(ver.split(".")[1])
-                    if major > 2 or (major == 2 and minor > 1):
-                        log("  Installing PyTorch 2.1.2 for P100 compatibility...")
-                        result = subprocess.run(
-                            [sys.executable, "-m", "pip", "install", "-q",
-                             "--force-reinstall", "--no-deps",
-                             "torch==2.1.2", "torchvision==0.16.2"],
-                            capture_output=True, text=True, timeout=600
-                        )
-                        if result.returncode == 0:
-                            log("  PyTorch 2.1.2 installed successfully.")
-                            # Clear cached imports
-                            for mod in list(sys.modules.keys()):
-                                if "torch" in mod:
-                                    del sys.modules[mod]
-                        else:
-                            log(f"  PyTorch install failed: {result.stderr[:500]}")
-                except ImportError:
-                    log("  PyTorch not found, installing 2.1.2...")
-                    subprocess.run(
-                        [sys.executable, "-m", "pip", "install", "-q",
-                         "torch==2.1.2", "torchvision==0.16.2"],
-                        timeout=300
-                    )
-    except Exception as e:
-        log(f"GPU setup warning: {e}")
-
-setup_gpu()
+install_pytorch_p100_compat()
 
 # =================================================================== #
 # IMPORTS — after PyTorch fix
@@ -167,239 +129,11 @@ sys.path.insert(0, os.getcwd())
 log(f"Working directory: {os.getcwd()}")
 
 # =================================================================== #
-# SELF-CONTAINED PREPROCESSING (auto-discovers TFRecord features)
+# 1b. PREPROCESS DATA (repo preprocess_ndws.py — proven in v14-v16)
 # =================================================================== #
-def discover_tfrecord_features(tf_path):
-    """Dynamically discover what features exist in a TFRecord."""
-    import tensorflow as tf
-    ds = tf.data.TFRecordDataset([str(tf_path)])
-    for raw in ds.take(1):
-        example = tf.train.Example()
-        example.ParseFromString(raw.numpy())
-        feat = example.features.feature
-        names = sorted(feat.keys())
-        log(f"    Discovered {len(names)} features: {names}")
-        # Get shapes from first feature
-        sample_name = names[0]
-        sample_shape = feat[sample_name].float_list.value
-        shape_info = f"{len(sample_shape)} values"
-        log(f"    Sample feature '{sample_name}': {shape_info}")
-        return names
-    return []
-
-
-def preprocess_ndws_inline(split, tf_files, split_dir):
-    """Self-contained TFRecord → NPZ conversion with feature auto-discovery."""
-    import tensorflow as tf
-
-    if not tf_files:
-        log(f"    No TFRecord files for {split}!")
-        return 0
-
-    # Discover features from first file
-    log(f"    Discovering features from {tf_files[0]}...")
-    feature_names = discover_tfrecord_features(tf_files[0])
-
-    # Map NDWS feature names (handle different naming conventions)
-    # The NDWS dataset uses these core features:
-    FEATURE_ALIASES = {
-        "elevation": ["elevation", "Elevation"],
-        "pdsi": ["pdsi", "PDSI", "palmer_drought_severity_index"],
-        "ndvi": ["NDVI", "ndvi", "Normalized_Difference_Vegetation_Index"],
-        "precipitation": ["precipitation", "Precipitation", "precip"],
-        "erc": ["energy_release_component", "ERC", "Energy_Release_Component",
-                "energy_release_component-1000"],
-        "humidity": ["specific_humidity", "Specific_humidity", "humidity"],
-        "temperature": ["temperature", "Temperature", "air_temperature"],
-        "wind_dir": ["wind_direction", "Wind_Direction", "wind_direction_10m"],
-        "wind_speed": ["wind_speed", "Wind_Speed", "wind_speed_10m"],
-        "dsrf": ["downward_shortwave_radiation_flux",
-                 "DownwardShortwaveRadiationFlux",
-                 "downward_shortwave_radiation",
-                 "dswrf", "DSWRF"],
-        "prev_fire": ["previous_day_fire_mask", "PreviousDayFireMask",
-                      "prev_fire_mask", "prev_fire"],
-        "fire": ["fire_mask", "FireMask", "target_fire_mask", "next_day_fire_mask"],
-    }
-
-    # Build feature map from discovered features
-    selected = {}
-    for logical_name, aliases in FEATURE_ALIASES.items():
-        for alias in aliases:
-            if alias in feature_names:
-                selected[logical_name] = alias
-                break
-
-    log(f"    Mapped features: {selected}")
-
-    # Require at minimum: prev_fire, fire target
-    if "fire" not in selected:
-        # Try all feature names as target
-        for fn in feature_names:
-            if "fire" in fn.lower() and "mask" in fn.lower():
-                if "prev" in fn.lower() or "previous" in fn.lower():
-                    selected["prev_fire"] = fn
-                else:
-                    selected["fire"] = fn
-        log(f"    Auto-detected fire masks: {selected}")
-
-    if "fire" not in selected:
-        log(f"    FATAL: Cannot find target fire mask in features!")
-        log(f"    Available: {feature_names}")
-        return 0
-
-    if "prev_fire" not in selected:
-        log(f"    WARNING: No prev_fire_mask found, will use fire as prev_fire")
-
-    # Build TF feature description
-    weather_features = []
-    for logical in ["elevation", "pdsi", "ndvi", "precipitation", "erc",
-                    "humidity", "temperature", "wind_dir", "wind_speed", "dsrf"]:
-        if logical in selected:
-            weather_features.append(logical)
-
-    log(f"    Weather features ({len(weather_features)}): {weather_features}")
-
-    # Determine patch size from features
-    n_values = 0
-    try:
-        raw_ds = tf.data.TFRecordDataset([str(tf_files[0])])
-        for raw in raw_ds.take(1):
-            example = tf.train.Example()
-            example.ParseFromString(raw.numpy())
-            fn = selected.get("fire", feature_names[0])
-            vals = example.features.feature[fn].float_list.value
-            n_values = len(vals)
-        patch_size = int(n_values ** 0.5)
-        log(f"    Patch size: {patch_size}x{patch_size} ({n_values} values)")
-    except Exception:
-        patch_size = 64
-
-    # Build feature description for parsing
-    feature_desc = {}
-    for logical, tf_name in selected.items():
-        feature_desc[tf_name] = tf.io.FixedLenFeature([patch_size, patch_size], tf.float32)
-
-    # Parse all TFRecords
-    count = 0
-    for tf_path in tf_files:
-        try:
-            dataset = tf.data.TFRecordDataset([str(tf_path)])
-            for serialized in dataset:
-                try:
-                    example = tf.io.parse_single_example(serialized, feature_desc)
-
-                    # Stack weather channels
-                    channels = []
-                    for logical in weather_features:
-                        tf_name = selected[logical]
-                        channels.append(example[tf_name].numpy())
-
-                    # Fire masks
-                    prev_fire = example[selected.get("prev_fire", selected["fire"])].numpy()
-                    target_fire = example[selected["fire"]].numpy()
-
-                    # Normalize
-                    if channels:
-                        seq = np.stack(channels, axis=0).astype(np.float32)
-                        seq = np.nan_to_num(seq, nan=0.0, posinf=0.0, neginf=0.0)
-                        for c in range(seq.shape[0]):
-                            std = seq[c].std()
-                            if std > 1e-6:
-                                seq[c] = (seq[c] - seq[c].mean()) / std
-                        sequence = seq[np.newaxis, ...]  # (1, C, H, W)
-                    else:
-                        # No weather features — just use fire mask as input
-                        sequence = np.zeros((1, 1, patch_size, patch_size), dtype=np.float32)
-
-                    prev_fire = (prev_fire > 0).astype(np.float32)
-                    target_fire = (target_fire > 0).astype(np.float32)
-
-                    np.savez_compressed(
-                        split_dir / f"{split}_{count:05d}.npz",
-                        sequence=sequence,
-                        current_fire=prev_fire,
-                        target_fire=target_fire,
-                    )
-                    count += 1
-                except Exception as e:
-                    if count == 0:
-                        log(f"      First sample parse error: {e}")
-        except Exception as e:
-            log(f"      File {tf_path} error: {e}")
-
-    log(f"    {split}: {count} patches extracted")
-    return count
-
-
-def ensure_data():
-    """Ensure NPZ data exists — fully self-contained preprocessing."""
-    global DATA_ROOT
-
-    # Check existing data
-    total_existing = 0
-    for split in ["train", "val", "test"]:
-        split_dir = DATA_ROOT / split
-        if split_dir.exists():
-            count = len(list(split_dir.glob("*.npz")))
-            total_existing += count
-            log(f"  {split}: {count} patches already exist")
-    if total_existing > 30:
-        log(f"  Data already preprocessed ({total_existing} total)")
-        return
-
-    # Find TFRecords
-    tf_root = Path("/kaggle/input/next-day-wildfire-spread")
-    if not tf_root.exists():
-        # Search for it
-        for candidate in [Path("/kaggle/input"), Path("../input")]:
-            if candidate.exists():
-                for d in candidate.iterdir():
-                    if "wildfire" in d.name.lower() or "ndws" in d.name.lower():
-                        tf_root = d
-                        break
-                log(f"  Using TFRecord root: {tf_root}")
-
-    # Find all .tfrecord files
-    tf_files = sorted(tf_root.rglob("*.tfrecord"))
-    if not tf_files:
-        tf_files = sorted(tf_root.rglob("*next*day*"))
-    if not tf_files:
-        # List everything
-        all_files = list(tf_root.rglob("*"))
-        log(f"  All files in {tf_root}: {[str(f) for f in all_files[:30]]}")
-        tf_files = [f for f in all_files if f.is_file() and "tfrecord" in str(f).lower()]
-
-    log(f"  Found {len(tf_files)} TFRecord files")
-    for f in tf_files[:5]:
-        log(f"    {f.name}")
-
-    # Standard NDWS splits: 15 files total
-    # train: 0-11, val: 12-13, test: 14
-    splits_map = {
-        "train": list(range(0, min(12, len(tf_files)))),
-        "val": list(range(min(12, len(tf_files)), min(14, len(tf_files)))),
-        "test": list(range(min(14, len(tf_files)), min(15, len(tf_files)))),
-    }
-
-    for split_name, indices in splits_map.items():
-        out_dir = DATA_ROOT / split_name
-        out_dir.mkdir(parents=True, exist_ok=True)
-        split_tf_files = [tf_files[i] for i in indices if i < len(tf_files)]
-        log(f"\n  Preprocessing {split_name} ({len(split_tf_files)} files)...")
-        preprocess_ndws_inline(split_name, split_tf_files, out_dir)
-
-    # Verify
-    for split in ["train", "val", "test"]:
-        count = len(list((DATA_ROOT / split).glob("*.npz")))
-        log(f"  Final {split}: {count} patches")
-
-    total = sum(len(list((DATA_ROOT / s).glob("*.npz"))) for s in ["train","val","test"])
-    if total == 0:
-        raise RuntimeError("No data produced from TFRecord preprocessing!")
-
 try:
-    ensure_data()
+    total_patches = run_preprocess_ndws(DATA_ROOT, min_total=100, log=log)
+    log(f"Data ready: {total_patches} patches total")
 except Exception as e:
     log(f"FATAL: Data preprocessing failed: {e}")
     log(traceback.format_exc())
@@ -810,6 +544,10 @@ def create_objective(train_ds, val_ds, device, in_channels):
 def main():
     # ---- PHASE 0 ----
     log("\n=== PHASE 0: Data + Feature Analysis ===")
+    for split in ("train", "val", "test"):
+        n = len(list((DATA_ROOT / split).glob("*.npz")))
+        if n == 0:
+            raise RuntimeError(f"Empty split '{split}' — preprocessing failed")
     train_ds = WildfireDataset(DATA_ROOT / "train", augment=True)
     val_ds = WildfireDataset(DATA_ROOT / "val", augment=False)
     test_ds = WildfireDataset(DATA_ROOT / "test", augment=False)

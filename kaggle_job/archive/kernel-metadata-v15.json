@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wildfire-front-training-v15",
+  "title": "Wildfire Front Training V15",
+  "code_file": "run_unet_training_v15.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "fantineh/next-day-wildfire-spread"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

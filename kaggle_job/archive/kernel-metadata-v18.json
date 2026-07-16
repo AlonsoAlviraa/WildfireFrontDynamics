@@ -1,7 +1,7 @@
 {
-  "id": "alonsoalviraaaa/wildfire-autonomous-research-v17",
-  "title": "Wildfire Autonomous Research v17",
-  "code_file": "run_autonomous_research_v17.py",
+  "id": "alonsoalviraaaa/wildfire-front-training-v18",
+  "title": "Wildfire Front Training V18",
+  "code_file": "run_unet_training_v18.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": true,

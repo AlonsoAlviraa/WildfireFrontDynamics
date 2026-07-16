@@ -1,0 +1,13 @@
+{
+  "id": "alonsoalviraaaa/wildfire-autonomous-research-v17",
+  "title": "Wildfire Autonomous Research v17d",
+  "code_file": "run_autonomous_research_v17.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["fantineh/next-day-wildfire-spread"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
