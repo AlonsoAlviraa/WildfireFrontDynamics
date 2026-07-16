@@ -13,7 +13,10 @@ def test_catalog_has_both_products():
     data = load_catalog()
     assert "ndws_v21" in data["products"]
     assert "clm_v28" in data["products"]
-    assert data.get("default_product") == "ndws_v21"
+    # Emergency primary is CLM specialist; NDWS remains research baseline.
+    assert data.get("default_product") == "clm_v28"
+    assert data.get("emergency_ml_product") == "clm_v28"
+    assert data.get("research_ml_product") == "ndws_v21"
 
 
 def test_list_products_ready():

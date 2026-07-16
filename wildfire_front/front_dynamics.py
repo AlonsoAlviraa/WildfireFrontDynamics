@@ -644,4 +644,28 @@ def build_structural_operational_bundle(
 
     ops["engine"] = "front_dynamics_v1"
     ops["product"] = "structural_observed_front_dynamics"
+
+    # Emergency sector ROS + short-horizon envelope (geometry from centroids)
+    try:
+        from .emergency_products import enrich_ops_dict
+
+        bearing = None
+        aligned = dyn.aligned_observations or observations
+        if len(aligned) >= 2:
+            cents = []
+            for o in aligned:
+                if o.components:
+                    pts = np.asarray(o.components[0], dtype=float)
+                    if len(pts) > 1 and np.allclose(pts[0], pts[-1]):
+                        pts = pts[:-1]
+                    if len(pts):
+                        cents.append((float(pts[:, 0].mean()), float(pts[:, 1].mean())))
+            if len(cents) >= 2:
+                from .emergency_products import expansion_bearing_deg_from_centroids
+
+                bearing = expansion_bearing_deg_from_centroids(cents)
+        ops = enrich_ops_dict(ops, expansion_bearing_deg=bearing)
+    except Exception:  # noqa: BLE001 — ops bundle must not fail on enrichment
+        pass
+
     return ops

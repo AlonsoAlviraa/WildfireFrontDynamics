@@ -31,8 +31,8 @@ def main() -> int:
     parser.add_argument(
         "--product",
         choices=["ndws_v21", "clm_v28"],
-        default="ndws_v21",
-        help="Which production product to load",
+        default="clm_v28",
+        help="Which production product to load (default: emergency CLM specialist)",
     )
     parser.add_argument("--list-products", action="store_true")
     parser.add_argument("--manifest", type=str, default=None, help="Override manifest path")
