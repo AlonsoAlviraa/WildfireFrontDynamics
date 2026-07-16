@@ -34,15 +34,13 @@ def convert_file(src: Path, dst: Path) -> bool:
 def build_map_html(pack: Path, fire_id: str) -> Path:
     """Self-contained Leaflet map embedding WGS84 layers."""
     layers = []
-    for name, label, color, weight in (
-        ("main_front_wgs84.geojson", "Frente principal", "#ff6b35", 3),
-        ("emergency_envelope_guidance.geojson", "Envelope 15/30/60 (guía)", "#4cc9f0", 2),
-        ("fronts_wgs84.geojson", "Todos los frentes", "#f72585", 1.5),
+    for name, label, color, weight, point in (
+        ("main_front_wgs84.geojson", "Frente principal", "#ff6b35", 3, False),
+        ("emergency_envelope_guidance.geojson", "Envelope 15/30/60 (guía)", "#4cc9f0", 2, False),
+        ("fronts_wgs84.geojson", "Todos los frentes", "#f72585", 1.5, False),
+        ("firms_hotspots.geojson", "FIRMS hotspots (contexto)", "#ffd60a", 1, True),
     ):
         p = pack / name
-        # envelope may already be WGS84 after re-export
-        if name == "emergency_envelope_guidance.geojson" and not p.is_file():
-            continue
         if not p.is_file():
             continue
         layers.append(
@@ -50,6 +48,7 @@ def build_map_html(pack: Path, fire_id: str) -> Path:
                 "name": label,
                 "color": color,
                 "weight": weight,
+                "point": point,
                 "data": json.loads(p.read_text(encoding="utf-8")),
             }
         )
@@ -102,7 +101,11 @@ def build_map_html(pack: Path, fire_id: str) -> Path:
     const overlays = {{}};
     layersData.forEach((layer) => {{
       const gj = L.geoJSON(layer.data, {{
+        pointToLayer: (feat, latlng) => L.circleMarker(latlng, {{
+          radius: 5, color: layer.color, fillColor: layer.color, fillOpacity: 0.85, weight: 1
+        }}),
         style: (feat) => {{
+          if (layer.point) return {{}};
           const sector = (feat.properties && feat.properties.sector) || '';
           let color = layer.color;
           if (sector === 'head') color = '#ff4d4d';

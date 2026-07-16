@@ -12,11 +12,16 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from wildfire_front.emergency_products import (  # noqa: E402
+    compute_short_horizon_envelope,
     enrich_ops_dict,
     expansion_bearing_deg_from_centroids,
     load_main_front_centroids,
     write_emergency_envelope_file,
     write_envelope_geojson,
+)
+from wildfire_front.sector_ros_local import (  # noqa: E402
+    load_local_speed_rows,
+    sector_ros_from_local_samples,
 )
 
 
@@ -27,14 +32,52 @@ def enrich_pack(pack_dir: Path) -> dict:
     ops = json.loads(ops_path.read_text(encoding="utf-8"))
     bearing = None
     mf = pack_dir / "main_front.geojson"
+    cents: list = []
     if mf.is_file():
         cents = load_main_front_centroids(mf)
         bearing = expansion_bearing_deg_from_centroids(cents)
     enriched = enrich_ops_dict(ops, expansion_bearing_deg=bearing)
+
+    # Prefer precise local normal-ray sectors when we have samples
+    local_csv = pack_dir / "local_speeds.csv"
+    local_rows = load_local_speed_rows(local_csv)
+    sector_source = "bulk_quartile"
+    if local_rows:
+        bulk_primary = enriched.get("speed_median_m_min")
+        precise = sector_ros_from_local_samples(
+            local_rows,
+            expansion_bearing_deg=bearing,
+            scale_to_primary_m_min=float(bulk_primary)
+            if bulk_primary is not None
+            else None,
+        )
+
+        if precise.get("status") == "estimated" and precise.get("sectors"):
+            enriched["sector_ros"] = precise
+            enriched["sector_ros_source"] = "local_normal_ray"
+            sector_source = "local_normal_ray"
+            secs = precise["sectors"]
+            # Rebuild envelope with precise head/flank/rear
+            primary = enriched.get("speed_median_m_min")
+            if primary is None:
+                primary = secs.get("primary_m_min")
+            env = compute_short_horizon_envelope(
+                float(primary) if primary is not None else None,
+                expansion_bearing_deg=precise.get("expansion_bearing_deg") or bearing,
+                quality_grade=str(enriched.get("quality_grade") or ""),
+                head_ros_m_min=secs.get("head_m_min"),
+                flank_ros_m_min=secs.get("flank_m_min"),
+                rear_ros_m_min=secs.get("rear_m_min"),
+            )
+            enriched["short_horizon_envelope"] = env
+            if precise.get("expansion_bearing_deg") is not None:
+                bearing = precise["expansion_bearing_deg"]
+    else:
+        enriched["sector_ros_source"] = sector_source
+
     ops_path.write_text(json.dumps(enriched, indent=2), encoding="utf-8")
     env = enriched.get("short_horizon_envelope") or {}
     write_emergency_envelope_file(env, pack_dir / "emergency_envelope.json")
-    cents = load_main_front_centroids(mf) if mf.is_file() else []
     center = cents[-1] if cents else None
     write_envelope_geojson(
         env,
@@ -50,6 +93,8 @@ def enrich_pack(pack_dir: Path) -> dict:
         "quality_grade": enriched.get("quality_grade"),
         "primary_ros": enriched.get("speed_median_m_min"),
         "sector_status": sector.get("status"),
+        "sector_source": sector_source,
+        "sector_n_samples": sector.get("n_samples"),
         "envelope_status": env.get("status"),
         "bearing": bearing,
         "gis": str(pack_dir / "emergency_envelope_guidance.geojson"),
