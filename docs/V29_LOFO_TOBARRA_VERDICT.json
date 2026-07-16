@@ -1,0 +1,18 @@
+{
+  "version": "v29_lofo_tobarra",
+  "held_out": "tobarra_20240802",
+  "train_sources": [
+    "CARDOSO",
+    "LA_ESTRELLA_ACOM1",
+    "LA_ESTRELLA_ACOM2"
+  ],
+  "test_iou": 0.4938,
+  "copy_baseline_iou": 0.3284,
+  "improvement_vs_copy_iou": 0.1654,
+  "best_epoch": 8,
+  "n_test": 300,
+  "G2_lofo": true,
+  "verdict": "GO_TRANSFER_LOFO",
+  "note": "Fine-tune on non-Tobarra CLM patches; held-out Tobarra beats copy by +0.165. Stronger industrial claim than random holdout alone.",
+  "weights": "outputs/ml_eval/v29_lofo_tobarra/weights_pretrained_best.pt"
+}

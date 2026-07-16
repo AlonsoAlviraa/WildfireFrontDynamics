@@ -143,3 +143,12 @@
 | Delta target + residual beats copy (full) | v21 Δ +0.076 |
 | Cross-protocol eval required | v14≈v21 only when aligned |
 | Dilated-copy baseline for changed pixels | `ndws_metrics.py` fix |
+
+### v29_lofo_tobarra: Transfer LOFO — GO
+- Held-out: Tobarra patches (n=300); train Cardoso+Estrella ACOM1/2
+- Test IoU **0.494** | copy **0.328** | **Δ +0.165**
+- Verdict: **GO_TRANSFER_LOFO** (industrial G2+)
+
+### O3 temporal Tobarra
+- Strict band 2/3 GO; late ratio 0.478; wide band 3/3
+
