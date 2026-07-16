@@ -58,6 +58,15 @@ front_dynamics_v1 → FREEZE ops engine (Tobarra A + multi-IF + FOV guard)
 
 CLI smoke: `python scripts/smoke_production_products.py`
 
+### LOFO all folds (lanzado y cerrado)
+| Held-out | IoU | Δ copy |
+|----------|-----|--------|
+| CARDOSO | 0.798 | **+0.156** |
+| LA_ESTRELLA_ACOM1 | 0.783 | **+0.424** |
+| LA_ESTRELLA_ACOM2 | 0.693 | **+0.323** |
+| tobarra | 0.494 | **+0.165** |
+**all_positive: true** · mean Δ **+0.267**
+
 ## Siguiente para subir de nivel industrial
 
 1. Anclas Vp/ha CMA → O1/O5  

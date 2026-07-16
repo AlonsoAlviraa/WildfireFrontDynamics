@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:21:15.986409+00:00",
+  "generated_at_utc": "2026-07-16T09:56:33.449059+00:00",
   "protocol": "if_inventory_s1_v1",
   "fires": [
     {
@@ -67,9 +67,9 @@
       "has_pack": true,
       "has_reprojected_dir": true,
       "has_masks_dir": true,
-      "quality_grade": "C",
-      "ros_m_min": null,
-      "area_ha_max": 90.11564992675781,
+      "quality_grade": "B",
+      "ros_m_min": 58.66047468664544,
+      "area_ha_max": 280.18935004882815,
       "qa_flag": null,
       "priority": "qa_flag",
       "usable_for_o1": false

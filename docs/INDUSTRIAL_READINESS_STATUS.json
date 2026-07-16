@@ -22,6 +22,12 @@
         "delta": 0.1654,
         "iou": 0.4938,
         "verdict": "GO"
+      },
+      "lofo_all_folds": {
+        "n_folds": 4,
+        "mean_delta": 0.26714462799600813,
+        "min_delta": 0.15600850763683827,
+        "all_positive": true
       }
     },
     "front_dynamics_v1": {
@@ -43,7 +49,8 @@
     "O4": "DOCX_READY",
     "O5": "NO_GO",
     "G1": "PENDING_V27",
-    "G2": "GO_PLUS_LOFO"
+    "G2": "GO_PLUS_LOFO_4_4",
+    "M1_G1": "v27 NO_PROMOTE; v27b RUNNING"
   },
   "industrial_claim_allowed": {
     "ops_observed_front_with_abstention": true,
@@ -52,7 +59,8 @@
     "multi_anchor_validated_ops": false,
     "official_perimeter_validated": false,
     "tactical_15_30_60_prediction": false,
-    "clm_lofo_generalization": true
+    "clm_lofo_generalization": true,
+    "clm_lofo_all_sources_positive": true
   },
   "blockers_to_full_industrial": [
     "INFOCAM Vp/ha for >=2 more IF",

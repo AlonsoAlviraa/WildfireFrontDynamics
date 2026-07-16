@@ -1,0 +1,47 @@
+{
+  "generated_at_utc": "2026-07-16T10:04:16.856122+00:00",
+  "protocol": "clm_lofo_v1_all_folds",
+  "folds": [
+    {
+      "held": "CARDOSO",
+      "status": "ok",
+      "test_iou": 0.7978106779815259,
+      "copy_baseline_iou": 0.6418021703446877,
+      "improvement_vs_copy_iou": 0.15600850763683827,
+      "best_epoch": 6,
+      "test_samples": 200
+    },
+    {
+      "held": "LA_ESTRELLA_ACOM1",
+      "status": "ok",
+      "test_iou": 0.7831634770802975,
+      "copy_baseline_iou": 0.3593319139796208,
+      "improvement_vs_copy_iou": 0.42383156310067677,
+      "best_epoch": 2,
+      "test_samples": 200
+    },
+    {
+      "held": "LA_ESTRELLA_ACOM2",
+      "status": "ok",
+      "test_iou": 0.6931861844919686,
+      "copy_baseline_iou": 0.369847743245451,
+      "improvement_vs_copy_iou": 0.32333844124651756,
+      "best_epoch": 1,
+      "test_samples": 190
+    },
+    {
+      "held": "tobarra_20240802",
+      "status": "cached",
+      "test_iou": 0.4938,
+      "copy_baseline_iou": 0.3284,
+      "improvement_vs_copy_iou": 0.1654,
+      "best_epoch": 8
+    }
+  ],
+  "summary": {
+    "n_folds": 4,
+    "mean_delta": 0.26714462799600813,
+    "min_delta": 0.15600850763683827,
+    "all_positive": true
+  }
+}

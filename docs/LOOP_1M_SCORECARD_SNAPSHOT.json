@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:22:43.730578+00:00",
+  "generated_at_utc": "2026-07-16T09:56:33.759168+00:00",
   "loop": "1M_MEJORA_CONTINUA",
   "horizon": "2026-07-16 \u2192 2026-08-13",
   "gates": {
@@ -8,7 +8,7 @@
     "O3_temporal_windows": "PARTIAL_OR_UNKNOWN",
     "O4_product": "DOCX_V1_READY",
     "O5_second_grade_A": "NO_GO",
-    "M1_G1": "FEATURES_CLOSED_TEMPORAL_PENDING",
+    "M1_G1": "NO_GO_CLOSED",
     "M2_G2": "GO_clm_v28",
     "M3_stretch": "N/A",
     "M4_dual_product": "READY"
@@ -51,11 +51,22 @@
     "v27": {
       "version": "v27_temporal_t2",
       "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
-      "status": "RUNNING_OR_PENDING",
-      "raw_status": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2 has status \"KernelWorkerStatus.RUNNING\"",
-      "checked_at_utc": "2026-07-16T09:18:39.991917+00:00",
-      "verdict": null,
-      "note": "Kernel not COMPLETE yet"
+      "status": "COMPLETE",
+      "checked_at_utc": "2026-07-16T09:55:21.749779+00:00",
+      "test_iou": 0.2253,
+      "copy_baseline_iou": 0.1498,
+      "improvement_vs_copy_iou": 0.0755,
+      "best_epoch": 30,
+      "vs_v21": {
+        "v21_iou": 0.2256,
+        "v21_delta": 0.0756,
+        "iou_diff": -0.0003,
+        "delta_diff": -0.0001,
+        "beats_v21": false
+      },
+      "G1": false,
+      "verdict": "NO_PROMOTE",
+      "next": "optional v27b T=3 once; if fail KILL G1 temporal+features"
     }
   },
   "go_mes": {
