@@ -32,9 +32,16 @@
 - **G1:** FAIL (need IoU≥0.25 and Δ≥+0.09)
 - **Verdict:** **NO_PROMOTE**; next rail = temporal T=2 (`v27`)
 
-### v27_temporal_t2: Temporal rail — QUEUED
+### v27_temporal_t2: Temporal rail — RUNNING (S1)
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v27-temporal-t2`
 - **Single change:** `sequence_length=2` on legacy17 residual+delta any_fire
+- **Eval script:** `python scripts/eval_kaggle_v27_verdict.py` → `docs/V27_TEMPORAL_VERDICT.json`
+- **Loop 1M:** `docs/LOOP_1M_MEJORA_CONTINUA.md` (S1 D0 started 2026-07-16)
+
+### Loop 1M — S1 inventory
+- **IF inventory:** `docs/IF_INVENTORY_S1.json` — 5 packs, 3 missing (ACOM2, Brazatortas, Polán)
+- **Retuerta:** QA flag area ~4209 ha — `docs/RETUERTA_QA_FLAG.md` (exclude from O1)
+- **Scorecard mes:** `python scripts/finalize_loop_1m_scorecard.py`
 
 ---
 

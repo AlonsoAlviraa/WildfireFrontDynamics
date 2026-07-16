@@ -1,0 +1,114 @@
+{
+  "generated_at_utc": "2026-07-16T09:17:54.892275+00:00",
+  "protocol": "if_inventory_s1_v1",
+  "fires": [
+    {
+      "fire_id": "tobarra_20240802",
+      "has_pack": true,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": "A",
+      "ros_m_min": 5.712726709599541,
+      "area_ha_max": 51.881200146484375,
+      "qa_flag": null,
+      "priority": "anchor",
+      "usable_for_o1": true
+    },
+    {
+      "fire_id": "cardoso_2025",
+      "has_pack": true,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": "B",
+      "ros_m_min": 30.204942788847656,
+      "area_ha_max": 38.383374853515626,
+      "qa_flag": null,
+      "priority": "anchor_needed",
+      "usable_for_o1": true
+    },
+    {
+      "fire_id": "hellin_2024",
+      "has_pack": true,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": "B",
+      "ros_m_min": 15.962313831094542,
+      "area_ha_max": 44.24487568359375,
+      "qa_flag": null,
+      "priority": "anchor_needed",
+      "usable_for_o1": true
+    },
+    {
+      "fire_id": "la_estrella_acom1_2024",
+      "has_pack": true,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": "B",
+      "ros_m_min": 39.318891396049025,
+      "area_ha_max": 52.661699877929685,
+      "qa_flag": null,
+      "priority": "anchor_needed",
+      "usable_for_o1": true
+    },
+    {
+      "fire_id": "la_estrella_acom2_2024",
+      "has_pack": false,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": null,
+      "ros_m_min": null,
+      "area_ha_max": null,
+      "qa_flag": null,
+      "priority": "pack",
+      "usable_for_o1": false
+    },
+    {
+      "fire_id": "retuerta_2025",
+      "has_pack": true,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": "B",
+      "ros_m_min": 58.66047468664544,
+      "area_ha_max": 4209.033700976563,
+      "qa_flag": "AREA_ANOMALOUS_LIKELY_MASK_OR_FOV",
+      "priority": "qa_flag",
+      "usable_for_o1": false
+    },
+    {
+      "fire_id": "brazatortas_2025",
+      "has_pack": false,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": null,
+      "ros_m_min": null,
+      "area_ha_max": null,
+      "qa_flag": null,
+      "priority": "pack",
+      "usable_for_o1": false
+    },
+    {
+      "fire_id": "polan_2025",
+      "has_pack": false,
+      "has_reprojected_dir": true,
+      "has_masks_dir": true,
+      "quality_grade": null,
+      "ros_m_min": null,
+      "area_ha_max": null,
+      "qa_flag": null,
+      "priority": "pack",
+      "usable_for_o1": false
+    }
+  ],
+  "summary": {
+    "n_listed": 8,
+    "n_packs": 5,
+    "n_grade_a": 1,
+    "n_qa_flag": 1,
+    "missing_packs": [
+      "la_estrella_acom2_2024",
+      "brazatortas_2025",
+      "polan_2025"
+    ]
+  },
+  "retuerta_note": "area_ha_max >> realistic IF size \u2192 do not use for ROS validation until mask QA. Likely FOV / component merge / wrong threshold, not front_dynamics math."
+}

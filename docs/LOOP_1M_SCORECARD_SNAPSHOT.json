@@ -1,0 +1,72 @@
+{
+  "generated_at_utc": "2026-07-16T09:18:17.465988+00:00",
+  "loop": "1M_MEJORA_CONTINUA",
+  "horizon": "2026-07-16 \u2192 2026-08-13",
+  "gates": {
+    "O1_multi_anchor": "PARTIAL",
+    "O2_hausdorff": "PROXY_ONLY",
+    "O3_temporal_windows": "PARTIAL_OR_UNKNOWN",
+    "O4_product": "DOCX_V1_READY",
+    "O5_second_grade_A": "NO_GO",
+    "M1_G1": "FEATURES_CLOSED_TEMPORAL_PENDING",
+    "M2_G2": "GO_clm_v28",
+    "M3_stretch": "N/A",
+    "M4_dual_product": "READY"
+  },
+  "honest_ceiling": {
+    "O1": "needs external Vp/ha",
+    "O2": "needs official perimeter",
+    "G1": null
+  },
+  "inventory_summary": {
+    "n_listed": 8,
+    "n_packs": 5,
+    "n_grade_a": 1,
+    "n_qa_flag": 1,
+    "missing_packs": [
+      "la_estrella_acom2_2024",
+      "brazatortas_2025",
+      "polan_2025"
+    ]
+  },
+  "ml": {
+    "v26": {
+      "version": "v26_physics15",
+      "kernel": "alonsoalviraaaa/wildfire-front-training-v26-physics15",
+      "status": "COMPLETE",
+      "test_iou": 0.2212,
+      "copy_baseline_iou": 0.15,
+      "improvement_vs_copy_iou": 0.0711,
+      "best_epoch": 23,
+      "n_test": 979,
+      "vs_v21": {
+        "v21_iou": 0.2256,
+        "v21_delta": 0.0756,
+        "iou_diff": -0.0044,
+        "delta_diff": -0.0045
+      },
+      "G1": false,
+      "verdict": "NO_PROMOTE",
+      "reason": "Does not beat v21 production; G1 thresholds not met",
+      "next": "v27 temporal sequence_length=2 on legacy17"
+    },
+    "v27": {
+      "version": "v27_temporal_t2",
+      "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
+      "status": "RUNNING_OR_PENDING",
+      "raw_status": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2 has status \"KernelWorkerStatus.RUNNING\"",
+      "checked_at_utc": "2026-07-16T09:18:17.392464+00:00",
+      "verdict": null,
+      "note": "Kernel not COMPLETE yet"
+    }
+  },
+  "go_mes": {
+    "formula": "(O1 AND O4) OR (O3 AND O4 AND O1_partial)",
+    "status": "NOT_YET"
+  },
+  "docs": {
+    "loop": "docs/LOOP_1M_MEJORA_CONTINUA.md",
+    "cma_report": "docs/entrega_cma/Informe_tecnico_dinamica_frente_v1.0.docx",
+    "correo": "docs/correo_pablo_cma_avances.md"
+  }
+}
