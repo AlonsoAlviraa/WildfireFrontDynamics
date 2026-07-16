@@ -93,14 +93,23 @@ DEFAULT_FIRES: list[FireSpec] = [
         masks=ROOT / "artifacts" / "brazatortas_2025_lwir_masks",
         sensor_id="lwir_drone",
         estimated_error_m=2.0,
+        notes="Brazatortas 2025 — sin ancla INFOCAM",
     ),
     FireSpec(
-        fire_id="la_estrella_acom1_2024",
-        images=ROOT / "artifacts" / "la_estrella_acom1_2024_reprojected_lwir",
-        masks=ROOT / "artifacts" / "la_estrella_acom1_2024_lwir_masks",
+        fire_id="la_estrella_acom2_2024",
+        images=ROOT / "artifacts" / "la_estrella_acom2_2024_reprojected_lwir",
+        masks=ROOT / "artifacts" / "la_estrella_acom2_2024_lwir_masks",
         sensor_id="lwir_drone",
         estimated_error_m=2.0,
-        notes="La Estrella ACOM1 — sin ancla INFOCAM local en repo",
+        notes="La Estrella ACOM2 — sin ancla INFOCAM",
+    ),
+    FireSpec(
+        fire_id="polan_2025",
+        images=ROOT / "artifacts" / "polan_2025_reprojected_lwir",
+        masks=ROOT / "artifacts" / "polan_2025_lwir_masks",
+        sensor_id="lwir_drone",
+        estimated_error_m=2.0,
+        notes="Polán 2025 — masks may be incomplete",
     ),
 ]
 
@@ -215,6 +224,9 @@ def _select_coherent_pairs(
         meta.append((img, mask, w, h, cx, cy, ts))
 
     if len(meta) < 2:
+        # Fallback: still reject absurd FOVs (e.g. full-scene 16k×27k Heligrafics
+        # dumps). Prefer smallest footprints under a hard side cap.
+        hard_side = max(int(max_side * 2.5), max_side + 500)
         all_meta: list[tuple[Path, Path, int, int, float, float, float]] = []
         for img, mask in pairs:
             try:
@@ -225,8 +237,30 @@ def _select_coherent_pairs(
                     cy = 0.5 * (b.bottom + b.top)
             except Exception:
                 continue
+            if max(w, h) > hard_side:
+                continue
             ts = _parse_timestamp_from_name(img.name) or 0.0
             all_meta.append((img, mask, w, h, cx, cy, ts))
+        if len(all_meta) < 2:
+            # Last resort: take the two smallest rasters even if oversized,
+            # but never the absolute largest scene in the set.
+            raw: list[tuple[Path, Path, int, int, float, float, float]] = []
+            for img, mask in pairs:
+                try:
+                    with rasterio.open(img) as ds:
+                        w, h = int(ds.width), int(ds.height)
+                        b = ds.bounds
+                        cx = 0.5 * (b.left + b.right)
+                        cy = 0.5 * (b.bottom + b.top)
+                except Exception:
+                    continue
+                ts = _parse_timestamp_from_name(img.name) or 0.0
+                raw.append((img, mask, w, h, cx, cy, ts))
+            raw.sort(key=lambda t: t[2] * t[3])
+            # Drop the largest 30% of footprints when we have enough frames.
+            if len(raw) >= 4:
+                raw = raw[: max(3, int(len(raw) * 0.7))]
+            return [(t[0], t[1]) for t in raw[: max(max_frames, 2)]]
         all_meta.sort(key=lambda t: t[2] * t[3])
         return [(t[0], t[1]) for t in all_meta[: max(max_frames, 2)]]
 
@@ -244,7 +278,11 @@ def _select_coherent_pairs(
         if not placed:
             clusters.append([item])
 
+    # Prefer densest spatial cluster when it is rich enough; otherwise use all
+    # max_side-filtered frames by time (aircraft re-visits can re-center).
     best = max(clusters, key=len)
+    if len(best) < 2 or (len(meta) >= 4 and len(best) < min(4, len(meta))):
+        best = meta
     best_sorted = sorted(best, key=lambda t: (t[6], t[0].name))
 
     # Find longest consecutive window with median Δt < 15 minutes if possible.

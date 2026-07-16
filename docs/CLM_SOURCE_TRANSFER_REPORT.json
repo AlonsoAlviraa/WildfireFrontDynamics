@@ -1,0 +1,43 @@
+{
+  "generated_at_utc": "2026-07-16T09:21:15.560915+00:00",
+  "product": "clm_v28",
+  "protocol": "clm_per_source_eval_holdout_v1",
+  "by_source": {
+    "CARDOSO": {
+      "n": 30,
+      "mean_iou": 0.5270940834052267,
+      "mean_copy": 0.36876998666660316,
+      "mean_delta": 0.15832409673862355,
+      "frac_beat_copy": 0.9333333333333333
+    },
+    "LA_ESTRELLA_ACOM1": {
+      "n": 30,
+      "mean_iou": 0.48322055241069944,
+      "mean_copy": 0.045155540453563105,
+      "mean_delta": 0.43806501195713643,
+      "frac_beat_copy": 0.9
+    },
+    "LA_ESTRELLA_ACOM2": {
+      "n": 30,
+      "mean_iou": 0.5514214065670067,
+      "mean_copy": 0.15804885835641533,
+      "mean_delta": 0.3933725482105913,
+      "frac_beat_copy": 1.0
+    },
+    "tobarra_20240802": {
+      "n": 30,
+      "mean_iou": 0.3899758074346549,
+      "mean_copy": 0.40224677751148447,
+      "mean_delta": -0.012270970076829658,
+      "frac_beat_copy": 0.4
+    }
+  },
+  "summary": {
+    "n_sources": 4,
+    "mean_delta_across_sources": 0.24437267170738042,
+    "min_delta": -0.012270970076829658,
+    "all_sources_delta_positive": false,
+    "industrial_g2_plus": false
+  },
+  "note": "Tobarra may show ~0 delta if fine-tune saw similar patches; industrial bar is delta>0 on multi-source held patterns."
+}

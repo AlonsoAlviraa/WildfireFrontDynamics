@@ -320,6 +320,10 @@ Si responde en S4, se documenta para post-mes sin forzar GO_MES+ artificial.
 |-------|--------|--------|-----------|
 | 2026-07-16 | S1 D0 | Plan aprobado; doc repo + scorecard scaffold | en curso |
 | 2026-07-16 | S1 D0 | v27 T=2 | RUNNING (pendiente verdict) |
+| 2026-07-16 | S1 | Retuerta FOV fix | area 4209→~280 ha; grado B |
+| 2026-07-16 | S1 | Packs ACOM2 + Brazatortas | OK grade B |
+| 2026-07-16 | S1 | CLM per-source transfer | 3/4 Δ>0; Tobarra ~0 |
+| 2026-07-16 | S1 | Smoke production products | PASS dual + CLM Δ>0 |
 
 ## Scorecard mes (actualizar con scripts/finalize_loop_1m_scorecard.py)
 

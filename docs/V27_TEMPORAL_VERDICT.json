@@ -3,7 +3,7 @@
   "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
   "status": "RUNNING_OR_PENDING",
   "raw_status": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2 has status \"KernelWorkerStatus.RUNNING\"",
-  "checked_at_utc": "2026-07-16T09:18:17.392464+00:00",
+  "checked_at_utc": "2026-07-16T09:22:45.170294+00:00",
   "verdict": null,
   "note": "Kernel not COMPLETE yet"
 }

@@ -1,15 +1,19 @@
 # Retuerta 2025 — QA flag (S1)
 
-**Status:** `AREA_ANOMALOUS_LIKELY_MASK_OR_FOV`  
+**Status:** `FIXED_FOV_FILTER` (2026-07-16) — was `AREA_ANOMALOUS`  
 **Pack:** `outputs/observatorio/retuerta_2025/`  
-**ROS primaria reportada:** ~58.7 m/min (grado B)  
-**Área máx. máscara:** ~**4209 ha**
+**Antes:** area_ha_max ~**4209 ha** (frame 16k×27k)  
+**Después:** area_ha_max ~**280 ha**, n_obs=5, grado **B**, ROS ~59 m/min (sin ancla)
 
-## Por qué se flagea
+## Causa raíz (confirmada)
 
-- Superficie de máscara térmica irreal para el uso de validación multi-ancla.
-- Probable causa: FOV amplio, umbral que captura fondo caliente, fusión de componentes, o georreferencia/resolución mal interpretada — **no** un bug aislado del estimador ROS.
-- **No usar** Retuerta para O1/O5 ni para comparar con parte hasta re-QA de máscaras.
+- Fallback de `_select_coherent_pairs` ignoraba `max_side` y metía el FOV completo Heligrafics.
+- Clustering espacial dejaba solo 1–2 frames útiles.
+
+## Fix industrial (código)
+
+- Hard cap en fallback FOV + no usar el 30% de frames más grandes.
+- Si el mejor cluster espacial es pobre, usar todos los frames bajo `max_side` ordenados por tiempo.
 
 ## Acción S1 (sin retocar motor)
 

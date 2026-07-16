@@ -1,0 +1,54 @@
+{
+  "updated_at_utc": "2026-07-16",
+  "definition": "docs/INDUSTRIAL_PRODUCTION_GATES.md",
+  "products": {
+    "ndws_v21": {
+      "ready": true,
+      "gate": "G0",
+      "note": "G1 not met; do not claim next-day ops for Spain"
+    },
+    "clm_v28": {
+      "ready": true,
+      "gate": "G2_holdout",
+      "per_source": {
+        "CARDOSO": "+0.158",
+        "LA_ESTRELLA_ACOM1": "+0.438",
+        "LA_ESTRELLA_ACOM2": "+0.393",
+        "tobarra_20240802": "-0.012"
+      },
+      "industrial_g2_plus": false,
+      "note": "3/4 sources beat copy; Tobarra near-copy. Ship as specialist with source report."
+    },
+    "front_dynamics_v1": {
+      "ready": true,
+      "tobarra_grade": "A",
+      "tobarra_ratio_vs_infocam": 0.82,
+      "n_packs_ok": 7,
+      "missing": ["polan_2025"],
+      "retuerta": "FOV filter fixed; area ~280 ha (was 4209); grade B without anchor"
+    }
+  },
+  "gates": {
+    "O1": "PARTIAL",
+    "O2": "PROXY_ONLY",
+    "O3": "PARTIAL",
+    "O4": "DOCX_READY",
+    "O5": "NO_GO",
+    "G1": "PENDING_V27",
+    "G2": "GO"
+  },
+  "industrial_claim_allowed": {
+    "ops_observed_front_with_abstention": true,
+    "clm_specialist_research_transfer": true,
+    "ndws_global_baseline": true,
+    "multi_anchor_validated_ops": false,
+    "official_perimeter_validated": false,
+    "tactical_15_30_60_prediction": false
+  },
+  "blockers_to_full_industrial": [
+    "INFOCAM Vp/ha for >=2 more IF",
+    "1 official perimeter vector",
+    "G1 NDWS or explicit G1 kill",
+    "optional: Tobarra CLM delta>0 via LOFO fine-tune"
+  ]
+}

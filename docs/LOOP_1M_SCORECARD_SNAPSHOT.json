@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:18:17.465988+00:00",
+  "generated_at_utc": "2026-07-16T09:22:43.730578+00:00",
   "loop": "1M_MEJORA_CONTINUA",
   "horizon": "2026-07-16 \u2192 2026-08-13",
   "gates": {
@@ -20,12 +20,10 @@
   },
   "inventory_summary": {
     "n_listed": 8,
-    "n_packs": 5,
+    "n_packs": 7,
     "n_grade_a": 1,
-    "n_qa_flag": 1,
+    "n_qa_flag": 0,
     "missing_packs": [
-      "la_estrella_acom2_2024",
-      "brazatortas_2025",
       "polan_2025"
     ]
   },
@@ -55,7 +53,7 @@
       "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
       "status": "RUNNING_OR_PENDING",
       "raw_status": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2 has status \"KernelWorkerStatus.RUNNING\"",
-      "checked_at_utc": "2026-07-16T09:18:17.392464+00:00",
+      "checked_at_utc": "2026-07-16T09:18:39.991917+00:00",
       "verdict": null,
       "note": "Kernel not COMPLETE yet"
     }
