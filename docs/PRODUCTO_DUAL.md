@@ -49,6 +49,8 @@ python scripts/predict_spread.py --product clm_v28 \
 
 | Gate | Producto | Estado |
 |------|----------|--------|
-| G0 | ndws_v21 | GO (baseline) |
-| G1 | NDWS ≥0.25 / +0.09 | Pelea con physics15 (v26) — no promocionar sin métrica |
+| G0 | ndws_v21 | GO (baseline IoU 0.226 / Δ +0.076) |
+| G1 | NDWS ≥0.25 / +0.09 | **OPEN** — v25/v26 features NO_PROMOTE; v27 temporal T=2 en curso |
 | G2 | clm_v28 holdout test | **GO** (Δ +0.196) |
+
+**v26 physics15 (cerrado):** IoU 0.221 / Δ +0.071 → no sustituye a `ndws_v21`.
