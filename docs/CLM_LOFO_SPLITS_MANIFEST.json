@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-07-16T09:24:32.413057+00:00",
+  "sources": {
+    "CARDOSO": 200,
+    "LA_ESTRELLA_ACOM1": 200,
+    "LA_ESTRELLA_ACOM2": 190,
+    "tobarra_20240802": 300
+  },
+  "folds": {
+    "CARDOSO": {
+      "train": 621,
+      "val": 69,
+      "test": 200
+    },
+    "LA_ESTRELLA_ACOM1": {
+      "train": 621,
+      "val": 69,
+      "test": 200
+    },
+    "LA_ESTRELLA_ACOM2": {
+      "train": 630,
+      "val": 70,
+      "test": 190
+    },
+    "tobarra_20240802": {
+      "train": 531,
+      "val": 59,
+      "test": 300
+    }
+  }
+}

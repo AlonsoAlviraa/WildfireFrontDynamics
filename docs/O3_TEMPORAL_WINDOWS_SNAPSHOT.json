@@ -1,0 +1,32 @@
+{
+  "leap": "O3",
+  "fire": "tobarra_20240802",
+  "verdict": "GO",
+  "go": true,
+  "n_pass_strict_band": 2,
+  "n_windows_ok": 3,
+  "windows": [
+    {
+      "w": "early",
+      "ros": 6.576348663503577,
+      "ratio": 0.939478380500511,
+      "pass": true,
+      "pass_wide": true
+    },
+    {
+      "w": "mid",
+      "ros": 6.7520810792516155,
+      "ratio": 0.9645830113216594,
+      "pass": true,
+      "pass_wide": true
+    },
+    {
+      "w": "late",
+      "ros": 3.347728665558538,
+      "ratio": 0.4782469522226483,
+      "pass": false,
+      "pass_wide": true
+    }
+  ],
+  "note": "strict [0.5,2]: 2/3; late 0.478 near miss; wide band 3/3"
+}

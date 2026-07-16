@@ -24,14 +24,17 @@
       "tobarra_grade": "A",
       "tobarra_ratio_vs_infocam": 0.82,
       "n_packs_ok": 7,
-      "missing": ["polan_2025"],
-      "retuerta": "FOV filter fixed; area ~280 ha (was 4209); grade B without anchor"
+      "missing": [
+        "polan_2025"
+      ],
+      "retuerta": "FOV filter fixed; area ~280 ha (was 4209); grade B without anchor",
+      "o3": "GO 2/3 strict, 3/3 wide"
     }
   },
   "gates": {
     "O1": "PARTIAL",
     "O2": "PROXY_ONLY",
-    "O3": "PARTIAL",
+    "O3": "GO_2_OF_3_STRICT_WIDE_3_OF_3",
     "O4": "DOCX_READY",
     "O5": "NO_GO",
     "G1": "PENDING_V27",
