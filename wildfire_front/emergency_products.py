@@ -412,7 +412,14 @@ def write_envelope_geojson(
     center_xy: tuple[float, float] | None,
     fire_id: str = "",
     expansion_bearing_deg: float | None = None,
+    write_wgs84: bool = True,
 ) -> dict[str, Any]:
+    """Write envelope GeoJSON. Default output is WGS84 for geojson.io/Leaflet.
+
+    Also writes ``*_utm.geojson`` next to path when coordinates were projected.
+    """
+    from .geo_crs import geojson_to_wgs84, looks_projected_meters
+
     gj = envelope_to_geojson(
         envelope,
         center_xy=center_xy,
@@ -420,5 +427,24 @@ def write_envelope_geojson(
         expansion_bearing_deg=expansion_bearing_deg,
     )
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Detect if center is UTM-style
+    is_utm = False
+    if center_xy is not None:
+        is_utm = looks_projected_meters(float(center_xy[0]), float(center_xy[1]))
+
+    if write_wgs84 and is_utm:
+        utm_path = path.with_name(path.stem + "_utm.geojson")
+        # store projected version for QGIS with local CRS
+        utm_doc = dict(gj)
+        utm_doc["crs"] = {
+            "type": "name",
+            "properties": {"name": "EPSG:32630"},
+        }
+        utm_path.write_text(json.dumps(utm_doc, indent=2), encoding="utf-8")
+        gj_wgs = geojson_to_wgs84(gj, zone=30, northern=True)
+        path.write_text(json.dumps(gj_wgs, indent=2), encoding="utf-8")
+        return gj_wgs
+
     path.write_text(json.dumps(gj, indent=2), encoding="utf-8")
     return gj
