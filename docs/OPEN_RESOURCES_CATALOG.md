@@ -40,6 +40,14 @@ https://firms.modaps.eosdis.nasa.gov/data/country/viirs-snpp/2024/viirs-snpp_202
 | **ForeFire** | Motor C++ ROS + NetCDF, JOSS | https://github.com/forefireAPI/forefire | Comparar ROS física vs observada |
 | **ELMFIRE** | Level-set operativo (US) | https://github.com/lautenberger/elmfire · https://elmfire.io | Referencia de forecasting real |
 | **Rothermel / Behave** | Clásicos USFS | Literature + implementaciones varias | Calibrar head ROS con wind/slope |
+| **Wang Zhengfei 王正非 (CN)** | ROS empírico viento×pendiente×combustible | **In-repo** `wildfire_front/cn_wang_zhengfei.py` · mega: `docs/MEGA_ANALISIS_CHINA_LINHUO.md` | Prior / anisotropía envelope |
+| **xllyll/fire-spread** | Java polar 360° + DEM (CN) | https://github.com/xllyll/fire-spread | Patrón rayos; vendored `_vendor_cn/` |
+| **CesiumFire** | Vue+Cesium linhuo | https://github.com/winrelde/CesiumFire | Ideas UI 3D |
+| **YongfengX WildfireSpreadTS** | Mejoras ML next-day (FNO) | https://github.com/YongfengX/wildfire-spread-prediction | Research only (G1 KILL) |
+
+```bash
+python scripts/run_cn_physics_prior.py --obs-ros 5.71 --ca
+```
 
 ---
 

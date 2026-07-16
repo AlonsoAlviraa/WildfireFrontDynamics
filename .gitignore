@@ -80,3 +80,36 @@ kaggle_output/
 kaggle_outputs_*/
 kaggle_outputs_*/WildfireFrontDynamics/
 kaggle_outputs_*/_fresh/
+# Vendored external clones (local analysis)
+_vendor_cn/
+
+
+# --- Repo cleanup (2026-07) ----------------------------------
+_vendor_cn/
+_cross_eval_npz/
+_kaggle_weights_bundle/
+WildfireFrontDynamics/
+mcps/
+terminals/
+ci_logs.zip
+ci_logs_extract/
+1.10
+cross_protocol_report.json
+kaggle_output/
+kaggle_outputs_*/
+kaggle_outputs_*_log/
+kaggle_job/**/__pycache__/
+
+# Intermediate weights (only production/ + clm_specialist/ are product)
+models/weights_v*.pt
+models/meta_labeler_*.pkl
+models/tobarra_finetuned.pt
+models/v3.pt
+models/__pycache__/
+
+# Local caches already listed above; reinforce
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

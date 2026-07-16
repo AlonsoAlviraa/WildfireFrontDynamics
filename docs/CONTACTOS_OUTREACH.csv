@@ -1,0 +1,52 @@
+prioridad,org,rol,email,canal_web,que_pedir,estado,fecha_envio,notas
+1,GEACAM Pablo,CMA/ops aéreo CLM,pablo.arroyobretano@geacam.com,,Vp/ha multi-IF; perímetro; Cardoso; feedback informe,ENVIADO,2026-07-16,Usuario confirma enviado
+1,GEACAM genérico,Institucional,contacto@geacam.com,https://www.geacam.es/contacto,CC institucional,ENVIADO,2026-07-16,CC con Pablo si aplica
+1,GEACAM DPD,Protección datos,dpd@geacam.com,,Solo si piden base legal,HOLD,,
+1,Heligrafics,Sensor aéreo LWIR,info@heligrafics.net,https://www.heligrafics.net/en/contact/,Metadatos sensor; más secuencias IF,ENVIADO,2026-07-16,Usuario confirma enviado
+1,Protección Civil CLM,Gobierno en CLM,proteccion_civil.castillalamancha@correo.gob.es,,Reenvío INFOCAM,OPCIONAL,,Tel 925989000
+1,INFOCAM,Ops CLM,,https://infocam.castillalamancha.es/,Partes/derivación técnica,WEB,,Sin email genérico público
+2,EFFIS JRC,Perímetros BA Europa,jrc-effis@ec.europa.eu,https://forest-fire.emergency.copernicus.eu/apps/data.request.form/,BA perimeters ES/CLM 2024-2025,PENDIENTE,,Preferido
+2,EFFIS legacy,Legacy PDF,effis@jrc.ec.europa.eu,,Solo si rebota jrc-effis,HOLD,,
+2,JRC data support,Datasets abiertos,jrc-data-support@ec.europa.eu,https://data.jrc.ec.europa.eu/,Soporte catálogo datos,OPCIONAL,,
+2,EU Space Support,Copernicus ayuda,support@euspace-programme.eu,,Acceso productos EMS,OPCIONAL,,
+2,ERCC ECHO,Activación EMS,echo-ercc@ec.europa.eu,,NO usar sin PC autorizada,NO,,Solo PC autorizada
+2,NASA FIRMS,Hotspots,,https://firms.modaps.eosdis.nasa.gov/api/map_key/,MAP_KEY gratis,PENDIENTE,,Script ya en repo
+2,Copernicus EMS Mapping,Delineation,,https://mapping.emergency.copernicus.eu/,Descargar EMSR ES publicados,WEB,,
+3,EGIF MITECO,Partes nacionales,,https://servicio.mapa.gob.es/incendios/Search/Publico,Ha fechas provincias XML,WEB,,
+3,SECF,Sociedad forestal,secforestales@secforestales.org,https://secforestales.org,Red/congresos,OPCIONAL,,
+3,ASELF,Lucha contra el fuego,administracion@aself.org,https://www.aself.org,Red ops/jornadas,OPCIONAL,,
+3,ASELF comunicación,Comunicación,comunicacion@aself.org,https://www.aself.org,Prensa/jornadas,OPCIONAL,,
+4,Andalucía REDIAM,Datos espaciales,rediam.atiende.csmaea@juntadeandalucia.es,,Cartografía incendios,OPCIONAL,,
+4,Andalucía REDIAM alt,Datos espaciales,rediam.atiende.csma@juntadeandalucia.es,,Cartografía incendios,OPCIONAL,,
+4,Andalucía TOP/medios,Metadatos medios,cor.top.cagpds@juntadeandalucia.es,,Catálogo medios INFOCA,OPCIONAL,,
+4,Andalucía ASEMA,Gerencia,gerencia.asema@juntadeandalucia.es,,Institucional,OPCIONAL,,
+4,Galicia forestal,DG Planificación Forestal,forestal.mediorural@xunta.gal,https://www.xunta.gal/es/medio-rural/directorio,Contacto forestal,OPCIONAL,,
+4,Galicia monte,Medio Rural monte,monte.mediorural@xunta.gal,,Monte/incendios docs,OPCIONAL,,
+4,Galicia secretaría CMR,Secretaría,secretaria.cmr@xunta.gal,,Institucional,OPCIONAL,,
+4,Galicia coordinación medios,Medios,coordinacion-medios.medio-rural@xunta.gal,,Formación/medios,OPCIONAL,,
+5,INIA lab incendios,CIFOR/ICIFOR,incendio@inia.es,https://www.inia.es,Validación ROS combustibles,PENDIENTE,,Tel +34 913476780
+5,INIA Guijarro,Investigadora,guijarro@inia.es,,Solo si encaja línea; preferir incendio@,HOLD,,Publicado en directorios
+5,UCLM Moreno,Grupo Fuego,JoseM.Moreno@uclm.es,https://blog.uclm.es/grupofuego/,Colaboración proyecto propio CLM,PENDIENTE,,
+5,UCLM Heras,Grupo Fuego,Jorge.Heras@uclm.es,,CC Moreno,PENDIENTE,,
+5,UCLM Sánchez,Grupo Fuego,juanmanuel.sanchez@uclm.es,,CC,OPCIONAL,,
+5,UdL MasterFUEGO,Coordinación máster,etseafiv.coordmfuego@udl.cat,https://www.masterfuegoforestal.udl.cat,Red máster incendios,PENDIENTE,,
+5,UCO Molina,Ing. Forestal fuego,jrmolina@uco.es,https://www.uco.es/idep/gestion-del-fuego,FirEUrisk modelos,PENDIENTE,,
+5,CTFC secretaría,Centro forestal Cat,secretaria@ctfc.cat,https://www.ctfc.cat,Consulta general,PENDIENTE,,Tel +34 973481752
+5,FIRE-RES CTFC,Proyecto UE,fire-res@ctfc.cat,https://fire-res.eu/contact-us/,Living labs datos,PENDIENTE,,
+5,Pau Costa Foundation,Red profesional,info@paucostafoundation.org,https://www.paucostafoundation.org,Red WFRM formación,PENDIENTE,,
+5,USC I+D grupos,Gestión grupos,imaisd@usc.gal,,Pedir IP incendios,OPCIONAL,,
+6,Firelogue,Red UE,info@firelogue.eu,https://firelogue.eu,Partners WFRM,OPCIONAL,,
+6,Firelogue civil protection,WG,civil-protection@firelogue.eu,,WG PC,OPCIONAL,,
+6,Firelogue environ,WG,environ@firelogue.eu,,WG environment,OPCIONAL,,
+6,CMCC,Partner clima,info@cmcc.it,,Clima/riesgo,OPCIONAL,,
+6,Trilateral Research,Partner Firelogue,info@trilateralresearch.com,,Tech/policy,OPCIONAL,,
+6,TREEADS ITI,Partner GR,Info@iti.gr,https://treeads-project.eu/,Detección/ecosistema,OPCIONAL,,
+6,RISE Fire Norway,Partner TREEADS,post@risefr.no,,Research fire,OPCIONAL,,
+7,INRAE international,Francia,international@inrae.fr,https://www.inrae.fr,Reenvío unidades wildfire,OPCIONAL,,
+7,Missoula Fire Lab tools,USFS ecosystem,firelabmissoula@gmail.com,https://research.fs.usda.gov/firelab,Tools/comparación modelos,OPCIONAL,,
+7,WA DFES BCoE,AU research,BCoEResearch@dfes.wa.gov.au,,Ops research,OPCIONAL,,
+7,IJWF journal,Editorial,publishing.ijwf@csiro.au,,NO datos ops,NO,,Solo journal
+7,ForeFire,Open source ROS,,https://github.com/forefireAPI/forefire,Issues GitHub,WEB,,
+7,ELMFIRE,Modelo operativo,,https://elmfire.io,Docs/GitHub,WEB,,
+4,Aragón INFOAR,Incendios forestales,incendios@aragon.es,https://www.aragon.es,Perímetros/anclas AR,PENDIENTE,,Nuevo
+4,Aragón gestión forestal,DG Gestión Forestal,gestionforestal@aragon.es,,CC INFOAR,PENDIENTE,,

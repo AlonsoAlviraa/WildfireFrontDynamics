@@ -204,8 +204,14 @@ def enrich_ops_dict(
     ops: dict[str, Any],
     *,
     expansion_bearing_deg: float | None = None,
+    cn_hybrid: bool = True,
+    wind_from_deg: float | None = None,
 ) -> dict[str, Any]:
-    """Attach sector_ros + short_horizon_envelope onto operational_metrics-like dict."""
+    """Attach sector_ros + short_horizon_envelope onto operational_metrics-like dict.
+
+    When ``cn_hybrid`` and a primary ROS exist, also attach
+    ``cn_hybrid_ros`` (Wang/Mao shape × observed magnitude).
+    """
     primary = ops.get("speed_median_m_min")
     if primary is None:
         primary = ops.get("primary_ros_m_min")
@@ -235,6 +241,37 @@ def enrich_ops_dict(
     out["short_horizon_envelope"] = envelope
     out["emergency_product"] = "observed_front_dynamics_v1"
     out["not_a_product"] = "validated_tactical_dispatch"
+
+    if cn_hybrid and primary is not None:
+        try:
+            from wildfire_front.cn_wang_zhengfei import hybrid_ros_prior
+
+            wfrom = wind_from_deg
+            if wfrom is None and expansion_bearing_deg is not None:
+                # Meteorological from ≈ opposite of expansion (proxy only)
+                wfrom = (float(expansion_bearing_deg) + 180.0) % 360.0
+            if wfrom is None:
+                wfrom = 270.0
+            hybrid = hybrid_ros_prior(float(primary), wind_from_deg=float(wfrom))
+            # Drop full polar from ops JSON bulk; keep summary + sample
+            if hybrid.get("status") == "ok":
+                out["cn_hybrid_ros"] = {
+                    "status": hybrid["status"],
+                    "model": hybrid["model"],
+                    "scale_factor": hybrid["scale_factor"],
+                    "ros_head_m_min": hybrid["ros_head_m_min"],
+                    "ros_flank_m_min": hybrid["ros_flank_m_min"],
+                    "ros_rear_m_min": hybrid["ros_rear_m_min"],
+                    "observed_ros_m_min": hybrid["observed_ros_m_min"],
+                    "polar_n": len(hybrid.get("polar_calibrated") or []),
+                    "polar_sample": (hybrid.get("polar_calibrated") or [])[:6],
+                    "label_es": hybrid.get("label_es"),
+                }
+            else:
+                out["cn_hybrid_ros"] = hybrid
+        except Exception as exc:  # pragma: no cover — defensive
+            out["cn_hybrid_ros"] = {"status": "error", "reason": str(exc)}
+
     return out
 
 

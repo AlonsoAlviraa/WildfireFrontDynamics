@@ -94,6 +94,9 @@ def test_enrich_ops_dict():
     assert out["short_horizon_envelope"].get("sector_aware") is True
     assert "head_radius_m" in out["short_horizon_envelope"]["envelopes"][0]
     assert out["not_a_product"] == "validated_tactical_dispatch"
+    assert out["cn_hybrid_ros"]["status"] == "ok"
+    assert out["cn_hybrid_ros"]["ros_head_m_min"] >= out["cn_hybrid_ros"]["ros_rear_m_min"]
+    assert out["cn_hybrid_ros"]["scale_factor"] > 0
 
 
 def test_envelope_to_geojson_feature_collection():

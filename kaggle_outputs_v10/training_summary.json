@@ -1,9 +1,0 @@
-{
-  "best_pretrain_epoch": 3,
-  "best_val_loss": 0.28492671086109195,
-  "test_loss": 0.2771419233452008,
-  "meta_labeler_test_acc": 0.6892168204971734,
-  "train_samples": 12009,
-  "val_samples": 5002,
-  "test_samples": 5001
-}
