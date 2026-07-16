@@ -38,6 +38,16 @@ env/
 .mypy_cache/
 .ruff_cache/
 .coverage
+
+# ─── Node (docx report builder) ──────────────────────────────
+node_modules/
+package-lock.json
+
+# ─── Local Kaggle dumps / noise ──────────────────────────────
+kaggle_outputs_v*/
+ci_logs.zip
+ci_logs_extract/
+_kaggle_weights_bundle/
 htmlcov/
 coverage.xml
 

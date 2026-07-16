@@ -1,0 +1,20 @@
+{
+  "version": "v26_physics15",
+  "kernel": "alonsoalviraaaa/wildfire-front-training-v26-physics15",
+  "status": "COMPLETE",
+  "test_iou": 0.2212,
+  "copy_baseline_iou": 0.15,
+  "improvement_vs_copy_iou": 0.0711,
+  "best_epoch": 23,
+  "n_test": 979,
+  "vs_v21": {
+    "v21_iou": 0.2256,
+    "v21_delta": 0.0756,
+    "iou_diff": -0.0044,
+    "delta_diff": -0.0045
+  },
+  "G1": false,
+  "verdict": "NO_PROMOTE",
+  "reason": "Does not beat v21 production; G1 thresholds not met",
+  "next": "v27 temporal sequence_length=2 on legacy17"
+}

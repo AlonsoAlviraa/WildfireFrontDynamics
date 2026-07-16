@@ -22,7 +22,19 @@
 
 **Observatorio packs (2026-07-15):** Tobarra + Cardoso + Hellín en `outputs/observatorio/` — gates A1/A2/A5 PASS (scorecard).
 
-**Priority stack (2026-07-15, `ebdc9a0`):** Dual product `ndws_v21`+`clm_v28` shipped (`docs/PRODUCTO_DUAL.md`). Anchors tooling → O1 PARTIAL / O5 NO_GO (only Tobarra confirmed). Hausdorff official BLOCKED; temporal proxy 5 IF. **v26 physics15** Kaggle pushed for G1: `alonsoalviraaaa/wildfire-front-training-v26-physics15`.
+**Priority stack (2026-07-15, `ebdc9a0`):** Dual product `ndws_v21`+`clm_v28` shipped (`docs/PRODUCTO_DUAL.md`). Anchors tooling → O1 PARTIAL / O5 NO_GO (only Tobarra confirmed). Hausdorff official BLOCKED; temporal proxy 5 IF.
+
+### v26_physics15: Features rail — NO PROMOTE vs v21
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v26-physics15` COMPLETE
+- **Single change:** `schema=physics15` (physics14 + wind_upslope)
+- **Test IoU:** **0.221** | copy **0.150** | **Δ +0.071** | best_epoch **23** | n=979
+- **vs v21:** IoU −0.005, Δ −0.005 — does **not** beat production
+- **G1:** FAIL (need IoU≥0.25 and Δ≥+0.09)
+- **Verdict:** **NO_PROMOTE**; next rail = temporal T=2 (`v27`)
+
+### v27_temporal_t2: Temporal rail — QUEUED
+- **Kernel:** `alonsoalviraaaa/wildfire-front-training-v27-temporal-t2`
+- **Single change:** `sequence_length=2` on legacy17 residual+delta any_fire
 
 ---
 

@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
+  "title": "Wildfire Front Training V27 Temporal T2",
+  "code_file": "run_unet_training_v27_temporal_t2.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "fantineh/next-day-wildfire-spread"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

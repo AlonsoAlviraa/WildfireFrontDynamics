@@ -19,20 +19,19 @@
     "results": {"model_iou": 0.798, "copy_iou": 0.642, "delta": 0.157, "protocol": "clm_holdout_test_seed42_v1"}
   },
   {
-    "id": "v26-interactions",
+    "id": "v26-physics15",
     "rail": "features",
-    "single_change": "physics14 + wind_upslope channel",
-    "go_if": "beats v25 on full IoU and delta",
-    "depends_on": ["v25-physics14"],
-    "status": "queued"
-  },
-  {
-    "id": "v27-temporal",
-    "rail": "temporal",
-    "single_change": "sequence_length=2 or 3 with best schema",
-    "go_if": "IoU >= 0.25 AND delta >= 0.09 OR skip if no real temporal",
-    "depends_on": ["v25-physics14"],
-    "status": "queued"
+    "single_change": "physics15 = physics14 + wind_upslope",
+    "go_if": "beats v21 on NDWS any_fire full IoU and delta",
+    "status": "completed",
+    "verdict": "NO_PROMOTE",
+    "results": {
+      "test_iou": 0.221,
+      "delta": 0.071,
+      "copy": 0.150,
+      "best_epoch": 23,
+      "vs_v21": "worse"
+    }
   },
   {
     "id": "v28-clm-ft",
@@ -51,11 +50,20 @@
     }
   },
   {
-    "id": "v26-physics15",
-    "rail": "features",
-    "single_change": "physics15 = physics14 + wind_upslope",
-    "go_if": "beats v21 on NDWS any_fire full IoU and delta",
-    "status": "queued",
-    "note": "schema implemented; train when GPU available"
+    "id": "v27-temporal-t2",
+    "rail": "temporal",
+    "single_change": "sequence_length=2 legacy17 residual delta any_fire",
+    "go_if": "IoU >= 0.25 AND delta >= 0.09 OR beats v21",
+    "depends_on": ["v26-physics15"],
+    "status": "running",
+    "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2"
+  },
+  {
+    "id": "v27b-temporal-t3",
+    "rail": "temporal",
+    "single_change": "sequence_length=3 if T=2 shows signal",
+    "go_if": "beats T=2 and G1",
+    "depends_on": ["v27-temporal-t2"],
+    "status": "queued"
   }
 ]

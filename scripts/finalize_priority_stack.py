@@ -80,14 +80,28 @@ def main() -> int:
     }
 
     p4 = {
-        "id": "ml_g1_physics15",
+        "id": "ml_g1_features_then_temporal",
         "priority": 4,
-        "status": "LAUNCHED_OR_QUEUED",
-        "rail": "features",
-        "schema": "physics15",
-        "kernel": "alonsoalviraaaa/wildfire-front-training-v26-physics15",
-        "script": "kaggle_job/run_unet_training_v26_physics15.py",
-        "gate": "G1 IoU>=0.25 and delta>=+0.09 vs v21 baseline (0.226 / +0.076)",
+        "status": "FEATURES_CLOSED_TEMPORAL_RUNNING",
+        "rail_features": {
+            "v25_physics14": {"test_iou": 0.224, "delta": 0.074, "verdict": "NO_PROMOTE"},
+            "v26_physics15": {
+                "test_iou": 0.221,
+                "delta": 0.071,
+                "copy": 0.150,
+                "best_epoch": 23,
+                "verdict": "NO_PROMOTE",
+                "kernel": "alonsoalviraaaa/wildfire-front-training-v26-physics15",
+            },
+        },
+        "rail_temporal": {
+            "v27_t2": {
+                "status": "RUNNING_OR_QUEUED",
+                "kernel": "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2",
+                "single_change": "sequence_length=2 legacy17 residual+delta",
+            }
+        },
+        "gate": "G1 IoU>=0.25 and delta>=+0.09 vs v21 (0.226 / +0.076)",
         "promote_only_if": "beats G1 on same NDWS any_fire protocol",
         "transfer_note": "CLM G2 already GO via v28 (separate product)",
     }
@@ -100,9 +114,10 @@ def main() -> int:
             "O1": "PARTIAL (1 confirmed INFOCAM anchor)",
             "O2": "BLOCKED without official perimeter vector",
             "O5": "NO_GO (1× grade A)",
-            "G1": "pending v26 physics15 Kaggle result",
+            "G1": "OPEN — features NO_PROMOTE; temporal T=2 next",
             "G2": "GO on CLM holdout via clm_v28",
             "ops": "Tobarra grade A ratio ~0.82 vs INFOCAM 7 m/min",
+            "cma_report": "docs/entrega_cma/Informe_tecnico_dinamica_frente_v1.0.docx",
         },
     }
 
