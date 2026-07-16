@@ -128,24 +128,29 @@ def compute_short_horizon_envelope(
     horizons_min: tuple[int, ...] = _HORIZONS_MIN,
     expansion_bearing_deg: float | None = None,
     quality_grade: str | None = None,
+    head_ros_m_min: float | None = None,
+    flank_ros_m_min: float | None = None,
+    rear_ros_m_min: float | None = None,
 ) -> dict[str, Any]:
     """Extrude distance = ROS × time for emergency **guidance** only.
 
-    Label is mandatory: not official dispatch, not ML next-day mask.
+    When sector ROS is provided, each horizon includes **head / flank / rear**
+    radii (and optional head bearing). Label is mandatory: not official dispatch.
     """
     base = {
-        "product": "short_horizon_envelope_v1",
+        "product": "short_horizon_envelope_v2_sector",
         "label_en": (
-            "EXTRAPOLATED FRONT GUIDANCE from observed ROS — "
+            "EXTRAPOLATED FRONT GUIDANCE from observed ROS (sector-aware) — "
             "NOT validated tactical dispatch, NOT official perimeter forecast"
         ),
         "label_es": (
-            "GUÍA DE FRENTE EXTRAPOLADA desde ROS observada — "
+            "GUÍA DE FRENTE EXTRAPOLADA desde ROS observada (por sector) — "
             "NO es despacho táctico validado ni perímetro oficial"
         ),
         "horizons_min": list(horizons_min),
         "quality_grade": quality_grade,
         "expansion_bearing_deg": expansion_bearing_deg,
+        "sector_aware": True,
     }
     if primary_ros_m_min is None or not math.isfinite(primary_ros_m_min) or primary_ros_m_min < 0:
         base["status"] = "abstained"
@@ -154,21 +159,43 @@ def compute_short_horizon_envelope(
         return base
 
     ros = min(float(primary_ros_m_min), _ENVELOPE_MAX_ROS_M_MIN)
+    head = min(float(head_ros_m_min if head_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN)
+    flank = min(float(flank_ros_m_min if flank_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN)
+    rear = min(float(rear_ros_m_min if rear_ros_m_min is not None else ros * 0.55), _ENVELOPE_MAX_ROS_M_MIN)
+    # Ensure head >= flank >= rear for guidance readability
+    flank = min(flank, head)
+    rear = min(rear, flank)
+
     envelopes = []
     for h in horizons_min:
-        dist_m = ros * float(h)
-        envelopes.append(
-            {
-                "horizon_min": int(h),
-                "ros_m_min_used": round(ros, 4),
-                "radius_m": round(dist_m, 2),
-                "radius_km": round(dist_m / 1000.0, 4),
-                "note": "isotropic radius from last observed front if no sector bias applied",
-            }
-        )
+        th = float(h)
+        entry = {
+            "horizon_min": int(h),
+            "ros_m_min_used": round(ros, 4),
+            "radius_m": round(ros * th, 2),
+            "radius_km": round(ros * th / 1000.0, 4),
+            "head_radius_m": round(head * th, 2),
+            "flank_radius_m": round(flank * th, 2),
+            "rear_radius_m": round(rear * th, 2),
+            "head_ros_m_min": round(head, 4),
+            "flank_ros_m_min": round(flank, 4),
+            "rear_ros_m_min": round(rear, 4),
+            "note": (
+                "Sector-aware: head/flank/rear radii from observed ROS quartiles; "
+                "isotropic radius_m kept for compatibility"
+            ),
+        }
+        if expansion_bearing_deg is not None:
+            entry["head_bearing_deg"] = round(float(expansion_bearing_deg) % 360.0, 2)
+        envelopes.append(entry)
     base["status"] = "ok"
     base["envelopes"] = envelopes
     base["ros_m_min"] = round(ros, 4)
+    base["sector_ros_m_min"] = {
+        "head": round(head, 4),
+        "flank": round(flank, 4),
+        "rear": round(rear, 4),
+    }
     base["capped"] = float(primary_ros_m_min) > _ENVELOPE_MAX_ROS_M_MIN
     return base
 
@@ -194,10 +221,14 @@ def enrich_ops_dict(
         expansion_bearing_deg=expansion_bearing_deg,
         n_estimates=n,
     )
+    secs = (sector.get("sectors") or {}) if sector else {}
     envelope = compute_short_horizon_envelope(
         float(primary) if primary is not None else None,
         expansion_bearing_deg=expansion_bearing_deg,
         quality_grade=str(grade) if grade else None,
+        head_ros_m_min=secs.get("head_m_min"),
+        flank_ros_m_min=secs.get("flank_m_min"),
+        rear_ros_m_min=secs.get("rear_m_min"),
     )
     out = dict(ops)
     out["sector_ros"] = sector

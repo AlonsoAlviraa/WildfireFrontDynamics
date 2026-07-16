@@ -1,36 +1,42 @@
 # Emergency product status (lives first)
 
 **Updated:** 2026-07-16  
-**Smoke:** `python scripts/smoke_emergency_products.py`
+**Smoke:** `python scripts/smoke_emergency_products.py`  
+**Briefing:** `python scripts/emergency_briefing.py --fire tobarra_20240802`
 
-## Shippable for emergencies (defendable)
+## G1 / NDWS closed
 
-| Product | What it does | Gate |
-|---------|--------------|------|
-| **front_dynamics_v1** | Observed ROS (m/min), grade A/B/C, **sector head/flank/rear**, uncertainty IQR | Tobarra A; multi-IF packs |
-| **short_horizon_envelope** | 15/30/60 min **extrapolated** distance from observed ROS | Labeled NOT tactical dispatch |
-| **clm_v28** | Spain-like next-day mask (ML) | Holdout Δ>0 + LOFO 4/4 Δ>0 |
-| **ndws_v21** | Global research baseline only | **Not** emergency primary |
+| Run | IoU | Δ copy | Verdict |
+|-----|-----|--------|---------|
+| v21 production | 0.226 | +0.076 | **FREEZE research baseline** |
+| v25/v26 features | ≤0.224 | ≤+0.074 | NO_PROMOTE |
+| v27 T=2 | 0.2253 | +0.0755 | NO_PROMOTE |
+| **v27b T=3** | **0.2249** | **+0.0751** | **NO_PROMOTE → KILL features+temporal** |
+
+Evidence: `docs/V27B_TEMPORAL_VERDICT.json`, `docs/G1_KILL_FEATURES_TEMPORAL.json`  
+**Emergency ML primary remains `clm_v28`.** NDWS is research-only.
+
+## Shippable for emergencies
+
+| Product | What it does |
+|---------|--------------|
+| **front_dynamics_v1** | Observed ROS, grade A/B/C, sector head/flank/rear + IQR |
+| **short_horizon_envelope_v2_sector** | 15/30/60 min **head/flank/rear radii** from observed ROS |
+| **emergency_briefing.md** | One-command human brief (grade, ROS, sectors, envelope, blocked items) |
+| **clm_v28** | Spain-like next-day ML (holdout + LOFO validated) |
+| **ndws_v21** | Research baseline only |
+
+## How to run
+
+```bash
+python scripts/enrich_emergency_ops.py
+python scripts/emergency_briefing.py --fire tobarra_20240802
+python scripts/smoke_emergency_products.py
+```
 
 ## Explicitly blocked / not claimed
 
-| Need | Status |
-|------|--------|
-| Multi-IF INFOCAM anchors (O1/O5) | BLOCKED without external Vp/ha |
-| Official perimeter Hausdorff (O2) | Path wired; BLOCKED until GeoJSON/EFFIS vector |
-| NDWS G1 (IoU≥0.25) | Features/temporal NO_PROMOTE; not emergency path |
-| Validated 15/30/60 tactical dispatch | **Never claimed** without independent anchors |
-
-## How to run (ops)
-
-```bash
-python scripts/enrich_emergency_ops.py --packs tobarra_20240802,cardoso_2025,hellin_2024,brazatortas_2025
-python scripts/smoke_emergency_products.py
-# Official O2 without reference → BLOCKED
-python scripts/eval_perimeter_hausdorff.py --observed outputs/observatorio/tobarra_20240802/main_front.geojson --mode official
-```
-
-## Monetization / emergency value (honest)
-
-- **Value now:** multi-estimator observed front speed + quality + sector guidance + envelope radius for **planning awareness**, plus CLM transfer model for Spain-like patch prediction.
-- **Not sold as:** autonomous dispatch AI or guaranteed perimeter forecast.
+- Multi-IF anchors without external Vp/ha  
+- Official Hausdorff without official GeoJSON (path BLOCKS honestly)  
+- Validated tactical 15/30/60 dispatch  
+- NDWS G1 “best model for emergencies”

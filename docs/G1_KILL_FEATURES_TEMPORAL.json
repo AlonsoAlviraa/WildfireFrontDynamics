@@ -1,0 +1,30 @@
+{
+  "gate": "G1",
+  "status": "KILLED",
+  "reason": "features (v25/v26) and temporal (v27/v27b) failed to beat v21/G1",
+  "production_ndws": "ndws_v21 frozen",
+  "checked_at_utc": "2026-07-16T10:33:07.331582+00:00",
+  "evidence": {
+    "v25": "NO_PROMOTE",
+    "v26": "NO_PROMOTE IoU 0.221",
+    "v27": "NO_PROMOTE IoU 0.2253",
+    "v27b": {
+      "version": "v27b_temporal_t3",
+      "kernel": "alonsoalviraaaa/wildfire-front-training-v27b-temporal-t3",
+      "status": "COMPLETE",
+      "checked_at_utc": "2026-07-16T10:33:07.331582+00:00",
+      "test_iou": 0.2249,
+      "copy_baseline_iou": 0.1498,
+      "improvement_vs_copy_iou": 0.0751,
+      "best_epoch": 23,
+      "vs_v21": {
+        "iou_diff": -0.0007,
+        "delta_diff": -0.0005,
+        "beats_v21": false
+      },
+      "G1": false,
+      "verdict": "NO_PROMOTE",
+      "next": "KILL G1 features+temporal rails"
+    }
+  }
+}
