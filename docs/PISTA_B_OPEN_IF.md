@@ -72,4 +72,5 @@ start outputs/open_if/emsr578/map.html
 
 - CEMS no es perímetro “nacional definitivo”.  
 - Δt 24 h es **hipótesis** para ROS proxy.  
-- dNBR Sentinel no se descarga aquí (API/STAC aparte); el pack ya da perímetro BA de emergencia.  
+- dNBR Sentinel opcional: `python scripts/build_open_if_dnbr.py --pack outputs/open_if/emsr578`  
+  → `dnbr_status.json`, `dnbr_summary.json`, `dnbr_preview.tif`, `dnbr_layer.md` (proxy severidad, **no** perímetro oficial).  

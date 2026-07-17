@@ -272,6 +272,7 @@ python scripts\\show_all.py</pre>
         <div class="row"><span>API mínima Decision Card (local HTTP)</span><span class="ok-text">HECHO · POST /v1/decide · p95&lt;500ms</span></div>
         <div class="row"><span>Acta forense + radio + replay</span><span class="ok-text">HECHO · outbox acta/radio · replay-decide</span></div>
         <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
+        <div class="row"><span>dNBR/STAC post-fuego (EMSR578)</span><span class="ok-text">HECHO · dnbr_preview.tif + STAC S2</span></div>
         <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>

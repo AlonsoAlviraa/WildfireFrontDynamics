@@ -80,7 +80,7 @@
   "audit": {
     "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
     "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-    "git_commit": "e14bed0",
+    "git_commit": "7cf1da7",
     "schema": "fire_decision_card_v1",
     "policy_id": "default",
     "policy_label": "Default (historical product thresholds)",
@@ -107,5 +107,5 @@
       "fire_prediction_accuracy_claim": "NOT_CLAIMED"
     }
   },
-  "built_at_utc": "2026-07-17T19:22:50.874629+00:00"
+  "built_at_utc": "2026-07-17T19:29:20.217239+00:00"
 }

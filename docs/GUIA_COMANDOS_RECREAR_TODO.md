@@ -176,6 +176,21 @@ curl -s -X POST http://127.0.0.1:8765/v1/decide `
 python C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\scripts\measure_decide_api_latency.py
 ```
 
+### 2.3d dNBR / STAC post-fuego (M2.3)
+
+```powershell
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+$env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
+
+python scripts\build_open_if_dnbr.py `
+  --pack C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\outputs\open_if\emsr578 `
+  --event-date 2022-07-15 `
+  --max-size 256
+```
+
+Artefactos: `dnbr_status.json`, `dnbr_summary.json`, `dnbr_stac_items.json`, `dnbr_preview.tif`, `dnbr_layer.md`.  
+Si no hay red/STAC → status **BLOCKED** (sigue siendo entrega válida del plan).
+
 ### 2.3c Acta forense + radio + replay (M2.9)
 
 ```powershell

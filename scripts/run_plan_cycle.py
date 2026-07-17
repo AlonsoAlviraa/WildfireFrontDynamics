@@ -106,6 +106,21 @@ def assess() -> dict:
             "status": "BLOCKED",
             "evidence": "pending_external INFOCAM",
         },
+        "M2.3_dnbr_stac": {
+            "status": "DONE"
+            if (
+                _exists("scripts", "build_open_if_dnbr.py")
+                and _exists("wildfire_front", "open_if", "dnbr.py")
+                and (
+                    (
+                        ROOT / "outputs" / "open_if" / "emsr578" / "dnbr_status.json"
+                    ).is_file()
+                    or _exists("docs", "design", "DNBR_STAC_OPEN_PACK.md")
+                )
+            )
+            else "PENDING",
+            "evidence": "scripts/build_open_if_dnbr.py + outputs/open_if/emsr578/dnbr_status.json",
+        },
         "M2.5_incident_sla": {
             "status": "DONE"
             if _exists("docs", "INCIDENT_SLA_LATENCY.json")

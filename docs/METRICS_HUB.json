@@ -1,8 +1,8 @@
 {
   "schema": "metrics_hub_v1",
-  "built_at_utc": "2026-07-17T19:22:50.874629+00:00",
-  "git_commit": "e14bed0",
-  "content_hash": "0ce7ea0237ed329939a68aca73a080c42c99a97c9b165621c79a31e1fea6e1ea",
+  "built_at_utc": "2026-07-17T19:29:20.217239+00:00",
+  "git_commit": "7cf1da7",
+  "content_hash": "9f56396aceaddef37f7127efbf8d5a5c174358bb973c7ebc35bef4f5c13cac08",
   "ml": {
     "product": "clm_ensemble_v34",
     "metrics": {
@@ -62,6 +62,11 @@
         "lwir_heligraphics": false,
         "status": "GO_OPEN_DATA_PACK",
         "pack_dir": "outputs\\open_if\\emsr578",
+        "dnbr_stac_status": "GO",
+        "dnbr_mean": 0.08085533231496811,
+        "dnbr_burned_frac_ge_0.27": 0.018515625,
+        "dnbr_pre_item": "S2A_31TCG_20220619_0_L2A",
+        "dnbr_post_item": "S2B_31TCG_20220724_0_L2A",
         "ros_proxy_n": 4,
         "hausdorff_series": [
           1685.944765359855,
@@ -285,7 +290,7 @@
     "audit": {
       "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
       "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-      "git_commit": "e14bed0",
+      "git_commit": "7cf1da7",
       "schema": "fire_decision_card_v1",
       "policy_id": "default",
       "policy_label": "Default (historical product thresholds)",
@@ -312,7 +317,7 @@
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-17T19:22:50.874629+00:00"
+    "built_at_utc": "2026-07-17T19:29:20.217239+00:00"
   },
   "reliability_note": "system_reliability five-nines bound applies to silent-GO prevention under tests, NOT to fire-spread forecast accuracy."
 }

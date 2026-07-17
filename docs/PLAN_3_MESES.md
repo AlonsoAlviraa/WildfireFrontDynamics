@@ -51,7 +51,8 @@ GO_Q+ = GO_Q AND
 
 1. §2.4 *API Decision Card* → **M2.8** HTTP local + p95 &lt; 500 ms  
 2. §3.1 *Replay forense · radio-bridge · export legal (acta MD)* → **M2.9**  
-3. §3.1 *Política configurable por organismo* → **M2.10** (`default` / `field_ops` / `research_open`)
+3. §3.1 *Política configurable por organismo* → **M2.10** (`default` / `field_ops` / `research_open`)  
+4. §3.3 *Severidad post-fuego dNBR/STAC* → **M2.3** (EMSR578; proxy no oficial)
 
 ---
 
@@ -80,7 +81,7 @@ GO_Q+ = GO_Q AND
 |----|---------|---------|--------|
 | M2.1 | Integrar Decision Card en `incident update` outbox | artifact en outbox | **DONE** (`fire_decision_card.json` + MD + heartbeat) |
 | M2.2 | Multi-ancla: Cardoso o open-source Vp documentado | O1 progress | BLOCKED externo / open proxy |
-| M2.3 | dNBR/STAC opcional post-fuego 1 pack | layer o BLOCKED doc | pending |
+| M2.3 | dNBR/STAC opcional post-fuego 1 pack | layer o BLOCKED doc | **DONE** (EMSR578 `dnbr_*` STAC S2; status GO) |
 | M2.4 | 10 outreach (GEACAM, Heligrafics, bomberos, Firelogue) | CSV updated | partial |
 | M2.5 | Piloto script: rebuild pack < 10 min SLA medido | latency json | **DONE** (`scripts/measure_incident_sla.py`) |
 | M2.6 | Informe técnico v1.1 CMA dual + FDC | DOCX/MD | pending |
