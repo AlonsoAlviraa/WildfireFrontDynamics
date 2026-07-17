@@ -1,180 +1,115 @@
-# Wildfire Front Dynamics
+# WildfireFrontDynamics
 
 [![CI](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/actions/workflows/ci.yml/badge.svg)](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
-> MVP reproducible y auditable para reconstruir la dinámica observada de un frente de incendio a partir de secuencias térmicas georreferenciadas (LWIR/GeoTIFF).
+## Qué es (30 segundos)
 
-## Overview
+**Apoyo a la decisión en incendios** con tres piezas:
 
-El pipeline genera quemas sintéticas con verdad conocida, simula observaciones con error, reconstruye tiempos de llegada, estima velocidades locales y produce informes visuales auditables. También acepta secuencias GeoTIFF reales y máscaras binarias para generar geometrías observadas, campos de llegada y estimaciones conservadoras de velocidad local **sin inventar ground truth**.
+| Pieza | Qué hace | Cuando no hay… |
+|-------|----------|----------------|
+| **Ops térmico** | ROS y brief desde LWIR de dron | No inventa frente |
+| **Open CEMS** | Perímetros satélite multi-día (sin NDA) | No sustituye cadastro nacional |
+| **Decision Card** | **GO / HOLD / ABSTAIN** + confianza + auditoría | Se calla si faltan datos |
 
-### Key Features
+**No es:** un visor más de mapas gratis de Copernicus.  
+**Sí es:** cuándo confiar, cuándo no, y con qué métricas.
 
-- **Scientific rigor**: strict separation between `observed`, `inferred`, and `ground-truth` data (leak-free pipeline).
-- **SHA-256 traceability**: every artifact has content hashes for full reproducibility.
-- **Modular architecture**: ingestion → reconstruction → evaluation → ML, each independently testable.
-- **Adaptive segmentation**: MAD-based (Median Absolute Deviation) thermal thresholding for robust hotspot detection.
-- **Meta-labeler**: temporal consistency validation for reconstructed fire fronts.
+---
 
-## Quick Start
-
-```bash
-# Install (editable, with dev tools)
-pip install -e ".[dev]"
-
-# Run the synthetic demo
-python -m wildfire_front demo --output outputs/demo
-
-# Run the test suite
-pytest tests/ -q
-
-# Open the report
-start outputs/demo/report.html      # Windows
-# open outputs/demo/report.html     # macOS
-```
-
-### One-step MVP (Windows)
+## Empieza aquí (1 comando)
 
 ```powershell
-.\scripts\run_mvp.cmd
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+$env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
+python scripts\show_all.py
 ```
 
-Generates both `outputs/demo/report.html` and `outputs/geotiff-demo/report.html`.
+Abre el **portal** (`docs/PORTAL.html`) con todo el trabajo, números y enlaces.
 
-## Installation
+Lectura corta: **[`docs/START_HERE.md`](docs/START_HERE.md)**  
+Venta: **[`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md)**  
+Comandos largos: **[`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md)**
 
-### Prerequisites
+---
 
-- Python ≥ 3.11
-- GDAL system libraries (for rasterio): `gdal-bin libgdal-dev` (Ubuntu) or [OSGeo4W](https://trac.osgeo.org/osgeo4w/) (Windows)
+## Números clave (no eslóganes)
 
-### Setup
+| Métrica | Valor |
+|---------|------:|
+| ML ensemble CLM v34 · IoU holdout | **0.8963** |
+| Mejora vs copy | **+0.2545** |
+| Packs open CEMS | **4** (hasta ~**5300 ha**) |
+| Decision Card | GO / HOLD / **ABSTAIN** según fuentes |
+| “99.9999%” | Solo: no emitir GO silencioso bajo tests — **no** acierto del fuego |
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate              # Windows
-# source .venv/bin/activate         # macOS/Linux
-pip install -e ".[dev]"
+---
 
-# For ML experiments:
-pip install -e ".[ml]"
+## Tres productos (claro)
 
-# For everything:
-pip install -e ".[all]"
+```text
+1) Thermal Front (CLM / Heligrafics)  →  incident_runtime_v1
+2) Open Perimeter (Copernicus EMS)    →  outputs/open_if/*
+3) ML next-day España                 →  clm_ensemble_v34  (separado del ROS)
 ```
 
-## Usage
-
-### Dual ML products (NDWS + CLM)
-
-| Product | CLI id | When |
-|---------|--------|------|
-| NDWS global v21 | `ndws_v21` | Next-day spread on NDWS-like patches |
-| CLM Spain specialist v28 | `clm_v28` | CLM holdout-style Spain patches |
-
-```bash
-python scripts/install_dual_weights.py
-python scripts/predict_spread.py --list-products
-python scripts/predict_spread.py --product clm_ensemble_v34 --npz path/to/patches --eval
-python scripts/smoke_production_products.py --clm-max 10
-# Unified ops + ML field smoke
-python scripts/smoke_ops_ml.py
-```
-
-See `docs/PRODUCTO_DUAL.md`. Ops ROS (drone fronts) is **not** ML — use `scripts/build_observatory_pack.py` or `incident watch`.
-
-### Live incident runtime (watch)
-
-```bash
-python -m wildfire_front --help
-python -m wildfire_front incident doctor --inbox path/to/inbox
-python -m wildfire_front incident update --inbox path/to/inbox --work-dir outputs/incidents/IF_demo --force
-python -m wildfire_front incident watch  --inbox path/to/inbox --work-dir outputs/incidents/IF_demo
-python -m wildfire_front incident status --work-dir outputs/incidents/IF_demo
-# --json machine output · -v more detail · -q quiet watch
-```
-
-Windows field kit: `scripts\run_incident.cmd D:\drops\inbox outputs\incidents\IF_demo`  
-Docs: `docs/INCIDENT_RUNTIME_V1.md` · smoke: `python scripts/smoke_incident_runtime.py`
-
-### Synthetic Demo
-
-```bash
-python -m wildfire_front demo --output outputs/demo
-```
-
-### GeoTIFF Ingest (Real Data)
-
-With pre-supplied masks:
 ```powershell
-python -m wildfire_front ingest-geotiff `
-  --images data\sample\images `
-  --masks data\sample\masks `
-  --output outputs\geotiff-demo `
-  --event-id burn_001 `
-  --sensor-id thermal_demo `
-  --estimated-error-m 2.0
+# Listar ML
+python scripts\predict_spread.py --list-products
+
+# Decisión (vacío = ABSTAIN)
+python -m wildfire_front decide
+
+# Decisión con open pack
+python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
 ```
 
-Adaptive MAD-based segmentation (no masks needed):
+---
+
+## Instalación
+
 ```powershell
-python -m wildfire_front ingest-geotiff `
-  --images data\sample\images `
-  --mad-z 6 `
-  --output outputs\mad-demo `
-  --sensor-id thermal_demo `
-  --estimated-error-m 2.0
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+python -m pip install -e ".[dev]"
+python -m pip install shapely pyproj
+python scripts\install_dual_weights.py
 ```
 
-### Batch Processing (Multiple Fires)
+---
 
-```bash
-python scripts/batch_process_fires.py
+## Documentos (solo 5 al empezar)
+
+| Archivo | Uso |
+|---------|-----|
+| [`docs/PORTAL.html`](docs/PORTAL.html) | **Ver todo** (generado) |
+| [`docs/START_HERE.md`](docs/START_HERE.md) | 2 minutos de texto |
+| [`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md) | Venta |
+| [`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md) | Todos los comandos |
+| [`docs/PLAN_3_MESES.md`](docs/PLAN_3_MESES.md) | Roadmap |
+
+El resto de `docs/` es archivo técnico (scorecards, FIRE-RES, experimentos). No hace falta para la primera demo.
+
+---
+
+## Trabajo hecho vs bloqueado
+
+| Hecho | Bloqueado (hace falta gente/datos) |
+|-------|-------------------------------------|
+| ML v34, ops incident, 4 packs CEMS | 2ª ancla INFOCAM |
+| Decision Card + Metrics Hub + portal | Perímetro nacional oficial |
+| Demo 1 comando | Piloto con cliente real |
+
+---
+
+## Desarrollo
+
+```powershell
+pytest tests\test_confidence_product.py tests\test_decide_cli.py tests\test_product_catalog.py -q
+python scripts\run_plan_cycle.py
 ```
-
-Processes all organized wildfire sequences: reprojection → ingest → mask materialization → audit.
-
-## Outputs
-
-| File | Description |
-|------|-------------|
-| `fronts.geojson` | True and observed fire fronts |
-| `observations_manifest.csv` | Observation traceability with declared error |
-| `ingest_manifest.csv` | Accepted/reviewed/rejected records with reasons |
-| `arrival_time.csv` | Rasterized arrival time field |
-| `local_speeds.csv` | Local speed, uncertainty, and abstentions |
-| `summary.json` | Metrics and reproducible configuration |
-| `fronts.svg` | Vector visualization |
-| `report.html` | Self-contained dashboard |
-
-## Development
-
-```bash
-make verify    # lint + typecheck + test
-make help      # see all targets
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [docs/MVP_ARCHITECTURE.md](docs/MVP_ARCHITECTURE.md) | Architecture overview |
-| [docs/SCIENTIFIC_CORE.md](docs/SCIENTIFIC_CORE.md) | Scientific method, quality gates, and limits |
-| [docs/GEOTIFF_INPUT_CONTRACT.md](docs/GEOTIFF_INPUT_CONTRACT.md) | GeoTIFF input specification |
-| [docs/PROVENANCE.md](docs/PROVENANCE.md) | Data provenance and traceability |
-| [docs/REPO_ANALYSIS.md](docs/REPO_ANALYSIS.md) | Repository analysis and improvement areas |
-| [docs/RUNBOOK_NEW_FIRES.md](docs/RUNBOOK_NEW_FIRES.md) | Protocol for ingesting new fires |
-| [docs/MEGA_SPRINT_PLAN.md](docs/MEGA_SPRINT_PLAN.md) | Sprint plan and roadmap |
-
-## Project Status
-
-This MVP validates the geometric core with synthetic data and accepts the real GeoTIFF contract. It is **not** an operational tool and does not predict real wildfires. Non-radial speed estimation still requires validation against independent annotations from a real thermal sequence.
 
 ## License
 
-[MIT](LICENSE) — © 2026 Alonso Alviraa
+MIT — see [LICENSE](LICENSE).
