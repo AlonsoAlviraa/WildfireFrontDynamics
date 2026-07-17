@@ -163,6 +163,157 @@ def evaluate_clm_weights(
     }
 
 
+@torch.no_grad()
+def collect_member_growth_cache(
+    weights: Sequence[Path],
+    data_dir: Path,
+    *,
+    max_patches: int = 400,
+    device: torch.device | str | None = None,
+) -> dict[str, Any]:
+    """Run each member once and cache per-patch growth probs + masks.
+
+    Enables cheap offline mix / threshold sweeps without reloading models.
+    """
+    weight_list = [Path(w) for w in weights]
+    for w in weight_list:
+        if not w.is_file():
+            raise FileNotFoundError(f"missing weights: {w}")
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(device)
+
+    ds = NpzWildfireDataset(data_dir, augment=False)
+    n = min(len(ds), max_patches)
+    if n < 1:
+        raise ValueError(f"no patches in {data_dir}")
+
+    seq0, cur0, _ = ds[0]
+    if seq0.dim() == 3:
+        seq0 = seq0.unsqueeze(0)
+    in_ch = seq0.shape[0] * seq0.shape[1] + 1
+    models = [_load_model(w, in_ch, device) for w in weight_list]
+
+    growth: list[list[np.ndarray]] = [[] for _ in models]
+    prevs: list[np.ndarray] = []
+    tgts: list[np.ndarray] = []
+
+    for i in range(n):
+        seq, cur, tgt = ds[i]
+        if seq.dim() == 3:
+            seq = seq.unsqueeze(0)
+        seq_b = seq.unsqueeze(0).to(device)
+        cur_b = cur.unsqueeze(0).to(device)
+        x = prepare_input(seq_b, cur_b)
+        prevs.append(cur.numpy())
+        tgts.append(tgt.numpy())
+        for mi, model in enumerate(models):
+            try:
+                logits = model(x, cur_b)
+            except TypeError:
+                logits = model(x)
+            growth[mi].append(torch.sigmoid(logits).squeeze().cpu().numpy())
+
+    # free GPU/CPU model refs
+    del models
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+
+    return {
+        "n_patches": n,
+        "n_members": len(weight_list),
+        "weights": [str(w) for w in weight_list],
+        "growth": growth,  # [member][patch] -> HxW float
+        "prev": prevs,
+        "target": tgts,
+        "device": str(device),
+    }
+
+
+def score_mix_from_cache(
+    cache: dict[str, Any],
+    member_weights: Sequence[float] | None = None,
+    *,
+    threshold: float = 0.5,
+) -> dict[str, Any]:
+    """Soft-vote growth probs from cache and score NDWS metrics."""
+    n_m = int(cache["n_members"])
+    mix = _normalize_member_weights(n_m, member_weights)
+    if mix is None:
+        mix = [1.0 / n_m] * n_m
+    growth = cache["growth"]
+    prevs = cache["prev"]
+    tgts = cache["target"]
+    sample_metrics: list[dict] = []
+    w = np.asarray(mix, dtype=np.float64)
+    for i in range(int(cache["n_patches"])):
+        stacked = np.stack([growth[m][i] for m in range(n_m)], axis=0)
+        mean_g = (stacked * w.reshape(-1, 1, 1)).sum(axis=0)
+        prev = np.asarray(prevs[i], dtype=np.float64)
+        pred = np.clip(prev + mean_g, 0.0, 1.0)
+        sample_metrics.append(
+            evaluate_sample(pred, prevs[i], tgts[i], threshold=threshold)
+        )
+    agg = aggregate_ndws_evaluation(sample_metrics)
+    model_iou = float(agg.get("model_iou") or 0.0)
+    copy_iou = float(agg.get("copy_baseline_iou") or 0.0)
+    delta = float(agg.get("improvement_vs_copy_iou", model_iou - copy_iou))
+    return {
+        "n_patches": int(cache["n_patches"]),
+        "n_members": n_m,
+        "weights": list(cache["weights"]),
+        "member_weights": list(mix),
+        "ensemble_mode": "mean_prob",
+        "threshold": float(threshold),
+        "model_iou": model_iou,
+        "copy_baseline_iou": copy_iou,
+        "improvement_vs_copy_iou": delta,
+        "model_iou_growth": float(agg.get("model_iou_growth") or 0.0),
+        "improvement_vs_dilated_copy_iou_growth": float(
+            agg.get("improvement_vs_dilated_copy_iou_growth") or 0.0
+        ),
+        "improvement_vs_copy_iou_changed": float(
+            agg.get("improvement_vs_copy_iou_changed") or 0.0
+        ),
+        "model_iou_changed": float(agg.get("model_iou_changed") or 0.0),
+        "aggregate": agg,
+    }
+
+
+def sweep_mix_threshold_from_cache(
+    cache: dict[str, Any],
+    mixes: Sequence[Sequence[float]],
+    thresholds: Sequence[float] = (0.4, 0.45, 0.5, 0.55, 0.6),
+) -> dict[str, Any]:
+    """Exhaustive mix × threshold sweep on a growth cache; returns best by Δ then IoU."""
+    best: dict[str, Any] | None = None
+    rows: list[dict[str, Any]] = []
+    for mix in mixes:
+        for thr in thresholds:
+            m = score_mix_from_cache(cache, mix, threshold=float(thr))
+            row = {
+                "mix": list(m["member_weights"]),
+                "threshold": float(thr),
+                "model_iou": m["model_iou"],
+                "improvement_vs_copy_iou": m["improvement_vs_copy_iou"],
+                "model_iou_growth": m["model_iou_growth"],
+            }
+            rows.append(row)
+            key = (row["improvement_vs_copy_iou"], row["model_iou"])
+            if best is None or key > (
+                best["improvement_vs_copy_iou"],
+                best["model_iou"],
+            ):
+                best = row
+    return {"best": best, "n_grid": len(rows), "rows_top": sorted(
+        rows,
+        key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]),
+        reverse=True,
+    )[:8]}
+
+
 def default_lofo_weight_paths(root: Path) -> list[Path]:
     """Canonical LOFO + Tobarra checkpoint paths if present."""
     candidates = [

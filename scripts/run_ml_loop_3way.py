@@ -30,7 +30,12 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from wildfire_front.ml.clm_eval import evaluate_clm_weights  # noqa: E402
+from wildfire_front.ml.clm_eval import (  # noqa: E402
+    collect_member_growth_cache,
+    evaluate_clm_weights,
+    score_mix_from_cache,
+    sweep_mix_threshold_from_cache,
+)
 from wildfire_front.ml.unet_train import UNetTrainConfig, run_training  # noqa: E402
 
 TRACKS = ("multi_if", "source_mix", "multi_obj")
@@ -148,7 +153,16 @@ def _honest_members() -> list[Path]:
 # ── Track 1: multi-IF retrain ───────────────────────────────────────────────
 
 
-def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict[str, Any]:
+def track_multi_if(
+    *,
+    epochs: int,
+    patience: int,
+    lr: float,
+    init: Path,
+    ema_decay: float = 0.0,
+    change_loss_weight: float = 5.0,
+    pos_weight: float = 5.0,
+) -> dict[str, Any]:
     """Train on LOFO-CARDOSO splits (multi-fire, held-out Cardoso)."""
     data = LOFO / "CARDOSO"
     if not (data / "train").is_dir():
@@ -160,11 +174,11 @@ def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict
         batch_size=8,
         lr=lr,
         loss="composite",
-        pos_weight=5.0,
+        pos_weight=pos_weight,
         model="small",
         architecture="residual",
         target_mode="delta",
-        change_loss_weight=5.0,
+        change_loss_weight=change_loss_weight,
         weighted_sampler=True,
         patience=patience,
         data_dir=str(data),
@@ -172,8 +186,13 @@ def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict
         version_tag="loop_multi_if",
         early_stop_metric="improvement_vs_copy_iou",
         init_weights_path=str(init),
+        ema_decay=ema_decay,
     )
-    print("\n=== TRACK multi_if ===", flush=True)
+    print(
+        f"\n=== TRACK multi_if init={init.name} lr={lr} ema={ema_decay} "
+        f"clw={change_loss_weight} pw={pos_weight} ===",
+        flush=True,
+    )
     s = run_training(cfg)
     w = out / "weights_pretrained_best.pt"
     # Snapshot so later rounds do not overwrite a promoted member
@@ -223,6 +242,14 @@ def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict
         "status": "ok",
         "single_change": "multi-IF FT on LOFO-CARDOSO train (no Cardoso in train)",
         "init": str(init),
+        "hyper": {
+            "lr": lr,
+            "ema_decay": ema_decay,
+            "change_loss_weight": change_loss_weight,
+            "pos_weight": pos_weight,
+            "epochs": epochs,
+            "patience": patience,
+        },
         "weights": str(w),
         "training": {
             "best_epoch": s.get("best_epoch"),
@@ -266,29 +293,58 @@ def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict
 # ── Track 2: per-source mix calibration ─────────────────────────────────────
 
 
+def _mix_grid(n: int) -> list[list[float]]:
+    """Finer simplex grid for soft-vote weights (n members)."""
+    if n == 2:
+        return [[w, 1.0 - w] for w in np.linspace(0.2, 0.8, 13)]
+    if n != 3:
+        # uniform + leave-one-light for n>3
+        base = [1.0 / n] * n
+        grid = [base]
+        for i in range(n):
+            w = [0.15] * n
+            w[i] = 1.0 - 0.15 * (n - 1)
+            grid.append(w)
+        return grid
+    grid: list[list[float]] = []
+    # denser simplex (step 0.05) with min weight 0.1
+    for a in np.arange(0.15, 0.70 + 1e-9, 0.05):
+        for b in np.arange(0.10, 0.55 + 1e-9, 0.05):
+            c = 1.0 - float(a) - float(b)
+            if c < 0.10 - 1e-9 or c > 0.70 + 1e-9:
+                continue
+            grid.append([float(a), float(b), float(c)])
+    # always include equal and known champion-ish mixes
+    for extra in (
+        [1 / 3, 1 / 3, 1 / 3],
+        [0.3, 0.2667, 0.4333],
+        [0.25, 0.25, 0.5],
+        [0.4, 0.2, 0.4],
+        [0.35, 0.25, 0.4],
+    ):
+        if not any(np.allclose(extra, g, atol=1e-3) for g in grid):
+            grid.append(list(extra))
+    return grid
+
+
 def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
-    """Calibrate soft-vote mix per LOFO source; apply Cardoso recipe on holdout test."""
+    """Calibrate soft-vote mix per LOFO source; apply Cardoso recipe on holdout test.
+
+    Uses growth-prob cache so mix×threshold sweeps do not re-run the U-Net.
+    Mix/threshold for GO are selected only on holdout VAL (never Cardoso LOFO).
+    """
     print("\n=== TRACK source_mix ===", flush=True)
     members = _honest_members()
     if len(members) < 2:
         return {"status": "skip", "reason": "need >=2 member weights"}
 
-    # Use first 2 or 3 available: prefer v28, multi_if/lofo, ema
-    # Normalize to available
     use = members[:3] if len(members) >= 3 else members
     n = len(use)
     print("  members:", [str(p.name) for p in use], flush=True)
 
-    # Grid of mixes
-    if n == 2:
-        grid = [[w, 1 - w] for w in (0.3, 0.4, 0.5, 0.6, 0.7, 0.8)]
-    else:
-        grid = []
-        for a in (0.3, 0.4, 0.5, 0.6):
-            for b in (0.2, 0.3, 0.4):
-                if a + b >= 0.95:
-                    continue
-                grid.append([a, b, 1 - a - b])
+    grid = _mix_grid(n)
+    thresholds = (0.40, 0.45, 0.50, 0.55, 0.60)
+    print(f"  grid={len(grid)} mixes × {len(thresholds)} thr (cached)", flush=True)
 
     per_source: dict[str, Any] = {}
     folds = sorted(
@@ -298,25 +354,24 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         test_dir = LOFO / held / "test"
         if not list(test_dir.glob("*.npz")):
             continue
+        cache = collect_member_growth_cache(use, test_dir, max_patches=200)
+        # diagnostic: mix only at thr=0.5 (fast + comparable to history)
         best = None
-        rows = []
         for mix in grid:
-            m = evaluate_clm_weights(
-                use, test_dir, max_patches=200, member_weights=mix
-            )
+            m = score_mix_from_cache(cache, mix, threshold=0.5)
             row = {
-                "mix": mix,
+                "mix": list(m["member_weights"]),
+                "threshold": 0.5,
                 "model_iou": m["model_iou"],
                 "improvement_vs_copy_iou": m["improvement_vs_copy_iou"],
                 "model_iou_growth": m["model_iou_growth"],
             }
-            rows.append(row)
             if best is None or (
                 row["improvement_vs_copy_iou"],
                 row["model_iou"],
             ) > (best["improvement_vs_copy_iou"], best["model_iou"]):
                 best = row
-        per_source[held] = {"best": best, "n_grid": len(rows)}
+        per_source[held] = {"best": best, "n_grid": len(grid)}
         print(
             f"  {held}: best mix={best['mix']} Δ={best['improvement_vs_copy_iou']:.4f}",
             flush=True,
@@ -324,27 +379,17 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
 
     # CRITICAL: LOFO CARDOSO/test == holdout_v1/test (same 200 patches).
     # Never select mix on CARDOSO LOFO for holdout GO claims (that is test leakage).
-    # Honest holdout mix: tune on holdout VAL (LA) only.
+    # Honest holdout mix+threshold: tune on holdout VAL (LA) only.
     val_dir = HOLDOUT / "val"
-    best_val = None
-    val_rows = []
-    for mix in grid:
-        m = evaluate_clm_weights(
-            use, val_dir, max_patches=400, member_weights=mix
-        )
-        row = {
-            "mix": mix,
-            "model_iou": m["model_iou"],
-            "improvement_vs_copy_iou": m["improvement_vs_copy_iou"],
-            "model_iou_growth": m["model_iou_growth"],
-        }
-        val_rows.append(row)
-        if best_val is None or (
-            row["improvement_vs_copy_iou"],
-            row["model_iou"],
-        ) > (best_val["improvement_vs_copy_iou"], best_val["model_iou"]):
-            best_val = row
+    val_cache = collect_member_growth_cache(use, val_dir, max_patches=400)
+    val_sweep = sweep_mix_threshold_from_cache(val_cache, grid, thresholds)
+    best_val = val_sweep["best"]
     mix = best_val["mix"] if best_val else [1.0 / n] * n
+    thr_val = float(best_val["threshold"]) if best_val else 0.5
+    print(
+        f"  VAL best mix={mix} thr={thr_val} Δ={best_val['improvement_vs_copy_iou']:.4f}",
+        flush=True,
+    )
 
     # Optional: non-Cardoso LOFO average mix (transfer recipe, still honest)
     other_mixes = [
@@ -354,14 +399,16 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
     ]
     transfer_mix = None
     hold_transfer = None
+    hold_transfer_thr = None
+    test_cache = collect_member_growth_cache(use, HOLDOUT / "test", max_patches=400)
     if other_mixes:
         arr = np.asarray(other_mixes, dtype=float)
         transfer_mix = [float(x) for x in arr.mean(axis=0).tolist()]
         s = sum(transfer_mix) or 1.0
         transfer_mix = [x / s for x in transfer_mix]
-        ht = evaluate_clm_weights(
-            use, HOLDOUT / "test", max_patches=400, member_weights=transfer_mix
-        )
+        # threshold for transfer: still only from VAL (no test thr leakage)
+        thr_transfer = thr_val
+        ht = score_mix_from_cache(test_cache, transfer_mix, threshold=thr_transfer)
         hold_transfer = {
             k: ht[k]
             for k in (
@@ -370,29 +417,52 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
                 "model_iou_growth",
                 "n_patches",
                 "member_weights",
+                "threshold",
+            )
+        }
+        hold_transfer_thr = thr_transfer
+
+    hold = score_mix_from_cache(test_cache, mix, threshold=thr_val)
+    equal = score_mix_from_cache(test_cache, None, threshold=0.5)
+    # also report transfer at thr=0.5 for continuity with v33
+    hold_transfer_05 = None
+    if transfer_mix is not None:
+        ht05 = score_mix_from_cache(test_cache, transfer_mix, threshold=0.5)
+        hold_transfer_05 = {
+            k: ht05[k]
+            for k in (
+                "model_iou",
+                "improvement_vs_copy_iou",
+                "model_iou_growth",
+                "n_patches",
+                "member_weights",
+                "threshold",
             )
         }
 
-    hold = evaluate_clm_weights(
-        use, HOLDOUT / "test", max_patches=400, member_weights=mix
-    )
-    equal = evaluate_clm_weights(use, HOLDOUT / "test", max_patches=400)
-
-    # Diagnostics only: Cardoso LOFO score (NOT for GO — same as holdout test)
     cardoso_diag = per_source.get("CARDOSO", {}).get("best")
 
     return {
         "status": "ok",
-        "single_change": "per-source soft-vote (diagnostic) + holdout mix tuned on VAL only",
+        "single_change": (
+            "cached per-source mix + VAL mix×threshold sweep (honest; no Cardoso GO)"
+        ),
         "leakage_guard": (
-            "LOFO CARDOSO/test == holdout test; mix for GO is selected on holdout VAL only"
+            "LOFO CARDOSO/test == holdout test; mix+threshold for GO on holdout VAL only"
         ),
         "members": [str(p) for p in use],
+        "grid_size": len(grid),
+        "thresholds": list(thresholds),
         "per_source_best_diagnostic": {k: v["best"] for k, v in per_source.items()},
         "cardoso_lofo_is_holdout_test": True,
         "cardoso_lofo_diag_not_for_go": cardoso_diag,
         "val_grid_best": best_val,
-        "applied_for_holdout": {"source_key": "holdout_val_LA", "mix": mix},
+        "val_sweep_top": val_sweep.get("rows_top"),
+        "applied_for_holdout": {
+            "source_key": "holdout_val_LA",
+            "mix": mix,
+            "threshold": thr_val,
+        },
         "transfer_mix_from_non_cardoso_lofo": transfer_mix,
         "holdout_test_val_tuned": {
             k: hold[k]
@@ -402,15 +472,18 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
                 "model_iou_growth",
                 "n_patches",
                 "member_weights",
+                "threshold",
             )
         },
         "holdout_test_transfer_mix": hold_transfer,
+        "holdout_test_transfer_mix_thr05": hold_transfer_05,
         "holdout_test_equal": {
             k: equal[k]
             for k in (
                 "model_iou",
                 "improvement_vs_copy_iou",
                 "model_iou_growth",
+                "threshold",
             )
         },
         "verdict": _verdict(hold, champion, "source_mix_val_tuned"),
@@ -419,6 +492,14 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
             if hold_transfer
             else None
         ),
+        "verdict_transfer_thr05": (
+            _verdict(
+                hold_transfer_05, champion, "source_mix_transfer_non_cardoso_thr05"
+            )
+            if hold_transfer_05
+            else None
+        ),
+        "transfer_threshold": hold_transfer_thr,
     }
 
 
@@ -459,10 +540,13 @@ def track_multi_obj(
     w = out / "weights_pretrained_best.pt"
     hold = evaluate_clm_weights(w, HOLDOUT / "test", max_patches=400)
     ens = None
+    # Prefer frozen / best-holdout multi_if — never half-trained live alone
     lofo = next(
         (
             p
             for p in (
+                ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
+                LOOP_DIR / "multi_if" / "weights_multi_if_best_holdout.pt",
                 LOOP_DIR / "multi_if" / "weights_pretrained_best.pt",
                 ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
             )
@@ -470,8 +554,31 @@ def track_multi_obj(
         ),
         None,
     )
+    ema = ROOT / "models" / "clm_ensemble" / "weights_v30_ema.pt"
     if lofo and V28.is_file():
-        ens = evaluate_clm_weights([V28, w, lofo], HOLDOUT / "test", max_patches=400)
+        members = [V28, w, lofo]
+        # if EMA exists and multi_obj is distinct, still keep triple v28+mo+multi_if
+        ens = evaluate_clm_weights(members, HOLDOUT / "test", max_patches=400)
+        if ema.is_file() and w.resolve() != ema.resolve():
+            ens4 = evaluate_clm_weights(
+                [V28, ema, lofo, w],
+                HOLDOUT / "test",
+                max_patches=400,
+                member_weights=[0.28, 0.22, 0.35, 0.15],
+            )
+            # stash 4-member diagnostic
+            ens = {
+                **ens,
+                "quad_with_ema": {
+                    k: ens4[k]
+                    for k in (
+                        "model_iou",
+                        "improvement_vs_copy_iou",
+                        "model_iou_growth",
+                        "member_weights",
+                    )
+                },
+            }
     return {
         "status": "ok",
         "single_change": f"early_stop={metric} (fullΔ + λ·growth, not growth-only)",
@@ -494,12 +601,19 @@ def track_multi_obj(
         },
         "eval_triple_if_available": (
             {
-                k: ens[k]
-                for k in (
-                    "model_iou",
-                    "improvement_vs_copy_iou",
-                    "model_iou_growth",
-                )
+                **{
+                    k: ens[k]
+                    for k in (
+                        "model_iou",
+                        "improvement_vs_copy_iou",
+                        "model_iou_growth",
+                    )
+                },
+                **(
+                    {"quad_with_ema": ens["quad_with_ema"]}
+                    if ens.get("quad_with_ema")
+                    else {}
+                ),
             }
             if ens
             else None
@@ -567,9 +681,31 @@ def run_round(
 
     if "multi_if" in tracks:
         t0 = time.perf_counter()
-        # Alternate init each round: v21 then v28
-        init_m = INIT_V21 if round_id % 2 == 1 and INIT_V21.is_file() else init
-        multi = track_multi_if(epochs=epochs, patience=patience, lr=lr, init=init_m)
+        # Rotate init + hyper: freeze continue / best-holdout / v28 / v21 + EMA variants
+        freeze_m = ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt"
+        best_h = LOOP_DIR / "multi_if" / "weights_multi_if_best_holdout.pt"
+        cycle = round_id % 6
+        hyper_cycle = [
+            # (init, lr_scale, ema, change_loss_w, pos_w)
+            (freeze_m if freeze_m.is_file() else init, 0.35, 0.999, 5.0, 5.0),
+            (best_h if best_h.is_file() else init, 0.45, 0.999, 6.0, 5.0),
+            (init, 0.7, 0.0, 5.0, 5.0),
+            (INIT_V21 if INIT_V21.is_file() else init, 1.0, 0.999, 5.0, 6.0),
+            (freeze_m if freeze_m.is_file() else init, 0.25, 0.0, 4.0, 4.0),
+            (init, 0.5, 0.999, 7.0, 5.0),
+        ][cycle]
+        init_m, lr_scale, ema_d, clw, pw = hyper_cycle
+        if not Path(init_m).is_file():
+            init_m = init
+        multi = track_multi_if(
+            epochs=epochs,
+            patience=patience,
+            lr=lr * lr_scale,
+            init=Path(init_m),
+            ema_decay=ema_d,
+            change_loss_weight=clw,
+            pos_weight=pw,
+        )
         # Verdict from holdout test of multi-if alone and v28+multi
         if multi.get("status") == "ok":
             vb1 = _verdict(multi["eval_holdout_test"], champion, f"r{round_id}_multi_if")
@@ -606,15 +742,21 @@ def run_round(
             for vkey, rkey in (
                 ("verdict", "source_mix_val_tuned"),
                 ("verdict_transfer", "source_mix_transfer"),
+                ("verdict_transfer_thr05", "source_mix_transfer_thr05"),
             ):
                 vb = sm.get(vkey)
                 if not vb:
                     continue
-                mix = (
-                    sm.get("applied_for_holdout", {}).get("mix")
-                    if vkey == "verdict"
-                    else sm.get("transfer_mix_from_non_cardoso_lofo")
-                )
+                if vkey == "verdict":
+                    mix = sm.get("applied_for_holdout", {}).get("mix")
+                    thr = sm.get("applied_for_holdout", {}).get("threshold", 0.5)
+                else:
+                    mix = sm.get("transfer_mix_from_non_cardoso_lofo")
+                    thr = (
+                        0.5
+                        if vkey == "verdict_transfer_thr05"
+                        else sm.get("transfer_threshold", 0.5)
+                    )
                 _maybe_promote(
                     sc,
                     vb,
@@ -622,6 +764,7 @@ def run_round(
                         "type": rkey,
                         "members": sm.get("members"),
                         "mix": mix,
+                        "threshold": thr,
                         "per_source_diagnostic": sm.get("per_source_best_diagnostic"),
                         "leakage_guard": sm.get("leakage_guard"),
                     },
@@ -646,8 +789,17 @@ def run_round(
             mo["verdict"] = vb
             _maybe_promote(sc, vb, {"type": "multi_obj", "metric": metric, "weights": mo["weights"]})
             if mo.get("eval_triple_if_available"):
+                base_triple = {
+                    k: mo["eval_triple_if_available"][k]
+                    for k in (
+                        "model_iou",
+                        "improvement_vs_copy_iou",
+                        "model_iou_growth",
+                    )
+                    if k in mo["eval_triple_if_available"]
+                }
                 vb3 = _verdict(
-                    mo["eval_triple_if_available"],
+                    base_triple,
                     champion,
                     f"r{round_id}_{metric}_triple",
                 )
@@ -661,6 +813,20 @@ def run_round(
                         "weights": mo["weights"],
                     },
                 )
+                quad = mo["eval_triple_if_available"].get("quad_with_ema")
+                if quad:
+                    vb4 = _verdict(quad, champion, f"r{round_id}_{metric}_quad")
+                    mo["verdict_quad"] = vb4
+                    _maybe_promote(
+                        sc,
+                        vb4,
+                        {
+                            "type": "quad_v28_ema_multi_if_multi_obj",
+                            "metric": metric,
+                            "weights": mo["weights"],
+                            "mix": quad.get("member_weights"),
+                        },
+                    )
         mo["latency_s"] = round(time.perf_counter() - t0, 2)
         round_rep["tracks"]["multi_obj"] = mo
 
