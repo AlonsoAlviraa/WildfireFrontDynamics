@@ -282,17 +282,23 @@ def build_decision_card(
     if extra_metrics:
         metrics["extra"] = dict(extra_metrics)
 
-    payload = {
+    # output_hash must ignore channel/extra so forensic replay is stable
+    hash_payload = {
         "event_id": event_id,
         "sources": sources,
-        "metrics": metrics,
+        "metrics": {
+            "ml": metrics["ml"],
+            "ops": metrics["ops"],
+            "open_cems": metrics["open_cems"],
+            "fused_confidence_pred": conf,
+        },
         "decision": decision.value,
     }
     audit = {
         "input_hash": content_hash(
             {"ml": ml_metrics, "ops": ops_metrics, "open": open_metrics}
         ),
-        "output_hash": content_hash(payload),
+        "output_hash": content_hash(hash_payload),
         "git_commit": git_commit,
         "schema": "fire_decision_card_v1",
     }

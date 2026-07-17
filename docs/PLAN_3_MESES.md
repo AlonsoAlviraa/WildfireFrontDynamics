@@ -47,9 +47,10 @@ GO_Q+ = GO_Q AND
   (API mínima decision-card JSON)   # ← bajado a M2.8 (parcial: local HTTP)
 ```
 
-**Fila del sueño bajada al plan (2026-07-17):**  
-`docs/SUENOS_MAXIMOS.md` §2.4 *API Decision Card* + latencia medible  
-→ **M2.8** API mínima local + p95 metrics-only &lt; 500 ms (no uptime 99.9% de sala).
+**Filas del sueño bajadas al plan (2026-07-17):**  
+
+1. §2.4 *API Decision Card* → **M2.8** HTTP local + p95 &lt; 500 ms  
+2. §3.1 *Replay forense · radio-bridge · export legal (acta MD)* → **M2.9**
 
 ---
 
@@ -84,6 +85,7 @@ GO_Q+ = GO_Q AND
 | M2.6 | Informe técnico v1.1 CMA dual + FDC | DOCX/MD | pending |
 | M2.7 | Review M2 + adaptar Mes 3 | status | pending |
 | M2.8 | **API mínima Decision Card** + p95 latencia | HTTP local + `DECIDE_API_LATENCY.json` | **DONE** (sueño §2.4 parcial) |
+| M2.9 | **Acta forense + radio-bridge + replay** | outbox acta/radio + `replay-decide` | **DONE** (sueño §3.1) |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 

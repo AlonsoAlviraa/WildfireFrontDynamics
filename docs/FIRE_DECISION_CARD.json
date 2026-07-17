@@ -78,7 +78,7 @@
   "audit": {
     "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
     "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
-    "git_commit": "04759a9",
+    "git_commit": "24854fa",
     "schema": "fire_decision_card_v1",
     "system_reliability": {
       "system_reliability_pass": true,
@@ -93,5 +93,5 @@
       "fire_prediction_accuracy_claim": "NOT_CLAIMED"
     }
   },
-  "built_at_utc": "2026-07-17T19:03:02.345172+00:00"
+  "built_at_utc": "2026-07-17T19:12:09.599811+00:00"
 }

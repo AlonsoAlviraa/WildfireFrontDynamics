@@ -101,6 +101,15 @@ def test_process_incident_once_streaming(tmp_path: Path) -> None:
     assert "confidence_pred" in fdc
     assert fdc.get("audit", {}).get("schema") == "fire_decision_card_v1"
     assert s2.get("decision") == fdc.get("decision")
+    # M2.9 — forensic acta + radio + replay
+    assert (outbox / "fire_decision_radio.txt").is_file()
+    assert (outbox / "fire_decision_acta.md").is_file()
+    assert (outbox / "forensic_manifest.json").is_file()
+    assert (outbox / "replay_sources.json").is_file()
+    man = json.loads((outbox / "forensic_manifest.json").read_text(encoding="utf-8"))
+    assert man.get("self_replay_ok") is True
+    radio = (outbox / "fire_decision_radio.txt").read_text(encoding="utf-8")
+    assert fdc.get("decision") in radio
     brief = (outbox / "emergency_briefing.md").read_text(encoding="utf-8")
     assert "Decision Card" in brief or "Decision:" in brief
     hb = json.loads((outbox / "watch_heartbeat.json").read_text(encoding="utf-8"))

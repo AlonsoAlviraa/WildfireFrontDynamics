@@ -28,7 +28,7 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 | Packs open CEMS | **4** (hasta ~5320 ha) |
 | Decisión ejemplo | **GO** (conf 0.89) |
 
-## Solo 5 documentos (ignora el resto al principio)
+## Documentos clave
 
 | Doc | Para qué |
 |------|----------|
@@ -36,17 +36,18 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 | `docs/START_HERE.md` | Este resumen |
 | `docs/ONEPAGER_COMERCIAL_ES.md` | Venta |
 | `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos largos |
-| `docs/PLAN_3_MESES.md` | Roadmap |
-
-El resto de `docs/` es archivo técnico / scorecards — no hace falta para la primera demo.
+| `docs/PLAN_3_MESES.md` | Roadmap realista |
+| `docs/SUENOS_MAXIMOS.md` | Techo de resultados y funciones |
 
 ## Qué está hecho vs bloqueado
 
 | Hecho | Bloqueado (externo) |
 |-------|---------------------|
-| ML v34, ops incident, 4 packs CEMS | 2ª ancla INFOCAM |
+| ML v34, ops, 4 packs CEMS | 2ª ancla INFOCAM |
 | Decision Card + Metrics Hub | Perímetro nacional oficial |
-| Portal + demo 1 comando | Piloto con cliente real |
+| FDC en incident update | Piloto con cliente real |
+| API mínima POST /v1/decide | Auth / 99.9% uptime (sueño) |
+| **Acta forense + radio + replay** | PDF firmado (sueño) |
 
 ## Comando mínimo de decisión
 
@@ -56,3 +57,13 @@ $env:PYTHONPATH = "."
 python -m wildfire_front decide                    # vacío → ABSTAIN
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
 ```
+
+## API + acta (filas del sueño en el plan)
+
+```powershell
+python -m wildfire_front serve-decide --port 8765
+python -m wildfire_front export-acta --work-dir outputs\incidents\tobarra_demo
+python -m wildfire_front replay-decide --work-dir outputs\incidents\tobarra_demo
+```
+
+Outbox tras `incident update`: `fire_decision_card.json`, `fire_decision_radio.txt`, `fire_decision_acta.md`, `replay_sources.json`.

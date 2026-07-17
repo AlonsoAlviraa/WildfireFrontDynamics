@@ -696,6 +696,70 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(serve)
 
+    # ── export-acta (forensic bundle) ──────────────────────────────────
+    acta = commands.add_parser(
+        "export-acta",
+        help="Write forensic acta + radio-bridge + replay sources from a Decision Card",
+        description=(
+            "Paid-value audit package: fire_decision_acta.md, fire_decision_radio.txt, "
+            "replay_sources.json, forensic_manifest.json. Not a court PDF."
+        ),
+    )
+    acta.add_argument(
+        "--card",
+        type=Path,
+        default=None,
+        help="Path to fire_decision_card.json (or use --work-dir outbox)",
+    )
+    acta.add_argument(
+        "--work-dir",
+        type=Path,
+        default=None,
+        help="Incident work-dir (uses outbox/fire_decision_card.json)",
+    )
+    acta.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Bundle directory (default: next to card or work_dir/outbox)",
+    )
+    acta.add_argument("--operator", default=None, help="Optional operator / sala label on acta")
+    acta.add_argument(
+        "--require-ops-for-go",
+        action="store_true",
+        help="Store require_ops_for_go=true in replay sources",
+    )
+    _add_global_flags(acta)
+
+    # ── replay-decide (forensic verify) ────────────────────────────────
+    replay = commands.add_parser(
+        "replay-decide",
+        help="Rebuild Decision Card from forensic sources and verify hashes",
+        description=(
+            "Forensic replay: load replay_sources.json (or card) and verify "
+            "output_hash + decision match. Empty mismatch → replay_ok=false."
+        ),
+    )
+    replay.add_argument(
+        "--bundle",
+        type=Path,
+        default=None,
+        help="Directory with replay_sources.json or fire_decision_card.json",
+    )
+    replay.add_argument(
+        "--sources",
+        type=Path,
+        default=None,
+        help="Explicit replay_sources.json path",
+    )
+    replay.add_argument(
+        "--work-dir",
+        type=Path,
+        default=None,
+        help="Incident work-dir (outbox forensic bundle)",
+    )
+    _add_global_flags(replay)
+
     return parser
 
 
@@ -842,6 +906,73 @@ def main(argv: Sequence[str] | None = None) -> None:
                 base_dir=getattr(args, "base_dir", None),
                 verbose=verbose,
             )
+            return
+
+        if args.command == "export-acta":
+            import json as _json
+
+            from .product.forensics import write_forensic_bundle
+
+            card_path: Path | None = getattr(args, "card", None)
+            work = getattr(args, "work_dir", None)
+            if card_path is None and work is not None:
+                card_path = Path(work) / "outbox" / "fire_decision_card.json"
+            if card_path is None or not Path(card_path).is_file():
+                raise SystemExit(
+                    "export-acta requires --card path or --work-dir with outbox card"
+                )
+            card = _json.loads(Path(card_path).read_text(encoding="utf-8"))
+            out_dir = getattr(args, "output", None)
+            if out_dir is None:
+                out_dir = Path(card_path).parent
+            paths = write_forensic_bundle(
+                out_dir,
+                card,
+                require_ops_for_go=bool(getattr(args, "require_ops_for_go", False)),
+                operator=getattr(args, "operator", None),
+            )
+            if as_json:
+                print_json(paths)
+            else:
+                print("forensic bundle written:")
+                for k, v in paths.items():
+                    print(f"  {k}: {v}")
+            return
+
+        if args.command == "replay-decide":
+            import json as _json
+
+            from .product.forensics import load_and_replay_bundle, replay_decision
+
+            bundle = getattr(args, "bundle", None)
+            sources = getattr(args, "sources", None)
+            work = getattr(args, "work_dir", None)
+            if sources is not None:
+                src = _json.loads(Path(sources).read_text(encoding="utf-8"))
+                result = replay_decision(src, base=Path.cwd())
+            else:
+                if bundle is None and work is not None:
+                    bundle = Path(work) / "outbox"
+                if bundle is None:
+                    raise SystemExit(
+                        "replay-decide requires --bundle, --sources, or --work-dir"
+                    )
+                result = load_and_replay_bundle(bundle, base=Path.cwd())
+            if as_json:
+                # omit full nested card if quiet? keep full for audit
+                print_json(result)
+            else:
+                ok = result.get("replay_ok")
+                print(f"replay_ok: {ok}")
+                print(
+                    f"decision: expected={result.get('expected_decision')} "
+                    f"got={result.get('got_decision')} match={result.get('match_decision')}"
+                )
+                print(
+                    f"output_hash match: {result.get('match_output_hash')}"
+                )
+                if not ok:
+                    raise SystemExit(2)
             return
 
         if args.command == "incident":

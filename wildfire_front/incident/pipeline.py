@@ -543,13 +543,36 @@ def publish_decision_card(
     tmp.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
     tmp.replace(json_path)
     md_path.write_text(render_decision_card_md(payload), encoding="utf-8")
-    return {
+
+    # M2.9 — forensic acta + radio-bridge + replay sources (paid audit trail)
+    forensic_paths: dict[str, str] = {}
+    try:
+        from ..product.forensics import write_forensic_bundle
+
+        forensic_paths = write_forensic_bundle(
+            outbox,
+            payload,
+            ml_metrics=ml_m,
+            ops_metrics=ops_m,
+            open_metrics=open_m,
+            require_ops_for_go=require_ops_for_go,
+        )
+    except Exception:  # noqa: BLE001 — card is primary; forensics best-effort
+        forensic_paths = {}
+
+    out: dict[str, Any] = {
         "fire_decision_card_json": str(json_path),
         "fire_decision_card_md": str(md_path),
         "decision": payload.get("decision"),
         "confidence_pred": payload.get("confidence_pred"),
         "confidence_pred_label": payload.get("confidence_pred_label"),
     }
+    for k in ("radio", "acta", "manifest", "replay_sources"):
+        if forensic_paths.get(k):
+            out[f"forensic_{k}"] = forensic_paths[k]
+    if forensic_paths.get("self_replay_ok") is not None:
+        out["forensic_self_replay_ok"] = forensic_paths["self_replay_ok"]
+    return out
 
 
 def publish_emergency_layers(

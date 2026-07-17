@@ -18,6 +18,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .decide_service import API_VERSION, PRODUCT_ID, REPO_ROOT, decide_from_request
+from .forensics import render_acta_md, render_radio_bridge, replay_decision
 
 OPENAPI: dict[str, Any] = {
     "openapi": "3.0.3",
@@ -26,7 +27,8 @@ OPENAPI: dict[str, Any] = {
         "version": API_VERSION,
         "description": (
             "Minimal Fire Decision Card API (GO/HOLD/ABSTAIN). "
-            "Not a tactical dispatch service. Empty sources → ABSTAIN."
+            "Not a tactical dispatch service. Empty sources → ABSTAIN. "
+            "Also: radio-bridge text, acta MD, forensic replay."
         ),
     },
     "paths": {
@@ -54,6 +56,8 @@ OPENAPI: dict[str, Any] = {
                                     "ml_metrics": {"type": "object"},
                                     "ops_metrics": {"type": "object"},
                                     "open_metrics": {"type": "object"},
+                                    "include_radio": {"type": "boolean"},
+                                    "include_acta": {"type": "boolean"},
                                 },
                             }
                         }
@@ -63,6 +67,12 @@ OPENAPI: dict[str, Any] = {
                     "200": {"description": "Decision Card JSON + latency_ms"},
                     "400": {"description": "Invalid JSON"},
                 },
+            }
+        },
+        "/v1/replay": {
+            "post": {
+                "summary": "Replay decision from stored sources (forensic)",
+                "responses": {"200": {"description": "replay_ok + card"}},
             }
         },
     },
@@ -112,7 +122,12 @@ class DecideHandler(BaseHTTPRequestHandler):
                 {
                     "product": PRODUCT_ID,
                     "api_version": API_VERSION,
-                    "endpoints": ["GET /health", "GET /v1/openapi.json", "POST /v1/decide"],
+                    "endpoints": [
+                        "GET /health",
+                        "GET /v1/openapi.json",
+                        "POST /v1/decide",
+                        "POST /v1/replay",
+                    ],
                     "disclaimer": "Not tactical dispatch. Empty sources → ABSTAIN.",
                 }
             )
@@ -123,10 +138,6 @@ class DecideHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path.rstrip("/") or "/"
-        if path != "/v1/decide":
-            status, body, ctype = _json_bytes({"error": "not_found", "path": path}, status=404)
-            self._send(status, body, ctype)
-            return
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length) if length > 0 else b"{}"
         try:
@@ -141,9 +152,26 @@ class DecideHandler(BaseHTTPRequestHandler):
             )
             self._send(status, body, ctype)
             return
-        req.setdefault("channel", "http_api")
+
         base = Path(getattr(self.server, "base_dir", REPO_ROOT))
+
+        if path == "/v1/replay":
+            result = replay_decision(req, base=base)
+            status, body, ctype = _json_bytes(result)
+            self._send(status, body, ctype)
+            return
+
+        if path != "/v1/decide":
+            status, body, ctype = _json_bytes({"error": "not_found", "path": path}, status=404)
+            self._send(status, body, ctype)
+            return
+
+        req.setdefault("channel", "http_api")
         payload = decide_from_request(req, base=base)
+        if req.get("include_radio", True):
+            payload["radio_bridge"] = render_radio_bridge(payload)
+        if req.get("include_acta"):
+            payload["acta_md"] = render_acta_md(payload)
         status, body, ctype = _json_bytes(payload)
         self._send(status, body, ctype)
 

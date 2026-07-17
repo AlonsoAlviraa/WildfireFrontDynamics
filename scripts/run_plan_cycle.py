@@ -129,6 +129,14 @@ def assess() -> dict:
             else "PENDING",
             "evidence": "POST /v1/decide + docs/DECIDE_API_LATENCY.json",
         },
+        "M2.9_forensic_acta": {
+            "status": "DONE"
+            if _exists("wildfire_front", "product", "forensics.py")
+            and "replay-decide"
+            in (ROOT / "wildfire_front" / "cli.py").read_text(encoding="utf-8")
+            else "PENDING",
+            "evidence": "forensics.py + export-acta + replay-decide",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
     }
 

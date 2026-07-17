@@ -176,6 +176,21 @@ curl -s -X POST http://127.0.0.1:8765/v1/decide `
 python C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\scripts\measure_decide_api_latency.py
 ```
 
+### 2.3c Acta forense + radio + replay (M2.9)
+
+```powershell
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+$env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
+
+python -m wildfire_front export-acta `
+  --work-dir C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\outputs\incidents\tobarra_demo `
+  --operator "sala_demo"
+
+python -m wildfire_front replay-decide `
+  --work-dir C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\outputs\incidents\tobarra_demo
+# debe imprimir replay_ok: True
+```
+
 ### 2.4 Status del incidente
 
 ```powershell

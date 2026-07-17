@@ -42,6 +42,14 @@ En **campo**, cada `incident update` escribe la Decision Card en el outbox:
 ```bash
 python -m wildfire_front serve-decide --port 8765
 # POST http://127.0.0.1:8765/v1/decide  → JSON GO/HOLD/ABSTAIN + latency_ms
+# POST http://127.0.0.1:8765/v1/replay  → verifica output_hash (forense)
+```
+
+**Acta + radio (auditor / mando):**
+
+```bash
+python -m wildfire_front export-acta --work-dir outputs/incidents/IF_x
+python -m wildfire_front replay-decide --work-dir outputs/incidents/IF_x  # debe replay_ok
 ```
 
 ## Métricas (siempre visibles)

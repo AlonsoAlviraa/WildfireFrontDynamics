@@ -56,6 +56,10 @@ work_dir/
   outbox/
     fire_decision_card.json   # GO / HOLD / ABSTAIN + audit (paid-value unit)
     fire_decision_card.md     # human decision one-pager
+    fire_decision_radio.txt   # radio-bridge short line for mando
+    fire_decision_acta.md     # 1-page forensic acta (hashes)
+    replay_sources.json       # rebuild card + verify output_hash
+    forensic_manifest.json    # bundle index + self_replay_ok
     incident_state.json
     watch_heartbeat.json      # last status (+ decision) for field monitors
     incident_log.jsonl        # append-only update history
