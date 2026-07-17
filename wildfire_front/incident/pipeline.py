@@ -32,9 +32,14 @@ from .state import (
 
 HEARTBEAT_FILENAME = "watch_heartbeat.json"
 LOG_FILENAME = "incident_log.jsonl"
+DECISION_CARD_FILENAME = "fire_decision_card.json"
+DECISION_CARD_MD_FILENAME = "fire_decision_card.md"
 
 TIFF_EXTENSIONS = {".tif", ".tiff"}
 LOCK_FILENAME = ".incident_watch.lock"
+
+# Repo root (…/WildfireFrontDynamics) for optional ML catalog metrics
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def acquire_work_dir_lock(work_dir: Path) -> Path:
@@ -117,6 +122,12 @@ class IncidentConfig:
     ref_name: str | None = None
     ref_vp_m_min: float | None = None
     ref_area_ha: float | None = None
+    # Optional open CEMS pack dir (scorecard_pista_b.json) fused into Decision Card
+    open_pack_dir: Path | None = None
+    # Attach ML v34 holdout metrics as transparency signal (not field ROS)
+    include_ml_metrics: bool = True
+    # Incident path is ops-primary: GO requires thermal ops grade
+    require_ops_for_go: bool = True
     # File stability: size must be unchanged across two polls (watch uses this).
     min_file_age_s: float = 0.5
 
@@ -125,6 +136,8 @@ class IncidentConfig:
         self.work_dir = Path(self.work_dir)
         if self.masks_dir is not None:
             self.masks_dir = Path(self.masks_dir)
+        if self.open_pack_dir is not None:
+            self.open_pack_dir = Path(self.open_pack_dir)
         # Prefer external masks over MAD when provided.
         if self.masks_dir is not None and self.masks_dir.is_dir():
             self.mad_z = None
@@ -302,6 +315,7 @@ def build_emergency_briefing_md(
     *,
     n_frames: int,
     latency_s: float | None,
+    decision_summary: dict[str, Any] | None = None,
 ) -> str:
     """One-page emergency briefing for the live outbox."""
     sector = ops.get("sector_ros") or {}
@@ -313,6 +327,21 @@ def build_emergency_briefing_md(
         "",
         f"_Product: incident_runtime_v1 · frames staged: {n_frames}_",
         "",
+    ]
+    if decision_summary:
+        dec = decision_summary.get("decision") or "—"
+        conf = decision_summary.get("confidence_pred")
+        conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
+        label = decision_summary.get("confidence_pred_label") or "—"
+        lines += [
+            "## Decision Card",
+            "",
+            f"- **Decision: {dec}** (confidence_pred={conf_s} · {label})",
+            "- Full card: `fire_decision_card.json` · human: `fire_decision_card.md`",
+            "- GO / HOLD / ABSTAIN is system advice with abstention — **not** a dispatch order",
+            "",
+        ]
+    lines += [
         "## Status",
         "",
         f"- **Quality grade:** {ops.get('quality_grade') or 'n/a'}",
@@ -361,6 +390,8 @@ def build_emergency_briefing_md(
         "",
         "## Artifacts",
         "",
+        "- `fire_decision_card.json` — GO/HOLD/ABSTAIN + audit (paid-value unit)",
+        "- `fire_decision_card.md` — human decision one-pager",
         "- `incident_state.json` — machine state",
         "- `main_front.geojson` — observed main front",
         "- `emergency_envelope_guidance.geojson` — GIS rings/wedges",
@@ -371,12 +402,163 @@ def build_emergency_briefing_md(
     return "\n".join(lines)
 
 
+def _load_ml_metrics_optional() -> dict[str, Any] | None:
+    """Holdout metrics from champion ensemble (transparency only, not field ROS)."""
+    man = _REPO_ROOT / "models" / "clm_ensemble" / "manifest.json"
+    if not man.is_file():
+        return None
+    try:
+        data = json.loads(man.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    metrics = data.get("metrics")
+    return dict(metrics) if isinstance(metrics, dict) else None
+
+
+def _load_open_metrics(open_pack_dir: Path | None) -> dict[str, Any] | None:
+    if open_pack_dir is None:
+        return None
+    scp = Path(open_pack_dir) / "scorecard_pista_b.json"
+    if not scp.is_file():
+        return None
+    try:
+        sc = json.loads(scp.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return {
+        "max_area_ha": sc.get("max_area_ha"),
+        "n_timeline_steps": sc.get("n_timeline_steps"),
+        "activation": sc.get("activation"),
+        "O2_cems_delineation": sc.get("O2_cems_delineation"),
+    }
+
+
+def ops_metrics_for_decision(ops: dict[str, Any], *, n_frames: int = 0) -> dict[str, Any]:
+    """Normalize operational_metrics.json fields for the confidence engine."""
+    ros = ops.get("speed_median_m_min")
+    if ros is None:
+        ros = ops.get("primary_ros_m_min")
+    n = int(ops.get("n_frames_staged") or ops.get("speed_n_observable") or n_frames or 0)
+    return {
+        "quality_grade": ops.get("quality_grade"),
+        "primary_ros_m_min": ros,
+        "n_frames_staged": n,
+        "n_frames": n,
+        "area_ha_max": ops.get("area_ha_max"),
+        "area_ha": ops.get("area_ha_max"),
+        "speed_vs_ref_ratio": ops.get("speed_vs_ref_ratio"),
+        "engine": ops.get("engine"),
+        "speed_status": ops.get("speed_status"),
+    }
+
+
+def render_decision_card_md(card_dict: dict[str, Any]) -> str:
+    """Human one-pager for the Fire Decision Card in the outbox."""
+    dec = card_dict.get("decision") or "—"
+    conf = card_dict.get("confidence_pred")
+    conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
+    label = card_dict.get("confidence_pred_label") or "—"
+    event = card_dict.get("event_id") or "—"
+    lines = [
+        f"# Fire Decision Card — {event}",
+        "",
+        f"**Decision: {dec}** · confidence_pred={conf_s} ({label})",
+        "",
+        f"- System reliability gates: "
+        f"{'PASS' if card_dict.get('system_reliability_pass') else 'FAIL'}",
+        f"- Built (UTC): {card_dict.get('built_at_utc') or '—'}",
+        "",
+        "## Sources",
+        "",
+    ]
+    for s in card_dict.get("sources") or []:
+        avail = "yes" if s.get("available") else "no"
+        conf_src = s.get("confidence")
+        conf_src_s = f"{float(conf_src):.3f}" if isinstance(conf_src, (int, float)) else "—"
+        lines.append(
+            f"- **{s.get('id')}**: available={avail} · conf={conf_src_s} · "
+            f"w={s.get('weight')}"
+        )
+    lines += ["", "## Reasons", ""]
+    for r in (card_dict.get("reasons") or [])[:16]:
+        lines.append(f"- {r}")
+    lines += ["", "## Disclaimers", ""]
+    for d in card_dict.get("disclaimers") or []:
+        lines.append(f"- {d}")
+    audit = card_dict.get("audit") or {}
+    lines += [
+        "",
+        "## Audit",
+        "",
+        f"- schema: `{audit.get('schema') or 'fire_decision_card_v1'}`",
+        f"- input_hash: `{(audit.get('input_hash') or '')[:16]}…`",
+        f"- output_hash: `{(audit.get('output_hash') or '')[:16]}…`",
+        "",
+        "Machine JSON: `fire_decision_card.json`",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def publish_decision_card(
+    outbox: Path,
+    event_id: str,
+    ops: dict[str, Any],
+    *,
+    n_frames: int = 0,
+    open_pack_dir: Path | None = None,
+    include_ml_metrics: bool = True,
+    require_ops_for_go: bool = True,
+    git_commit: str | None = None,
+) -> dict[str, str]:
+    """Write Fire Decision Card (JSON + MD) into the operator outbox.
+
+    Paid-value artifact: GO / HOLD / ABSTAIN with confidence, sources, audit.
+    Incident path is ops-primary (``require_ops_for_go=True`` by default).
+    """
+    from ..product.confidence import build_decision_card
+
+    outbox = Path(outbox)
+    outbox.mkdir(parents=True, exist_ok=True)
+    ops_m = ops_metrics_for_decision(ops, n_frames=n_frames)
+    ml_m = _load_ml_metrics_optional() if include_ml_metrics else None
+    open_m = _load_open_metrics(open_pack_dir)
+    card = build_decision_card(
+        event_id,
+        ml_metrics=ml_m,
+        ops_metrics=ops_m,
+        open_metrics=open_m,
+        require_ops_for_go=require_ops_for_go,
+        git_commit=git_commit,
+        extra_metrics={
+            "product": "incident_runtime_v1",
+            "outbox": str(outbox.resolve()),
+            "n_frames": n_frames,
+        },
+    )
+    payload = card.to_dict()
+    json_path = outbox / DECISION_CARD_FILENAME
+    md_path = outbox / DECISION_CARD_MD_FILENAME
+    tmp = json_path.with_suffix(json_path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    tmp.replace(json_path)
+    md_path.write_text(render_decision_card_md(payload), encoding="utf-8")
+    return {
+        "fire_decision_card_json": str(json_path),
+        "fire_decision_card_md": str(md_path),
+        "decision": payload.get("decision"),
+        "confidence_pred": payload.get("confidence_pred"),
+        "confidence_pred_label": payload.get("confidence_pred_label"),
+    }
+
+
 def publish_emergency_layers(
     outbox: Path,
     event_id: str,
     *,
     n_frames: int = 0,
     latency_s: float | None = None,
+    decision_summary: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Write emergency envelope GIS + briefing from operational_metrics + main_front."""
     ops_path = outbox / "operational_metrics.json"
@@ -419,7 +601,11 @@ def publish_emergency_layers(
     brief = outbox / "emergency_briefing.md"
     brief.write_text(
         build_emergency_briefing_md(
-            event_id, ops, n_frames=n_frames, latency_s=latency_s
+            event_id,
+            ops,
+            n_frames=n_frames,
+            latency_s=latency_s,
+            decision_summary=decision_summary,
         ),
         encoding="utf-8",
     )
@@ -450,6 +636,9 @@ def write_heartbeat(outbox: Path, summary: dict[str, Any]) -> Path:
         "new_frames": summary.get("new_frames"),
         "quality_grade": summary.get("quality_grade"),
         "primary_ros_m_min": summary.get("primary_ros_m_min"),
+        "decision": summary.get("decision"),
+        "confidence_pred": summary.get("confidence_pred"),
+        "confidence_pred_label": summary.get("confidence_pred_label"),
         "latency_s": summary.get("latency_s"),
         "error": summary.get("error") or summary.get("last_error"),
         "outbox": str(outbox.resolve()),
@@ -472,6 +661,8 @@ def append_incident_log(outbox: Path, summary: dict[str, Any]) -> Path:
         "new_frames": summary.get("new_frames"),
         "quality_grade": summary.get("quality_grade"),
         "primary_ros_m_min": summary.get("primary_ros_m_min"),
+        "decision": summary.get("decision"),
+        "confidence_pred": summary.get("confidence_pred"),
         "latency_s": summary.get("latency_s"),
         "error": summary.get("error"),
     }
@@ -613,18 +804,32 @@ def process_incident_once(
             write_operational=True,
         )
         latency = time.perf_counter() - t0
-        emergency = publish_emergency_layers(
-            config.outbox,
-            config.event_id,
-            n_frames=n_staged,
-            latency_s=latency,
-        )
         ops = metrics.get("operational") if isinstance(metrics.get("operational"), dict) else {}
         # Prefer full ops file for grade/ROS
         ops_path = config.outbox / "operational_metrics.json"
         if ops_path.is_file():
             full_ops = json.loads(ops_path.read_text(encoding="utf-8"))
             ops = full_ops
+
+        decision_artifacts: dict[str, Any] = {}
+        if isinstance(ops, dict) and ops:
+            decision_artifacts = publish_decision_card(
+                config.outbox,
+                config.event_id,
+                ops,
+                n_frames=n_staged,
+                open_pack_dir=config.open_pack_dir,
+                include_ml_metrics=config.include_ml_metrics,
+                require_ops_for_go=config.require_ops_for_go,
+            )
+
+        emergency = publish_emergency_layers(
+            config.outbox,
+            config.event_id,
+            n_frames=n_staged,
+            latency_s=latency,
+            decision_summary=decision_artifacts or None,
+        )
 
         state.n_updates += 1
         state.last_latency_s = round(latency, 4)
@@ -646,12 +851,19 @@ def process_incident_once(
         for f in state.frames:
             if f.get("status") == "staged":
                 f["status"] = "processed"
+        # Keep only path artifacts in state (not decision scalars)
+        fdc_paths = {
+            k: v
+            for k, v in decision_artifacts.items()
+            if k.startswith("fire_decision_card") and isinstance(v, str)
+        }
         state.artifacts = {
             "outbox": str(config.outbox.resolve()),
             "operational_metrics": str(ops_path),
             "main_front": str(config.outbox / "main_front.geojson"),
             "incident_state": str(config.state_path),
             **emergency,
+            **fdc_paths,
         }
         save_state(state, config.state_path)
 
@@ -665,6 +877,11 @@ def process_incident_once(
         summary["area_ha_max"] = state.area_ha_max
         summary["speed_vs_ref_ratio"] = state.speed_vs_ref_ratio
         summary["engine"] = state.engine
+        summary["decision"] = decision_artifacts.get("decision")
+        summary["confidence_pred"] = decision_artifacts.get("confidence_pred")
+        summary["confidence_pred_label"] = decision_artifacts.get(
+            "confidence_pred_label"
+        )
         summary["artifacts"] = state.artifacts
         summary["new_frame_stems"] = [f.stem for f in new_frames]
         summary["metrics"] = {

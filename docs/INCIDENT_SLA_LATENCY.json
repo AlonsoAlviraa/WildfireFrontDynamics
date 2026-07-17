@@ -1,0 +1,17 @@
+{
+  "schema": "incident_sla_latency_v1",
+  "measured_at_utc": "2026-07-17T18:55:30.904715+00:00",
+  "scenario": "synthetic_2_frame_lwir",
+  "wall_clock_s": 0.1841,
+  "pipeline_latency_s": 0.1302,
+  "status": "updated",
+  "decision": "GO",
+  "confidence_pred": 0.7230769230769231,
+  "quality_grade": "B",
+  "n_staged": 2,
+  "fdc_written": true,
+  "sla_target_s": 600.0,
+  "sla_pass": true,
+  "pilot_note": "Synthetic 2-frame path. Field packs with dozens of LWIR frames will be slower; still target < 10 min for pilot rebuild.",
+  "outbox": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\incidents\\_sla_measure\\outbox"
+}

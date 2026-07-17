@@ -266,6 +266,29 @@ def print_incident_report(
     if ros is None:
         ros = detail.get("primary_ros_m_min")
 
+    # Decision Card (paid-value unit) — prefer summary, else outbox file
+    decision = data.get("decision")
+    conf_pred = data.get("confidence_pred")
+    conf_label = data.get("confidence_pred_label")
+    if decision is None and data.get("outbox"):
+        fdc_path = Path(str(data["outbox"])) / "fire_decision_card.json"
+        if fdc_path.is_file():
+            try:
+                fdc = json.loads(fdc_path.read_text(encoding="utf-8"))
+                decision = fdc.get("decision")
+                conf_pred = fdc.get("confidence_pred")
+                conf_label = fdc.get("confidence_pred_label")
+            except (OSError, json.JSONDecodeError, TypeError):
+                pass
+    if decision is not None:
+        section("Decision Card")
+        conf_s = (
+            f"{float(conf_pred):.3f}" if isinstance(conf_pred, (int, float)) else "—"
+        )
+        label_s = f" · {conf_label}" if conf_label else ""
+        _out(_kv("decision", f"{decision}  (conf={conf_s}{label_s})"))
+        _out(_kv("artifact", "fire_decision_card.json"))
+
     section("Front dynamics")
     _out(_kv("grade", f"{_fmt(grade)} · {_fmt(label)}" if grade or label else "—"))
     _out(_kv("ROS m/min", ros))
@@ -335,6 +358,8 @@ def print_incident_report(
         section("Artifacts")
         outbox = Path(str(data.get("outbox") or state.get("artifacts", {}).get("outbox") or "."))
         names = [
+            ("fire_decision_card.json", outbox / "fire_decision_card.json"),
+            ("fire_decision_card.md", outbox / "fire_decision_card.md"),
             ("incident_state.json", outbox / "incident_state.json"),
             ("emergency_briefing.md", outbox / "emergency_briefing.md"),
             ("emergency_envelope.json", outbox / "emergency_envelope.json"),
@@ -385,9 +410,10 @@ def print_incident_report(
         section("Next steps")
         outbox = data.get("outbox")
         if outbox:
-            _out(f"  · Read  {Path(outbox) / 'emergency_briefing.md'}")
-            _out(f"  · Open  {Path(outbox) / 'operational_report.html'}")
-            _out(f"  · GIS   {Path(outbox) / 'main_front.geojson'}")
+            _out(f"  · Decision  {Path(outbox) / 'fire_decision_card.md'}")
+            _out(f"  · Brief     {Path(outbox) / 'emergency_briefing.md'}")
+            _out(f"  · Open      {Path(outbox) / 'operational_report.html'}")
+            _out(f"  · GIS       {Path(outbox) / 'main_front.geojson'}")
     elif status == "error":
         section("Next steps")
         _out("  · Inspect outbox/ingest_manifest.csv for reject reasons")

@@ -93,10 +93,23 @@ def test_process_incident_once_streaming(tmp_path: Path) -> None:
     assert (outbox / "incident_state.json").is_file()
     assert (outbox / "watch_heartbeat.json").is_file()
     assert (outbox / "incident_log.jsonl").is_file()
+    # M2.1 — Fire Decision Card in operator outbox
+    assert (outbox / "fire_decision_card.json").is_file()
+    assert (outbox / "fire_decision_card.md").is_file()
+    fdc = json.loads((outbox / "fire_decision_card.json").read_text(encoding="utf-8"))
+    assert fdc.get("decision") in ("GO", "HOLD", "ABSTAIN")
+    assert "confidence_pred" in fdc
+    assert fdc.get("audit", {}).get("schema") == "fire_decision_card_v1"
+    assert s2.get("decision") == fdc.get("decision")
+    brief = (outbox / "emergency_briefing.md").read_text(encoding="utf-8")
+    assert "Decision Card" in brief or "Decision:" in brief
     hb = json.loads((outbox / "watch_heartbeat.json").read_text(encoding="utf-8"))
     assert hb.get("status") == "updated"
+    assert hb.get("decision") == fdc.get("decision")
     log_lines = (outbox / "incident_log.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(log_lines) >= 1
+    last_log = json.loads(log_lines[-1])
+    assert last_log.get("decision") == fdc.get("decision")
 
     state = load_state(outbox / "incident_state.json")
     assert state is not None

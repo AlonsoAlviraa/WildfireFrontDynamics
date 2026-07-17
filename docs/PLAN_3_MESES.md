@@ -70,15 +70,15 @@ GO_Q+ = GO_Q AND
 
 ### Mes 2 — Campo y credibilidad (sem 5–8)
 
-| ID | Entrega | Métrica |
-|----|---------|---------|
-| M2.1 | Integrar Decision Card en `incident update` outbox | artifact en outbox |
-| M2.2 | Multi-ancla: Cardoso o open-source Vp documentado | O1 progress |
-| M2.3 | dNBR/STAC opcional post-fuego 1 pack | layer o BLOCKED doc |
-| M2.4 | 10 outreach (GEACAM, Heligrafics, bomberos, Firelogue) | CSV updated |
-| M2.5 | Piloto script: rebuild pack < 10 min SLA medido | latency json |
-| M2.6 | Informe técnico v1.1 CMA dual + FDC | DOCX/MD |
-| M2.7 | Review M2 + adaptar Mes 3 | status |
+| ID | Entrega | Métrica | Status |
+|----|---------|---------|--------|
+| M2.1 | Integrar Decision Card en `incident update` outbox | artifact en outbox | **DONE** (`fire_decision_card.json` + MD + heartbeat) |
+| M2.2 | Multi-ancla: Cardoso o open-source Vp documentado | O1 progress | BLOCKED externo / open proxy |
+| M2.3 | dNBR/STAC opcional post-fuego 1 pack | layer o BLOCKED doc | pending |
+| M2.4 | 10 outreach (GEACAM, Heligrafics, bomberos, Firelogue) | CSV updated | partial |
+| M2.5 | Piloto script: rebuild pack < 10 min SLA medido | latency json | **DONE** (`scripts/measure_incident_sla.py`) |
+| M2.6 | Informe técnico v1.1 CMA dual + FDC | DOCX/MD | pending |
+| M2.7 | Review M2 + adaptar Mes 3 | status | pending |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 

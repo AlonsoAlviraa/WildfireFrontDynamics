@@ -1,7 +1,7 @@
 {
   "schema": "plan_3_meses_status_v1",
   "plan": "docs/PLAN_3_MESES.md",
-  "cycle_at_utc": "2026-07-17T16:43:27.885483+00:00",
+  "cycle_at_utc": "2026-07-17T18:55:52.758470+00:00",
   "items": {
     "M1.1_plan_cycle_runner": {
       "status": "DONE",
@@ -33,16 +33,20 @@
       "evidence": "docs/ONEPAGER_COMERCIAL_ES.md"
     },
     "M1.8_review": {
-      "status": "IN_PROGRESS",
-      "evidence": "this cycle"
+      "status": "DONE",
+      "evidence": "cycle runner + portal UX"
     },
     "M2.1_fdc_in_incident": {
-      "status": "PENDING",
-      "evidence": null
+      "status": "DONE",
+      "evidence": "outbox/fire_decision_card.json on incident update"
     },
     "M2.2_second_anchor": {
       "status": "BLOCKED",
       "evidence": "pending_external INFOCAM"
+    },
+    "M2.5_incident_sla": {
+      "status": "DONE",
+      "evidence": "docs/INCIDENT_SLA_LATENCY.json"
     },
     "M3.3_GO_Q": {
       "status": "PENDING",
@@ -132,7 +136,7 @@
       "audit": {
         "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
         "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
-        "git_commit": "1beaf0a",
+        "git_commit": "046226f",
         "schema": "fire_decision_card_v1",
         "system_reliability": {
           "system_reliability_pass": true,
@@ -147,15 +151,17 @@
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T16:29:49.487086+00:00"
+      "built_at_utc": "2026-07-17T18:55:31.237750+00:00"
     }
   },
   "go_q_progress": {
     "decision_card_cli": true,
+    "fdc_in_incident": true,
     "metrics_hub": true,
     "reliability_gate": true,
     "open_packs_ge_4": true,
     "ml_hold": true,
+    "incident_sla": true,
     "pilot_or_outreach": false,
     "quarter_report": false
   },

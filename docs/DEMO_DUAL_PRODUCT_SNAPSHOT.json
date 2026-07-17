@@ -1,5 +1,5 @@
 {
-  "started_at_utc": "2026-07-17T15:47:08.988190+00:00",
+  "started_at_utc": "2026-07-17T17:58:17.187938+00:00",
   "product_ml": "clm_ensemble_v34",
   "product_ops": "incident_runtime_v1 / front_dynamics_v1",
   "steps": [
@@ -22,11 +22,26 @@
         "scripts/smoke_incident_runtime.py"
       ],
       "returncode": 0,
-      "stdout_tail": "{\n  \"ok\": true,\n  \"synthetic\": {\n    \"mode\": \"synthetic\",\n    \"ok\": true,\n    \"status\": \"updated\",\n    \"n_staged\": 3,\n    \"quality_grade\": \"B\",\n    \"primary_ros_m_min\": 11.283791670955129,\n    \"latency_s\": 0.1725,\n    \"work_dir\": \"C:\\\\Users\\\\Mariano\\\\AppData\\\\Local\\\\Temp\\\\incident_smoke_8q1ds9co\\\\work\",\n    \"error\": null\n  }\n}\n",
+      "stdout_tail": "{\n  \"ok\": true,\n  \"synthetic\": {\n    \"mode\": \"synthetic\",\n    \"ok\": true,\n    \"status\": \"updated\",\n    \"n_staged\": 3,\n    \"quality_grade\": \"B\",\n    \"primary_ros_m_min\": 11.283791670955129,\n    \"latency_s\": 0.1091,\n    \"work_dir\": \"C:\\\\Users\\\\Mariano\\\\AppData\\\\Local\\\\Temp\\\\incident_smoke_omxy7t_g\\\\work\",\n    \"error\": null\n  }\n}\n",
       "stderr_tail": "",
       "ok": true
+    },
+    {
+      "name": "smoke_ml_v34",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/smoke_production_products.py",
+        "--products",
+        "clm_v28,clm_ensemble_v34",
+        "--max-patches",
+        "12"
+      ],
+      "returncode": 2,
+      "stdout_tail": "",
+      "stderr_tail": "usage: smoke_production_products.py [-h] [--clm-max CLM_MAX]\n                                    [--products PRODUCTS]\nsmoke_production_products.py: error: unrecognized arguments: --max-patches 12\n",
+      "ok": false
     }
   ],
-  "ok": true,
-  "finished_at_utc": "2026-07-17T15:47:12.997789+00:00"
+  "ok": false,
+  "finished_at_utc": "2026-07-17T17:58:21.169635+00:00"
 }

@@ -382,6 +382,24 @@ def _add_incident_runtime_args(p: argparse.ArgumentParser) -> None:
         metavar="S",
         help="Ignore files newer than S seconds; also requires size-stable polls (default: 0.5)",
     )
+    fdc = p.add_argument_group("decision card (outbox)")
+    fdc.add_argument(
+        "--open-pack",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Optional open CEMS pack dir fused into Fire Decision Card",
+    )
+    fdc.add_argument(
+        "--no-ml-metrics",
+        action="store_true",
+        help="Do not attach ML v34 holdout metrics to the Decision Card",
+    )
+    fdc.add_argument(
+        "--allow-go-without-ops",
+        action="store_true",
+        help="Allow GO without thermal ops (default: require ops for GO)",
+    )
 
 
 def _add_all_incident_process_args(p: argparse.ArgumentParser, *, require_work: bool = True) -> None:
@@ -679,6 +697,9 @@ def _incident_config_from_args(args: argparse.Namespace):
         ref_name=getattr(args, "ref_name", None),
         ref_vp_m_min=getattr(args, "ref_vp_m_min", None),
         ref_area_ha=getattr(args, "ref_area_ha", None),
+        open_pack_dir=getattr(args, "open_pack", None),
+        include_ml_metrics=not bool(getattr(args, "no_ml_metrics", False)),
+        require_ops_for_go=not bool(getattr(args, "allow_go_without_ops", False)),
         min_file_age_s=getattr(args, "min_file_age_s", 0.5),
     )
 

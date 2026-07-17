@@ -54,16 +54,32 @@ work_dir/
   stage/images/     # cumulative accepted GeoTIFFs (sha-deduped)
   stage/masks/      # paired masks when --masks given
   outbox/
+    fire_decision_card.json   # GO / HOLD / ABSTAIN + audit (paid-value unit)
+    fire_decision_card.md     # human decision one-pager
     incident_state.json
-    watch_heartbeat.json      # last status for field monitors
+    watch_heartbeat.json      # last status (+ decision) for field monitors
     incident_log.jsonl        # append-only update history
-    emergency_briefing.md
+    emergency_briefing.md     # includes Decision Card section
     emergency_envelope.json
     emergency_envelope_guidance.geojson
     main_front.geojson
     operational_metrics.json
     operational_report.html
     ...
+```
+
+### Decision Card on every update
+
+Each successful `incident update` publishes a **Fire Decision Card**:
+
+- Sources fused: ops thermal (required for GO by default) + optional ML v34 metrics + optional `--open-pack`
+- Heartbeat and `incident_log.jsonl` include `decision` / `confidence_pred`
+- Flags: `--open-pack DIR`, `--no-ml-metrics`, `--allow-go-without-ops`
+
+```bash
+python -m wildfire_front incident update \
+  --inbox path/to/inbox --work-dir outputs/incidents/IF_demo --force \
+  --open-pack outputs/open_if/emsr578
 ```
 
 Unified smoke (ops + ML):

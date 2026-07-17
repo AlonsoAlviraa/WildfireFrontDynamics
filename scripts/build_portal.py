@@ -148,7 +148,7 @@ a:hover {{ text-decoration: underline; }}
   background: #0f1620;
 }}
 .pill.ok {{ border-color: #0d6b4f; color: #63e6be; }}
-.pill.warn {{ border-color: #a dig  #8a6a00; color: #ffd43b; border-color: #8a6a00; }}
+.pill.warn {{ border-color: #8a6a00; color: #ffd43b; }}
 .pill.bad {{ border-color: #8a2b2b; color: #ffa8a8; }}
 table {{ width: 100%; border-collapse: collapse; font-size: .92rem; }}
 th, td {{ padding: .5rem .4rem; border-bottom: 1px solid var(--line); text-align: left; }}
@@ -264,9 +264,11 @@ python scripts\\show_all.py</pre>
       <div class="work">
         <div class="row"><span>ML ensemble CLM v34 (holdout honesto)</span><span class="ok-text">HECHO · IoU {iou}</span></div>
         <div class="row"><span>Incident runtime + field kit</span><span class="ok-text">HECHO</span></div>
+        <div class="row"><span>FDC en cada incident update (outbox)</span><span class="ok-text">HECHO · fire_decision_card.json</span></div>
         <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · {n_packs} packs</span></div>
-        <div class="row"><span>Decision Card + reliability gate</span><span class="ok-text">HECHO</span></div>
+        <div class="row"><span>Decision Card CLI + reliability gate</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>Metrics Hub unificado</span><span class="ok-text">HECHO</span></div>
+        <div class="row"><span>SLA incidente sintético (&lt;10 min)</span><span class="ok-text">HECHO · ver INCIDENT_SLA_LATENCY.json</span></div>
         <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
@@ -298,7 +300,7 @@ python scripts\\show_all.py</pre>
       <ol class="steps">
         <li><b>ABSTAIN vacío</b> — <code>python -m wildfire_front decide</code> → el sistema se calla sin datos.</li>
         <li><b>Mapa open grande</b> — abrir EMSR632 (~5k ha) sin NDA.</li>
-        <li><b>Métricas</b> — este portal + Decision Card: confianza real, no eslóganes.</li>
+        <li><b>Incidente → Decision Card en outbox</b> — tras <code>incident update</code> lee <code>fire_decision_card.md</code> (GO/HOLD/ABSTAIN).</li>
       </ol>
     </div>
   </section>

@@ -77,7 +77,7 @@
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+      "built_at_utc": "2026-07-17T18:11:28.803484+00:00"
     },
     "open_only": {
       "event_id": "test_open",
@@ -152,7 +152,7 @@
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+      "built_at_utc": "2026-07-17T18:11:28.803484+00:00"
     },
     "both": {
       "event_id": "test_both",
@@ -249,7 +249,7 @@
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+      "built_at_utc": "2026-07-17T18:11:28.803484+00:00"
     }
   }
 }

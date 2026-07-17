@@ -1,6 +1,6 @@
 # Comparativa vendible: CLM-solo vs producto dual (CLM + open CEMS)
 
-_Actualizado: 2026-07-17T16:11:38.312320+00:00_
+_Actualizado: 2026-07-17T18:11:29.182241+00:00_
 
 **Score ponderado CLM-solo:** 39.0/100
 **Score ponderado dual:** 95.0/100

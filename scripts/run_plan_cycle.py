@@ -91,27 +91,51 @@ def assess() -> dict:
             "evidence": "docs/ONEPAGER_COMERCIAL_ES.md",
         },
         "M1.8_review": {
-            "status": "IN_PROGRESS",
-            "evidence": "this cycle",
+            "status": "DONE",
+            "evidence": "cycle runner + portal UX",
         },
-        "M2.1_fdc_in_incident": {"status": "PENDING", "evidence": None},
-        "M2.2_second_anchor": {"status": "BLOCKED", "evidence": "pending_external INFOCAM"},
+        "M2.1_fdc_in_incident": {
+            "status": "DONE"
+            if "publish_decision_card" in (
+                ROOT / "wildfire_front" / "incident" / "pipeline.py"
+            ).read_text(encoding="utf-8")
+            else "PENDING",
+            "evidence": "outbox/fire_decision_card.json on incident update",
+        },
+        "M2.2_second_anchor": {
+            "status": "BLOCKED",
+            "evidence": "pending_external INFOCAM",
+        },
+        "M2.5_incident_sla": {
+            "status": "DONE"
+            if _exists("docs", "INCIDENT_SLA_LATENCY.json")
+            and bool((_load(ROOT / "docs" / "INCIDENT_SLA_LATENCY.json") or {}).get("sla_pass"))
+            else (
+                "IN_PROGRESS"
+                if _exists("scripts", "measure_incident_sla.py")
+                else "PENDING"
+            ),
+            "evidence": "docs/INCIDENT_SLA_LATENCY.json",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
     }
 
     reliability = _load(ROOT / "docs" / "RELIABILITY_GATE_REPORT.json") or {}
     go_q_progress = {
         "decision_card_cli": items["M1.2_decide_cli"]["status"] == "DONE",
+        "fdc_in_incident": items["M2.1_fdc_in_incident"]["status"] == "DONE",
         "metrics_hub": items["M1.3_metrics_hub"]["status"] == "DONE",
         "reliability_gate": bool(reliability.get("ok")),
         "open_packs_ge_4": n_packs >= 4,
         "ml_hold": ml_iou >= 0.89,
+        "incident_sla": items["M2.5_incident_sla"]["status"] == "DONE",
         "pilot_or_outreach": False,
         "quarter_report": False,
     }
     go_q_ready = all(
         [
             go_q_progress["decision_card_cli"],
+            go_q_progress["fdc_in_incident"],
             go_q_progress["metrics_hub"],
             go_q_progress["reliability_gate"],
             go_q_progress["open_packs_ge_4"],

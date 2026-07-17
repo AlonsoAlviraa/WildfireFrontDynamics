@@ -137,6 +137,25 @@ python -m wildfire_front incident update `
   --force
 ```
 
+Tras el update, el **Decision Card** está en el outbox (unidad de venta):
+
+```
+outputs\incidents\tobarra_demo\outbox\fire_decision_card.json
+outputs\incidents\tobarra_demo\outbox\fire_decision_card.md
+```
+
+Opciones de fusión:
+
+```powershell
+# + pack open CEMS en la misma card
+python -m wildfire_front incident update `
+  --inbox ... --work-dir ... --force `
+  --open-pack C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\outputs\open_if\emsr578
+
+# SLA sintético (debe ser << 10 min)
+python scripts\measure_incident_sla.py
+```
+
 ### 2.4 Status del incidente
 
 ```powershell

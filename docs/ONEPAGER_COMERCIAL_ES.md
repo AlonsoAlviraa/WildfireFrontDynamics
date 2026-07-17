@@ -29,8 +29,13 @@
 ```bash
 python scripts/reliability_gate.py
 python scripts/build_metrics_hub.py
-# abrir docs/METRICS_DASHBOARD.html
+python scripts/show_all.py
+# abrir docs/PORTAL.html  (+ Metrics Hub)
 ```
+
+En **campo**, cada `incident update` escribe la Decision Card en el outbox:
+
+`outbox/fire_decision_card.json` · `outbox/fire_decision_card.md`
 
 ## Métricas (siempre visibles)
 
