@@ -1,0 +1,33 @@
+{
+  "name": "source_mix_val_temp_calibrated",
+  "model_iou": 0.8962661597172356,
+  "improvement_vs_copy_iou": 0.2544639893725479,
+  "model_iou_growth": 0.9070774227697294,
+  "verdict": "GO_PROMOTE",
+  "recipe": {
+    "type": "source_mix_val_temp_calibrated",
+    "members": [
+      "models/clm_ensemble/weights_v28_clm_ft.pt",
+      "models/clm_ensemble/weights_v30_ema.pt",
+      "models/clm_ensemble/weights_multi_if.pt"
+    ],
+    "mix": [
+      0.28,
+      0.32,
+      0.4
+    ],
+    "temperatures": [
+      0.7,
+      0.7,
+      1.3
+    ],
+    "threshold": 0.5,
+    "leakage_guard": "mix+temps on holdout VAL only; multi_if never trained on Cardoso"
+  },
+  "promoted_at_utc": "2026-07-17T12:35:57.024354+00:00",
+  "parent": "clm_ensemble_v33",
+  "vs_v33": {
+    "iou_diff": 0.0010338561069478391,
+    "delta_diff": 0.0010338561069478391
+  }
+}

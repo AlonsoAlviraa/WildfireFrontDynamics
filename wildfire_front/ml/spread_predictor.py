@@ -33,6 +33,7 @@ class SpreadModelManifest:
     ensemble_mode: str = "mean_prob"
     members: tuple[str, ...] = ()
     member_weights: tuple[float, ...] = ()
+    member_temperatures: tuple[float, ...] = ()
 
     @classmethod
     def from_json(cls, path: Path | str) -> SpreadModelManifest:
@@ -47,6 +48,8 @@ class SpreadModelManifest:
         members = tuple(str(m) for m in (data.get("members") or []))
         mw_raw = data.get("member_weights") or []
         member_weights = tuple(float(x) for x in mw_raw) if mw_raw else ()
+        mt_raw = data.get("member_temperatures") or data.get("temperatures") or []
+        member_temperatures = tuple(float(x) for x in mt_raw) if mt_raw else ()
         product_type = str(data.get("product_type") or ("ensemble" if members else "single"))
         return cls(
             version=str(data.get("version") or data.get("id") or "unknown"),
@@ -65,6 +68,7 @@ class SpreadModelManifest:
             ensemble_mode=str(data.get("ensemble_mode") or "mean_prob"),
             members=members,
             member_weights=member_weights,
+            member_temperatures=member_temperatures,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -85,8 +89,8 @@ class SpreadModelManifest:
             "ensemble_mode": self.ensemble_mode,
             "members": list(self.members),
             "member_weights": list(self.member_weights),
+            "member_temperatures": list(self.member_temperatures),
         }
-
 
 class SpreadPredictor:
     """Load a v21-style checkpoint and predict next-day fire masks."""
@@ -314,9 +318,13 @@ class EnsembleSpreadPredictor:
 
         growth_list: list[torch.Tensor] = []
         abs_list: list[torch.Tensor] = []
-        for model in self.models:
+        temps = list(self.manifest.member_temperatures) if self.manifest.member_temperatures else []
+        if temps and len(temps) != len(self.models):
+            temps = []
+        for mi, model in enumerate(self.models):
             logits = model_forward(model, x, fire_t, self.manifest.architecture)
-            growth = torch.sigmoid(logits)
+            t = float(temps[mi]) if temps else 1.0
+            growth = torch.sigmoid(logits / t) if abs(t - 1.0) > 1e-9 else torch.sigmoid(logits)
             growth_list.append(growth)
             if self.manifest.target_mode == "delta":
                 prev_bin = (fire_t >= self.manifest.threshold).float().unsqueeze(1)

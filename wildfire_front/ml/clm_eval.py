@@ -54,6 +54,7 @@ def evaluate_clm_weights(
     device: torch.device | str | None = None,
     ensemble_mode: str = "mean_prob",
     member_weights: Sequence[float] | None = None,
+    temperatures: Sequence[float] | None = None,
 ) -> dict[str, Any]:
     """Evaluate one checkpoint or soft-vote ensemble on a CLM NPZ split dir.
 
@@ -68,6 +69,8 @@ def evaluate_clm_weights(
         ``mean_abs`` — average absolute fire probabilities after decode.
     member_weights:
         Optional non-negative mix weights (normalized). Length = n members.
+    temperatures:
+        Optional per-member temperature scales (logit / T before soft-vote).
     """
     weight_list = [Path(weights)] if isinstance(weights, (str, Path)) else [Path(w) for w in weights]
     for w in weight_list:
@@ -91,6 +94,15 @@ def evaluate_clm_weights(
 
     models = [_load_model(w, in_ch, device) for w in weight_list]
     mix = _normalize_member_weights(len(models), member_weights)
+    if temperatures is not None and len(temperatures) != len(models):
+        raise ValueError(
+            f"temperatures length {len(temperatures)} != n_models {len(models)}"
+        )
+    temps = (
+        [float(t) for t in temperatures]
+        if temperatures is not None
+        else [1.0] * len(models)
+    )
     sample_metrics: list[dict] = []
 
     for i in range(n):
@@ -103,14 +115,18 @@ def evaluate_clm_weights(
 
         growth_probs: list[torch.Tensor] = []
         abs_probs: list[torch.Tensor] = []
-        for model in models:
+        for mi, model in enumerate(models):
             try:
                 logits = model(x, cur_b)
             except TypeError:
                 logits = model(x)
-            g = torch.sigmoid(logits)
+            t = temps[mi]
+            if abs(t - 1.0) > 1e-9:
+                g = torch.sigmoid(logits / t)
+            else:
+                g = torch.sigmoid(logits)
             growth_probs.append(g)
-            abs_probs.append(_decode_delta(logits, cur_b))
+            abs_probs.append(torch.clamp(cur_b.unsqueeze(1) + g, 0.0, 1.0))
 
         if len(models) == 1:
             pred = abs_probs[0]
@@ -144,6 +160,7 @@ def evaluate_clm_weights(
         "n_members": len(models),
         "weights": [str(w) for w in weight_list],
         "member_weights": mix,
+        "temperatures": temps,
         "ensemble_mode": ensemble_mode if len(models) > 1 else "single",
         "in_channels": in_ch,
         "threshold": threshold,
@@ -161,7 +178,6 @@ def evaluate_clm_weights(
         "model_iou_changed": float(agg.get("model_iou_changed") or 0.0),
         "aggregate": agg,
     }
-
 
 @torch.no_grad()
 def collect_member_growth_cache(
@@ -232,24 +248,50 @@ def collect_member_growth_cache(
     }
 
 
+def _apply_temperature_to_prob(prob: np.ndarray, temperature: float) -> np.ndarray:
+    """Rescale Bernoulli probs via logit / T (temperature scaling)."""
+    t = float(temperature)
+    if abs(t - 1.0) < 1e-9:
+        return prob
+    if t <= 0:
+        raise ValueError(f"temperature must be > 0, got {t}")
+    eps = 1e-6
+    p = np.clip(prob, eps, 1.0 - eps)
+    logit = np.log(p / (1.0 - p))
+    return 1.0 / (1.0 + np.exp(-logit / t))
+
+
 def score_mix_from_cache(
     cache: dict[str, Any],
     member_weights: Sequence[float] | None = None,
     *,
     threshold: float = 0.5,
+    temperatures: Sequence[float] | None = None,
 ) -> dict[str, Any]:
-    """Soft-vote growth probs from cache and score NDWS metrics."""
+    """Soft-vote growth probs from cache and score NDWS metrics.
+
+    Optional per-member ``temperatures`` apply logit/T rescaling before the mix.
+    """
     n_m = int(cache["n_members"])
     mix = _normalize_member_weights(n_m, member_weights)
     if mix is None:
         mix = [1.0 / n_m] * n_m
+    if temperatures is not None and len(temperatures) != n_m:
+        raise ValueError(f"temperatures length {len(temperatures)} != n_models {n_m}")
+    temps = [float(t) for t in temperatures] if temperatures is not None else [1.0] * n_m
     growth = cache["growth"]
     prevs = cache["prev"]
     tgts = cache["target"]
     sample_metrics: list[dict] = []
     w = np.asarray(mix, dtype=np.float64)
     for i in range(int(cache["n_patches"])):
-        stacked = np.stack([growth[m][i] for m in range(n_m)], axis=0)
+        layers = []
+        for m in range(n_m):
+            g = growth[m][i]
+            if abs(temps[m] - 1.0) > 1e-9:
+                g = _apply_temperature_to_prob(g, temps[m])
+            layers.append(g)
+        stacked = np.stack(layers, axis=0)
         mean_g = (stacked * w.reshape(-1, 1, 1)).sum(axis=0)
         prev = np.asarray(prevs[i], dtype=np.float64)
         pred = np.clip(prev + mean_g, 0.0, 1.0)
@@ -265,6 +307,7 @@ def score_mix_from_cache(
         "n_members": n_m,
         "weights": list(cache["weights"]),
         "member_weights": list(mix),
+        "temperatures": list(temps),
         "ensemble_mode": "mean_prob",
         "threshold": float(threshold),
         "model_iou": model_iou,
@@ -280,7 +323,6 @@ def score_mix_from_cache(
         "model_iou_changed": float(agg.get("model_iou_changed") or 0.0),
         "aggregate": agg,
     }
-
 
 def sweep_mix_threshold_from_cache(
     cache: dict[str, Any],

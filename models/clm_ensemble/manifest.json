@@ -1,7 +1,7 @@
 {
-  "version": "clm_ensemble_v33",
+  "version": "clm_ensemble_v34",
   "id": "clm_ensemble_v30",
-  "label": "CLM ensemble (v28 + EMA + multi-IF, transfer mix)",
+  "label": "CLM ensemble (v28 + EMA + multi-IF, VAL temp-calibrated mix)",
   "product_type": "ensemble",
   "architecture": "residual",
   "target_mode": "delta",
@@ -19,16 +19,17 @@
     "models/clm_ensemble/weights_v30_ema.pt",
     "models/clm_ensemble/weights_multi_if.pt"
   ],
-  "member_weights": [0.3, 0.26666666666666666, 0.4333333333333333],
+  "member_weights": [0.28, 0.32, 0.4],
+  "member_temperatures": [0.7, 0.7, 1.3],
   "protocol": "clm_holdout_test_seed42_v1",
   "metrics": {
-    "test_iou": 0.8952,
+    "test_iou": 0.8963,
     "copy_baseline_iou": 0.6418,
-    "improvement_vs_copy_iou": 0.2534,
-    "model_iou_growth": 0.8887
+    "improvement_vs_copy_iou": 0.2545,
+    "model_iou_growth": 0.9071
   },
   "verdict": "GO_PROMOTE",
-  "parent": "loop round 8 source_mix_transfer_non_cardoso",
-  "leakage_policy": "mix averaged from non-Cardoso LOFO best mixes; multi_if never trained on Cardoso; eval only on holdout test",
-  "notes": "Soft-vote weighted growth. Equal mix also strong (IoU 0.892). multi_if snapshotted as weights_multi_if.pt from best holdout."
+  "parent": "clm_ensemble_v33 + VAL temperature calibration",
+  "leakage_policy": "mix and per-member temperatures selected on holdout VAL only; multi_if never trained on Cardoso; eval only on holdout test",
+  "notes": "Soft-vote weighted growth with logit temperature scaling. Temperatures [0.7, 0.7, 1.3] sharpen v28/EMA and soften multi_if. Honest gain vs v33: IoU +0.0010, Δ +0.0010, growth +0.018."
 }

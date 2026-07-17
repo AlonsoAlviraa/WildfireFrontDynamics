@@ -195,17 +195,22 @@ Tracks (cycle each round):
 **Champion after round 8 (honest, promoted):** `source_mix_transfer_non_cardoso`  
 IoU **0.8952** Δ **+0.2534** · mix ≈ **0.30 / 0.27 / 0.43** (v28 + EMA + multi_if)  
 Mix = average of best mixes on **non-Cardoso** LOFO folds; multi_if snapshotted.  
-Product: `models/clm_ensemble/manifest.json` version **`clm_ensemble_v33`**.  
+Product was **`clm_ensemble_v33`**.
+
+**Champion v34 (honest, promoted):** `source_mix_val_temp_calibrated`  
+IoU **0.8963** Δ **+0.2545** · growth **0.9071**  
+mix **0.28 / 0.32 / 0.40** · temperatures **0.7 / 0.7 / 1.3** (v28, EMA, multi_if)  
+Selection on holdout **VAL only** (no Cardoso). Gain vs v33: IoU/Δ **+0.0010**, growth **+0.018**.  
+Product: `models/clm_ensemble/manifest.json` version **`clm_ensemble_v34`**.
 
 **Leakage rejected:**
 - `source_mix_cardoso_recipe` IoU 0.888 — LOFO CARDOSO/test ≡ holdout test.
-- **v34 Tobarra/LA as 4th member** IoU ~0.90 — LOFO-tobarra / LOFO-LA trains **include Cardoso**; not eligible for holdout GO.
+- **Tobarra/LA as 4th member** IoU ~0.90 — LOFO trains **include Cardoso**; not eligible for holdout GO.
 
-**v34 loop upgrades (in progress):**
-- Growth-prob **cache** for mix×threshold sweeps (no U-Net re-inference per mix).
-- Denser mix grid + VAL-only threshold sweep (thr=0.4 overfits VAL; thr=0.5 keeps champion).
-- multi_if: rotate init (freeze / best-holdout / v28 / v21) + EMA + clw/pw variants.
-- multi_obj triple uses **frozen** multi_if, not live mid-train weights.
+**Loop upgrades:**
+- Growth-prob **cache** for mix×threshold/temp sweeps.
+- multi_if: rotate init + EMA + clw/pw; freeze-protected members.
+- Production inference supports `member_temperatures` (logit / T).
 
 Scorecard: `docs/ML_LOOP_3WAY_SCORECARD.json`
 
