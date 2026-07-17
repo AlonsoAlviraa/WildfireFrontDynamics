@@ -155,6 +155,7 @@ def decide_from_request(
     req = dict(request or {})
     event_id = str(req.get("event_id") or "decision")
     require_ops = bool(req.get("require_ops_for_go", False))
+    policy_id = req.get("policy") or req.get("policy_id")
     sources = resolve_sources(req, base=base)
     card: DecisionCard = build_decision_card(
         event_id,
@@ -163,9 +164,11 @@ def decide_from_request(
         open_metrics=sources["open_metrics"],
         require_ops_for_go=require_ops,
         git_commit=git_commit,
+        policy_id=str(policy_id) if policy_id else None,
         extra_metrics={
             "channel": req.get("channel") or "decide_service",
             "api_version": API_VERSION,
+            "policy_id": policy_id or "default",
         },
     )
     latency_ms = round((time.perf_counter() - t0) * 1000.0, 3)
@@ -173,4 +176,5 @@ def decide_from_request(
     payload["latency_ms"] = latency_ms
     payload["api_version"] = API_VERSION
     payload["product"] = PRODUCT_ID
+    payload["policy_id"] = (payload.get("audit") or {}).get("policy_id") or policy_id or "default"
     return payload

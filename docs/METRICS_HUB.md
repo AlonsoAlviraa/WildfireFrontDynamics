@@ -1,13 +1,13 @@
 # Metrics Hub — todas las métricas
 
-_UTC: 2026-07-17T19:12:09.599811+00:00_ · git `24854fa` · hash `bc0f7db75625…`
+_UTC: 2026-07-17T19:22:50.874629+00:00_ · git `e14bed0` · hash `0ce7ea0237ed…`
 
 ## Decision Card (fusión)
 
 - **decision:** `GO`
 - **confidence_pred:** 0.894 (HIGH)
 - **system_reliability_pass:** True
-- **reasons:** ml_clm_ensemble:conf=1.000:w=0.25, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.720:w=0.35, ops_confidence_ok
+- **reasons:** ml_clm_ensemble:conf=1.000:w=0.25, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.720:w=0.35, policy:default, ops_confidence_ok
 
 > Fire prediction is **not** 99.9999% accurate. Five-nines bound = no silent GO without gates under automation.
 
@@ -72,5 +72,5 @@ n_packs = **4**
 
 ## Audit
 
-- decision audit: `90ef8eb2c0497382…`
-- hub hash: `bc0f7db75625261d288de5834f1b82b76b4062be1c88b6a54bfda8f84fa72f80`
+- decision audit: `279265f3faad435f…`
+- hub hash: `0ce7ea0237ed329939a68aca73a080c42c99a97c9b165621c79a31e1fea6e1ea`

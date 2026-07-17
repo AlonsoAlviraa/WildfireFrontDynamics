@@ -180,11 +180,23 @@ def decide(
     sources: Sequence[Mapping[str, Any]],
     *,
     require_ops_for_go: bool = False,
+    policy: Any | None = None,
 ) -> tuple[Decision, list[str]]:
-    reasons: list[str] = []
+    """Apply GO/HOLD/ABSTAIN rules.
+
+    If ``policy`` is a DecisionPolicy, its thresholds win.
+    ``require_ops_for_go`` overrides policy when True (CLI flag still works).
+    """
+    from .policy import DecisionPolicy, LEGACY_DEFAULT
+
+    pol: DecisionPolicy = policy if isinstance(policy, DecisionPolicy) else LEGACY_DEFAULT
+    # CLI/API may force ops requirement without switching full profile
+    req_ops = bool(require_ops_for_go) or bool(pol.require_ops_for_go)
+
+    reasons: list[str] = [f"policy:{pol.id}"]
     available = [s for s in sources if s.get("available")]
-    if len(available) < 1:
-        return Decision.ABSTAIN, ["no_available_sources"]
+    if len(available) < int(pol.min_available_sources):
+        return Decision.ABSTAIN, reasons + ["no_available_sources"]
 
     ops_ok = any(s.get("id") == "ops_thermal_front" and s.get("available") for s in sources)
     open_ok = any(
@@ -192,22 +204,29 @@ def decide(
     )
     ml_ok = any(s.get("id") == "ml_clm_ensemble" and s.get("available") for s in sources)
 
-    if confidence_pred < 0.20:
-        return Decision.ABSTAIN, reasons + ["confidence_pred<0.20"]
-    if require_ops_for_go and not ops_ok:
-        if open_ok and confidence_pred >= 0.35:
+    if confidence_pred < float(pol.abstain_below):
+        return Decision.ABSTAIN, reasons + [f"confidence_pred<{pol.abstain_below}"]
+    if req_ops and not ops_ok:
+        if open_ok and pol.allow_open_only_hold and confidence_pred >= float(pol.hold_open_min):
             return Decision.HOLD, reasons + ["open_only_monitoring"]
         return Decision.ABSTAIN, reasons + ["ops_required_for_go"]
 
     # GO only if we have thermal ops with decent grade OR multi-source strong
-    if ops_ok and confidence_pred >= 0.55:
+    if ops_ok and confidence_pred >= float(pol.go_ops_min):
         return Decision.GO, reasons + ["ops_confidence_ok"]
-    if ops_ok and open_ok and confidence_pred >= 0.45:
+    if ops_ok and open_ok and confidence_pred >= float(pol.go_ops_open_min):
         return Decision.GO, reasons + ["ops+open_fusion"]
-    if open_ok and confidence_pred >= 0.35:
+    if open_ok and pol.allow_open_only_hold and confidence_pred >= float(pol.hold_open_min):
         return Decision.HOLD, reasons + ["open_cems_monitoring_only"]
-    if ml_ok and confidence_pred >= 0.50 and not ops_ok:
+    if (
+        ml_ok
+        and not ops_ok
+        and pol.allow_ml_only_hold
+        and confidence_pred >= float(pol.hold_ml_only_min)
+    ):
         return Decision.HOLD, reasons + ["ml_only_not_field_ros"]
+    if ml_ok and not ops_ok and not pol.allow_ml_only_hold:
+        return Decision.ABSTAIN, reasons + ["ml_only_blocked_by_policy"]
     return Decision.ABSTAIN, reasons + ["below_action_threshold"]
 
 
@@ -253,7 +272,16 @@ def build_decision_card(
     extra_metrics: Mapping[str, Any] | None = None,
     require_ops_for_go: bool = False,
     git_commit: str | None = None,
+    policy: Any | None = None,
+    policy_id: str | None = None,
 ) -> DecisionCard:
+    from .policy import DecisionPolicy, get_policy
+
+    if policy is None:
+        policy = get_policy(policy_id)
+    elif not isinstance(policy, DecisionPolicy):
+        policy = get_policy(policy_id or "default")
+
     sources = [
         score_ml_source(ml_metrics),
         score_ops_source(ops_metrics),
@@ -261,7 +289,10 @@ def build_decision_card(
     ]
     conf, fuse_reasons = fuse_confidence(sources)
     decision, dec_reasons = decide(
-        conf, sources, require_ops_for_go=require_ops_for_go
+        conf,
+        sources,
+        require_ops_for_go=require_ops_for_go,
+        policy=policy,
     )
 
     # System reliability: if we reached a card, provenance is attached;
@@ -278,11 +309,13 @@ def build_decision_card(
         "ops": sources[1].get("metrics"),
         "open_cems": sources[2].get("metrics"),
         "fused_confidence_pred": conf,
+        "policy_id": policy.id,
     }
     if extra_metrics:
         metrics["extra"] = dict(extra_metrics)
 
     # output_hash must ignore channel/extra so forensic replay is stable
+    # policy_id is part of the decision contract → included
     hash_payload = {
         "event_id": event_id,
         "sources": sources,
@@ -291,16 +324,35 @@ def build_decision_card(
             "ops": metrics["ops"],
             "open_cems": metrics["open_cems"],
             "fused_confidence_pred": conf,
+            "policy_id": policy.id,
         },
         "decision": decision.value,
+        "policy_id": policy.id,
     }
     audit = {
         "input_hash": content_hash(
-            {"ml": ml_metrics, "ops": ops_metrics, "open": open_metrics}
+            {
+                "ml": ml_metrics,
+                "ops": ops_metrics,
+                "open": open_metrics,
+                "policy_id": policy.id,
+            }
         ),
         "output_hash": content_hash(hash_payload),
         "git_commit": git_commit,
         "schema": "fire_decision_card_v1",
+        "policy_id": policy.id,
+        "policy_label": policy.label,
+        "policy_snapshot": {
+            "require_ops_for_go": policy.require_ops_for_go,
+            "abstain_below": policy.abstain_below,
+            "go_ops_min": policy.go_ops_min,
+            "go_ops_open_min": policy.go_ops_open_min,
+            "hold_open_min": policy.hold_open_min,
+            "hold_ml_only_min": policy.hold_ml_only_min,
+            "allow_ml_only_hold": policy.allow_ml_only_hold,
+            "allow_open_only_hold": policy.allow_open_only_hold,
+        },
     }
 
     return DecisionCard(

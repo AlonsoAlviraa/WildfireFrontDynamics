@@ -271,6 +271,7 @@ python scripts\\show_all.py</pre>
         <div class="row"><span>SLA incidente sintético (&lt;10 min)</span><span class="ok-text">HECHO · ver INCIDENT_SLA_LATENCY.json</span></div>
         <div class="row"><span>API mínima Decision Card (local HTTP)</span><span class="ok-text">HECHO · POST /v1/decide · p95&lt;500ms</span></div>
         <div class="row"><span>Acta forense + radio + replay</span><span class="ok-text">HECHO · outbox acta/radio · replay-decide</span></div>
+        <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
         <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
@@ -405,15 +406,18 @@ python -m wildfire_front decide                    # vacío → ABSTAIN
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\\open_if\\emsr578 --require-ops-for-go
 ```
 
-## API + acta (filas del sueño en el plan)
+## API + acta + políticas (filas del sueño en el plan)
 
 ```powershell
+python -m wildfire_front decide --list-policies
+python -m wildfire_front decide --use-ml-v34 --policy field_ops   # estricto: ML-only → ABSTAIN
+python -m wildfire_front decide --use-ml-v34 --policy research_open
 python -m wildfire_front serve-decide --port 8765
 python -m wildfire_front export-acta --work-dir outputs\\incidents\\tobarra_demo
 python -m wildfire_front replay-decide --work-dir outputs\\incidents\\tobarra_demo
 ```
 
-Outbox tras `incident update`: `fire_decision_card.json`, `fire_decision_radio.txt`, `fire_decision_acta.md`, `replay_sources.json`.
+Outbox tras `incident update` (policy default **field_ops**): card + radio + acta + replay_sources.
 """
     (ROOT / "docs" / "START_HERE.md").write_text(start, encoding="utf-8")
     print(json.dumps({"ok": True, "portal": str(out), "start_here": "docs/START_HERE.md"}, indent=2))

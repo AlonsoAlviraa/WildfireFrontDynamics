@@ -167,10 +167,17 @@ def extract_replay_sources(
         open_metrics = _metrics_from_card_source(card, "open_cems_perimeter")
 
     audit = card.get("audit") if isinstance(card.get("audit"), Mapping) else {}
+    metrics = card.get("metrics") if isinstance(card.get("metrics"), Mapping) else {}
+    policy_id = (
+        audit.get("policy_id")
+        or metrics.get("policy_id")
+        or "default"
+    )
     return {
         "schema": REPLAY_SOURCES_SCHEMA,
         "event_id": card.get("event_id") or "decision",
         "require_ops_for_go": require_ops_for_go,
+        "policy_id": policy_id,
         "ml_metrics": dict(ml_metrics) if ml_metrics else None,
         "ops_metrics": dict(ops_metrics) if ops_metrics else None,
         "open_metrics": dict(open_metrics) if open_metrics else None,
@@ -213,6 +220,7 @@ def replay_decision(
         "ops_metrics": sources.get("ops_metrics"),
         "open_metrics": sources.get("open_metrics"),
         "require_ops_for_go": bool(sources.get("require_ops_for_go", False)),
+        "policy_id": sources.get("policy_id") or sources.get("policy") or "default",
         "channel": "forensic_replay",
     }
     card = decide_from_request(req, base=base)

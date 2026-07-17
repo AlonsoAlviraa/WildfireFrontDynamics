@@ -61,12 +61,14 @@
       "activation": "EMSR632",
       "O2_cems_delineation": "GO"
     },
-    "fused_confidence_pred": 0.894
+    "fused_confidence_pred": 0.894,
+    "policy_id": "default"
   },
   "reasons": [
     "ml_clm_ensemble:conf=1.000:w=0.25",
     "ops_thermal_front:conf=0.980:w=0.40",
     "open_cems_perimeter:conf=0.720:w=0.35",
+    "policy:default",
     "ops_confidence_ok"
   ],
   "disclaimers": [
@@ -76,10 +78,22 @@
     "ABSTAIN means the product refuses to recommend action."
   ],
   "audit": {
-    "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
-    "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
-    "git_commit": "24854fa",
+    "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
+    "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
+    "git_commit": "e14bed0",
     "schema": "fire_decision_card_v1",
+    "policy_id": "default",
+    "policy_label": "Default (historical product thresholds)",
+    "policy_snapshot": {
+      "require_ops_for_go": false,
+      "abstain_below": 0.2,
+      "go_ops_min": 0.55,
+      "go_ops_open_min": 0.45,
+      "hold_open_min": 0.35,
+      "hold_ml_only_min": 0.5,
+      "allow_ml_only_hold": true,
+      "allow_open_only_hold": true
+    },
     "system_reliability": {
       "system_reliability_pass": true,
       "checks": {
@@ -93,5 +107,5 @@
       "fire_prediction_accuracy_claim": "NOT_CLAIMED"
     }
   },
-  "built_at_utc": "2026-07-17T19:12:09.599811+00:00"
+  "built_at_utc": "2026-07-17T19:22:50.874629+00:00"
 }

@@ -128,6 +128,8 @@ class IncidentConfig:
     include_ml_metrics: bool = True
     # Incident path is ops-primary: GO requires thermal ops grade
     require_ops_for_go: bool = True
+    # Decision policy profile (config/decision_policies.json); default field_ops for incidents
+    decision_policy: str = "field_ops"
     # File stability: size must be unchanged across two polls (watch uses this).
     min_file_age_s: float = 0.5
 
@@ -509,12 +511,14 @@ def publish_decision_card(
     open_pack_dir: Path | None = None,
     include_ml_metrics: bool = True,
     require_ops_for_go: bool = True,
+    decision_policy: str = "field_ops",
     git_commit: str | None = None,
 ) -> dict[str, str]:
     """Write Fire Decision Card (JSON + MD) into the operator outbox.
 
     Paid-value artifact: GO / HOLD / ABSTAIN with confidence, sources, audit.
     Incident path is ops-primary (``require_ops_for_go=True`` by default).
+    Default policy ``field_ops`` (stricter organism template).
     """
     from ..product.confidence import build_decision_card
 
@@ -530,6 +534,7 @@ def publish_decision_card(
         open_metrics=open_m,
         require_ops_for_go=require_ops_for_go,
         git_commit=git_commit,
+        policy_id=decision_policy or "field_ops",
         extra_metrics={
             "product": "incident_runtime_v1",
             "outbox": str(outbox.resolve()),
@@ -844,6 +849,7 @@ def process_incident_once(
                 open_pack_dir=config.open_pack_dir,
                 include_ml_metrics=config.include_ml_metrics,
                 require_ops_for_go=config.require_ops_for_go,
+                decision_policy=config.decision_policy or "field_ops",
             )
 
         emergency = publish_emergency_layers(

@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 from .decide_service import API_VERSION, PRODUCT_ID, REPO_ROOT, decide_from_request
 from .forensics import render_acta_md, render_radio_bridge, replay_decision
+from .policy import list_policies, load_policy_catalog
 
 OPENAPI: dict[str, Any] = {
     "openapi": "3.0.3",
@@ -58,6 +59,10 @@ OPENAPI: dict[str, Any] = {
                                     "open_metrics": {"type": "object"},
                                     "include_radio": {"type": "boolean"},
                                     "include_acta": {"type": "boolean"},
+                                    "policy_id": {
+                                        "type": "string",
+                                        "description": "default|field_ops|research_open|demo",
+                                    },
                                 },
                             }
                         }
@@ -67,6 +72,12 @@ OPENAPI: dict[str, Any] = {
                     "200": {"description": "Decision Card JSON + latency_ms"},
                     "400": {"description": "Invalid JSON"},
                 },
+            }
+        },
+        "/v1/policies": {
+            "get": {
+                "summary": "List decision policy profiles",
+                "responses": {"200": {"description": "policy catalog"}},
             }
         },
         "/v1/replay": {
@@ -117,6 +128,15 @@ class DecideHandler(BaseHTTPRequestHandler):
             status, body, ctype = _json_bytes(OPENAPI)
             self._send(status, body, ctype)
             return
+        if path in ("/v1/policies", "/policies"):
+            status, body, ctype = _json_bytes(
+                {
+                    "default_policy": (load_policy_catalog() or {}).get("default_policy"),
+                    "policies": list_policies(),
+                }
+            )
+            self._send(status, body, ctype)
+            return
         if path == "/":
             status, body, ctype = _json_bytes(
                 {
@@ -125,6 +145,7 @@ class DecideHandler(BaseHTTPRequestHandler):
                     "endpoints": [
                         "GET /health",
                         "GET /v1/openapi.json",
+                        "GET /v1/policies",
                         "POST /v1/decide",
                         "POST /v1/replay",
                     ],

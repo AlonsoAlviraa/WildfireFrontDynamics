@@ -137,6 +137,13 @@ def assess() -> dict:
             else "PENDING",
             "evidence": "forensics.py + export-acta + replay-decide",
         },
+        "M2.10_decision_policy": {
+            "status": "DONE"
+            if _exists("config", "decision_policies.json")
+            and _exists("wildfire_front", "product", "policy.py")
+            else "PENDING",
+            "evidence": "config/decision_policies.json + --policy field_ops",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
     }
 

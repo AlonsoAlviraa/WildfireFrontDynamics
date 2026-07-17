@@ -50,7 +50,8 @@ GO_Q+ = GO_Q AND
 **Filas del sueño bajadas al plan (2026-07-17):**  
 
 1. §2.4 *API Decision Card* → **M2.8** HTTP local + p95 &lt; 500 ms  
-2. §3.1 *Replay forense · radio-bridge · export legal (acta MD)* → **M2.9**
+2. §3.1 *Replay forense · radio-bridge · export legal (acta MD)* → **M2.9**  
+3. §3.1 *Política configurable por organismo* → **M2.10** (`default` / `field_ops` / `research_open`)
 
 ---
 
@@ -86,6 +87,7 @@ GO_Q+ = GO_Q AND
 | M2.7 | Review M2 + adaptar Mes 3 | status | pending |
 | M2.8 | **API mínima Decision Card** + p95 latencia | HTTP local + `DECIDE_API_LATENCY.json` | **DONE** (sueño §2.4 parcial) |
 | M2.9 | **Acta forense + radio-bridge + replay** | outbox acta/radio + `replay-decide` | **DONE** (sueño §3.1) |
+| M2.10 | **Política de decisión por organismo** | `config/decision_policies.json` + `--policy` | **DONE** (sueño §3.1) |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 

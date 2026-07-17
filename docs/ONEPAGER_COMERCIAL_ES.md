@@ -52,6 +52,14 @@ python -m wildfire_front export-acta --work-dir outputs/incidents/IF_x
 python -m wildfire_front replay-decide --work-dir outputs/incidents/IF_x  # debe replay_ok
 ```
 
+**Política por organismo** (mismos datos, distinto umbral):
+
+```bash
+python -m wildfire_front decide --list-policies
+python -m wildfire_front decide --use-ml-v34 --policy field_ops      # sala: ML-only → ABSTAIN
+python -m wildfire_front decide --use-ml-v34 --policy research_open  # lab: HOLD posible
+```
+
 ## Métricas (siempre visibles)
 
 Ver `docs/METRICS_HUB.md` — ML IoU/Δ/growth, ops ROS/grade/ratio, CEMS ha/timeline/Hausdorff, gates, decision card.

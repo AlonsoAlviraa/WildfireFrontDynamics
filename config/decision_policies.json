@@ -1,0 +1,62 @@
+{
+  "schema": "decision_policies_v1",
+  "default_policy": "default",
+  "policies": {
+    "default": {
+      "id": "default",
+      "label": "Default (historical product thresholds)",
+      "require_ops_for_go": false,
+      "abstain_below": 0.2,
+      "go_ops_min": 0.55,
+      "go_ops_open_min": 0.45,
+      "hold_open_min": 0.35,
+      "hold_ml_only_min": 0.5,
+      "allow_ml_only_hold": true,
+      "allow_open_only_hold": true,
+      "min_available_sources": 1,
+      "notes": "Preserves pre-M2.10 decide() behavior exactly."
+    },
+    "field_ops": {
+      "id": "field_ops",
+      "label": "Field / emergency ops (strict — GEACAM-style template)",
+      "require_ops_for_go": true,
+      "abstain_below": 0.25,
+      "go_ops_min": 0.65,
+      "go_ops_open_min": 0.55,
+      "hold_open_min": 0.4,
+      "hold_ml_only_min": 0.5,
+      "allow_ml_only_hold": false,
+      "allow_open_only_hold": true,
+      "min_available_sources": 1,
+      "notes": "Never GO without thermal ops. ML-only → ABSTAIN. Open-only → HOLD monitoring."
+    },
+    "research_open": {
+      "id": "research_open",
+      "label": "Research / open-data lab (not field dispatch)",
+      "require_ops_for_go": false,
+      "abstain_below": 0.15,
+      "go_ops_min": 0.5,
+      "go_ops_open_min": 0.4,
+      "hold_open_min": 0.3,
+      "hold_ml_only_min": 0.4,
+      "allow_ml_only_hold": true,
+      "allow_open_only_hold": true,
+      "min_available_sources": 1,
+      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order."
+    },
+    "demo": {
+      "id": "demo",
+      "label": "Commercial demo (same thresholds as default, labeled)",
+      "require_ops_for_go": false,
+      "abstain_below": 0.2,
+      "go_ops_min": 0.55,
+      "go_ops_open_min": 0.45,
+      "hold_open_min": 0.35,
+      "hold_ml_only_min": 0.5,
+      "allow_ml_only_hold": true,
+      "allow_open_only_hold": true,
+      "min_available_sources": 1,
+      "notes": "Alias of default for pitch decks / portal demos."
+    }
+  }
+}

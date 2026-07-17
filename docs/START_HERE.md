@@ -58,12 +58,15 @@ python -m wildfire_front decide                    # vacío → ABSTAIN
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
 ```
 
-## API + acta (filas del sueño en el plan)
+## API + acta + políticas (filas del sueño en el plan)
 
 ```powershell
+python -m wildfire_front decide --list-policies
+python -m wildfire_front decide --use-ml-v34 --policy field_ops   # estricto: ML-only → ABSTAIN
+python -m wildfire_front decide --use-ml-v34 --policy research_open
 python -m wildfire_front serve-decide --port 8765
 python -m wildfire_front export-acta --work-dir outputs\incidents\tobarra_demo
 python -m wildfire_front replay-decide --work-dir outputs\incidents\tobarra_demo
 ```
 
-Outbox tras `incident update`: `fire_decision_card.json`, `fire_decision_radio.txt`, `fire_decision_acta.md`, `replay_sources.json`.
+Outbox tras `incident update` (policy default **field_ops**): card + radio + acta + replay_sources.

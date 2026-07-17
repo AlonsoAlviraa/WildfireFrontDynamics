@@ -400,6 +400,12 @@ def _add_incident_runtime_args(p: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Allow GO without thermal ops (default: require ops for GO)",
     )
+    fdc.add_argument(
+        "--policy",
+        default="field_ops",
+        metavar="ID",
+        help="Decision policy for outbox card (default: field_ops). See config/decision_policies.json",
+    )
 
 
 def _add_all_incident_process_args(p: argparse.ArgumentParser, *, require_work: bool = True) -> None:
@@ -660,6 +666,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Never GO without thermal ops source",
     )
     decide.add_argument(
+        "--policy",
+        default=None,
+        metavar="ID",
+        help="Decision policy id (default|field_ops|research_open|demo). See config/decision_policies.json",
+    )
+    decide.add_argument(
+        "--list-policies",
+        action="store_true",
+        help="List available decision policies and exit",
+    )
+    decide.add_argument(
         "--output",
         type=Path,
         default=None,
@@ -793,6 +810,7 @@ def _incident_config_from_args(args: argparse.Namespace):
         open_pack_dir=getattr(args, "open_pack", None),
         include_ml_metrics=not bool(getattr(args, "no_ml_metrics", False)),
         require_ops_for_go=not bool(getattr(args, "allow_go_without_ops", False)),
+        decision_policy=str(getattr(args, "policy", None) or "field_ops"),
         min_file_age_s=getattr(args, "min_file_age_s", 0.5),
     )
 
@@ -862,7 +880,20 @@ def main(argv: Sequence[str] | None = None) -> None:
 
         if args.command == "decide":
             from .product.decide_service import decide_from_request
+            from .product.policy import list_policies
             import json as _json
+
+            if getattr(args, "list_policies", False):
+                rows = list_policies()
+                if as_json:
+                    print_json({"policies": rows})
+                else:
+                    for r in rows:
+                        print(
+                            f"{r.get('id'):<16} require_ops={r.get('require_ops_for_go')}  "
+                            f"{r.get('label')}"
+                        )
+                return
 
             payload = decide_from_request(
                 {
@@ -871,6 +902,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                     "work_dir": str(args.work_dir) if getattr(args, "work_dir", None) else None,
                     "open_pack": str(args.open_pack) if getattr(args, "open_pack", None) else None,
                     "require_ops_for_go": bool(getattr(args, "require_ops_for_go", False)),
+                    "policy_id": getattr(args, "policy", None),
                     "channel": "cli",
                 },
                 base=Path.cwd(),
@@ -890,6 +922,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 print(
                     f"confidence_pred: {conf_s} ({payload.get('confidence_pred_label')})"
                 )
+                print(f"policy: {payload.get('policy_id') or (payload.get('audit') or {}).get('policy_id')}")
                 print(f"system_reliability_pass: {payload.get('system_reliability_pass')}")
                 print(f"latency_ms: {payload.get('latency_ms')}")
                 print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
