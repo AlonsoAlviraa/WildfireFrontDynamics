@@ -174,9 +174,45 @@ def track_multi_if(*, epochs: int, patience: int, lr: float, init: Path) -> dict
     print("\n=== TRACK multi_if ===", flush=True)
     s = run_training(cfg)
     w = out / "weights_pretrained_best.pt"
+    # Snapshot so later rounds do not overwrite a promoted member
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    snap = out / f"weights_multi_if_{stamp}.pt"
+    if w.is_file():
+        import shutil
+
+        shutil.copy2(w, snap)
+        # Keep a rolling "latest good" only if holdout Δ improves later
     # Eval on LOFO held-out Cardoso test AND global holdout test
     lofo_test = evaluate_clm_weights(w, data / "test", max_patches=400)
     hold_test = evaluate_clm_weights(w, HOLDOUT / "test", max_patches=400)
+    if w.is_file():
+        best_link = out / "weights_multi_if_best_holdout.pt"
+        prev_delta = -1e9
+        meta_path = out / "best_holdout_meta.json"
+        if meta_path.is_file():
+            try:
+                prev_delta = float(
+                    json.loads(meta_path.read_text(encoding="utf-8")).get(
+                        "improvement_vs_copy_iou", -1e9
+                    )
+                )
+            except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                prev_delta = -1e9
+        cur_delta = float(hold_test.get("improvement_vs_copy_iou") or -1e9)
+        if cur_delta >= prev_delta:
+            shutil.copy2(w, best_link)
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "weights": str(snap if snap.is_file() else w),
+                        "improvement_vs_copy_iou": cur_delta,
+                        "model_iou": hold_test.get("model_iou"),
+                        "saved_at_utc": _utc(),
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
     # Pair with v28 on holdout
     ens = None
     if V28.is_file():
@@ -284,22 +320,79 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
             flush=True,
         )
 
-    # Apply Cardoso-best (or equal) on global holdout test
-    card_key = "CARDOSO" if "CARDOSO" in per_source else next(iter(per_source), None)
-    if card_key is None:
-        return {"status": "skip", "reason": "no LOFO tests"}
-    mix = per_source[card_key]["best"]["mix"]
+    # CRITICAL: LOFO CARDOSO/test == holdout_v1/test (same 200 patches).
+    # Never select mix on CARDOSO LOFO for holdout GO claims (that is test leakage).
+    # Honest holdout mix: tune on holdout VAL (LA) only.
+    val_dir = HOLDOUT / "val"
+    best_val = None
+    val_rows = []
+    for mix in grid:
+        m = evaluate_clm_weights(
+            use, val_dir, max_patches=400, member_weights=mix
+        )
+        row = {
+            "mix": mix,
+            "model_iou": m["model_iou"],
+            "improvement_vs_copy_iou": m["improvement_vs_copy_iou"],
+            "model_iou_growth": m["model_iou_growth"],
+        }
+        val_rows.append(row)
+        if best_val is None or (
+            row["improvement_vs_copy_iou"],
+            row["model_iou"],
+        ) > (best_val["improvement_vs_copy_iou"], best_val["model_iou"]):
+            best_val = row
+    mix = best_val["mix"] if best_val else [1.0 / n] * n
+
+    # Optional: non-Cardoso LOFO average mix (transfer recipe, still honest)
+    other_mixes = [
+        per_source[k]["best"]["mix"]
+        for k in per_source
+        if "CARDOSO" not in k.upper() and per_source[k].get("best")
+    ]
+    transfer_mix = None
+    hold_transfer = None
+    if other_mixes:
+        arr = np.asarray(other_mixes, dtype=float)
+        transfer_mix = [float(x) for x in arr.mean(axis=0).tolist()]
+        s = sum(transfer_mix) or 1.0
+        transfer_mix = [x / s for x in transfer_mix]
+        ht = evaluate_clm_weights(
+            use, HOLDOUT / "test", max_patches=400, member_weights=transfer_mix
+        )
+        hold_transfer = {
+            k: ht[k]
+            for k in (
+                "model_iou",
+                "improvement_vs_copy_iou",
+                "model_iou_growth",
+                "n_patches",
+                "member_weights",
+            )
+        }
+
     hold = evaluate_clm_weights(
         use, HOLDOUT / "test", max_patches=400, member_weights=mix
     )
     equal = evaluate_clm_weights(use, HOLDOUT / "test", max_patches=400)
+
+    # Diagnostics only: Cardoso LOFO score (NOT for GO — same as holdout test)
+    cardoso_diag = per_source.get("CARDOSO", {}).get("best")
+
     return {
         "status": "ok",
-        "single_change": "per-source soft-vote mix calibrated on LOFO tests",
+        "single_change": "per-source soft-vote (diagnostic) + holdout mix tuned on VAL only",
+        "leakage_guard": (
+            "LOFO CARDOSO/test == holdout test; mix for GO is selected on holdout VAL only"
+        ),
         "members": [str(p) for p in use],
-        "per_source_best": {k: v["best"] for k, v in per_source.items()},
-        "applied_for_holdout": {"source_key": card_key, "mix": mix},
-        "holdout_test_calibrated": {
+        "per_source_best_diagnostic": {k: v["best"] for k, v in per_source.items()},
+        "cardoso_lofo_is_holdout_test": True,
+        "cardoso_lofo_diag_not_for_go": cardoso_diag,
+        "val_grid_best": best_val,
+        "applied_for_holdout": {"source_key": "holdout_val_LA", "mix": mix},
+        "transfer_mix_from_non_cardoso_lofo": transfer_mix,
+        "holdout_test_val_tuned": {
             k: hold[k]
             for k in (
                 "model_iou",
@@ -309,6 +402,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
                 "member_weights",
             )
         },
+        "holdout_test_transfer_mix": hold_transfer,
         "holdout_test_equal": {
             k: equal[k]
             for k in (
@@ -317,7 +411,12 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
                 "model_iou_growth",
             )
         },
-        "verdict": _verdict(hold, champion, "source_mix_cardoso_recipe"),
+        "verdict": _verdict(hold, champion, "source_mix_val_tuned"),
+        "verdict_transfer": (
+            _verdict(hold_transfer, champion, "source_mix_transfer_non_cardoso")
+            if hold_transfer
+            else None
+        ),
     }
 
 
@@ -481,17 +580,30 @@ def run_round(
     if "source_mix" in tracks:
         t0 = time.perf_counter()
         sm = track_source_mix(champion=champion)
-        if sm.get("status") == "ok" and sm.get("verdict"):
-            _maybe_promote(
-                sc,
-                sm["verdict"],
-                {
-                    "type": "source_mix",
-                    "members": sm.get("members"),
-                    "mix": sm.get("applied_for_holdout", {}).get("mix"),
-                    "per_source": sm.get("per_source_best"),
-                },
-            )
+        if sm.get("status") == "ok":
+            for vkey, rkey in (
+                ("verdict", "source_mix_val_tuned"),
+                ("verdict_transfer", "source_mix_transfer"),
+            ):
+                vb = sm.get(vkey)
+                if not vb:
+                    continue
+                mix = (
+                    sm.get("applied_for_holdout", {}).get("mix")
+                    if vkey == "verdict"
+                    else sm.get("transfer_mix_from_non_cardoso_lofo")
+                )
+                _maybe_promote(
+                    sc,
+                    vb,
+                    {
+                        "type": rkey,
+                        "members": sm.get("members"),
+                        "mix": mix,
+                        "per_source_diagnostic": sm.get("per_source_best_diagnostic"),
+                        "leakage_guard": sm.get("leakage_guard"),
+                    },
+                )
         sm["latency_s"] = round(time.perf_counter() - t0, 2)
         round_rep["tracks"]["source_mix"] = sm
         champion = sc.get("champion") or champion
