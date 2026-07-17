@@ -20,7 +20,7 @@
     },
     "clm_ensemble_v30": {
       "id": "clm_ensemble_v30",
-      "label": "CLM ensemble v30 (v28 + LOFO-CARDOSO soft-vote)",
+      "label": "CLM ensemble (v28 + EMA + LOFO-CARDOSO weighted soft-vote)",
       "domain": "CLM_Spain_holdout_ensemble",
       "product_type": "ensemble",
       "ensemble_mode": "mean_prob",
@@ -28,9 +28,10 @@
       "weights": "models/clm_ensemble/weights_v28_clm_ft.pt",
       "members": [
         "models/clm_ensemble/weights_v28_clm_ft.pt",
+        "models/clm_ensemble/weights_v30_ema.pt",
         "models/clm_ensemble/weights_lofo_cardoso.pt"
       ],
-      "use_when": "Best CLM next-day mask when both member weights available; soft-vote growth probs.",
+      "use_when": "Best CLM next-day mask when three member weights available; weighted soft-vote growth probs.",
       "not_for": "Drone ROS; leakage-prone LOFO members trained on the eval fire source."
     }
   },

@@ -164,6 +164,18 @@ Protocol: `clm_holdout_test_seed42_v1` (test=CARDOSO, n=200). Baseline **clm_v28
 **Scripts:** `scripts/eval_clm_ensemble.py`, `scripts/run_clm_v30_experiments.py`, `wildfire_front/ml/clm_eval.py`  
 **Product:** `models/clm_ensemble/manifest.json` + catalog `clm_ensemble_v30`
 
+### v31 metric push (2026-07-17)
+Protocol: same holdout test (CARDOSO). Champion v30 pair equal IoU **0.8683** Δ **+0.2265**.
+
+| Exp | Single change | Test IoU | Δ | Verdict |
+|-----|---------------|----------|---|--------|
+| weighted pair | mix w on VAL | 0.8683 | +0.2265 | NO (equal already best) |
+| threshold | thr on VAL | 0.8579 | +0.216 | NO |
+| **triple weighted** | v28+EMA+LOFO mix 0.4/0.3/0.3 | **0.8702** | **+0.2284** | **GO_SOFT → product** |
+| continue FT v28 | lr=1e-4 from v28 | 0.788 | +0.146 | NO_PROMOTE |
+
+**Scorecard:** `docs/V31_ML_SCORECARD.json` · **Script:** `scripts/run_clm_v31_metric_push.py`
+
 ### O3 temporal Tobarra
 - Strict band 2/3 GO; late ratio 0.478; wide band 3/3
 

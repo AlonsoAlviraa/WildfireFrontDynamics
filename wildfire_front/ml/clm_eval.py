@@ -30,6 +30,20 @@ def _decode_delta(logits: torch.Tensor, prev: torch.Tensor) -> torch.Tensor:
     return torch.clamp(prev_b + prob, 0.0, 1.0)
 
 
+def _normalize_member_weights(
+    n: int, member_weights: Sequence[float] | None
+) -> list[float] | None:
+    if member_weights is None:
+        return None
+    if len(member_weights) != n:
+        raise ValueError(f"member_weights length {len(member_weights)} != n_models {n}")
+    w = np.asarray([float(x) for x in member_weights], dtype=np.float64)
+    if np.any(w < 0) or float(w.sum()) <= 0:
+        raise ValueError("member_weights must be non-negative with positive sum")
+    w = w / w.sum()
+    return [float(x) for x in w.tolist()]
+
+
 @torch.no_grad()
 def evaluate_clm_weights(
     weights: Path | Sequence[Path],
@@ -39,6 +53,7 @@ def evaluate_clm_weights(
     threshold: float = 0.5,
     device: torch.device | str | None = None,
     ensemble_mode: str = "mean_prob",
+    member_weights: Sequence[float] | None = None,
 ) -> dict[str, Any]:
     """Evaluate one checkpoint or soft-vote ensemble on a CLM NPZ split dir.
 
@@ -51,6 +66,8 @@ def evaluate_clm_weights(
     ensemble_mode:
         ``mean_prob`` — average growth probabilities before decode (recommended).
         ``mean_abs`` — average absolute fire probabilities after decode.
+    member_weights:
+        Optional non-negative mix weights (normalized). Length = n members.
     """
     weight_list = [Path(weights)] if isinstance(weights, (str, Path)) else [Path(w) for w in weights]
     for w in weight_list:
@@ -73,6 +90,7 @@ def evaluate_clm_weights(
     in_ch = seq0.shape[0] * seq0.shape[1] + 1
 
     models = [_load_model(w, in_ch, device) for w in weight_list]
+    mix = _normalize_member_weights(len(models), member_weights)
     sample_metrics: list[dict] = []
 
     for i in range(n):
@@ -97,10 +115,19 @@ def evaluate_clm_weights(
         if len(models) == 1:
             pred = abs_probs[0]
         elif ensemble_mode == "mean_abs":
-            pred = torch.stack(abs_probs, dim=0).mean(dim=0)
+            stacked = torch.stack(abs_probs, dim=0)
+            if mix is None:
+                pred = stacked.mean(dim=0)
+            else:
+                w_t = torch.tensor(mix, device=device, dtype=stacked.dtype).view(-1, 1, 1, 1, 1)
+                pred = (stacked * w_t).sum(dim=0)
         else:
-            # mean growth probability then decode (single-change D2)
-            mean_g = torch.stack(growth_probs, dim=0).mean(dim=0)
+            stacked = torch.stack(growth_probs, dim=0)
+            if mix is None:
+                mean_g = stacked.mean(dim=0)
+            else:
+                w_t = torch.tensor(mix, device=device, dtype=stacked.dtype).view(-1, 1, 1, 1, 1)
+                mean_g = (stacked * w_t).sum(dim=0)
             prev_b = cur_b.unsqueeze(1)
             pred = torch.clamp(prev_b + mean_g, 0.0, 1.0)
 
@@ -116,6 +143,7 @@ def evaluate_clm_weights(
         "n_patches": n,
         "n_members": len(models),
         "weights": [str(w) for w in weight_list],
+        "member_weights": mix,
         "ensemble_mode": ensemble_mode if len(models) > 1 else "single",
         "in_channels": in_ch,
         "threshold": threshold,

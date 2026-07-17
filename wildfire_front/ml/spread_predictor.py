@@ -32,6 +32,7 @@ class SpreadModelManifest:
     product_type: str = "single"
     ensemble_mode: str = "mean_prob"
     members: tuple[str, ...] = ()
+    member_weights: tuple[float, ...] = ()
 
     @classmethod
     def from_json(cls, path: Path | str) -> SpreadModelManifest:
@@ -44,6 +45,8 @@ class SpreadModelManifest:
             except (TypeError, ValueError):
                 continue
         members = tuple(str(m) for m in (data.get("members") or []))
+        mw_raw = data.get("member_weights") or []
+        member_weights = tuple(float(x) for x in mw_raw) if mw_raw else ()
         product_type = str(data.get("product_type") or ("ensemble" if members else "single"))
         return cls(
             version=str(data.get("version") or data.get("id") or "unknown"),
@@ -61,6 +64,7 @@ class SpreadModelManifest:
             product_type=product_type,
             ensemble_mode=str(data.get("ensemble_mode") or "mean_prob"),
             members=members,
+            member_weights=member_weights,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -80,6 +84,7 @@ class SpreadModelManifest:
             "product_type": self.product_type,
             "ensemble_mode": self.ensemble_mode,
             "members": list(self.members),
+            "member_weights": list(self.member_weights),
         }
 
 
@@ -194,6 +199,7 @@ class EnsembleSpreadPredictor:
         member_weights: Sequence[Path | str],
         *,
         ensemble_mode: str = "mean_prob",
+        mix_weights: Sequence[float] | None = None,
         device: torch.device | str | None = None,
     ) -> None:
         paths = [Path(p) for p in member_weights]
@@ -206,6 +212,19 @@ class EnsembleSpreadPredictor:
         self.manifest = manifest
         self.member_paths = paths
         self.ensemble_mode = ensemble_mode or manifest.ensemble_mode or "mean_prob"
+        # Prefer explicit mix, then manifest.member_weights, else equal
+        raw_mix = mix_weights if mix_weights is not None else (
+            list(manifest.member_weights) if manifest.member_weights else None
+        )
+        if raw_mix is not None:
+            if len(raw_mix) != len(paths):
+                raise ValueError("mix_weights length must match members")
+            s = float(sum(float(x) for x in raw_mix))
+            if s <= 0:
+                raise ValueError("mix_weights sum must be positive")
+            self.mix_weights = [float(x) / s for x in raw_mix]
+        else:
+            self.mix_weights = None
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = torch.device(device)
@@ -305,10 +324,18 @@ class EnsembleSpreadPredictor:
             else:
                 abs_list.append(growth)
 
+        def _mix(stacked: torch.Tensor) -> torch.Tensor:
+            if self.mix_weights is None:
+                return stacked.mean(dim=0)
+            w = torch.tensor(
+                self.mix_weights, device=stacked.device, dtype=stacked.dtype
+            ).view(-1, *([1] * (stacked.dim() - 1)))
+            return (stacked * w).sum(dim=0)
+
         if self.ensemble_mode == "mean_abs":
-            probs = torch.stack(abs_list, dim=0).mean(dim=0)
+            probs = _mix(torch.stack(abs_list, dim=0))
         else:
-            mean_g = torch.stack(growth_list, dim=0).mean(dim=0)
+            mean_g = _mix(torch.stack(growth_list, dim=0))
             if self.manifest.target_mode == "delta":
                 prev_bin = (fire_t >= self.manifest.threshold).float().unsqueeze(1)
                 probs = torch.clamp(prev_bin + mean_g, 0.0, 1.0)

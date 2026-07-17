@@ -1,0 +1,61 @@
+{
+  "batch": "v31_metric_push",
+  "generated_at_utc": "2026-07-17T09:05:00Z",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "baseline_v30_pair_equal": {
+    "model_iou": 0.8683,
+    "improvement_vs_copy_iou": 0.2265,
+    "model_iou_growth": 0.8860,
+    "members": ["v28", "LOFO-CARDOSO"],
+    "mix": [0.5, 0.5]
+  },
+  "experiments": {
+    "weighted_pair": {
+      "single_change": "mix w_v28 on VAL grid",
+      "best_on_val": {"w_v28": 0.5, "w_lofo": 0.5},
+      "test": {"model_iou": 0.8683, "delta": 0.2265},
+      "verdict": "NO_PROMOTE_KEEP_V30 (equal is already optimal on pair)"
+    },
+    "threshold": {
+      "single_change": "threshold on VAL (mix 0.5/0.5)",
+      "best_on_val": {"threshold": 0.6},
+      "test": {"model_iou": 0.8579, "delta": 0.2161},
+      "verdict": "NO_PROMOTE (VAL thr does not transfer)"
+    },
+    "triple_weighted": {
+      "single_change": "v28+EMA+LOFO-CARDOSO soft-vote, mix tuned on VAL",
+      "mix": [0.4, 0.3, 0.3],
+      "test": {
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      },
+      "vs_v30": {"iou_diff": 0.0019, "delta_diff": 0.0019},
+      "verdict": "GO_SOFT_BEATS_V30",
+      "promoted_as": "clm_ensemble_v30 product recipe (manifest version clm_ensemble_v31)"
+    },
+    "continue_ft_from_v28": {
+      "single_change": "FT from v28 with lr=1e-4",
+      "test_single": {"model_iou": 0.7881, "delta": 0.1463},
+      "test_with_lofo": {"model_iou": 0.8467, "delta": 0.2049},
+      "verdict": "NO_PROMOTE (overfits / regresses vs v28 and v30)"
+    }
+  },
+  "champion": {
+    "name": "v31_triple_weighted",
+    "model_iou": 0.8702,
+    "improvement_vs_copy_iou": 0.2284,
+    "model_iou_growth": 0.9134,
+    "mix": [0.4, 0.3, 0.3],
+    "members": [
+      "models/clm_ensemble/weights_v28_clm_ft.pt",
+      "models/clm_ensemble/weights_v30_ema.pt",
+      "models/clm_ensemble/weights_lofo_cardoso.pt"
+    ],
+    "verdict": "GO_SOFT_BEATS_V30"
+  },
+  "kill_list_additions": [
+    "continue FT from v28 at 1e-4 without new signal",
+    "threshold tuned on VAL without test-aware protocol lock"
+  ]
+}
