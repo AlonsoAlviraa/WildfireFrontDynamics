@@ -6,7 +6,7 @@
 |----------|--------|---------|----------------|
 | **NDWS global** | `ndws_v21` | Next-day patches Google NDWS | IoU **0.226**, Δ copy **+0.076** |
 | **CLM España** | `clm_v28` | Holdout incendios CLM | IoU **0.838**, Δ copy **+0.196** (test holdout) |
-| **CLM ensemble** | `clm_ensemble_v30` | Soft-vote **v28 + EMA + LOFO-CARDOSO** (0.4/0.3/0.3) | IoU **0.870**, Δ **+0.228** (honest; v31 soft promote) |
+| **CLM ensemble** | `clm_ensemble_v30` | Soft-vote **v28 + EMA + multi-IF** (~0.30/0.27/0.43) | IoU **0.895**, Δ **+0.253** (loop r8 transfer mix; honest) |
 | **Ops frente** | (no ML) | Secuencias LWIR reales | ROS multi-estimador (`front_dynamics_v1`) |
 
 **v30 (2026-07-17):** G1 NDWS features/temporal sigue KILL. Nuevo campeón ML CLM = ensemble honesto (`docs/V30_ML_SCORECARD.json`). Inferencia ensemble: `python scripts/eval_clm_ensemble.py`.

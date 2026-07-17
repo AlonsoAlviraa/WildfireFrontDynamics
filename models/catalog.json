@@ -20,7 +20,7 @@
     },
     "clm_ensemble_v30": {
       "id": "clm_ensemble_v30",
-      "label": "CLM ensemble (v28 + multi-IF soft-vote 0.5/0.5)",
+      "label": "CLM ensemble (v28 + EMA + multi-IF, transfer mix)",
       "domain": "CLM_Spain_holdout_ensemble",
       "product_type": "ensemble",
       "ensemble_mode": "mean_prob",
@@ -28,10 +28,11 @@
       "weights": "models/clm_ensemble/weights_v28_clm_ft.pt",
       "members": [
         "models/clm_ensemble/weights_v28_clm_ft.pt",
+        "models/clm_ensemble/weights_v30_ema.pt",
         "models/clm_ensemble/weights_multi_if.pt"
       ],
-      "use_when": "Best CLM next-day mask; soft-vote v28 + multi-IF specialist (no Cardoso in multi-IF train).",
-      "not_for": "Drone ROS; do not mix LOFO members trained on the evaluation fire source."
+      "use_when": "Best CLM next-day mask; weighted soft-vote (mix from non-Cardoso LOFO transfer).",
+      "not_for": "Drone ROS; never tune mix on LOFO-CARDOSO/test (identical to holdout test)."
     }
   },
   "default_product": "clm_ensemble_v30",

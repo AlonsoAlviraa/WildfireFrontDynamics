@@ -191,7 +191,11 @@ Tracks (cycle each round):
 
 **Champion after round 4 (honest):** `r4_v28_plus_multi_if` IoU **0.8709** Δ **+0.2291**  
 = soft-vote **v28 + multi_if** (0.5/0.5); multi_if trained on LOFO-CARDOSO train only.  
-Product recipe: `models/clm_ensemble/manifest.json` version `clm_ensemble_v32`.  
+
+**Champion after round 8 (honest, promoted):** `source_mix_transfer_non_cardoso`  
+IoU **0.8952** Δ **+0.2534** · mix ≈ **0.30 / 0.27 / 0.43** (v28 + EMA + multi_if)  
+Mix = average of best mixes on **non-Cardoso** LOFO folds; multi_if snapshotted.  
+Product: `models/clm_ensemble/manifest.json` version **`clm_ensemble_v33`**.  
 
 **Leakage rejected:** `source_mix_cardoso_recipe` IoU 0.888 — LOFO CARDOSO/test ≡ holdout test.  
 
