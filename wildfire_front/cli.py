@@ -609,6 +609,46 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(st)
 
+    # ── decide (Fire Decision Card) ─────────────────────────────────────
+    decide = commands.add_parser(
+        "decide",
+        help="Build Fire Decision Card (GO/HOLD/ABSTAIN + metrics fusion)",
+        description=(
+            "Fuse optional ML / ops / open-CEMS metrics into a decision card "
+            "with confidence and audit hashes. Empty sources → ABSTAIN."
+        ),
+    )
+    decide.add_argument("--event-id", default="decision", help="Event id for the card")
+    decide.add_argument(
+        "--work-dir",
+        type=Path,
+        default=None,
+        help="Optional incident work-dir (reads outbox/incident_state.json)",
+    )
+    decide.add_argument(
+        "--open-pack",
+        type=Path,
+        default=None,
+        help="Optional open_if pack dir (scorecard_pista_b.json)",
+    )
+    decide.add_argument(
+        "--use-ml-v34",
+        action="store_true",
+        help="Include clm_ensemble_v34 manifest metrics",
+    )
+    decide.add_argument(
+        "--require-ops-for-go",
+        action="store_true",
+        help="Never GO without thermal ops source",
+    )
+    decide.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Write card JSON to this path",
+    )
+    _add_global_flags(decide)
+
     return parser
 
 
@@ -704,6 +744,64 @@ def main(argv: Sequence[str] | None = None) -> None:
             print_ingest_report(
                 args.output, metrics, as_json=as_json, event_id=args.event_id
             )
+            return
+
+        if args.command == "decide":
+            from .product.confidence import build_decision_card
+            import json as _json
+
+            ml_m = ops_m = open_m = None
+            if getattr(args, "use_ml_v34", False):
+                man = Path("models/clm_ensemble/manifest.json")
+                if man.is_file():
+                    ml_m = (_json.loads(man.read_text(encoding="utf-8"))).get("metrics")
+            if getattr(args, "work_dir", None):
+                st_path = Path(args.work_dir) / "outbox" / "incident_state.json"
+                if st_path.is_file():
+                    st = _json.loads(st_path.read_text(encoding="utf-8"))
+                    ops_m = {
+                        "quality_grade": st.get("quality_grade"),
+                        "primary_ros_m_min": st.get("primary_ros_m_min"),
+                        "n_frames_staged": st.get("n_frames_staged")
+                        or st.get("n_frames_seen"),
+                        "area_ha_max": st.get("area_ha_max"),
+                        "speed_vs_ref_ratio": st.get("speed_vs_ref_ratio"),
+                    }
+            if getattr(args, "open_pack", None):
+                scp = Path(args.open_pack) / "scorecard_pista_b.json"
+                if scp.is_file():
+                    sc = _json.loads(scp.read_text(encoding="utf-8"))
+                    open_m = {
+                        "max_area_ha": sc.get("max_area_ha"),
+                        "n_timeline_steps": sc.get("n_timeline_steps"),
+                        "activation": sc.get("activation"),
+                        "O2_cems_delineation": sc.get("O2_cems_delineation"),
+                    }
+            card = build_decision_card(
+                args.event_id,
+                ml_metrics=ml_m,
+                ops_metrics=ops_m,
+                open_metrics=open_m,
+                require_ops_for_go=bool(getattr(args, "require_ops_for_go", False)),
+            )
+            payload = card.to_dict()
+            out = getattr(args, "output", None)
+            if out:
+                Path(out).parent.mkdir(parents=True, exist_ok=True)
+                Path(out).write_text(
+                    _json.dumps(payload, indent=2, default=str), encoding="utf-8"
+                )
+            if as_json:
+                print_json(payload)
+            else:
+                print(f"decision: {card.decision.value}")
+                print(
+                    f"confidence_pred: {card.confidence_pred:.3f} ({card.confidence_pred_label})"
+                )
+                print(f"system_reliability_pass: {card.system_reliability_pass}")
+                print("reasons:", "; ".join(card.reasons[:12]))
+                if out:
+                    print(f"wrote: {out}")
             return
 
         if args.command == "incident":
