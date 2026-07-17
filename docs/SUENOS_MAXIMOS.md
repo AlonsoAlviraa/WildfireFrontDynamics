@@ -188,6 +188,7 @@ Principios que **no se rompen** ni en el sueño:
 | 3c | **Acta forense + radio-bridge + replay** (hashes verificables) | **Hecho (M2.9)** — MD/txt, no PDF firmado |
 | 3d | **Política de umbrales por organismo** (field_ops ≠ research) | **Hecho (M2.10)** — JSON catalog, no SSO |
 | 3e | **dNBR/STAC post-fuego** en pack open (1+ IF) | **Hecho (M2.3)** — EMSR578 window COG, no BA nacional |
+| 3f | **App sala de mando** (HUD decisión + mapa) | **Hecho (M2.11)** — docs/commander, no SSO 112 aún |
 | 4 | Piloto con organismo + 2ª ancla + API firmada/auth | Próximo horizonte real |
 | 5 | Multi-CCAA, Δt real, 50+ IF, portal vivo | Sueño a 12–24 meses |
 | 6 | Sala de crisis conectada + foundation Med + 20 IF/año | **Sueño máximo** |

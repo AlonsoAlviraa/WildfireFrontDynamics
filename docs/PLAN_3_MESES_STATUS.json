@@ -1,7 +1,7 @@
 {
   "schema": "plan_3_meses_status_v1",
   "plan": "docs/PLAN_3_MESES.md",
-  "cycle_at_utc": "2026-07-17T19:29:19.946037+00:00",
+  "cycle_at_utc": "2026-07-17T19:36:22.325880+00:00",
   "items": {
     "M1.1_plan_cycle_runner": {
       "status": "DONE",
@@ -63,6 +63,10 @@
     "M2.10_decision_policy": {
       "status": "DONE",
       "evidence": "config/decision_policies.json + --policy field_ops"
+    },
+    "M2.11_commander_app": {
+      "status": "DONE",
+      "evidence": "docs/commander/index.html WFD COMMAND HUD"
     },
     "M3.3_GO_Q": {
       "status": "PENDING",
@@ -154,7 +158,7 @@
       "audit": {
         "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
         "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-        "git_commit": "e14bed0",
+        "git_commit": "d57ae16",
         "schema": "fire_decision_card_v1",
         "policy_id": "default",
         "policy_label": "Default (historical product thresholds)",
@@ -181,7 +185,7 @@
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T19:22:50.874629+00:00"
+      "built_at_utc": "2026-07-17T19:36:09.936263+00:00"
     }
   },
   "go_q_progress": {

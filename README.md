@@ -27,7 +27,13 @@ $env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
 python scripts\show_all.py
 ```
 
-Abre el **portal** (`docs/PORTAL.html`) con todo el trabajo, números y enlaces.
+Abre la **app de sala de mando** (`docs/commander/index.html`) + portal.  
+Solo la app:
+
+```powershell
+python scripts\build_commander_app.py
+start docs\commander\index.html
+```
 
 Lectura corta: **[`docs/START_HERE.md`](docs/START_HERE.md)**  
 Venta: **[`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md)**  

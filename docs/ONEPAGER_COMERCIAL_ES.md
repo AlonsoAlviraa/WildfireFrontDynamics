@@ -27,10 +27,14 @@
 ## Demo
 
 ```bash
-python scripts/reliability_gate.py
-python scripts/build_metrics_hub.py
 python scripts/show_all.py
-# abrir docs/PORTAL.html  (+ Metrics Hub)
+# abre docs/commander/index.html  ← app sala de mando
+# + docs/PORTAL.html
+```
+
+```bash
+python scripts/build_commander_app.py
+# start docs/commander/index.html
 ```
 
 En **campo**, cada `incident update` escribe la Decision Card en el outbox:

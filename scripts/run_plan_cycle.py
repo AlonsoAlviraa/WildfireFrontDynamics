@@ -159,6 +159,13 @@ def assess() -> dict:
             else "PENDING",
             "evidence": "config/decision_policies.json + --policy field_ops",
         },
+        "M2.11_commander_app": {
+            "status": "DONE"
+            if _exists("docs", "commander", "index.html")
+            and _exists("scripts", "build_commander_app.py")
+            else "PENDING",
+            "evidence": "docs/commander/index.html WFD COMMAND HUD",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
     }
 

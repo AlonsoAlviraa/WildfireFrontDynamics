@@ -32,6 +32,7 @@ def main() -> int:
     ok &= run([sys.executable, str(ROOT / "scripts" / "build_metrics_hub.py")])
     ok &= run([sys.executable, str(ROOT / "scripts" / "build_open_if_index.py")])
     ok &= run([sys.executable, str(ROOT / "scripts" / "build_portal.py")])
+    ok &= run([sys.executable, str(ROOT / "scripts" / "build_commander_app.py")])
     ok &= run(
         [
             sys.executable,
@@ -47,27 +48,27 @@ def main() -> int:
         ]
     )
 
+    commander = ROOT / "docs" / "commander" / "index.html"
     portal = ROOT / "docs" / "PORTAL.html"
     index = ROOT / "outputs" / "open_if" / "index.html"
-    print("\n=== Abriendo portal y mapas ===\n", flush=True)
+    print("\n=== Abriendo COMMAND app + portal ===\n", flush=True)
+    if commander.is_file():
+        webbrowser.open(commander.resolve().as_uri())
     if portal.is_file():
         webbrowser.open(portal.resolve().as_uri())
     if index.is_file():
         webbrowser.open(index.resolve().as_uri())
-    big = ROOT / "outputs" / "open_if" / "emsr632" / "map.html"
-    if big.is_file():
-        webbrowser.open(big.resolve().as_uri())
 
     print(
         json.dumps(
             {
                 "ok": ok,
                 "open": [
+                    str(commander),
                     str(portal),
                     "docs/START_HERE.md",
-                    "docs/ONEPAGER_COMERCIAL_ES.md",
                 ],
-                "message": "Portal abierto. Lee START_HERE.md si quieres texto corto.",
+                "message": "App de sala de mando abierta (docs/commander). F=fullscreen, 1-4=packs.",
             },
             indent=2,
         ),

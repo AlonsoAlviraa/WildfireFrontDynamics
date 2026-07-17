@@ -273,6 +273,7 @@ python scripts\\show_all.py</pre>
         <div class="row"><span>Acta forense + radio + replay</span><span class="ok-text">HECHO · outbox acta/radio · replay-decide</span></div>
         <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
         <div class="row"><span>dNBR/STAC post-fuego (EMSR578)</span><span class="ok-text">HECHO · dnbr_preview.tif + STAC S2</span></div>
+        <div class="row"><span>App sala de mando (WFD COMMAND)</span><span class="ok-text">HECHO · docs/commander/index.html</span></div>
         <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
@@ -313,6 +314,7 @@ python scripts\\show_all.py</pre>
     <div class="card">
       <h2>Docs cortos (solo estos)</h2>
       <ul>
+        <li><a href="commander/index.html"><b>WFD COMMAND</b></a> — app sala de mando</li>
         <li><a href="START_HERE.md">START_HERE.md</a> — lectura 2 min</li>
         <li><a href="ONEPAGER_COMERCIAL_ES.md">One-pager venta</a></li>
         <li><a href="SUENOS_MAXIMOS.md">Sueños máximos</a> — techo de resultados y funciones</li>
@@ -407,18 +409,22 @@ python -m wildfire_front decide                    # vacío → ABSTAIN
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\\open_if\\emsr578 --require-ops-for-go
 ```
 
-## API + acta + políticas (filas del sueño en el plan)
+## App de sala de mando (espectacular)
+
+```powershell
+python scripts\\build_commander_app.py
+start docs\\commander\\index.html
+```
+
+Teclas: **1–4** packs · **R** copiar radio · **F** fullscreen.
+
+## API + acta + políticas
 
 ```powershell
 python -m wildfire_front decide --list-policies
-python -m wildfire_front decide --use-ml-v34 --policy field_ops   # estricto: ML-only → ABSTAIN
-python -m wildfire_front decide --use-ml-v34 --policy research_open
+python -m wildfire_front decide --use-ml-v34 --policy field_ops
 python -m wildfire_front serve-decide --port 8765
-python -m wildfire_front export-acta --work-dir outputs\\incidents\\tobarra_demo
-python -m wildfire_front replay-decide --work-dir outputs\\incidents\\tobarra_demo
 ```
-
-Outbox tras `incident update` (policy default **field_ops**): card + radio + acta + replay_sources.
 """
     (ROOT / "docs" / "START_HERE.md").write_text(start, encoding="utf-8")
     print(json.dumps({"ok": True, "portal": str(out), "start_here": "docs/START_HERE.md"}, indent=2))

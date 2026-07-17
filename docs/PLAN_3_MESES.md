@@ -89,6 +89,7 @@ GO_Q+ = GO_Q AND
 | M2.8 | **API mínima Decision Card** + p95 latencia | HTTP local + `DECIDE_API_LATENCY.json` | **DONE** (sueño §2.4 parcial) |
 | M2.9 | **Acta forense + radio-bridge + replay** | outbox acta/radio + `replay-decide` | **DONE** (sueño §3.1) |
 | M2.10 | **Política de decisión por organismo** | `config/decision_policies.json` + `--policy` | **DONE** (sueño §3.1) |
+| M2.11 | **App sala de mando (WFD COMMAND)** | `docs/commander/index.html` HUD | **DONE** (front + demo mando) |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 
