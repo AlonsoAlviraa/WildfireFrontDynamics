@@ -1,0 +1,255 @@
+{
+  "ok": true,
+  "failures": [],
+  "system_reliability": {
+    "system_reliability_pass": true,
+    "checks": {
+      "R1_determinism": true,
+      "R2_gates": true,
+      "R3_abstention_enforced": true,
+      "R4_provenance": true
+    },
+    "residual_silent_go_risk_bound": 1e-06,
+    "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+    "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+  },
+  "samples": {
+    "empty": {
+      "event_id": "test_empty",
+      "decision": "ABSTAIN",
+      "confidence_pred": 0.0,
+      "confidence_pred_label": "VERY_LOW",
+      "system_reliability_pass": true,
+      "sources": [
+        {
+          "id": "ml",
+          "available": false,
+          "weight": 0.0,
+          "confidence": 0.0
+        },
+        {
+          "id": "ops",
+          "available": false,
+          "weight": 0.0,
+          "confidence": 0.0
+        },
+        {
+          "id": "open_cems",
+          "available": false,
+          "weight": 0.0,
+          "confidence": 0.0
+        }
+      ],
+      "metrics": {
+        "ml": null,
+        "ops": null,
+        "open_cems": null,
+        "fused_confidence_pred": 0.0
+      },
+      "reasons": [
+        "missing:ml",
+        "missing:ops",
+        "missing:open_cems",
+        "no_sources",
+        "no_available_sources"
+      ],
+      "disclaimers": [
+        "Not a tactical dispatch order.",
+        "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+        "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
+        "ABSTAIN means the product refuses to recommend action."
+      ],
+      "audit": {
+        "input_hash": "fc94bc93feb92ccf29adbcb7f7dd2b9c1e81bc9046e9e3af0cbfcad9fbdd543f",
+        "output_hash": "46ae7e892d716e136cef02312290975c4036ae3b0ff59719a8a96c3661e0701f",
+        "git_commit": null,
+        "schema": "fire_decision_card_v1",
+        "system_reliability": {
+          "system_reliability_pass": true,
+          "checks": {
+            "R1_determinism": true,
+            "R2_gates": true,
+            "R3_abstention_enforced": true,
+            "R4_provenance": true
+          },
+          "residual_silent_go_risk_bound": 1e-06,
+          "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+          "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+        }
+      },
+      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+    },
+    "open_only": {
+      "event_id": "test_open",
+      "decision": "HOLD",
+      "confidence_pred": 0.7200000000000001,
+      "confidence_pred_label": "MEDIUM",
+      "system_reliability_pass": true,
+      "sources": [
+        {
+          "id": "ml",
+          "available": false,
+          "weight": 0.0,
+          "confidence": 0.0
+        },
+        {
+          "id": "ops",
+          "available": false,
+          "weight": 0.0,
+          "confidence": 0.0
+        },
+        {
+          "id": "open_cems_perimeter",
+          "available": true,
+          "weight": 0.35,
+          "confidence": 0.72,
+          "metrics": {
+            "max_area_ha": 2500.0,
+            "n_timeline_steps": 5,
+            "activation": "EMSR578",
+            "O2_cems_delineation": "GO"
+          }
+        }
+      ],
+      "metrics": {
+        "ml": null,
+        "ops": null,
+        "open_cems": {
+          "max_area_ha": 2500.0,
+          "n_timeline_steps": 5,
+          "activation": "EMSR578",
+          "O2_cems_delineation": "GO"
+        },
+        "fused_confidence_pred": 0.7200000000000001
+      },
+      "reasons": [
+        "missing:ml",
+        "missing:ops",
+        "open_cems_perimeter:conf=0.720:w=0.35",
+        "open_only_monitoring"
+      ],
+      "disclaimers": [
+        "Not a tactical dispatch order.",
+        "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+        "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
+        "ABSTAIN means the product refuses to recommend action."
+      ],
+      "audit": {
+        "input_hash": "b3ac50fcd8115e75e35551604a6a3948d0866100bbf93d85fa6556ee55bfdeb6",
+        "output_hash": "2b8e8b47379a5734b056943778ebac9e98f220aca1ef9ef506dec6f174fa2e23",
+        "git_commit": null,
+        "schema": "fire_decision_card_v1",
+        "system_reliability": {
+          "system_reliability_pass": true,
+          "checks": {
+            "R1_determinism": true,
+            "R2_gates": true,
+            "R3_abstention_enforced": true,
+            "R4_provenance": true
+          },
+          "residual_silent_go_risk_bound": 1e-06,
+          "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+          "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+        }
+      },
+      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+    },
+    "both": {
+      "event_id": "test_both",
+      "decision": "GO",
+      "confidence_pred": 0.894,
+      "confidence_pred_label": "HIGH",
+      "system_reliability_pass": true,
+      "sources": [
+        {
+          "id": "ml_clm_ensemble",
+          "available": true,
+          "weight": 0.25,
+          "confidence": 1.0,
+          "metrics": {
+            "test_iou": 0.8963,
+            "improvement_vs_copy_iou": 0.2545,
+            "model_iou_growth": 0.9071
+          }
+        },
+        {
+          "id": "ops_thermal_front",
+          "available": true,
+          "weight": 0.4,
+          "confidence": 0.98,
+          "metrics": {
+            "quality_grade": "A",
+            "primary_ros_m_min": 5.7,
+            "n_frames": 20,
+            "area_ha_max": 39,
+            "speed_vs_ref_ratio": 0.81
+          }
+        },
+        {
+          "id": "open_cems_perimeter",
+          "available": true,
+          "weight": 0.35,
+          "confidence": 0.72,
+          "metrics": {
+            "max_area_ha": 2500.0,
+            "n_timeline_steps": 4,
+            "activation": "EMSR578",
+            "O2_cems_delineation": null
+          }
+        }
+      ],
+      "metrics": {
+        "ml": {
+          "test_iou": 0.8963,
+          "improvement_vs_copy_iou": 0.2545,
+          "model_iou_growth": 0.9071
+        },
+        "ops": {
+          "quality_grade": "A",
+          "primary_ros_m_min": 5.7,
+          "n_frames": 20,
+          "area_ha_max": 39,
+          "speed_vs_ref_ratio": 0.81
+        },
+        "open_cems": {
+          "max_area_ha": 2500.0,
+          "n_timeline_steps": 4,
+          "activation": "EMSR578",
+          "O2_cems_delineation": null
+        },
+        "fused_confidence_pred": 0.894
+      },
+      "reasons": [
+        "ml_clm_ensemble:conf=1.000:w=0.25",
+        "ops_thermal_front:conf=0.980:w=0.40",
+        "open_cems_perimeter:conf=0.720:w=0.35",
+        "ops_confidence_ok"
+      ],
+      "disclaimers": [
+        "Not a tactical dispatch order.",
+        "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+        "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
+        "ABSTAIN means the product refuses to recommend action."
+      ],
+      "audit": {
+        "input_hash": "dbcc31479050d50ce1e0b2639dfa46ecbd6947a0ad92e5f87dc2f7e8c9a59e90",
+        "output_hash": "49ac0bb7fda358e558b7926618b2c321c5346f9b849ab527551e7f30208912ff",
+        "git_commit": null,
+        "schema": "fire_decision_card_v1",
+        "system_reliability": {
+          "system_reliability_pass": true,
+          "checks": {
+            "R1_determinism": true,
+            "R2_gates": true,
+            "R3_abstention_enforced": true,
+            "R4_provenance": true
+          },
+          "residual_silent_go_risk_bound": 1e-06,
+          "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+          "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+        }
+      },
+      "built_at_utc": "2026-07-17T16:19:31.063257+00:00"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Metrics Hub</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#0f1419;color:#e7ecf1}
+.wrap{max-width:960px;margin:0 auto;padding:1.5rem}
+.card{background:#1a2332;border-radius:12px;padding:1.2rem;margin:1rem 0}
+.badge{display:inline-block;padding:.4rem .8rem;border-radius:8px;background:#0a7;font-weight:700}
+table{width:100%;border-collapse:collapse} th,td{padding:.4rem;border-bottom:1px solid #334;text-align:left}
+.muted{color:#9ab;font-size:.9rem}
+h1{margin-top:0}
+</style></head><body><div class="wrap">
+<h1>Metrics Hub</h1>
+<p class="muted">2026-07-17T16:19:31.192532+00:00 · 4a45b2b · hash 9cdba6f21e0e02db…</p>
+<div class="card">
+  <span class="badge">GO</span>
+  <p>confidence_pred = <b>0.894</b> (HIGH)
+  · system_reliability = <b>True</b></p>
+  <p class="muted">99.9999% applies only to silent-GO prevention under tests — NOT fire accuracy.</p>
+</div>
+<div class="card">
+  <h2>ML v34</h2>
+  <ul>
+    <li>IoU 0.8963</li>
+    <li>Δ copy 0.2545</li>
+    <li>growth 0.9071</li>
+  </ul>
+</div>
+<div class="card">
+  <h2>Open CEMS packs</h2>
+  <table><thead><tr><th>Pack</th><th>ha</th><th>steps</th><th>O2</th></tr></thead>
+  <tbody><tr><td>EMSR578</td><td>2693</td><td>5</td><td>GO</td></tr><tr><td>EMSR581</td><td>2210</td><td>4</td><td>GO</td></tr><tr><td>EMSR583</td><td>1791</td><td>5</td><td>GO</td></tr><tr><td>EMSR632</td><td>5320</td><td>4</td><td>GO</td></tr></tbody></table>
+</div>
+<div class="card">
+  <h2>Commercial</h2>
+  <pre>{
+  "score_dual": 95.0,
+  "score_clm_only": 39.0,
+  "VENTA_GO": true,
+  "axes_win": 5
+}</pre>
+</div>
+<div class="card">
+  <h2>Gates</h2>
+  <pre>{
+  "G0_ndws": "GO",
+  "G1_ndws": "KILL",
+  "G2_clm_v28": "GO",
+  "G2e_ensemble_v34": "GO",
+  "O1_multi_anchor": "OPEN",
+  "O2_hausdorff_official": "BLOCKED",
+  "O3_temporal": "PARTIAL",
+  "O4_brief": "GO_ENG",
+  "O5_second_grade_a": "OPEN",
+  "P1_incident_2if": "PARTIAL",
+  "E1_ci_smokes": "GO_ENG",
+  "D1_cyl": "FOLLOW_UP",
+  "M2_v34_hold": "GO",
+  "M5_v35": "NO_DATA"
+}</pre>
+</div>
+</div></body></html>

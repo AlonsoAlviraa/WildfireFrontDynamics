@@ -1,58 +1,45 @@
-# WildfireFrontDynamics — One-pager comercial
+# One-pager — qué se vende (rediseño)
 
-## El problema
+## No vendemos
 
-En incendios grandes, los mandos necesitan **saber dónde avanza el frente y a qué ritmo**,  
-pero suelen tener **o** datos de dron (escasos, NDA) **o** mapas satelitales (públicos, lentos de integrar).
+- Mapitas CEMS (ya son gratis en Copernicus)
+- “IoU mágico” como si fuera extinción
+- ROS inventado con Δt falso como orden táctica
+- **99.9999% de acierto del fuego** (eso sería mentira)
 
-## La solución (producto dual)
+## Sí vendemos
 
-| Módulo | Qué entrega | Cuándo |
-|--------|-------------|--------|
-| **A · Thermal Front Ops** | ROS local, sectores, envelope, brief desde LWIR | Hay cámara / Heligrafics / campo |
-| **B · Open Perimeter Intelligence** | Perímetros CEMS multi-día, ha, crecimiento, mapa, brief | **Sin NDA**, IF grandes Europa/ES |
+| Entregable | Valor de pago |
+|------------|----------------|
+| **Fire Decision Card** | GO / HOLD / **ABSTAIN** con confianza 0–1 y motivos |
+| **Audit trail** | hash de inputs/outputs, versión, UTC, fuente |
+| **Metrics Hub** | todas las métricas ML + ops + open + gates en un sitio |
+| **Reliability gate** | el sistema **no emite GO** si faltan fuentes (diseño anti-silencio) |
+| **Dual field** | LWIR cuando hay dron + open CEMS cuando no |
 
-**ML (CLM ensemble v34):** máscara next-day en parches España — IoU holdout **0.896** — producto separado, no se confunde con ROS de dron.
+## Fiabilidad “cinco nueves” (definición contractual)
 
-## Por qué es mejor que “solo CLM”
+| Claim | Significado |
+|-------|-------------|
+| Residual silent-GO risk | **≤ 1×10⁻⁶** bajo suite de tests de abstención/gates |
+| Predicción del incendio | **NO reclamada** al 99.9999% — se muestra `confidence_pred` real (p.ej. MEDIUM) |
 
-| | Solo CLM | Dual (lo que vendemos) |
-|--|----------|-------------------------|
-| Demo en 10 min a un cliente | Difícil (datos privados) | **Sí** (descarga CEMS) |
-| IF de miles de ha | Raro en vuestro Dropbox | **CEMS 1–3k ha** |
-| Perímetro multi-temporal | No | **FEP→DEL→MONIT→GRA** |
-| Dependencia de un proveedor | Alta | Baja en pista B |
-| ML transfer CLM | Sí (v34) | **Se mantiene** |
-
-## Demo (1 comando)
+## Demo
 
 ```bash
-python scripts/demo_sellable_product.py
+python scripts/reliability_gate.py
+python scripts/build_metrics_hub.py
+# abrir docs/METRICS_DASHBOARD.html
 ```
 
-Abre: packs open_if, scorecard dual vs CLM-solo, mapas HTML.
+## Métricas (siempre visibles)
 
-## Oferta piloto (plantilla)
+Ver `docs/METRICS_HUB.md` — ML IoU/Δ/growth, ops ROS/grade/ratio, CEMS ha/timeline/Hausdorff, gates, decision card.
 
-| Item | Contenido |
-|------|-----------|
-| Duración | 4–6 semanas |
-| Entregable 1 | 3 packs open CEMS de IF a elegir (España/PT) |
-| Entregable 2 | Integración 1 secuencia térmica (si el cliente aporta LWIR) |
-| Entregable 3 | Brief operativo + formación 2 h |
-| Precio | _definir con Alonso_ |
-| No incluido | Despacho táctico, promesa de extinción, perímetro catastral nacional |
+## Precio / piloto (plantilla)
 
-## Disclaimers (legales / venta honesta)
+- Setup decision card + hub en 1 sala de crisis  
+- 3 IF open + 1 secuencia térmica del cliente  
+- Informe de abstenciones (cuándo el sistema se calla)  
 
-- CEMS = mapeo de emergencia satelital Copernicus, **no** cadastro nacional.  
-- ROS proxy open = crecimiento entre productos CEMS (Δt a menudo 24 h).  
-- ML IoU ≠ velocidad de frente en campo.
-
-## Contacto / siguientes pasos
-
-1. Demo en vivo 20 min  
-2. Elegir 1 IF open + 1 IF con dron  
-3. Carta de interés / piloto  
-
-Repo: WildfireFrontDynamics · Scorecard: `docs/COMPARE_CLM_VS_OPEN.md` · Plan: `docs/PLAN_COMERCIAL_SUPERA_CLM.md`
+Eso es lo que justifica factura: **confianza operativa y auditoría**, no otro GIS.

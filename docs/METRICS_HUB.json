@@ -1,0 +1,304 @@
+{
+  "schema": "metrics_hub_v1",
+  "built_at_utc": "2026-07-17T16:19:31.192532+00:00",
+  "git_commit": "4a45b2b",
+  "content_hash": "9cdba6f21e0e02db83299cbb4216d9d5cbdfaf462191a526ee5b0eb5119576a1",
+  "ml": {
+    "product": "clm_ensemble_v34",
+    "metrics": {
+      "test_iou": 0.8963,
+      "copy_baseline_iou": 0.6418,
+      "improvement_vs_copy_iou": 0.2545,
+      "model_iou_growth": 0.9071
+    },
+    "member_weights": [
+      0.28,
+      0.32,
+      0.4
+    ],
+    "member_temperatures": [
+      0.7,
+      0.7,
+      1.3
+    ],
+    "protocol": "clm_holdout_test_seed42_v1",
+    "loop_status": "STOPPED_PLATEAU",
+    "champion_name": "source_mix_val_temp_calibrated"
+  },
+  "ops": {
+    "product": "incident_runtime_v1 / front_dynamics_v1",
+    "tobarra_anchor": {
+      "fire_id": "tobarra_20240802",
+      "name": "Tobarra (AB) 2024-08-02",
+      "vp_m_min": 7.0,
+      "area_ha": 39.0,
+      "intensity": "Media-Alta",
+      "behavior": "Contraviento",
+      "source": "INFOCAM 2024 parte operativo",
+      "status": "confirmed",
+      "detection": "2024-08-02T16:42:00"
+    },
+    "representative_metrics": {
+      "quality_grade": "A",
+      "primary_ros_m_min": 5.71,
+      "n_frames_staged": 35,
+      "area_ha_max": 39.0,
+      "speed_vs_ref_ratio": 0.8157142857142857,
+      "anchor_status": "confirmed"
+    }
+  },
+  "open_cems": {
+    "n_packs": 4,
+    "packs": [
+      {
+        "id": "emsr578",
+        "track": "Pista_B",
+        "activation": "EMSR578",
+        "max_area_ha": 2693.4837707192946,
+        "n_timeline_steps": 5,
+        "n_ros_proxy_steps": 4,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "lwir_heligraphics": false,
+        "status": "GO_OPEN_DATA_PACK",
+        "pack_dir": "outputs\\open_if\\emsr578",
+        "ros_proxy_n": 4,
+        "hausdorff_series": [
+          1685.944765359855,
+          2386.114343560732,
+          1623.7754805788961,
+          0.0
+        ],
+        "growth_ha_h": [
+          -17.129480819489203,
+          25.397559985904525,
+          24.251522869324276,
+          0.0
+        ]
+      },
+      {
+        "id": "emsr581",
+        "track": "Pista_B",
+        "activation": "EMSR581",
+        "max_area_ha": 2209.794940004186,
+        "n_timeline_steps": 4,
+        "n_ros_proxy_steps": 3,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "lwir_heligraphics": false,
+        "status": "GO_OPEN_DATA_PACK",
+        "pack_dir": "outputs\\open_if\\emsr581",
+        "ros_proxy_n": 3,
+        "hausdorff_series": [
+          4041.139715549566,
+          0.0,
+          379.9027469709821
+        ],
+        "growth_ha_h": [
+          2.7258028453343286,
+          0.0,
+          -2.841999800006628
+        ]
+      },
+      {
+        "id": "emsr583",
+        "track": "Pista_B",
+        "activation": "EMSR583",
+        "max_area_ha": 1790.5688508544401,
+        "n_timeline_steps": 5,
+        "n_ros_proxy_steps": 4,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "lwir_heligraphics": false,
+        "status": "GO_OPEN_DATA_PACK",
+        "pack_dir": "outputs\\open_if\\emsr583",
+        "ros_proxy_n": 4,
+        "hausdorff_series": [
+          1475.8332095808528,
+          1367.607886773742,
+          2110.1172100655253,
+          235.40189978947063
+        ],
+        "growth_ha_h": [
+          -10.124601107750815,
+          6.163589265060892,
+          5.796246920986931,
+          0.2621408401346059
+        ]
+      },
+      {
+        "id": "emsr632",
+        "track": "Pista_B",
+        "activation": "EMSR632",
+        "max_area_ha": 5319.506429634212,
+        "n_timeline_steps": 4,
+        "n_ros_proxy_steps": 3,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "lwir_heligraphics": false,
+        "status": "GO_OPEN_DATA_PACK",
+        "pack_dir": "outputs\\open_if\\emsr632",
+        "ros_proxy_n": 3,
+        "hausdorff_series": [
+          1603.8602999953632,
+          1192.2899964858168,
+          4144.184082006344
+        ],
+        "growth_ha_h": [
+          18.992425678442164,
+          17.78597526735486,
+          46.69691636823359
+        ]
+      }
+    ],
+    "best": {
+      "id": "emsr632",
+      "track": "Pista_B",
+      "activation": "EMSR632",
+      "max_area_ha": 5319.506429634212,
+      "n_timeline_steps": 4,
+      "n_ros_proxy_steps": 3,
+      "O2_cems_delineation": "GO",
+      "O2_national_official": "NO_GO_CEMS_PROXY",
+      "lwir_heligraphics": false,
+      "status": "GO_OPEN_DATA_PACK",
+      "pack_dir": "outputs\\open_if\\emsr632",
+      "ros_proxy_n": 3,
+      "hausdorff_series": [
+        1603.8602999953632,
+        1192.2899964858168,
+        4144.184082006344
+      ],
+      "growth_ha_h": [
+        18.992425678442164,
+        17.78597526735486,
+        46.69691636823359
+      ]
+    }
+  },
+  "gates": {
+    "G0_ndws": "GO",
+    "G1_ndws": "KILL",
+    "G2_clm_v28": "GO",
+    "G2e_ensemble_v34": "GO",
+    "O1_multi_anchor": "OPEN",
+    "O2_hausdorff_official": "BLOCKED",
+    "O3_temporal": "PARTIAL",
+    "O4_brief": "GO_ENG",
+    "O5_second_grade_a": "OPEN",
+    "P1_incident_2if": "PARTIAL",
+    "E1_ci_smokes": "GO_ENG",
+    "D1_cyl": "FOLLOW_UP",
+    "M2_v34_hold": "GO",
+    "M5_v35": "NO_DATA"
+  },
+  "industrial": {
+    "GO_MES": false,
+    "GO_ENG": true,
+    "GO_MES_reason": "Blocked on external anchors/perimeters (O1/O2), not product regression"
+  },
+  "commercial_compare": {
+    "score_dual": 95.0,
+    "score_clm_only": 39.0,
+    "VENTA_GO": true,
+    "axes_win": 5
+  },
+  "decision_card": {
+    "event_id": "hub_aggregate",
+    "decision": "GO",
+    "confidence_pred": 0.894,
+    "confidence_pred_label": "HIGH",
+    "system_reliability_pass": true,
+    "sources": [
+      {
+        "id": "ml_clm_ensemble",
+        "available": true,
+        "weight": 0.25,
+        "confidence": 1.0,
+        "metrics": {
+          "test_iou": 0.8963,
+          "improvement_vs_copy_iou": 0.2545,
+          "model_iou_growth": 0.9071
+        }
+      },
+      {
+        "id": "ops_thermal_front",
+        "available": true,
+        "weight": 0.4,
+        "confidence": 0.98,
+        "metrics": {
+          "quality_grade": "A",
+          "primary_ros_m_min": 5.71,
+          "n_frames": 35,
+          "area_ha_max": 39.0,
+          "speed_vs_ref_ratio": 0.8157142857142857
+        }
+      },
+      {
+        "id": "open_cems_perimeter",
+        "available": true,
+        "weight": 0.35,
+        "confidence": 0.72,
+        "metrics": {
+          "max_area_ha": 5319.506429634212,
+          "n_timeline_steps": 4,
+          "activation": "EMSR632",
+          "O2_cems_delineation": "GO"
+        }
+      }
+    ],
+    "metrics": {
+      "ml": {
+        "test_iou": 0.8963,
+        "improvement_vs_copy_iou": 0.2545,
+        "model_iou_growth": 0.9071
+      },
+      "ops": {
+        "quality_grade": "A",
+        "primary_ros_m_min": 5.71,
+        "n_frames": 35,
+        "area_ha_max": 39.0,
+        "speed_vs_ref_ratio": 0.8157142857142857
+      },
+      "open_cems": {
+        "max_area_ha": 5319.506429634212,
+        "n_timeline_steps": 4,
+        "activation": "EMSR632",
+        "O2_cems_delineation": "GO"
+      },
+      "fused_confidence_pred": 0.894
+    },
+    "reasons": [
+      "ml_clm_ensemble:conf=1.000:w=0.25",
+      "ops_thermal_front:conf=0.980:w=0.40",
+      "open_cems_perimeter:conf=0.720:w=0.35",
+      "ops_confidence_ok"
+    ],
+    "disclaimers": [
+      "Not a tactical dispatch order.",
+      "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+      "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
+      "ABSTAIN means the product refuses to recommend action."
+    ],
+    "audit": {
+      "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
+      "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
+      "git_commit": "4a45b2b",
+      "schema": "fire_decision_card_v1",
+      "system_reliability": {
+        "system_reliability_pass": true,
+        "checks": {
+          "R1_determinism": true,
+          "R2_gates": true,
+          "R3_abstention_enforced": true,
+          "R4_provenance": true
+        },
+        "residual_silent_go_risk_bound": 1e-06,
+        "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+        "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+      }
+    },
+    "built_at_utc": "2026-07-17T16:19:31.192532+00:00"
+  },
+  "reliability_note": "system_reliability five-nines bound applies to silent-GO prevention under tests, NOT to fire-spread forecast accuracy."
+}

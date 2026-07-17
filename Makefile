@@ -55,3 +55,11 @@ demo:  ## One-command dual product demo (ops + ML)
 	set PYTHONPATH=. && $(PYTHON) scripts/demo_dual_product.py
 
 industrial: test smoke-ops  ## Unit tests + ops smoke
+
+metrics-hub:  ## Build full metrics hub + decision card + dashboard
+	set PYTHONPATH=. && $(PYTHON) scripts/build_metrics_hub.py
+
+reliability:  ## Reliability / abstention gate (system five-nines bound)
+	set PYTHONPATH=. && $(PYTHON) scripts/reliability_gate.py
+
+product-gate: reliability metrics-hub  ## Paid-value product gates

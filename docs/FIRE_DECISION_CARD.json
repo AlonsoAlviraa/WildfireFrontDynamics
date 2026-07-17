@@ -1,0 +1,97 @@
+{
+  "event_id": "hub_aggregate",
+  "decision": "GO",
+  "confidence_pred": 0.894,
+  "confidence_pred_label": "HIGH",
+  "system_reliability_pass": true,
+  "sources": [
+    {
+      "id": "ml_clm_ensemble",
+      "available": true,
+      "weight": 0.25,
+      "confidence": 1.0,
+      "metrics": {
+        "test_iou": 0.8963,
+        "improvement_vs_copy_iou": 0.2545,
+        "model_iou_growth": 0.9071
+      }
+    },
+    {
+      "id": "ops_thermal_front",
+      "available": true,
+      "weight": 0.4,
+      "confidence": 0.98,
+      "metrics": {
+        "quality_grade": "A",
+        "primary_ros_m_min": 5.71,
+        "n_frames": 35,
+        "area_ha_max": 39.0,
+        "speed_vs_ref_ratio": 0.8157142857142857
+      }
+    },
+    {
+      "id": "open_cems_perimeter",
+      "available": true,
+      "weight": 0.35,
+      "confidence": 0.72,
+      "metrics": {
+        "max_area_ha": 5319.506429634212,
+        "n_timeline_steps": 4,
+        "activation": "EMSR632",
+        "O2_cems_delineation": "GO"
+      }
+    }
+  ],
+  "metrics": {
+    "ml": {
+      "test_iou": 0.8963,
+      "improvement_vs_copy_iou": 0.2545,
+      "model_iou_growth": 0.9071
+    },
+    "ops": {
+      "quality_grade": "A",
+      "primary_ros_m_min": 5.71,
+      "n_frames": 35,
+      "area_ha_max": 39.0,
+      "speed_vs_ref_ratio": 0.8157142857142857
+    },
+    "open_cems": {
+      "max_area_ha": 5319.506429634212,
+      "n_timeline_steps": 4,
+      "activation": "EMSR632",
+      "O2_cems_delineation": "GO"
+    },
+    "fused_confidence_pred": 0.894
+  },
+  "reasons": [
+    "ml_clm_ensemble:conf=1.000:w=0.25",
+    "ops_thermal_front:conf=0.980:w=0.40",
+    "open_cems_perimeter:conf=0.720:w=0.35",
+    "ops_confidence_ok"
+  ],
+  "disclaimers": [
+    "Not a tactical dispatch order.",
+    "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+    "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
+    "ABSTAIN means the product refuses to recommend action."
+  ],
+  "audit": {
+    "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
+    "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
+    "git_commit": "4a45b2b",
+    "schema": "fire_decision_card_v1",
+    "system_reliability": {
+      "system_reliability_pass": true,
+      "checks": {
+        "R1_determinism": true,
+        "R2_gates": true,
+        "R3_abstention_enforced": true,
+        "R4_provenance": true
+      },
+      "residual_silent_go_risk_bound": 1e-06,
+      "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+      "fire_prediction_accuracy_claim": "NOT_CLAIMED"
+    }
+  },
+  "built_at_utc": "2026-07-17T16:19:31.192532+00:00"
+}
