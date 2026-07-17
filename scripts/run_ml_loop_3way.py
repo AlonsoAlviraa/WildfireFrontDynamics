@@ -72,7 +72,41 @@ def _load_scorecard() -> dict[str, Any]:
 
 
 def _save_scorecard(sc: dict[str, Any]) -> None:
+    """Persist scorecard without demoting a stronger champion written externally."""
     SCORECARD.parent.mkdir(parents=True, exist_ok=True)
+    if SCORECARD.is_file():
+        try:
+            disk = json.loads(SCORECARD.read_text(encoding="utf-8"))
+            disk_c = disk.get("champion") or {}
+            mem_c = sc.get("champion") or {}
+            d_iou = float(disk_c.get("model_iou") or 0.0)
+            d_delta = float(disk_c.get("improvement_vs_copy_iou") or 0.0)
+            m_iou = float(mem_c.get("model_iou") or 0.0)
+            m_delta = float(mem_c.get("improvement_vs_copy_iou") or 0.0)
+            # Never overwrite a strictly better champion (e.g. external promote)
+            if (d_iou > m_iou + 1e-6) or (
+                abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6
+            ):
+                sc["champion"] = disk_c
+                sc.setdefault("promotions", [])
+                # keep disk promotions that memory lacks
+                seen = {
+                    (
+                        p.get("name"),
+                        round(float(p.get("model_iou") or 0), 6),
+                    )
+                    for p in sc["promotions"]
+                    if isinstance(p, dict)
+                }
+                for p in disk.get("promotions") or []:
+                    if not isinstance(p, dict):
+                        continue
+                    key = (p.get("name"), round(float(p.get("model_iou") or 0), 6))
+                    if key not in seen:
+                        sc["promotions"].append(p)
+                        seen.add(key)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass
     sc["updated_at_utc"] = _utc()
     SCORECARD.write_text(json.dumps(sc, indent=2, default=str), encoding="utf-8")
 

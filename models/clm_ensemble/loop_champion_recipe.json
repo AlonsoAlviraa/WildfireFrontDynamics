@@ -24,10 +24,11 @@
     "threshold": 0.5,
     "leakage_guard": "mix+temps on holdout VAL only; multi_if never trained on Cardoso"
   },
-  "promoted_at_utc": "2026-07-17T12:35:57.024354+00:00",
+  "promoted_at_utc": "2026-07-17T12:38:11.820810+00:00",
   "parent": "clm_ensemble_v33",
   "vs_v33": {
     "iou_diff": 0.0010338561069478391,
     "delta_diff": 0.0010338561069478391
-  }
+  },
+  "note": "restored after loop in-memory scorecard overwrite"
 }
