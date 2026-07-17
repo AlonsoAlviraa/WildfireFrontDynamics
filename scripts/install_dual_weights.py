@@ -52,6 +52,14 @@ INSTALL_PLAN: list[tuple[list[Path], Path]] = [
         ],
         ROOT / "models" / "clm_ensemble" / "weights_v30_ema.pt",
     ),
+    (
+        [
+            ROOT / "outputs" / "ml_eval" / "loop_3way" / "multi_if" / "weights_multi_if_best_holdout.pt",
+            ROOT / "outputs" / "ml_eval" / "loop_3way" / "multi_if" / "weights_pretrained_best.pt",
+            ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
+        ],
+        ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
+    ),
 ]
 
 

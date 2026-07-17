@@ -6,12 +6,23 @@
     "multi_obj"
   ],
   "champion": {
-    "name": "clm_ensemble_v31_triple",
-    "model_iou": 0.8702,
-    "improvement_vs_copy_iou": 0.2284,
-    "model_iou_growth": 0.9134,
-    "note": "Restored after rejecting leaky source_mix_cardoso_recipe promotion",
-    "restored_at_utc": "2026-07-17T10:02:29.935921+00:00"
+    "name": "r4_v28_plus_multi_if",
+    "model_iou": 0.8708863253530745,
+    "improvement_vs_copy_iou": 0.22908415500838686,
+    "model_iou_growth": 0.8844625088598402,
+    "verdict": "GO_SOFT",
+    "recipe": {
+      "type": "pair",
+      "members": [
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+      ],
+      "mix": [
+        0.5,
+        0.5
+      ]
+    },
+    "promoted_at_utc": "2026-07-17T10:06:22.397397+00:00"
   },
   "rounds": [
     {
@@ -712,6 +723,286 @@
         },
         "promoted_at_utc": "2026-07-17T09:56:35.443833+00:00"
       }
+    },
+    {
+      "round": 4,
+      "started_at_utc": "2026-07-17T10:02:49.000650+00:00",
+      "tracks": {
+        "multi_if": {
+          "status": "ok",
+          "single_change": "multi-IF FT on LOFO-CARDOSO train (no Cardoso in train)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 6,
+            "test_iou": 0.807661282827995,
+            "improvement_vs_copy_iou": 0.1658591124833073
+          },
+          "eval_lofo_cardoso_test": {
+            "model_iou": 0.807661282827995,
+            "improvement_vs_copy_iou": 0.1658591124833073,
+            "model_iou_growth": 0.9928759207912784,
+            "n_patches": 200
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.807661282827995,
+            "improvement_vs_copy_iou": 0.1658591124833073,
+            "model_iou_growth": 0.9928759207912784,
+            "n_patches": 200
+          },
+          "eval_v28_plus_multi_if": {
+            "model_iou": 0.8708863253530745,
+            "improvement_vs_copy_iou": 0.22908415500838686,
+            "model_iou_growth": 0.8844625088598402,
+            "n_patches": 200
+          },
+          "verdict_single": {
+            "name": "r4_multi_if",
+            "model_iou": 0.807661282827995,
+            "improvement_vs_copy_iou": 0.1658591124833073,
+            "model_iou_growth": 0.9928759207912784,
+            "vs_champion": {
+              "iou_diff": -0.06253871717200499,
+              "delta_diff": -0.06254088751669268,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_pair": {
+            "name": "r4_v28_plus_multi_if",
+            "model_iou": 0.8708863253530745,
+            "improvement_vs_copy_iou": 0.22908415500838686,
+            "model_iou_growth": 0.8844625088598402,
+            "vs_champion": {
+              "iou_diff": 0.0006863253530745572,
+              "delta_diff": 0.0006841550083868664,
+              "beats": true
+            },
+            "verdict": "GO_SOFT",
+            "go": true
+          },
+          "latency_s": 213.39
+        },
+        "source_mix": {
+          "status": "ok",
+          "single_change": "per-source soft-vote (diagnostic) + holdout mix tuned on VAL only",
+          "leakage_guard": "LOFO CARDOSO/test == holdout test; mix for GO is selected on holdout VAL only",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v30_ema.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+          ],
+          "per_source_best_diagnostic": {
+            "CARDOSO": {
+              "mix": [
+                0.4,
+                0.4,
+                0.19999999999999996
+              ],
+              "model_iou": 0.8709372238922533,
+              "improvement_vs_copy_iou": 0.22913505354756558,
+              "model_iou_growth": 0.8811965581900527
+            },
+            "LA_ESTRELLA_ACOM1": {
+              "mix": [
+                0.4,
+                0.3,
+                0.3
+              ],
+              "model_iou": 0.7919163329417974,
+              "improvement_vs_copy_iou": 0.43258441896217664,
+              "model_iou_growth": 0.9737370131937093
+            },
+            "LA_ESTRELLA_ACOM2": {
+              "mix": [
+                0.4,
+                0.2,
+                0.39999999999999997
+              ],
+              "model_iou": 0.7050769972083345,
+              "improvement_vs_copy_iou": 0.3352292539628835,
+              "model_iou_growth": 0.9741928710813879
+            },
+            "tobarra_20240802": {
+              "mix": [
+                0.6,
+                0.3,
+                0.10000000000000003
+              ],
+              "model_iou": 0.40646756403450723,
+              "improvement_vs_copy_iou": -0.04749150487175935,
+              "model_iou_growth": 0.9949599502571267
+            }
+          },
+          "cardoso_lofo_is_holdout_test": true,
+          "cardoso_lofo_diag_not_for_go": {
+            "mix": [
+              0.4,
+              0.4,
+              0.19999999999999996
+            ],
+            "model_iou": 0.8709372238922533,
+            "improvement_vs_copy_iou": 0.22913505354756558,
+            "model_iou_growth": 0.8811965581900527
+          },
+          "val_grid_best": {
+            "mix": [
+              0.4,
+              0.2,
+              0.39999999999999997
+            ],
+            "model_iou": 0.7496770139967616,
+            "improvement_vs_copy_iou": 0.3855428292887968,
+            "model_iou_growth": 0.980302727733427
+          },
+          "applied_for_holdout": {
+            "source_key": "holdout_val_LA",
+            "mix": [
+              0.4,
+              0.2,
+              0.39999999999999997
+            ]
+          },
+          "transfer_mix_from_non_cardoso_lofo": [
+            0.4666666666666666,
+            0.26666666666666666,
+            0.26666666666666666
+          ],
+          "holdout_test_val_tuned": {
+            "model_iou": 0.8663812445685702,
+            "improvement_vs_copy_iou": 0.22457907422388257,
+            "model_iou_growth": 0.9356410325424459,
+            "n_patches": 200,
+            "member_weights": [
+              0.4,
+              0.2,
+              0.39999999999999997
+            ]
+          },
+          "holdout_test_transfer_mix": {
+            "model_iou": 0.8666202416059622,
+            "improvement_vs_copy_iou": 0.2248180712612745,
+            "model_iou_growth": 0.848994643481625,
+            "n_patches": 200,
+            "member_weights": [
+              0.4666666666666666,
+              0.26666666666666666,
+              0.26666666666666666
+            ]
+          },
+          "holdout_test_equal": {
+            "model_iou": 0.8638684168055215,
+            "improvement_vs_copy_iou": 0.22206624646083384,
+            "model_iou_growth": 0.950342296752465
+          },
+          "verdict": {
+            "name": "source_mix_val_tuned",
+            "model_iou": 0.8663812445685702,
+            "improvement_vs_copy_iou": 0.22457907422388257,
+            "model_iou_growth": 0.9356410325424459,
+            "vs_champion": {
+              "iou_diff": -0.0045050807845042895,
+              "delta_diff": -0.0045050807845042895,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_transfer": {
+            "name": "source_mix_transfer_non_cardoso",
+            "model_iou": 0.8666202416059622,
+            "improvement_vs_copy_iou": 0.2248180712612745,
+            "model_iou_growth": 0.848994643481625,
+            "vs_champion": {
+              "iou_diff": -0.004266083747112348,
+              "delta_diff": -0.004266083747112348,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 565.6
+        },
+        "multi_obj": {
+          "status": "ok",
+          "single_change": "early_stop=multi_full_growth (full\u0394 + \u03bb\u00b7growth, not growth-only)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_obj_multi_full_growth\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 3,
+            "test_iou": 0.799078412636166,
+            "improvement_vs_copy_iou": 0.1572762422914783,
+            "model_iou_growth": 0.5597381856026488
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.799078412636166,
+            "improvement_vs_copy_iou": 0.1572762422914783,
+            "model_iou_growth": 0.5597381856026488,
+            "n_patches": 200
+          },
+          "eval_triple_if_available": {
+            "model_iou": 0.851955605927642,
+            "improvement_vs_copy_iou": 0.2101534355829543,
+            "model_iou_growth": 0.7496388612236774
+          },
+          "verdict": {
+            "name": "r4_multi_full_growth",
+            "model_iou": 0.799078412636166,
+            "improvement_vs_copy_iou": 0.1572762422914783,
+            "model_iou_growth": 0.5597381856026488,
+            "vs_champion": {
+              "iou_diff": -0.07180791271690856,
+              "delta_diff": -0.07180791271690856,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_triple": {
+            "name": "r4_multi_full_growth_triple",
+            "model_iou": 0.851955605927642,
+            "improvement_vs_copy_iou": 0.2101534355829543,
+            "model_iou_growth": 0.7496388612236774,
+            "vs_champion": {
+              "iou_diff": -0.018930719425432563,
+              "delta_diff": -0.018930719425432563,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 129.62
+        }
+      },
+      "champion_before": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134,
+        "note": "Restored after rejecting leaky source_mix_cardoso_recipe promotion",
+        "restored_at_utc": "2026-07-17T10:02:29.935921+00:00"
+      },
+      "finished_at_utc": "2026-07-17T10:17:57.619904+00:00",
+      "champion_after": {
+        "name": "r4_v28_plus_multi_if",
+        "model_iou": 0.8708863253530745,
+        "improvement_vs_copy_iou": 0.22908415500838686,
+        "model_iou_growth": 0.8844625088598402,
+        "verdict": "GO_SOFT",
+        "recipe": {
+          "type": "pair",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+          ],
+          "mix": [
+            0.5,
+            0.5
+          ]
+        },
+        "promoted_at_utc": "2026-07-17T10:06:22.397397+00:00"
+      }
     }
   ],
   "history": [
@@ -801,9 +1092,32 @@
         "promoted_at_utc": "2026-07-17T09:56:35.443833+00:00"
       },
       "at": "2026-07-17T09:58:32.469547+00:00"
+    },
+    {
+      "round": 4,
+      "champion": {
+        "name": "r4_v28_plus_multi_if",
+        "model_iou": 0.8708863253530745,
+        "improvement_vs_copy_iou": 0.22908415500838686,
+        "model_iou_growth": 0.8844625088598402,
+        "verdict": "GO_SOFT",
+        "recipe": {
+          "type": "pair",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+          ],
+          "mix": [
+            0.5,
+            0.5
+          ]
+        },
+        "promoted_at_utc": "2026-07-17T10:06:22.397397+00:00"
+      },
+      "at": "2026-07-17T10:17:57.619904+00:00"
     }
   ],
-  "updated_at_utc": "2026-07-17T10:02:29.935921+00:00",
+  "updated_at_utc": "2026-07-17T10:17:57.619904+00:00",
   "promotions": [
     {
       "name": "r3_v28_plus_multi_if",
@@ -888,6 +1202,25 @@
       "promoted_at_utc": "2026-07-17T09:56:35.443833+00:00",
       "rejected_reason": "LOFO CARDOSO/test is identical to holdout_v1/test (200/200 same files); mix was tuned on the evaluation set.",
       "rejected_at_utc": "2026-07-17T10:02:29.935921+00:00"
+    },
+    {
+      "name": "r4_v28_plus_multi_if",
+      "model_iou": 0.8708863253530745,
+      "improvement_vs_copy_iou": 0.22908415500838686,
+      "model_iou_growth": 0.8844625088598402,
+      "verdict": "GO_SOFT",
+      "recipe": {
+        "type": "pair",
+        "members": [
+          "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+        ],
+        "mix": [
+          0.5,
+          0.5
+        ]
+      },
+      "promoted_at_utc": "2026-07-17T10:06:22.397397+00:00"
     }
   ],
   "leakage_incident": {

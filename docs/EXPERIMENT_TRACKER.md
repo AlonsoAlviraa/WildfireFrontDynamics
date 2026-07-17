@@ -189,8 +189,12 @@ Tracks (cycle each round):
 | 1 | 0.799 (v21 init) | Δ 0.228 (mix 0.4/0.3/0.3) | 0.788 | No |
 | 2 | 0.802 (v28 init) | Δ 0.225 (mix 0.4/0.4/0.2) | 0.823 (λ=0.25) | No |
 
-**Champion unchanged:** triple weighted IoU **0.870** Δ **+0.228**.  
-Per-source mixes differ (Estrella wants more LOFO; Tobarra prefers v28) — useful for future source-aware product.  
+**Champion after round 4 (honest):** `r4_v28_plus_multi_if` IoU **0.8709** Δ **+0.2291**  
+= soft-vote **v28 + multi_if** (0.5/0.5); multi_if trained on LOFO-CARDOSO train only.  
+Product recipe: `models/clm_ensemble/manifest.json` version `clm_ensemble_v32`.  
+
+**Leakage rejected:** `source_mix_cardoso_recipe` IoU 0.888 — LOFO CARDOSO/test ≡ holdout test.  
+
 Scorecard: `docs/ML_LOOP_3WAY_SCORECARD.json`
 
 ### O3 temporal Tobarra

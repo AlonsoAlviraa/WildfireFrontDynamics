@@ -1,7 +1,7 @@
 {
-  "version": "clm_ensemble_v31",
+  "version": "clm_ensemble_v32",
   "id": "clm_ensemble_v30",
-  "label": "CLM ensemble (v28 + EMA + LOFO-CARDOSO, weighted soft-vote)",
+  "label": "CLM ensemble (v28 + multi-IF soft-vote 0.5/0.5)",
   "product_type": "ensemble",
   "architecture": "residual",
   "target_mode": "delta",
@@ -16,19 +16,18 @@
   "weights_file": "weights_v28_clm_ft.pt",
   "members": [
     "models/clm_ensemble/weights_v28_clm_ft.pt",
-    "models/clm_ensemble/weights_v30_ema.pt",
-    "models/clm_ensemble/weights_lofo_cardoso.pt"
+    "models/clm_ensemble/weights_multi_if.pt"
   ],
-  "member_weights": [0.4, 0.3, 0.3],
+  "member_weights": [0.5, 0.5],
   "protocol": "clm_holdout_test_seed42_v1",
   "metrics": {
-    "test_iou": 0.8702,
+    "test_iou": 0.8709,
     "copy_baseline_iou": 0.6418,
-    "improvement_vs_copy_iou": 0.2284,
-    "model_iou_growth": 0.9134
+    "improvement_vs_copy_iou": 0.2291,
+    "model_iou_growth": 0.8845
   },
-  "verdict": "GO_SOFT_BEATS_V30",
-  "parent": "clm_ensemble_v30 equal-weight pair IoU 0.8683",
-  "leakage_policy": "v28+EMA train on Tobarra only; LOFO held-out CARDOSO; mix tuned on VAL",
-  "notes": "Soft-vote weighted growth probs then decode prev+growth. Mix 0.4/0.3/0.3 selected on holdout val."
+  "verdict": "GO_SOFT",
+  "parent": "loop round 4 r4_v28_plus_multi_if",
+  "leakage_policy": "multi_if trained on LOFO-CARDOSO train (no Cardoso); eval on holdout test Cardoso only",
+  "notes": "Soft-vote equal growth probs v28 + multi-IF specialist. Snapshotted from loop multi_if best holdout."
 }
