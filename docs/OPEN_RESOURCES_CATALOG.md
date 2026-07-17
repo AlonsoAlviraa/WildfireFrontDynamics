@@ -33,11 +33,27 @@ https://firms.modaps.eosdis.nasa.gov/data/country/viirs-snpp/2024/viirs-snpp_202
 
 ---
 
+## 2b. FIRE-RES (H2020, finalizado) — deliverables públicos EWE
+
+| Recurso | Qué da | Link | Uso en WFD |
+|---------|--------|------|------------|
+| **Índice deliverables** | Todos los PDF públicos | https://fire-res.eu/deliverables-and-reports/ | Entrada |
+| **D1.1** | Lecciones EWE, retos monitorización/predicción | [PDF](https://fire-res.eu/wp-content/uploads/2024/01/D1.1_FIRE-RES_Transfer_of_LL_on_EWE.pdf) | Marco TFG/CMA |
+| **D5.3** | ForeFire+MesoNH fire–atmósfera, forecast EWE | [PDF](https://fire-res.eu/wp-content/uploads/2024/11/D5.3_FIRE-RES_IA5.2_Modelling-the-EWE-and-smoke-spread-based-on-coupled-fire-atmosphere-approaches.pdf) | Benchmark landscape |
+| **D5.4** | Combustión/convección, ROS simulado | [PDF](https://fire-res.eu/wp-content/uploads/2024/12/D5.4_FIRE-RES_Modelling-of-fire-combustion-and-convective-processes_compressed.pdf) | Límites modelos clásicos |
+| **D5.6** | EO atmósfera + dNBR/NDVI post-fuego | [PDF](https://fire-res.eu/wp-content/uploads/2024/12/D5.6_FIRE-RES_IA-5.5-brief-Earth-Observation-data-collection-to-support-decision-making.pdf) | Proxy BA (no perímetro oficial) |
+| **D5.12** | Comunicación crisis EWE (GIS/web) | [PDF](https://fire-res.eu/wp-content/uploads/2024/03/D5.12_FIRE-RES_Tools-to-comunicate-scenarios-in-EWE-1.pdf) | Brief / field kit |
+| **Mapa WFD** | Priorización para este repo | `docs/FIRE_RES_DELIVERABLES_MAP.md` | Lectura mínima |
+
+**Importante:** proyecto **finalizado**; no es fuente de anclas INFOCAM CLM. No mezclar con claims tácticos de `incident_runtime`.
+
+---
+
 ## 3. Repositorios de simulación / ROS (física)
 
 | Repo | Qué es | Link | Cómo nos ayuda |
 |------|--------|------|----------------|
-| **ForeFire** | Motor C++ ROS + NetCDF, JOSS | https://github.com/forefireAPI/forefire | Comparar ROS física vs observada |
+| **ForeFire** | Motor C++ ROS + NetCDF, JOSS (también en FIRE-RES D5.3) | https://github.com/forefireAPI/forefire | Comparar ROS física vs observada |
 | **ELMFIRE** | Level-set operativo (US) | https://github.com/lautenberger/elmfire · https://elmfire.io | Referencia de forecasting real |
 | **Rothermel / Behave** | Clásicos USFS | Literature + implementaciones varias | Calibrar head ROS con wind/slope |
 | **Wang Zhengfei 王正非 (CN)** | ROS empírico viento×pendiente×combustible | **In-repo** `wildfire_front/cn_wang_zhengfei.py` · mega: `docs/MEGA_ANALISIS_CHINA_LINHUO.md` | Prior / anisotropía envelope |
