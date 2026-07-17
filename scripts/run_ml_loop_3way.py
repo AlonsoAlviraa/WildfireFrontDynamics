@@ -352,7 +352,9 @@ def _mix_grid(n: int) -> list[list[float]]:
     for extra in (
         [1 / 3, 1 / 3, 1 / 3],
         [0.3, 0.2667, 0.4333],
+        [0.28, 0.32, 0.4],  # v34
         [0.25, 0.25, 0.5],
+        [0.25, 0.35, 0.4],
         [0.4, 0.2, 0.4],
         [0.35, 0.25, 0.4],
     ):
@@ -361,11 +363,25 @@ def _mix_grid(n: int) -> list[list[float]]:
     return grid
 
 
+def _temp_grid(n: int) -> list[list[float]]:
+    """Coarse per-member temperature grid (logit / T)."""
+    if n == 2:
+        return [[a, b] for a in (0.7, 1.0, 1.3) for b in (0.7, 1.0, 1.3)]
+    if n != 3:
+        return [[1.0] * n]
+    vals = (0.7, 1.0, 1.3)
+    grid = [[a, b, c] for a in vals for b in vals for c in vals]
+    # always include v34 temps
+    if not any(np.allclose([0.7, 0.7, 1.3], g, atol=1e-3) for g in grid):
+        grid.append([0.7, 0.7, 1.3])
+    return grid
+
+
 def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
     """Calibrate soft-vote mix per LOFO source; apply Cardoso recipe on holdout test.
 
-    Uses growth-prob cache so mix×threshold sweeps do not re-run the U-Net.
-    Mix/threshold for GO are selected only on holdout VAL (never Cardoso LOFO).
+    Uses growth-prob cache so mix×threshold/temperature sweeps do not re-run the U-Net.
+    Mix/threshold/temps for GO are selected only on holdout VAL (never Cardoso LOFO).
     """
     print("\n=== TRACK source_mix ===", flush=True)
     members = _honest_members()
@@ -378,8 +394,11 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
 
     grid = _mix_grid(n)
     thresholds = (0.40, 0.45, 0.50, 0.55, 0.60)
-    print(f"  grid={len(grid)} mixes × {len(thresholds)} thr (cached)", flush=True)
-
+    temp_grid = _temp_grid(n)
+    print(
+        f"  grid={len(grid)} mixes × {len(thresholds)} thr + {len(temp_grid)} temps (cached)",
+        flush=True,
+    )
     per_source: dict[str, Any] = {}
     folds = sorted(
         p.name for p in LOFO.iterdir() if p.is_dir() and (p / "test").is_dir()
@@ -474,24 +493,89 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
             )
         }
 
+    # VAL temperature × mix sweep (honest; thr fixed at 0.5 to avoid thr overfit)
+    # Candidate mixes: VAL best@0.5, transfer, equal, v34, a few top mixes
+    temp_mix_cands: list[list[float]] = []
+    for m in (
+        mix,
+        transfer_mix,
+        [1.0 / n] * n,
+        [0.28, 0.32, 0.4] if n == 3 else None,
+        [0.3, 0.2667, 0.4333] if n == 3 else None,
+        best_val["mix"] if best_val else None,
+    ):
+        if m is None:
+            continue
+        if not any(np.allclose(m, x, atol=1e-3) for x in temp_mix_cands):
+            temp_mix_cands.append(list(m))
+    best_temp = None
+    for temps in temp_grid:
+        for tm in temp_mix_cands:
+            m = score_mix_from_cache(
+                val_cache, tm, threshold=0.5, temperatures=temps
+            )
+            row = {
+                "mix": list(m["member_weights"]),
+                "temperatures": list(temps),
+                "threshold": 0.5,
+                "model_iou": m["model_iou"],
+                "improvement_vs_copy_iou": m["improvement_vs_copy_iou"],
+                "model_iou_growth": m["model_iou_growth"],
+            }
+            if best_temp is None or (
+                row["improvement_vs_copy_iou"],
+                row["model_iou"],
+            ) > (
+                best_temp["improvement_vs_copy_iou"],
+                best_temp["model_iou"],
+            ):
+                best_temp = row
+    hold_temp = None
+    if best_temp is not None:
+        print(
+            f"  VAL best temp mix={best_temp['mix']} T={best_temp['temperatures']} "
+            f"Δ={best_temp['improvement_vs_copy_iou']:.4f}",
+            flush=True,
+        )
+        ht = score_mix_from_cache(
+            test_cache,
+            best_temp["mix"],
+            threshold=0.5,
+            temperatures=best_temp["temperatures"],
+        )
+        hold_temp = {
+            k: ht[k]
+            for k in (
+                "model_iou",
+                "improvement_vs_copy_iou",
+                "model_iou_growth",
+                "n_patches",
+                "member_weights",
+                "threshold",
+                "temperatures",
+            )
+        }
+
     cardoso_diag = per_source.get("CARDOSO", {}).get("best")
 
     return {
         "status": "ok",
         "single_change": (
-            "cached per-source mix + VAL mix×threshold sweep (honest; no Cardoso GO)"
+            "cached per-source mix + VAL mix×threshold + VAL temp sweep (honest)"
         ),
         "leakage_guard": (
-            "LOFO CARDOSO/test == holdout test; mix+threshold for GO on holdout VAL only"
+            "LOFO CARDOSO/test == holdout test; mix+threshold+temps for GO on VAL only"
         ),
         "members": [str(p) for p in use],
         "grid_size": len(grid),
         "thresholds": list(thresholds),
+        "temp_grid_size": len(temp_grid),
         "per_source_best_diagnostic": {k: v["best"] for k, v in per_source.items()},
         "cardoso_lofo_is_holdout_test": True,
         "cardoso_lofo_diag_not_for_go": cardoso_diag,
         "val_grid_best": best_val,
         "val_sweep_top": val_sweep.get("rows_top"),
+        "val_temp_best": best_temp,
         "applied_for_holdout": {
             "source_key": "holdout_val_LA",
             "mix": mix,
@@ -511,6 +595,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         },
         "holdout_test_transfer_mix": hold_transfer,
         "holdout_test_transfer_mix_thr05": hold_transfer_05,
+        "holdout_test_val_temp": hold_temp,
         "holdout_test_equal": {
             k: equal[k]
             for k in (
@@ -533,9 +618,13 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
             if hold_transfer_05
             else None
         ),
+        "verdict_val_temp": (
+            _verdict(hold_temp, champion, "source_mix_val_temp_calibrated")
+            if hold_temp
+            else None
+        ),
         "transfer_threshold": hold_transfer_thr,
     }
-
 
 # ── Track 3: multi-objective FT ─────────────────────────────────────────────
 
@@ -777,13 +866,20 @@ def run_round(
                 ("verdict", "source_mix_val_tuned"),
                 ("verdict_transfer", "source_mix_transfer"),
                 ("verdict_transfer_thr05", "source_mix_transfer_thr05"),
+                ("verdict_val_temp", "source_mix_val_temp"),
             ):
                 vb = sm.get(vkey)
                 if not vb:
                     continue
+                temps = None
                 if vkey == "verdict":
                     mix = sm.get("applied_for_holdout", {}).get("mix")
                     thr = sm.get("applied_for_holdout", {}).get("threshold", 0.5)
+                elif vkey == "verdict_val_temp":
+                    vt = sm.get("val_temp_best") or {}
+                    mix = vt.get("mix")
+                    thr = vt.get("threshold", 0.5)
+                    temps = vt.get("temperatures")
                 else:
                     mix = sm.get("transfer_mix_from_non_cardoso_lofo")
                     thr = (
@@ -791,18 +887,38 @@ def run_round(
                         if vkey == "verdict_transfer_thr05"
                         else sm.get("transfer_threshold", 0.5)
                     )
-                _maybe_promote(
-                    sc,
-                    vb,
-                    {
-                        "type": rkey,
-                        "members": sm.get("members"),
-                        "mix": mix,
-                        "threshold": thr,
-                        "per_source_diagnostic": sm.get("per_source_best_diagnostic"),
-                        "leakage_guard": sm.get("leakage_guard"),
-                    },
-                )
+                recipe = {
+                    "type": rkey,
+                    "members": sm.get("members"),
+                    "mix": mix,
+                    "threshold": thr,
+                    "per_source_diagnostic": sm.get("per_source_best_diagnostic"),
+                    "leakage_guard": sm.get("leakage_guard"),
+                }
+                if temps is not None:
+                    recipe["temperatures"] = temps
+                _maybe_promote(sc, vb, recipe)
+                # On GO temp promote, freeze recipe into ensemble manifest-friendly sidecar
+                if vb.get("go") and temps is not None and vb.get("verdict") == "GO_PROMOTE":
+                    try:
+                        (ROOT / "models" / "clm_ensemble" / "loop_champion_recipe.json").write_text(
+                            json.dumps(
+                                {
+                                    "name": vb["name"],
+                                    "model_iou": vb["model_iou"],
+                                    "improvement_vs_copy_iou": vb["improvement_vs_copy_iou"],
+                                    "model_iou_growth": vb.get("model_iou_growth"),
+                                    "recipe": recipe,
+                                    "promoted_at_utc": _utc(),
+                                },
+                                indent=2,
+                                default=str,
+                            ),
+                            encoding="utf-8",
+                        )
+                    except OSError:
+                        pass
+
         sm["latency_s"] = round(time.perf_counter() - t0, 2)
         round_rep["tracks"]["source_mix"] = sm
         champion = sc.get("champion") or champion
