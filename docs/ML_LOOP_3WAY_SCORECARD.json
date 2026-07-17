@@ -1,0 +1,467 @@
+{
+  "protocol": "clm_holdout_test_seed42_v1 + LOFO honest",
+  "tracks": [
+    "multi_if",
+    "source_mix",
+    "multi_obj"
+  ],
+  "champion": {
+    "name": "clm_ensemble_v31_triple",
+    "model_iou": 0.8702,
+    "improvement_vs_copy_iou": 0.2284,
+    "model_iou_growth": 0.9134
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "started_at_utc": "2026-07-17T09:21:20.193026+00:00",
+      "tracks": {
+        "multi_if": {
+          "status": "ok",
+          "single_change": "multi-IF FT on LOFO-CARDOSO train (no Cardoso in train)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\production\\weights_v21_best.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 4,
+            "test_iou": 0.7992638949917198,
+            "improvement_vs_copy_iou": 0.15746172464703212
+          },
+          "eval_lofo_cardoso_test": {
+            "model_iou": 0.7992638949917198,
+            "improvement_vs_copy_iou": 0.15746172464703212,
+            "model_iou_growth": 0.9981786044337083,
+            "n_patches": 200
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.7992638949917198,
+            "improvement_vs_copy_iou": 0.15746172464703212,
+            "model_iou_growth": 0.9981786044337083,
+            "n_patches": 200
+          },
+          "eval_v28_plus_multi_if": {
+            "model_iou": 0.8661981211926587,
+            "improvement_vs_copy_iou": 0.22439595084797104,
+            "model_iou_growth": 0.8691645805851483,
+            "n_patches": 200
+          },
+          "verdict_single": {
+            "name": "r1_multi_if",
+            "model_iou": 0.7992638949917198,
+            "improvement_vs_copy_iou": 0.15746172464703212,
+            "model_iou_growth": 0.9981786044337083,
+            "vs_champion": {
+              "iou_diff": -0.07093610500828018,
+              "delta_diff": -0.07093827535296787,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_pair": {
+            "name": "r1_v28_plus_multi_if",
+            "model_iou": 0.8661981211926587,
+            "improvement_vs_copy_iou": 0.22439595084797104,
+            "model_iou_growth": 0.8691645805851483,
+            "vs_champion": {
+              "iou_diff": -0.004001878807341264,
+              "delta_diff": -0.0040040491520289545,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 151.03
+        },
+        "source_mix": {
+          "status": "ok",
+          "single_change": "per-source soft-vote mix calibrated on LOFO tests",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v30_ema.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+          ],
+          "per_source_best": {
+            "CARDOSO": {
+              "mix": [
+                0.4,
+                0.3,
+                0.3
+              ],
+              "model_iou": 0.8698329432540359,
+              "improvement_vs_copy_iou": 0.22803077290934826,
+              "model_iou_growth": 0.9014068710573508
+            },
+            "LA_ESTRELLA_ACOM1": {
+              "mix": [
+                0.4,
+                0.2,
+                0.39999999999999997
+              ],
+              "model_iou": 0.7920393721932895,
+              "improvement_vs_copy_iou": 0.4327074582136687,
+              "model_iou_growth": 0.9810567913822472
+            },
+            "LA_ESTRELLA_ACOM2": {
+              "mix": [
+                0.4,
+                0.2,
+                0.39999999999999997
+              ],
+              "model_iou": 0.7035175078886452,
+              "improvement_vs_copy_iou": 0.3336697646431942,
+              "model_iou_growth": 0.9704567349254717
+            },
+            "tobarra_20240802": {
+              "mix": [
+                0.6,
+                0.3,
+                0.10000000000000003
+              ],
+              "model_iou": 0.40570964066359033,
+              "improvement_vs_copy_iou": -0.04824942824267625,
+              "model_iou_growth": 0.9949453202143338
+            }
+          },
+          "applied_for_holdout": {
+            "source_key": "CARDOSO",
+            "mix": [
+              0.4,
+              0.3,
+              0.3
+            ]
+          },
+          "holdout_test_calibrated": {
+            "model_iou": 0.8698329432540359,
+            "improvement_vs_copy_iou": 0.22803077290934826,
+            "model_iou_growth": 0.9014068710573508,
+            "n_patches": 200,
+            "member_weights": [
+              0.4,
+              0.3,
+              0.3
+            ]
+          },
+          "holdout_test_equal": {
+            "model_iou": 0.8635766071998048,
+            "improvement_vs_copy_iou": 0.2217744368551171,
+            "model_iou_growth": 0.9419575964752218
+          },
+          "verdict": {
+            "name": "source_mix_cardoso_recipe",
+            "model_iou": 0.8698329432540359,
+            "improvement_vs_copy_iou": 0.22803077290934826,
+            "model_iou_growth": 0.9014068710573508,
+            "vs_champion": {
+              "iou_diff": -0.00036705674596404503,
+              "delta_diff": -0.00036922709065173587,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 378.23
+        },
+        "multi_obj": {
+          "status": "ok",
+          "single_change": "early_stop=multi_full_growth (full\u0394 + \u03bb\u00b7growth, not growth-only)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_obj_multi_full_growth\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 5,
+            "test_iou": 0.7883999763405006,
+            "improvement_vs_copy_iou": 0.14659780599581296,
+            "model_iou_growth": 0.5203763021181483
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.7883999763405006,
+            "improvement_vs_copy_iou": 0.14659780599581296,
+            "model_iou_growth": 0.5203763021181483,
+            "n_patches": 200
+          },
+          "eval_triple_if_available": {
+            "model_iou": 0.8493037550035183,
+            "improvement_vs_copy_iou": 0.20750158465883062,
+            "model_iou_growth": 0.7490780867268045
+          },
+          "verdict": {
+            "name": "r1_multi_full_growth",
+            "model_iou": 0.7883999763405006,
+            "improvement_vs_copy_iou": 0.14659780599581296,
+            "model_iou_growth": 0.5203763021181483,
+            "vs_champion": {
+              "iou_diff": -0.08180002365949934,
+              "delta_diff": -0.08180219400418703,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_triple": {
+            "name": "r1_multi_full_growth_triple",
+            "model_iou": 0.8493037550035183,
+            "improvement_vs_copy_iou": 0.20750158465883062,
+            "model_iou_growth": 0.7490780867268045,
+            "vs_champion": {
+              "iou_diff": -0.020896244996481683,
+              "delta_diff": -0.020898415341169374,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 142.97
+        }
+      },
+      "champion_before": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      },
+      "finished_at_utc": "2026-07-17T09:32:32.426796+00:00",
+      "champion_after": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      }
+    },
+    {
+      "round": 2,
+      "started_at_utc": "2026-07-17T09:32:32.426796+00:00",
+      "tracks": {
+        "multi_if": {
+          "status": "ok",
+          "single_change": "multi-IF FT on LOFO-CARDOSO train (no Cardoso in train)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 2,
+            "test_iou": 0.8021449107620094,
+            "improvement_vs_copy_iou": 0.16034274041732177
+          },
+          "eval_lofo_cardoso_test": {
+            "model_iou": 0.8021449107620094,
+            "improvement_vs_copy_iou": 0.16034274041732177,
+            "model_iou_growth": 0.9912922936121095,
+            "n_patches": 200
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.8021449107620094,
+            "improvement_vs_copy_iou": 0.16034274041732177,
+            "model_iou_growth": 0.9912922936121095,
+            "n_patches": 200
+          },
+          "eval_v28_plus_multi_if": {
+            "model_iou": 0.8605615489548248,
+            "improvement_vs_copy_iou": 0.21875937861013717,
+            "model_iou_growth": 0.8478372049200794,
+            "n_patches": 200
+          },
+          "verdict_single": {
+            "name": "r2_multi_if",
+            "model_iou": 0.8021449107620094,
+            "improvement_vs_copy_iou": 0.16034274041732177,
+            "model_iou_growth": 0.9912922936121095,
+            "vs_champion": {
+              "iou_diff": -0.06805508923799053,
+              "delta_diff": -0.06805725958267822,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_pair": {
+            "name": "r2_v28_plus_multi_if",
+            "model_iou": 0.8605615489548248,
+            "improvement_vs_copy_iou": 0.21875937861013717,
+            "model_iou_growth": 0.8478372049200794,
+            "vs_champion": {
+              "iou_diff": -0.009638451045175134,
+              "delta_diff": -0.009640621389862825,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 118.4
+        },
+        "source_mix": {
+          "status": "ok",
+          "single_change": "per-source soft-vote mix calibrated on LOFO tests",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v30_ema.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_if\\weights_pretrained_best.pt"
+          ],
+          "per_source_best": {
+            "CARDOSO": {
+              "mix": [
+                0.4,
+                0.4,
+                0.19999999999999996
+              ],
+              "model_iou": 0.8666963162684771,
+              "improvement_vs_copy_iou": 0.22489414592378942,
+              "model_iou_growth": 0.8662844427692094
+            },
+            "LA_ESTRELLA_ACOM1": {
+              "mix": [
+                0.4,
+                0.2,
+                0.39999999999999997
+              ],
+              "model_iou": 0.7920708476994612,
+              "improvement_vs_copy_iou": 0.43273893371984046,
+              "model_iou_growth": 0.9715953853015561
+            },
+            "LA_ESTRELLA_ACOM2": {
+              "mix": [
+                0.4,
+                0.2,
+                0.39999999999999997
+              ],
+              "model_iou": 0.7031156883193344,
+              "improvement_vs_copy_iou": 0.33326794507388335,
+              "model_iou_growth": 0.9661678976357464
+            },
+            "tobarra_20240802": {
+              "mix": [
+                0.6,
+                0.3,
+                0.10000000000000003
+              ],
+              "model_iou": 0.4054421050877205,
+              "improvement_vs_copy_iou": -0.04851696381854609,
+              "model_iou_growth": 0.9952452360915875
+            }
+          },
+          "applied_for_holdout": {
+            "source_key": "CARDOSO",
+            "mix": [
+              0.4,
+              0.4,
+              0.19999999999999996
+            ]
+          },
+          "holdout_test_calibrated": {
+            "model_iou": 0.8666963162684771,
+            "improvement_vs_copy_iou": 0.22489414592378942,
+            "model_iou_growth": 0.8662844427692094,
+            "n_patches": 200,
+            "member_weights": [
+              0.4,
+              0.4,
+              0.19999999999999996
+            ]
+          },
+          "holdout_test_equal": {
+            "model_iou": 0.8609063638600176,
+            "improvement_vs_copy_iou": 0.21910419351532995,
+            "model_iou_growth": 0.9243717082532886
+          },
+          "verdict": {
+            "name": "source_mix_cardoso_recipe",
+            "model_iou": 0.8666963162684771,
+            "improvement_vs_copy_iou": 0.22489414592378942,
+            "model_iou_growth": 0.8662844427692094,
+            "vs_champion": {
+              "iou_diff": -0.0035036837315228775,
+              "delta_diff": -0.0035058540762105683,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 435.09
+        },
+        "multi_obj": {
+          "status": "ok",
+          "single_change": "early_stop=multi_full_growth_025 (full\u0394 + \u03bb\u00b7growth, not growth-only)",
+          "init": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\loop_3way\\multi_obj_multi_full_growth_025\\weights_pretrained_best.pt",
+          "training": {
+            "best_epoch": 2,
+            "test_iou": 0.8227913171819256,
+            "improvement_vs_copy_iou": 0.18098914683723788,
+            "model_iou_growth": 0.6321364162469237
+          },
+          "eval_holdout_test": {
+            "model_iou": 0.8227913171819256,
+            "improvement_vs_copy_iou": 0.18098914683723788,
+            "model_iou_growth": 0.6321364162469237,
+            "n_patches": 200
+          },
+          "eval_triple_if_available": {
+            "model_iou": 0.8495416325639336,
+            "improvement_vs_copy_iou": 0.20773946221924589,
+            "model_iou_growth": 0.7601724493729374
+          },
+          "verdict": {
+            "name": "r2_multi_full_growth_025",
+            "model_iou": 0.8227913171819256,
+            "improvement_vs_copy_iou": 0.18098914683723788,
+            "model_iou_growth": 0.6321364162469237,
+            "vs_champion": {
+              "iou_diff": -0.04740868281807442,
+              "delta_diff": -0.04741085316276211,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "verdict_triple": {
+            "name": "r2_multi_full_growth_025_triple",
+            "model_iou": 0.8495416325639336,
+            "improvement_vs_copy_iou": 0.20773946221924589,
+            "model_iou_growth": 0.7601724493729374,
+            "vs_champion": {
+              "iou_diff": -0.020658367436066416,
+              "delta_diff": -0.020660537780754107,
+              "beats": false
+            },
+            "verdict": "NO_PROMOTE_KEEP_CHAMPION",
+            "go": false
+          },
+          "latency_s": 100.42
+        }
+      },
+      "champion_before": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      },
+      "finished_at_utc": "2026-07-17T09:43:26.361146+00:00",
+      "champion_after": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      }
+    }
+  ],
+  "history": [
+    {
+      "round": 1,
+      "champion": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      },
+      "at": "2026-07-17T09:32:32.426796+00:00"
+    },
+    {
+      "round": 2,
+      "champion": {
+        "name": "clm_ensemble_v31_triple",
+        "model_iou": 0.8702,
+        "improvement_vs_copy_iou": 0.2284,
+        "model_iou_growth": 0.9134
+      },
+      "at": "2026-07-17T09:43:26.361146+00:00"
+    }
+  ],
+  "updated_at_utc": "2026-07-17T09:43:26.361146+00:00"
+}

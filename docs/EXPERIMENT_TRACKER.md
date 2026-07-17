@@ -176,6 +176,23 @@ Protocol: same holdout test (CARDOSO). Champion v30 pair equal IoU **0.8683** Δ
 
 **Scorecard:** `docs/V31_ML_SCORECARD.json` · **Script:** `scripts/run_clm_v31_metric_push.py`
 
+### ML loop 3-way (2026-07-17) — continuous iteration
+Script: `python scripts/run_ml_loop_3way.py --rounds N`  
+Tracks (cycle each round):
+
+1. **multi_if** — FT multi-fire LOFO-CARDOSO train  
+2. **source_mix** — per-source soft-vote mix (LOFO tests → Cardoso recipe)  
+3. **multi_obj** — early-stop `multi_full_growth*` = fullΔ + λ·growth IoU  
+
+| Round | multi_if holdout IoU | source_mix Cardoso Δ | multi_obj holdout IoU | Promote? |
+|-------|----------------------|----------------------|------------------------|----------|
+| 1 | 0.799 (v21 init) | Δ 0.228 (mix 0.4/0.3/0.3) | 0.788 | No |
+| 2 | 0.802 (v28 init) | Δ 0.225 (mix 0.4/0.4/0.2) | 0.823 (λ=0.25) | No |
+
+**Champion unchanged:** triple weighted IoU **0.870** Δ **+0.228**.  
+Per-source mixes differ (Estrella wants more LOFO; Tobarra prefers v28) — useful for future source-aware product.  
+Scorecard: `docs/ML_LOOP_3WAY_SCORECARD.json`
+
 ### O3 temporal Tobarra
 - Strict band 2/3 GO; late ratio 0.478; wide band 3/3
 

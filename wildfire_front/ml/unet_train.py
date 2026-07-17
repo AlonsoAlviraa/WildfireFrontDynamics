@@ -449,15 +449,15 @@ EARLY_STOP_METRICS = frozenset(
         "model_iou",
         "model_iou_changed",
         "model_iou_growth",
+        # Multi-objective: full Δcopy + λ * growth IoU (does NOT use growth alone)
+        "multi_full_growth",
+        "multi_full_growth_05",
+        "multi_full_growth_025",
     }
 )
 
 
-def _early_stop_score(val_results: dict, metric: str) -> float:
-    """Higher is better. ``val_loss`` is negated."""
-    if metric == "val_loss":
-        return -float(val_results.get("loss", 0.0))
-    # Prefer top-level flattened keys (see evaluate_loader) then thresh primary.
+def _metric_value(val_results: dict, metric: str) -> float:
     if metric in val_results and not isinstance(val_results.get(metric), dict):
         try:
             return float(val_results[metric])
@@ -469,7 +469,31 @@ def _early_stop_score(val_results: dict, metric: str) -> float:
             return float(primary[metric])
         except (TypeError, ValueError):
             pass
-    return float(val_results.get(metric, -1e9))
+    return float("nan")
+
+
+def _early_stop_score(val_results: dict, metric: str) -> float:
+    """Higher is better. ``val_loss`` is negated."""
+    if metric == "val_loss":
+        return -float(val_results.get("loss", 0.0))
+    # Multi-objective gates: never optimize growth alone (v30_growth_es killed that).
+    if metric in ("multi_full_growth", "multi_full_growth_05", "multi_full_growth_025"):
+        full = _metric_value(val_results, "improvement_vs_copy_iou")
+        growth = _metric_value(val_results, "model_iou_growth")
+        if full != full:  # NaN
+            full = -1e9
+        if growth != growth:
+            growth = 0.0
+        lam = 0.25
+        if metric == "multi_full_growth_05":
+            lam = 0.5
+        elif metric == "multi_full_growth":
+            lam = 0.35
+        return float(full + lam * growth)
+    val = _metric_value(val_results, metric)
+    if val != val:  # NaN
+        return -1e9
+    return float(val)
 
 
 def run_training(config: UNetTrainConfig) -> dict:
