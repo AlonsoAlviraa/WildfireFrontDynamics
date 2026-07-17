@@ -197,20 +197,23 @@ IoU **0.8952** Δ **+0.2534** · mix ≈ **0.30 / 0.27 / 0.43** (v28 + EMA + mul
 Mix = average of best mixes on **non-Cardoso** LOFO folds; multi_if snapshotted.  
 Product was **`clm_ensemble_v33`**.
 
-**Champion v34 (honest, promoted):** `source_mix_val_temp_calibrated`  
+**Champion v34 (honest, promoted — CLOSED):** `source_mix_val_temp_calibrated`  
 IoU **0.8963** Δ **+0.2545** · growth **0.9071**  
 mix **0.28 / 0.32 / 0.40** · temperatures **0.7 / 0.7 / 1.3** (v28, EMA, multi_if)  
 Selection on holdout **VAL only** (no Cardoso). Gain vs v33: IoU/Δ **+0.0010**, growth **+0.018**.  
 Product: `models/clm_ensemble/manifest.json` version **`clm_ensemble_v34`**.
 
+**Loop close-out:** 3-way infinite loop stopped after **30 rounds** at plateau (temps reaffirm champion; multi_if / multi_obj no GO). Status `STOPPED_PLATEAU`.
+
 **Leakage rejected:**
 - `source_mix_cardoso_recipe` IoU 0.888 — LOFO CARDOSO/test ≡ holdout test.
 - **Tobarra/LA as 4th member** IoU ~0.90 — LOFO trains **include Cardoso**; not eligible for holdout GO.
 
-**Loop upgrades:**
+**Loop upgrades (landed):**
 - Growth-prob **cache** for mix×threshold/temp sweeps.
 - multi_if: rotate init + EMA + clw/pw; freeze-protected members.
 - Production inference supports `member_temperatures` (logit / T).
+- Scorecard save never demotes a stronger external champion.
 
 Scorecard: `docs/ML_LOOP_3WAY_SCORECARD.json`
 
