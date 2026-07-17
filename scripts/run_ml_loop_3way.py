@@ -104,18 +104,18 @@ def _verdict(test: dict[str, Any], champion: dict[str, Any], name: str) -> dict[
 
 
 def _honest_members() -> list[Path]:
-    """v28 + EMA + LOFO-CARDOSO if present."""
-    cands = [
-        ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
-        V28,
-        ROOT / "models" / "clm_ensemble" / "weights_v30_ema.pt",
-        ROOT / "outputs" / "ml_eval" / "v30_ema" / "weights_pretrained_best.pt",
-        ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
-        ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
-        LOOP_DIR / "multi_if" / "weights_pretrained_best.pt",
-    ]
-    # Prefer dedicated ensemble copies
-    v28 = next((p for p in cands[:2] if p.is_file()), None)
+    """v28 + EMA + best multi_if (prefer frozen / best-holdout, never a half-trained live file)."""
+    v28 = next(
+        (
+            p
+            for p in (
+                ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
+                V28,
+            )
+            if p.is_file()
+        ),
+        None,
+    )
     ema = next(
         (
             p
@@ -127,10 +127,13 @@ def _honest_members() -> list[Path]:
         ),
         None,
     )
-    lofo = next(
+    # multi_if: production freeze first, then best-holdout snapshot, then live last
+    multi = next(
         (
             p
             for p in (
+                ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
+                LOOP_DIR / "multi_if" / "weights_multi_if_best_holdout.pt",
                 LOOP_DIR / "multi_if" / "weights_pretrained_best.pt",
                 ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
                 ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
@@ -139,8 +142,7 @@ def _honest_members() -> list[Path]:
         ),
         None,
     )
-    out = [p for p in (v28, ema, lofo) if p is not None]
-    return out
+    return [p for p in (v28, ema, multi) if p is not None]
 
 
 # ── Track 1: multi-IF retrain ───────────────────────────────────────────────
@@ -520,6 +522,26 @@ def _maybe_promote(sc: dict[str, Any], vb: dict[str, Any], recipe: dict[str, Any
     sc["champion"] = champ
     sc.setdefault("promotions", []).append(champ)
     print("  ** PROMOTED CHAMPION **", json.dumps(vb, indent=2), flush=True)
+    # Freeze multi_if member into models/ if present in recipe
+    try:
+        members = recipe.get("members") or []
+        for m in members:
+            mp = Path(m)
+            if "multi_if" in mp.name or "loop_3way" in str(mp).replace("\\", "/"):
+                dest = ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt"
+                if mp.is_file():
+                    import shutil
+
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(mp, dest)
+                    print(f"  froze multi_if -> {dest}", flush=True)
+                break
+        # Write production-ish recipe sidecar
+        (ROOT / "models" / "clm_ensemble" / "loop_champion_recipe.json").write_text(
+            json.dumps(champ, indent=2, default=str), encoding="utf-8"
+        )
+    except OSError as exc:
+        print(f"  warn: could not freeze champion weights: {exc}", flush=True)
 
 
 def run_round(
