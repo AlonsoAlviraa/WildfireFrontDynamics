@@ -1,43 +1,53 @@
-# 🎯 VISION — WildfireFrontDynamics
+# VISION — WildfireFrontDynamics
 
-## What We Build
+## What we build (today)
 
-A machine-learning system that predicts **next-day wildfire spread** using satellite imagery, meteorological data, and terrain features. The system segments a map into "will burn" vs "won't burn" cells, enabling emergency responders to anticipate fire front movement.
+**Decision support for wildfires** with three honest pieces:
 
-## Why It Matters
+1. **Thermal ops** (`incident_runtime_v1`) — observed front + ROS from LWIR when a drone exists  
+2. **Open perimeter** — public CEMS/EFFIS multi-day packs when there is no NDA  
+3. **Fire Decision Card** — **GO / HOLD / ABSTAIN** + confidence + audit hashes  
 
-Wildfires destroy millions of hectares annually. Predicting where a fire will spread **24 hours in advance** saves lives, optimizes resource deployment, and reduces economic loss. Our system targets **Castilla-La Mancha, Spain** as the operational domain, with global applicability.
+We do **not** claim 99.9999% fire-spread accuracy. That figure, when used at all, is only the residual risk of a **silent GO** under automated gates in tests.
 
-## North Star Metric
+## North star (dream)
 
-| Metric | Target | Current |
-|---|---|---|
-| **IoU (Intersection over Union)** | **>0.30** | 0.002 |
-| **Recall** | **>0.50** | 0.002 |
+See the full aspirational document (Spanish):
 
-Benchmark reference: NDWS paper (Hu et al., NeurIPS 2023) achieves IoU=0.42 with U-Net.
+### → [`docs/SUENOS_MAXIMOS.md`](docs/SUENOS_MAXIMOS.md)
 
-## Core Principles
+That file is the **maximum** results and features this repository could achieve: crisis-room fusion, sub-minute Decision Cards, multi-region ML with calibration, national perimeter anchors, forensic replay, paid pilots — without lying about physics.
 
-1. **Physics-informed ML** — Combine Rothermel's fire spread equations with deep learning
-2. **Leak-free evaluation** — Train/val/test splits are geographically disjoint
-3. **Real-world deployability** — Must work on real GeoTIFF data from Spanish wildfires (Tobarra, La Estrella)
-4. **Iterative improvement** — Loop engineering: hypothesis → experiment → measure → learn
+## Why it matters
 
-## Architecture Direction
+Wildfires move faster than bureaucracy. What pays in the field is not another free map: it is knowing **when to trust**, **when to hold**, and **when the system must stay silent** — with a trail an auditor can rebuild.
 
-```
-Satellite + Weather Data → U-Net Segmentation → Fire Spread Probability Map
-                                                      ↓
-                                              Meta-Labeler (RandomForest)
-                                                      ↓
-                                              Trustworthy Predictions
-```
+## Current phase (2026-07)
 
-## Current Phase
+| Layer | State |
+|-------|--------|
+| ML Spain ensemble | `clm_ensemble_v34` · holdout IoU **0.8963** · Δ vs copy **0.2545** |
+| Incident runtime | Outbox includes **fire_decision_card.json** on every update |
+| Open CEMS | **4** packs demo-ready |
+| Product gates | Metrics Hub + reliability gate + portal (`docs/PORTAL.html`) |
 
-We are in **Phase 1: Architectural Overhaul** — transitioning from A3C-LSTM (per-cell, batch_size=1) to U-Net (full-patch, batch_size=32). Three experiments (v10-v12) proved the bottleneck is architectural.
+Near-term plan: [`docs/PLAN_3_MESES.md`](docs/PLAN_3_MESES.md)  
+Start here: [`docs/START_HERE.md`](docs/START_HERE.md)
 
-## Success Definition
+## Core principles (non-negotiable)
 
-When a firefighter in Castilla-La Mancha can upload today's fire perimeter + weather data and receive a reliable 24-hour spread prediction with **IoU > 0.30**.
+1. **Ops ≠ ML ≠ open** — fuse only in the Decision Card  
+2. **Abstention is a feature** — empty or weak sources → ABSTAIN  
+3. **Leak-free evaluation** — never tune on the holdout test  
+4. **Provenance** — every metric has source, version, UTC  
+5. **Champion protection** — no training loop overwrites the promoted model without gates  
+6. **Honest claims** — system reliability ≠ fire prediction accuracy  
+
+## Success (near) vs success (dream)
+
+| Horizon | Definition |
+|---------|------------|
+| **Near (GO_Q)** | Decision Card in CLI + incident outbox; hub + reliability green; ≥4 open packs; v34 not regressed; pilot path or outreach evidence |
+| **Dream** | Crisis room uses live FDC with multi-source fusion; 20+ IF/year audited; multi-region calibrated ML; signed API; organism pays for **trust + audit**, not for pretty maps |
+
+Details and target tables: **`docs/SUENOS_MAXIMOS.md`**.

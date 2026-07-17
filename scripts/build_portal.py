@@ -311,6 +311,7 @@ python scripts\\show_all.py</pre>
       <ul>
         <li><a href="START_HERE.md">START_HERE.md</a> — lectura 2 min</li>
         <li><a href="ONEPAGER_COMERCIAL_ES.md">One-pager venta</a></li>
+        <li><a href="SUENOS_MAXIMOS.md">Sueños máximos</a> — techo de resultados y funciones</li>
         <li><a href="GUIA_COMANDOS_RECREAR_TODO.md">Comandos completos</a></li>
         <li><a href="PLAN_3_MESES.md">Plan 3 meses</a></li>
         <li><a href="PRODUCT_REDESIGN_PAID_VALUE.md">Por qué se paga</a></li>

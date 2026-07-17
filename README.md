@@ -31,7 +31,8 @@ Abre el **portal** (`docs/PORTAL.html`) con todo el trabajo, números y enlaces.
 
 Lectura corta: **[`docs/START_HERE.md`](docs/START_HERE.md)**  
 Venta: **[`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md)**  
-Comandos largos: **[`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md)**
+Comandos largos: **[`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md)**  
+Sueños máximos (techo del producto): **[`docs/SUENOS_MAXIMOS.md`](docs/SUENOS_MAXIMOS.md)**
 
 ---
 

@@ -46,8 +46,7 @@ El resto de `docs/` es archivo técnico / scorecards — no hace falta para la p
 |-------|---------------------|
 | ML v34, ops incident, 4 packs CEMS | 2ª ancla INFOCAM |
 | Decision Card + Metrics Hub | Perímetro nacional oficial |
-| **FDC en cada `incident update`** (outbox) | Piloto con cliente real |
-| Portal + demo 1 comando | |
+| Portal + demo 1 comando | Piloto con cliente real |
 
 ## Comando mínimo de decisión
 
@@ -57,7 +56,3 @@ $env:PYTHONPATH = "."
 python -m wildfire_front decide                    # vacío → ABSTAIN
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
 ```
-
-Tras un incidente (demo o real), la decisión también sale **en el outbox**:
-
-`outputs/incidents/<IF>/outbox/fire_decision_card.json`
