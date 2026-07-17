@@ -1,0 +1,45 @@
+{
+  "track": "Pista_B_famous_open_data",
+  "updated_at_utc": "2026-07-17T16:10:00+00:00",
+  "requires_lwir_heligraphics": false,
+  "packs": [
+    {
+      "activation": "EMSR578",
+      "name": "Spain June 2022 CEMS (Artesa de Segre / multi-AOI)",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR578",
+      "max_area_ha": 2693.5,
+      "n_timeline_steps": 5,
+      "n_ros_proxy_steps": 4,
+      "O2_cems_delineation": "GO",
+      "O2_national_official": "NO_GO_CEMS_PROXY",
+      "pack_dir": "outputs/open_if/emsr578",
+      "status": "GO_OPEN_DATA_PACK"
+    },
+    {
+      "activation": "EMSR583",
+      "name": "Spain June 2022 CEMS (same wave)",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR583",
+      "max_area_ha": 1790.6,
+      "n_timeline_steps": 5,
+      "n_ros_proxy_steps": 4,
+      "O2_cems_delineation": "GO",
+      "O2_national_official": "NO_GO_CEMS_PROXY",
+      "pack_dir": "outputs/open_if/emsr583",
+      "status": "GO_OPEN_DATA_PACK"
+    }
+  ],
+  "methods_validated_without_lwir": [
+    "CEMS multi-product perimeter timeline",
+    "area_ha from equal-area projection",
+    "growth_ha_per_hour proxy (dt assumed 24h)",
+    "equiv_radius ROS proxy m/min",
+    "Hausdorff perimeter-to-perimeter between CEMS products",
+    "operator brief + Leaflet map",
+    "FIRE-RES paper links in manifest"
+  ],
+  "honest_limits": [
+    "CEMS is emergency satellite delineation, not Spanish national cadastral perimeter",
+    "ROS proxy assumes 24h between products when acquisition time not in layer props",
+    "Does not replace INFOCAM Vp/ha anchors for CLM drone ROS (Pista A)"
+  ]
+}

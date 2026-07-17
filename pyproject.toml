@@ -36,7 +36,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Typing :: Typed",
 ]
-dependencies = ["numpy>=2.0", "rasterio>=1.4", "affine"]
+dependencies = ["numpy>=2.0", "rasterio>=1.4", "affine", "shapely>=2.0", "pyproj>=3.6"]
 
 [project.urls]
 Homepage = "https://github.com/AlonsoAlviraa/WildfireFrontDynamics"

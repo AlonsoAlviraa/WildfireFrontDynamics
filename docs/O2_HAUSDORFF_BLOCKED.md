@@ -5,7 +5,12 @@
 
 ## Estado
 
-**BLOCKED** — no hay perímetro vectorial oficial (SHP/GPKG) con CRS y timestamp válidos para ningún IF del repo que permita un Hausdorff “oficial”.
+| Nivel | Estado | Evidencia |
+|-------|--------|-----------|
+| **O2 nacional/catastral oficial** | **BLOCKED** | Sin SHP/GPKG nacional para Tobarra/Cardoso |
+| **O2 open CEMS delineation (Pista B)** | **GO_PROXY** | Packs `outputs/open_if/emsr578` y `emsr583` (perímetros `observedEventA`, multi-MONIT) |
+
+CEMS **no** sustituye perímetro nacional; sí permite demo reproducible de Hausdorff / área / timeline **sin LWIR**.
 
 ## Prohibido
 

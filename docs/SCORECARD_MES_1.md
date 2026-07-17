@@ -20,7 +20,8 @@
 | **E1** CI/smokes | tests + smokes | **PARTIAL→GO eng** | `make test`, `demo_dual_product`, Makefile |
 | **P1** incident 2 IF | smoke 2 IF reales | **PARTIAL** | synthetic + Tobarra path en smokes; 2º IF depende de QA |
 | **O1** multi-ancla | ≥2 confirmed | **OPEN** | solo Tobarra confirmed; Cardoso pending_external |
-| **O2** Hausdorff oficial | P50 o abstención | **BLOCKED** | `docs/O2_HAUSDORFF_BLOCKED.md` |
+| **O2** Hausdorff oficial nacional | P50 o abstención | **BLOCKED** | sin perímetro nacional |
+| **O2** CEMS open (Pista B) | perímetro multi-temporal | **GO_PROXY** | EMSR578/583 · `docs/PISTA_B_OPEN_IF.md` |
 | **O3** temporal | ventanas | PARTIAL | Tobarra histórico |
 | **O4** brief 5 min | field kit | **GO eng** | `docs/FIELD_KIT_INCIDENT.md` + outbox briefing |
 | **O5** 2º grado A | 2º IF | **OPEN** | requiere ancla |
