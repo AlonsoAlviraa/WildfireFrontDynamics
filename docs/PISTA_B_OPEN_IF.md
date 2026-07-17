@@ -6,10 +6,14 @@ Validar métodos y gates con **datos públicos reproducibles**, en paralelo a CL
 
 ## Packs generados
 
-| Activación CEMS | Localización (CEMS) | max ha (CEMS) | Timeline pasos | Path |
-|-----------------|---------------------|---------------|----------------|------|
-| **EMSR578** | España jun-2022 (Artesa de Segre / multi-AOI) | ~2693 | 5 (FEP→DEL→MONIT→GRA) | `outputs/open_if/emsr578/` |
-| **EMSR583** | España jun-2022 (misma ola CEMS) | ~1791 | 5 | `outputs/open_if/emsr583/` |
+| Activación CEMS | max ha (CEMS) | Timeline | Path |
+|-----------------|---------------|----------|------|
+| **EMSR578** | ~2693 | 5 | `outputs/open_if/emsr578/` |
+| **EMSR583** | ~1791 | 5 | `outputs/open_if/emsr583/` |
+| **EMSR581** | ~2210 | 4 | `outputs/open_if/emsr581/` |
+| **EMSR632** | ~5320 | 4 | `outputs/open_if/emsr632/` |
+
+Índice: `outputs/open_if/index.html` · Comparativa venta: `docs/COMPARE_CLM_VS_OPEN.md`
 
 Fuente: [Copernicus EMS Rapid Mapping](https://mapping.emergency.copernicus.eu/).
 

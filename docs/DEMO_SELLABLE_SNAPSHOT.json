@@ -1,0 +1,53 @@
+{
+  "started_at_utc": "2026-07-17T16:11:38.252518+00:00",
+  "steps": [
+    {
+      "name": "index_compare",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/build_open_if_index.py"
+      ],
+      "ok": true,
+      "code": 0,
+      "tail": "{\n  \"n_packs\": 4,\n  \"score_dual\": 95.0,\n  \"score_clm\": 39.0,\n  \"VENTA_GO\": true\n}\n"
+    },
+    {
+      "name": "list_products",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/predict_spread.py",
+        "--list-products"
+      ],
+      "ok": true,
+      "code": 0,
+      "tail": "e_when\": \"Best CLM next-day mask; weighted soft-vote + per-member temperature (VAL-calibrated).\",\n    \"not_for\": \"Drone ROS; never tune mix/temps on LOFO-CARDOSO/test (identical to holdout test).\"\n  },\n  {\n    \"id\": \"clm_v28\",\n    \"label\": \"CLM Spain specialist (single-model emergency ML)\",\n    \"domain\": \"CLM_Spain_holdout\",\n    \"product_type\": \"single\",\n    \"ready\": true,\n    \"status\": \"ok\",\n    \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\manifest.json\",\n    \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\weights_v28_clm_ft.pt\",\n    \"members\": null,\n    \"ensemble_mode\": null,\n    \"use_when\": \"Spain-like legacy17 patches; single-checkpoint transfer.\",\n    \"not_for\": \"Drone ROS (use front_dynamics); NDWS paper protocol without re-export.\"\n  },\n  {\n    \"id\": \"ndws_v21\",\n    \"label\": \"NDWS global next-day spread (research baseline)\",\n    \"domain\": \"NDWS_global\",\n    \"product_type\": \"single\",\n    \"ready\": true,\n    \"status\": \"ok\",\n    \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\manifest.json\",\n    \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\weights_v21_best.pt\",\n    \"members\": null,\n    \"ensemble_mode\": null,\n    \"use_when\": \"Research / NDWS-like patches only. Not the emergency primary.\",\n    \"not_for\": \"Spain emergency ROS, tactical dispatch, sole decision support.\"\n  }\n]\n"
+    },
+    {
+      "name": "ops_smoke",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/smoke_incident_runtime.py"
+      ],
+      "ok": true,
+      "code": 0,
+      "tail": "{\n  \"ok\": true,\n  \"synthetic\": {\n    \"mode\": \"synthetic\",\n    \"ok\": true,\n    \"status\": \"updated\",\n    \"n_staged\": 3,\n    \"quality_grade\": \"B\",\n    \"primary_ros_m_min\": 11.283791670955129,\n    \"latency_s\": 0.1645,\n    \"work_dir\": \"C:\\\\Users\\\\Mariano\\\\AppData\\\\Local\\\\Temp\\\\incident_smoke_bsdczr18\\\\work\",\n    \"error\": null\n  }\n}\n"
+    }
+  ],
+  "ok": true,
+  "comparison": {
+    "score_dual": 95.0,
+    "score_clm_only": 39.0,
+    "VENTA_GO": true,
+    "axes_win": 5,
+    "n_packs": 4
+  },
+  "venta_go": true,
+  "finished_at_utc": "2026-07-17T16:11:41.150642+00:00",
+  "artifacts": {
+    "compare_md": "docs/COMPARE_CLM_VS_OPEN.md",
+    "compare_json": "docs/COMPARE_CLM_VS_OPEN_SCORECARD.json",
+    "onepager": "docs/ONEPAGER_COMERCIAL_ES.md",
+    "plan": "docs/PLAN_COMERCIAL_SUPERA_CLM.md",
+    "index_html": "outputs/open_if/index.html"
+  }
+}
