@@ -65,6 +65,9 @@ python -m wildfire_front decide
 
 # Decisión con open pack
 python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
+
+# API mínima local (POST /v1/decide)
+python -m wildfire_front serve-decide --port 8765
 ```
 
 ---

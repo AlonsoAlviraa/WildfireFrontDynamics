@@ -667,6 +667,35 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(decide)
 
+    # ── serve-decide (minimal HTTP API) ────────────────────────────────
+    serve = commands.add_parser(
+        "serve-decide",
+        help="Minimal HTTP API for Fire Decision Card (POST /v1/decide)",
+        description=(
+            "Local Decision Card HTTP server (stdlib). "
+            "GET /health · GET /v1/openapi.json · POST /v1/decide. "
+            "Default bind 127.0.0.1 — not production multi-tenant hosting."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "example:\n"
+            "  wildfire-front serve-decide --port 8765\n"
+            "  curl -s http://127.0.0.1:8765/health\n"
+            '  curl -s -X POST http://127.0.0.1:8765/v1/decide '
+            '-H "Content-Type: application/json" '
+            '-d "{\\"use_ml_v34\\": true, \\"require_ops_for_go\\": true}"\n'
+        ),
+    )
+    serve.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    serve.add_argument("--port", type=int, default=8765, help="Bind port (default: 8765)")
+    serve.add_argument(
+        "--base-dir",
+        type=Path,
+        default=None,
+        help="Resolve relative work_dir/open_pack paths from here (default: repo root)",
+    )
+    _add_global_flags(serve)
+
     return parser
 
 
@@ -768,44 +797,20 @@ def main(argv: Sequence[str] | None = None) -> None:
             return
 
         if args.command == "decide":
-            from .product.confidence import build_decision_card
+            from .product.decide_service import decide_from_request
             import json as _json
 
-            ml_m = ops_m = open_m = None
-            if getattr(args, "use_ml_v34", False):
-                man = Path("models/clm_ensemble/manifest.json")
-                if man.is_file():
-                    ml_m = (_json.loads(man.read_text(encoding="utf-8"))).get("metrics")
-            if getattr(args, "work_dir", None):
-                st_path = Path(args.work_dir) / "outbox" / "incident_state.json"
-                if st_path.is_file():
-                    st = _json.loads(st_path.read_text(encoding="utf-8"))
-                    ops_m = {
-                        "quality_grade": st.get("quality_grade"),
-                        "primary_ros_m_min": st.get("primary_ros_m_min"),
-                        "n_frames_staged": st.get("n_frames_staged")
-                        or st.get("n_frames_seen"),
-                        "area_ha_max": st.get("area_ha_max"),
-                        "speed_vs_ref_ratio": st.get("speed_vs_ref_ratio"),
-                    }
-            if getattr(args, "open_pack", None):
-                scp = Path(args.open_pack) / "scorecard_pista_b.json"
-                if scp.is_file():
-                    sc = _json.loads(scp.read_text(encoding="utf-8"))
-                    open_m = {
-                        "max_area_ha": sc.get("max_area_ha"),
-                        "n_timeline_steps": sc.get("n_timeline_steps"),
-                        "activation": sc.get("activation"),
-                        "O2_cems_delineation": sc.get("O2_cems_delineation"),
-                    }
-            card = build_decision_card(
-                args.event_id,
-                ml_metrics=ml_m,
-                ops_metrics=ops_m,
-                open_metrics=open_m,
-                require_ops_for_go=bool(getattr(args, "require_ops_for_go", False)),
+            payload = decide_from_request(
+                {
+                    "event_id": args.event_id,
+                    "use_ml_v34": bool(getattr(args, "use_ml_v34", False)),
+                    "work_dir": str(args.work_dir) if getattr(args, "work_dir", None) else None,
+                    "open_pack": str(args.open_pack) if getattr(args, "open_pack", None) else None,
+                    "require_ops_for_go": bool(getattr(args, "require_ops_for_go", False)),
+                    "channel": "cli",
+                },
+                base=Path.cwd(),
             )
-            payload = card.to_dict()
             out = getattr(args, "output", None)
             if out:
                 Path(out).parent.mkdir(parents=True, exist_ok=True)
@@ -815,14 +820,28 @@ def main(argv: Sequence[str] | None = None) -> None:
             if as_json:
                 print_json(payload)
             else:
-                print(f"decision: {card.decision.value}")
+                print(f"decision: {payload.get('decision')}")
+                conf = payload.get("confidence_pred")
+                conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
                 print(
-                    f"confidence_pred: {card.confidence_pred:.3f} ({card.confidence_pred_label})"
+                    f"confidence_pred: {conf_s} ({payload.get('confidence_pred_label')})"
                 )
-                print(f"system_reliability_pass: {card.system_reliability_pass}")
-                print("reasons:", "; ".join(card.reasons[:12]))
+                print(f"system_reliability_pass: {payload.get('system_reliability_pass')}")
+                print(f"latency_ms: {payload.get('latency_ms')}")
+                print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
                 if out:
                     print(f"wrote: {out}")
+            return
+
+        if args.command == "serve-decide":
+            from .product.api_server import serve as serve_decide_api
+
+            serve_decide_api(
+                host=str(args.host),
+                port=int(args.port),
+                base_dir=getattr(args, "base_dir", None),
+                verbose=verbose,
+            )
             return
 
         if args.command == "incident":

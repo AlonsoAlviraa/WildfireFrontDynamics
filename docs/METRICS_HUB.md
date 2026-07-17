@@ -1,6 +1,6 @@
 # Metrics Hub — todas las métricas
 
-_UTC: 2026-07-17T18:55:52.951370+00:00_ · git `046226f` · hash `9e69e7a6fa39…`
+_UTC: 2026-07-17T19:03:02.345172+00:00_ · git `04759a9` · hash `7739272dd417…`
 
 ## Decision Card (fusión)
 
@@ -73,4 +73,4 @@ n_packs = **4**
 ## Audit
 
 - decision audit: `90ef8eb2c0497382…`
-- hub hash: `9e69e7a6fa39ca24f1c860a549b6c9cc6cccc2e1d419166fa16482c26c0b070d`
+- hub hash: `7739272dd417845fb0f189265e36cd7ae3b7df31f70a79a408a32e750f3ad8e9`

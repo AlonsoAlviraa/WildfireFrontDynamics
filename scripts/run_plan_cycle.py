@@ -117,6 +117,18 @@ def assess() -> dict:
             ),
             "evidence": "docs/INCIDENT_SLA_LATENCY.json",
         },
+        "M2.8_decide_api": {
+            "status": "DONE"
+            if _exists("wildfire_front", "product", "api_server.py")
+            and (
+                not _exists("docs", "DECIDE_API_LATENCY.json")
+                or bool(
+                    (_load(ROOT / "docs" / "DECIDE_API_LATENCY.json") or {}).get("sla_pass")
+                )
+            )
+            else "PENDING",
+            "evidence": "POST /v1/decide + docs/DECIDE_API_LATENCY.json",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
     }
 
@@ -124,6 +136,7 @@ def assess() -> dict:
     go_q_progress = {
         "decision_card_cli": items["M1.2_decide_cli"]["status"] == "DONE",
         "fdc_in_incident": items["M2.1_fdc_in_incident"]["status"] == "DONE",
+        "decide_api_min": items["M2.8_decide_api"]["status"] == "DONE",
         "metrics_hub": items["M1.3_metrics_hub"]["status"] == "DONE",
         "reliability_gate": bool(reliability.get("ok")),
         "open_packs_ge_4": n_packs >= 4,

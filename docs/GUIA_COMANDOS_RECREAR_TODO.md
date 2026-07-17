@@ -156,6 +156,26 @@ python -m wildfire_front incident update `
 python scripts\measure_incident_sla.py
 ```
 
+### 2.3b API mínima Decision Card (HTTP local)
+
+```powershell
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+$env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
+
+python -m wildfire_front serve-decide --host 127.0.0.1 --port 8765
+```
+
+En otra terminal:
+
+```powershell
+curl -s http://127.0.0.1:8765/health
+curl -s -X POST http://127.0.0.1:8765/v1/decide `
+  -H "Content-Type: application/json" `
+  -d "{\"event_id\": \"demo\", \"use_ml_v34\": true, \"open_pack\": \"outputs/open_if/emsr578\", \"require_ops_for_go\": true}"
+
+python C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\scripts\measure_decide_api_latency.py
+```
+
 ### 2.4 Status del incidente
 
 ```powershell

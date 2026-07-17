@@ -1,8 +1,8 @@
 {
   "schema": "metrics_hub_v1",
-  "built_at_utc": "2026-07-17T18:55:52.951370+00:00",
-  "git_commit": "046226f",
-  "content_hash": "9e69e7a6fa39ca24f1c860a549b6c9cc6cccc2e1d419166fa16482c26c0b070d",
+  "built_at_utc": "2026-07-17T19:03:02.345172+00:00",
+  "git_commit": "04759a9",
+  "content_hash": "7739272dd417845fb0f189265e36cd7ae3b7df31f70a79a408a32e750f3ad8e9",
   "ml": {
     "product": "clm_ensemble_v34",
     "metrics": {
@@ -283,7 +283,7 @@
     "audit": {
       "input_hash": "8e270f6ebfe055f405b8d24bfbd7fd44c8fada8ac9ec6ddea6c53437b2a9d5d2",
       "output_hash": "90ef8eb2c049738243d6f1c0de00c26c1e8f66338dc7efccd31c0ad892a7d601",
-      "git_commit": "046226f",
+      "git_commit": "04759a9",
       "schema": "fire_decision_card_v1",
       "system_reliability": {
         "system_reliability_pass": true,
@@ -298,7 +298,7 @@
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-17T18:55:52.951370+00:00"
+    "built_at_utc": "2026-07-17T19:03:02.345172+00:00"
   },
   "reliability_note": "system_reliability five-nines bound applies to silent-GO prevention under tests, NOT to fire-spread forecast accuracy."
 }

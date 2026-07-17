@@ -269,6 +269,7 @@ python scripts\\show_all.py</pre>
         <div class="row"><span>Decision Card CLI + reliability gate</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>Metrics Hub unificado</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>SLA incidente sintético (&lt;10 min)</span><span class="ok-text">HECHO · ver INCIDENT_SLA_LATENCY.json</span></div>
+        <div class="row"><span>API mínima Decision Card (local HTTP)</span><span class="ok-text">HECHO · POST /v1/decide · p95&lt;500ms</span></div>
         <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>

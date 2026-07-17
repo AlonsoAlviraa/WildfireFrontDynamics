@@ -184,7 +184,8 @@ Principios que **no se rompen** ni en el sueño:
 | 1 | Dual ops + ML documentado | Hecho |
 | 2 | Decision Card + hub + reliability | **Hecho (2026-07)** |
 | 3 | FDC en cada incident update + SLA medido | **Hecho (M2.1)** |
-| 4 | Piloto con organismo + 2ª ancla + API | Próximo horizonte real |
+| 3b | **API mínima Decision Card** (local HTTP) + p95 &lt; 500 ms metrics-only | **Hecho (M2.8)** — no es uptime 99.9% de sala |
+| 4 | Piloto con organismo + 2ª ancla + API firmada/auth | Próximo horizonte real |
 | 5 | Multi-CCAA, Δt real, 50+ IF, portal vivo | Sueño a 12–24 meses |
 | 6 | Sala de crisis conectada + foundation Med + 20 IF/año | **Sueño máximo** |
 

@@ -44,8 +44,12 @@ GO_Q =
 GO_Q+ = GO_Q AND
   (2ª ancla CLM confirmed O perímetro nacional 1 IF) AND
   (carta de interés / presupuesto piloto) AND
-  (API mínima decision-card JSON)
+  (API mínima decision-card JSON)   # ← bajado a M2.8 (parcial: local HTTP)
 ```
+
+**Fila del sueño bajada al plan (2026-07-17):**  
+`docs/SUENOS_MAXIMOS.md` §2.4 *API Decision Card* + latencia medible  
+→ **M2.8** API mínima local + p95 metrics-only &lt; 500 ms (no uptime 99.9% de sala).
 
 ---
 
@@ -79,17 +83,18 @@ GO_Q+ = GO_Q AND
 | M2.5 | Piloto script: rebuild pack < 10 min SLA medido | latency json | **DONE** (`scripts/measure_incident_sla.py`) |
 | M2.6 | Informe técnico v1.1 CMA dual + FDC | DOCX/MD | pending |
 | M2.7 | Review M2 + adaptar Mes 3 | status | pending |
+| M2.8 | **API mínima Decision Card** + p95 latencia | HTTP local + `DECIDE_API_LATENCY.json` | **DONE** (sueño §2.4 parcial) |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 
-| ID | Entrega | Métrica |
-|----|---------|---------|
-| M3.1 | API/CLI `decide` + `metrics-hub` estable | version tag |
-| M3.2 | 1 demo con tercero (acta 1 página) | doc |
-| M3.3 | GO_Q scorecard final | JSON |
-| M3.4 | Memoria trimestre / TFG capítulos producto | 8–12 pp |
-| M3.5 | Backlog Q2 (solo si GO_Q) | 1 página |
-| M3.6 | Tag `v1.1-decision-card` | git |
+| ID | Entrega | Métrica | Status |
+|----|---------|---------|--------|
+| M3.1 | Congelar OpenAPI `decide_api_v1` + tag + hub CLI | version tag | pending (API ya en M2.8) |
+| M3.2 | 1 demo con tercero (acta 1 página) | doc | pending |
+| M3.3 | GO_Q scorecard final | JSON | pending |
+| M3.4 | Memoria trimestre / TFG capítulos producto | 8–12 pp | pending |
+| M3.5 | Backlog Q2 (solo si GO_Q) | 1 página | pending |
+| M3.6 | Tag `v1.1-decision-card` | git | pending |
 
 ---
 

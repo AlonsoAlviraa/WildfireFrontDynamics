@@ -37,6 +37,13 @@ En **campo**, cada `incident update` escribe la Decision Card en el outbox:
 
 `outbox/fire_decision_card.json` · `outbox/fire_decision_card.md`
 
+**API mínima (integración demo):**
+
+```bash
+python -m wildfire_front serve-decide --port 8765
+# POST http://127.0.0.1:8765/v1/decide  → JSON GO/HOLD/ABSTAIN + latency_ms
+```
+
 ## Métricas (siempre visibles)
 
 Ver `docs/METRICS_HUB.md` — ML IoU/Δ/growth, ops ROS/grade/ratio, CEMS ha/timeline/Hausdorff, gates, decision card.
