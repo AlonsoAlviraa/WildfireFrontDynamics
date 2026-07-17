@@ -1,12 +1,30 @@
+"""WildfireFrontDynamics command-line interface.
+
+Human-readable by default; pass ``--json`` for machine-readable output.
+"""
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any, Sequence
 
 import numpy as np
 
+from . import __version__
+from .cli_report import (
+    enrich_incident_summary,
+    print_demo_report,
+    print_doctor_report,
+    print_error,
+    print_ingest_report,
+    print_incident_report,
+    print_json,
+    print_status_report,
+    print_watch_line,
+)
 from .evaluation import front_distance_metrics
 from .geometry_speed import estimate_geometry_speeds, summarize_geometry_speeds
 from .ingestion.geotiff import ingest_geotiff_sequence, write_ingest_manifest
@@ -20,6 +38,38 @@ from .reconstruction import (
     summarize,
 )
 from .synthetic import generate_observations
+
+_EPILOG = """
+examples:
+  # Synthetic demo with ground truth
+  wildfire-front demo --output outputs/demo
+
+  # Batch GeoTIFF ingest (ops products)
+  wildfire-front ingest-geotiff \\
+    --images artifacts/tobarra_reprojected_lwir \\
+    --masks artifacts/tobarra_lwir_masks \\
+    --sensor-id lwir_drone --estimated-error-m 2 \\
+    --event-id tobarra_20240802 --output outputs/tobarra \\
+    --operational --scientific-clean
+
+  # Field: pre-flight check
+  wildfire-front incident doctor --inbox D:/drops --masks D:/masks
+
+  # Field: process once
+  wildfire-front incident update --inbox D:/drops --work-dir outputs/incidents/IF1 --force
+
+  # Field: live watch (Ctrl+C to stop)
+  wildfire-front incident watch --inbox D:/drops --work-dir outputs/incidents/IF1
+
+  # Machine-readable
+  wildfire-front incident status --work-dir outputs/incidents/IF1 --json
+
+notes:
+  · Thermal mask ≠ official fire perimeter
+  · 15/30/60 envelope is extrapolated guidance, NOT tactical dispatch
+  · Filenames must include parseable timestamps for real LWIR frames
+  · Docs: docs/INCIDENT_RUNTIME_V1.md
+"""
 
 
 def run_demo(output: Path, seed: int, position_error_m: float) -> dict[str, object]:
@@ -90,7 +140,6 @@ def run_geotiff_ingest(
     if resolution is None:
         raise ValueError("accepted observations do not have metric resolution")
 
-    # Arrival grid can explode in memory on multi-pass footprints; coarsen or skip.
     arrival_resolution = float(resolution)
     try:
         xx, yy, arrival = reconstruct_arrival_from_components(
@@ -133,7 +182,6 @@ def run_geotiff_ingest(
         from .scientific_ops import OperationalReference, write_operational_report_html
 
         ref = operational_ref if isinstance(operational_ref, OperationalReference) else None
-        # Structural leap: coreg + dual ROS (area / radius / normal) fusion
         ops = build_structural_operational_bundle(
             list(result.observations),
             summary,
@@ -148,7 +196,6 @@ def run_geotiff_ingest(
             encoding="utf-8",
         )
         write_operational_report_html(ops, event_id, output / "operational_report.html")
-        # Operator GIS + brief (O4)
         try:
             from .observatory_export import export_operator_bundle
 
@@ -175,58 +222,458 @@ def run_geotiff_ingest(
     return summary
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="wildfire-front", description="Wildfire Front Dynamics MVP"
-    )
-    commands = parser.add_subparsers(dest="command", required=True)
-    demo = commands.add_parser("demo", help="Run the synthetic end-to-end MVP")
-    demo.add_argument("--output", type=Path, default=Path("outputs/demo"))
-    demo.add_argument("--seed", type=int, default=7)
-    demo.add_argument(
-        "--position-error-m", type=float, default=0.6, help="One-sigma observation error in metres"
-    )
-    ingest = commands.add_parser(
-        "ingest-geotiff", help="Ingest georeferenced GeoTIFF images and masks"
-    )
-    ingest.add_argument("--images", type=Path, required=True)
-    ingest.add_argument("--masks", type=Path)
-    ingest.add_argument("--output", type=Path, default=Path("outputs/geotiff-demo"))
-    ingest.add_argument("--event-id", default="geotiff_event")
-    ingest.add_argument("--sensor-id", required=True)
-    ingest.add_argument("--estimated-error-m", type=float, required=True)
-    ingest.add_argument("--band", type=int, default=1)
-    ingest.add_argument("--threshold", type=float)
-    ingest.add_argument(
-        "--mad-z", type=float, help="Robust adaptive threshold using median absolute deviation"
-    )
-    ingest.add_argument(
-        "--respect-alpha",
+# ── argparse builders ────────────────────────────────────────────────────────
+
+
+def _add_global_flags(parser: argparse.ArgumentParser) -> None:
+    g = parser.add_argument_group("output")
+    g.add_argument(
+        "--json",
         action="store_true",
-        help="Ignore transparent pixels when thresholding RGBA GeoTIFFs",
+        help="Machine-readable JSON on stdout (full detail, no human tables)",
     )
-    ingest.add_argument(
+    g.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show extra detail (frame list, hybrid ROS, etc.)",
+    )
+    g.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Suppress progress lines on stderr (watch mode)",
+    )
+
+
+def _add_incident_io_args(p: argparse.ArgumentParser, *, require_work: bool = True) -> None:
+    io = p.add_argument_group("paths")
+    io.add_argument(
+        "--inbox",
+        type=Path,
+        required=True,
+        metavar="DIR",
+        help="Folder receiving new LWIR GeoTIFFs (drop zone)",
+    )
+    io.add_argument(
+        "--work-dir",
+        type=Path,
+        required=require_work,
+        metavar="DIR",
+        help="Incident workspace: stage/ + outbox/ (created if missing)",
+    )
+    io.add_argument(
+        "--masks",
+        type=Path,
+        metavar="DIR",
+        help="Optional external masks ({stem}.tif or {stem}_mask.tif). Disables MAD.",
+    )
+
+
+def _add_incident_identity_args(p: argparse.ArgumentParser) -> None:
+    idg = p.add_argument_group("identity")
+    idg.add_argument(
+        "--event-id",
+        default="incident",
+        help="Incident / fire id (default: incident)",
+    )
+    idg.add_argument(
+        "--sensor-id",
+        default="lwir_drone",
+        help="Sensor id for provenance (default: lwir_drone)",
+    )
+    idg.add_argument(
+        "--estimated-error-m",
+        type=float,
+        default=2.0,
+        metavar="M",
+        help="Declared one-sigma geolocation error in metres (default: 2)",
+    )
+
+
+def _add_incident_segmentation_args(p: argparse.ArgumentParser) -> None:
+    seg = p.add_argument_group("segmentation")
+    seg.add_argument("--band", type=int, default=1, help="Raster band index (default: 1)")
+    seg.add_argument(
+        "--threshold",
+        type=float,
+        metavar="VAL",
+        help="Fixed radiometric threshold (mutually exclusive with MAD)",
+    )
+    seg.add_argument(
+        "--mad-z",
+        type=float,
+        default=6.0,
+        metavar="Z",
+        help="MAD z-score when no --masks (default: 6)",
+    )
+    seg.add_argument(
+        "--no-mad",
+        action="store_true",
+        help="Disable MAD (requires --masks or --threshold)",
+    )
+    seg.add_argument(
+        "--respect-alpha",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Ignore transparent pixels when thresholding (default: true)",
+    )
+    seg.add_argument(
         "--min-component-pixels",
         type=int,
-        default=1,
-        help="Remove thresholded components smaller than this many pixels before vectorization",
+        default=200,
+        metavar="N",
+        help="Drop flecks smaller than N pixels (default: 200)",
     )
-    ingest.add_argument("--speed-sample-spacing-m", type=float, default=2.0)
-    ingest.add_argument("--speed-max-normal-distance-m", type=float, default=100.0)
-    ingest.add_argument("--speed-observability-ratio", type=float, default=2.0)
-    ingest.add_argument("--speed-min-valid-fraction", type=float, default=0.25)
-    ingest.add_argument("--speed-max-turn-angle-deg", type=float, default=60.0)
-    ingest.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
+    seg.add_argument(
+        "--scientific-clean",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Morphological clean + main-front filter (default: true)",
+    )
+    seg.add_argument(
+        "--max-components",
+        type=int,
+        default=5,
+        metavar="N",
+        help="Keep largest N components after clean (default: 5)",
+    )
+    seg.add_argument(
+        "--morph-close-pixels",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Morphological close radius in pixels (default: 3)",
+    )
+    seg.add_argument(
+        "--min-component-area-m2",
+        type=float,
+        default=100.0,
+        metavar="M2",
+        help="Min component area in m² (default: 100)",
+    )
+
+
+def _add_incident_anchor_args(p: argparse.ArgumentParser) -> None:
+    anc = p.add_argument_group("operational anchor (optional INFOCAM-style)")
+    anc.add_argument("--ref-name", type=str, default=None, help="Anchor name (e.g. INFOCAM Tobarra)")
+    anc.add_argument(
+        "--ref-vp-m-min",
+        type=float,
+        default=None,
+        metavar="M_MIN",
+        help="Reference rate of spread (m/min) for grade ratio",
+    )
+    anc.add_argument(
+        "--ref-area-ha",
+        type=float,
+        default=None,
+        metavar="HA",
+        help="Reference burned area (ha)",
+    )
+
+
+def _add_incident_runtime_args(p: argparse.ArgumentParser) -> None:
+    rt = p.add_argument_group("runtime")
+    rt.add_argument(
+        "--min-file-age-s",
+        type=float,
+        default=0.5,
+        metavar="S",
+        help="Ignore files newer than S seconds; also requires size-stable polls (default: 0.5)",
+    )
+
+
+def _add_all_incident_process_args(p: argparse.ArgumentParser, *, require_work: bool = True) -> None:
+    _add_incident_io_args(p, require_work=require_work)
+    _add_incident_identity_args(p)
+    _add_incident_segmentation_args(p)
+    _add_incident_anchor_args(p)
+    _add_incident_runtime_args(p)
+    _add_global_flags(p)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="wildfire-front",
+        description=(
+            "Wildfire Front Dynamics — reconstruct observed fire fronts from "
+            "thermal GeoTIFF sequences, estimate ROS with abstention, and publish "
+            "operator packs. Not validated tactical dispatch."
+        ),
+        epilog=_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+
+    commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
+
+    # ── demo ──────────────────────────────────────────────────────────────
+    demo = commands.add_parser(
+        "demo",
+        help="Synthetic end-to-end demo with ground truth",
+        description="Generate a synthetic burn, reconstruct fronts, write HTML report.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="example:\n  wildfire-front demo --output outputs/demo --seed 7",
+    )
+    demo.add_argument("--output", type=Path, default=Path("outputs/demo"), help="Output directory")
+    demo.add_argument("--seed", type=int, default=7, help="RNG seed (default: 7)")
+    demo.add_argument(
+        "--position-error-m",
+        type=float,
+        default=0.6,
+        metavar="M",
+        help="One-sigma observation error in metres (default: 0.6)",
+    )
+    _add_global_flags(demo)
+
+    # ── ingest-geotiff ────────────────────────────────────────────────────
+    ingest = commands.add_parser(
+        "ingest-geotiff",
+        help="Batch-ingest a folder of georeferenced thermal GeoTIFFs",
+        description=(
+            "Ingest images (+ optional masks), reconstruct arrival/speeds, "
+            "optionally write operational front_dynamics products."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    ig = ingest.add_argument_group("paths")
+    ig.add_argument("--images", type=Path, required=True, metavar="DIR", help="GeoTIFF images folder")
+    ig.add_argument("--masks", type=Path, metavar="DIR", help="Binary masks folder (optional)")
+    ig.add_argument(
+        "--output",
+        type=Path,
+        default=Path("outputs/geotiff-demo"),
+        metavar="DIR",
+        help="Output pack directory (default: outputs/geotiff-demo)",
+    )
+    iid = ingest.add_argument_group("identity")
+    iid.add_argument("--event-id", default="geotiff_event", help="Event id")
+    iid.add_argument("--sensor-id", required=True, help="Sensor id (required)")
+    iid.add_argument(
+        "--estimated-error-m",
+        type=float,
+        required=True,
+        metavar="M",
+        help="Declared geolocation error (m) — required",
+    )
+    iseg = ingest.add_argument_group("segmentation")
+    iseg.add_argument("--band", type=int, default=1)
+    iseg.add_argument("--threshold", type=float, help="Fixed threshold (needs no masks)")
+    iseg.add_argument("--mad-z", type=float, help="MAD z-score adaptive threshold")
+    iseg.add_argument(
+        "--respect-alpha",
+        action="store_true",
+        help="Ignore transparent pixels on RGBA GeoTIFFs",
+    )
+    iseg.add_argument("--min-component-pixels", type=int, default=1)
+    iseg.add_argument(
+        "--scientific-clean",
+        action="store_true",
+        help="Enable morphological clean + main-front filter",
+    )
+    iseg.add_argument("--max-components", type=int, default=5)
+    iseg.add_argument("--morph-close-pixels", type=int, default=3)
+    iseg.add_argument("--min-component-area-m2", type=float, default=100.0)
+    iops = ingest.add_argument_group("operational products")
+    iops.add_argument(
+        "--operational",
+        action="store_true",
+        help="Write front_dynamics + operator GIS/brief (recommended for packs)",
+    )
+    iops.add_argument("--ref-name", type=str, default=None)
+    iops.add_argument("--ref-vp-m-min", type=float, default=None)
+    iops.add_argument("--ref-area-ha", type=float, default=None)
+    isp = ingest.add_argument_group("geometry speed")
+    isp.add_argument("--speed-sample-spacing-m", type=float, default=2.0)
+    isp.add_argument("--speed-max-normal-distance-m", type=float, default=100.0)
+    isp.add_argument("--speed-observability-ratio", type=float, default=2.0)
+    isp.add_argument("--speed-min-valid-fraction", type=float, default=0.25)
+    isp.add_argument("--speed-max-turn-angle-deg", type=float, default=60.0)
+    isp.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
+    _add_global_flags(ingest)
+
+    # ── incident ──────────────────────────────────────────────────────────
+    incident = commands.add_parser(
+        "incident",
+        help="Live incident runtime (watch / update / status / doctor)",
+        description=(
+            "incident_runtime_v1 — stage LWIR frames as they land, recompute "
+            "observed front + ROS + emergency envelope, publish operator outbox.\n\n"
+            "NOT validated tactical dispatch. Geometry-first observed products only."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "subcommands:\n"
+            "  doctor   Pre-flight: timestamps, CRS, masks, inbox health\n"
+            "  update   Process inbox once → outbox\n"
+            "  watch    Poll inbox and update continuously\n"
+            "  status   Read last outbox state without processing\n"
+        ),
+    )
+    inc_subs = incident.add_subparsers(
+        dest="incident_command", required=True, metavar="SUBCOMMAND"
+    )
+
+    # doctor
+    doc = inc_subs.add_parser(
+        "doctor",
+        help="Pre-flight checks before a real incident",
+        description="Validate inbox naming, CRS sample, masks pairing, work-dir.",
+    )
+    doc.add_argument("--inbox", type=Path, required=True, metavar="DIR")
+    doc.add_argument("--work-dir", type=Path, default=None, metavar="DIR")
+    doc.add_argument("--masks", type=Path, default=None, metavar="DIR")
+    doc.add_argument("--event-id", default="incident")
+    _add_global_flags(doc)
+
+    # update
+    upd = inc_subs.add_parser(
+        "update",
+        help="Process inbox once (stage + recompute outbox)",
+        description="Stage new stable GeoTIFFs and rebuild operator products.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    _add_all_incident_process_args(upd)
+    upd.add_argument(
+        "--force",
+        action="store_true",
+        help="Recompute even if no new frames (refresh products)",
+    )
+
+    # watch
+    wat = inc_subs.add_parser(
+        "watch",
+        help="Poll inbox and update outbox continuously",
+        description=(
+            "Live loop: detect new GeoTIFFs → stage → recompute → publish. "
+            "Ctrl+C stops cleanly. Prints status lines on stderr; final report on stdout."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    _add_all_incident_process_args(wat)
+    loop = wat.add_argument_group("watch loop")
+    loop.add_argument(
+        "--interval-s",
+        type=float,
+        default=2.0,
+        metavar="S",
+        help="Poll interval seconds (default: 2)",
+    )
+    loop.add_argument(
+        "--max-iterations",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Stop after N poll loops (default: forever)",
+    )
+    loop.add_argument(
+        "--max-frames",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Stop once staged frame count reaches N",
+    )
+    loop.add_argument(
+        "--once",
+        action="store_true",
+        help="Single forced update then exit (like update --force)",
+    )
+    loop.add_argument(
+        "--stop-on-error",
+        action="store_true",
+        help="Exit the loop if pipeline returns error",
+    )
+    loop.add_argument(
+        "--no-lock",
+        action="store_true",
+        help="Do not acquire exclusive work-dir lock (not recommended)",
+    )
+
+    # status
+    st = inc_subs.add_parser(
+        "status",
+        help="Show last incident state without processing",
+        description="Read outbox/incident_state.json + operational metrics.",
+    )
+    st.add_argument(
+        "--work-dir",
+        type=Path,
+        required=True,
+        metavar="DIR",
+        help="Incident workspace containing outbox/",
+    )
+    _add_global_flags(st)
+
     return parser
 
 
-def main(argv: list[str] | None = None) -> None:
+def _incident_config_from_args(args: argparse.Namespace):
+    from .incident import IncidentConfig
+
+    mad_z = None if getattr(args, "no_mad", False) else getattr(args, "mad_z", 6.0)
+    if getattr(args, "threshold", None) is not None:
+        mad_z = None
+    if mad_z is None and getattr(args, "threshold", None) is None and getattr(args, "masks", None) is None:
+        raise ValueError("--no-mad requires --masks or --threshold (or omit --no-mad)")
+    return IncidentConfig(
+        event_id=args.event_id,
+        sensor_id=args.sensor_id,
+        estimated_error_m=args.estimated_error_m,
+        inbox=args.inbox,
+        work_dir=args.work_dir,
+        masks_dir=getattr(args, "masks", None),
+        band=getattr(args, "band", 1),
+        threshold=getattr(args, "threshold", None),
+        mad_z=mad_z,
+        respect_alpha=bool(getattr(args, "respect_alpha", True)),
+        min_component_pixels=getattr(args, "min_component_pixels", 200),
+        scientific_clean=bool(getattr(args, "scientific_clean", True)),
+        max_components=getattr(args, "max_components", 5),
+        morph_close_pixels=getattr(args, "morph_close_pixels", 3),
+        min_component_area_m2=getattr(args, "min_component_area_m2", 100.0),
+        ref_name=getattr(args, "ref_name", None),
+        ref_vp_m_min=getattr(args, "ref_vp_m_min", None),
+        ref_area_ha=getattr(args, "ref_area_ha", None),
+        min_file_age_s=getattr(args, "min_file_age_s", 0.5),
+    )
+
+
+def _emit(payload: dict[str, Any] | None, *, as_json: bool, human_fn, **human_kw) -> None:
+    if as_json:
+        if payload is not None:
+            print_json(payload)
+        return
+    human_fn(**human_kw)
+
+
+def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(list(argv) if argv is not None else None)
+    as_json = bool(getattr(args, "json", False))
+    verbose = bool(getattr(args, "verbose", False))
+    quiet = bool(getattr(args, "quiet", False))
+
     try:
         if args.command == "demo":
             metrics = run_demo(args.output, args.seed, args.position_error_m)
-        else:
+            print_demo_report(args.output, metrics, as_json=as_json)
+            return
+
+        if args.command == "ingest-geotiff":
+            from .scientific_ops import OperationalReference
+
+            ref = None
+            if args.ref_vp_m_min is not None or args.ref_area_ha is not None:
+                ref = OperationalReference(
+                    name=args.ref_name or "operational_anchor",
+                    vp_m_min=args.ref_vp_m_min,
+                    area_ha=args.ref_area_ha,
+                )
             metrics = run_geotiff_ingest(
                 args.images,
                 args.masks,
@@ -247,8 +694,116 @@ def main(argv: list[str] | None = None) -> None:
                 args.mad_z,
                 args.respect_alpha,
                 args.min_component_pixels,
+                scientific_clean=bool(args.scientific_clean),
+                max_components=args.max_components,
+                morph_close_pixels=args.morph_close_pixels,
+                min_component_area_m2=args.min_component_area_m2,
+                operational_ref=ref,
+                write_operational=bool(args.operational) or ref is not None or bool(args.scientific_clean),
             )
-        print(json.dumps({"output": str(args.output), "metrics": metrics}, indent=2))
+            print_ingest_report(
+                args.output, metrics, as_json=as_json, event_id=args.event_id
+            )
+            return
+
+        if args.command == "incident":
+            from .incident.doctor import (
+                config_snapshot,
+                doctor_incident,
+                read_incident_status,
+            )
+            from .incident import process_incident_once, run_incident_watch
+
+            if args.incident_command == "doctor":
+                report = doctor_incident(
+                    inbox=args.inbox,
+                    work_dir=args.work_dir,
+                    masks_dir=args.masks,
+                    event_id=args.event_id,
+                )
+                print_doctor_report(report, as_json=as_json)
+                if not report.get("ok"):
+                    raise SystemExit(1)
+                return
+
+            if args.incident_command == "status":
+                report = read_incident_status(args.work_dir)
+                report = enrich_incident_summary(report)
+                print_status_report(report, as_json=as_json, verbose=verbose)
+                if report.get("status") == "error":
+                    raise SystemExit(1)
+                if report.get("status") == "no_state":
+                    raise SystemExit(2)
+                return
+
+            config = _incident_config_from_args(args)
+
+            if args.incident_command == "update":
+                summary = process_incident_once(config, force=bool(args.force))
+                summary = enrich_incident_summary(summary)
+                summary["config"] = config_snapshot(config)
+                print_incident_report(
+                    summary, as_json=as_json, verbose=verbose, title="incident update"
+                )
+                if summary.get("status") == "error":
+                    raise SystemExit(1)
+                return
+
+            if args.incident_command == "watch":
+                def _on_update(s: dict[str, Any]) -> None:
+                    if quiet:
+                        return
+                    print_watch_line(s, verbose=verbose)
+
+                result = run_incident_watch(
+                    config,
+                    interval_s=args.interval_s,
+                    max_iterations=args.max_iterations,
+                    max_frames=args.max_frames,
+                    once=bool(args.once),
+                    stop_on_error=bool(args.stop_on_error),
+                    on_update=_on_update,
+                    use_lock=not bool(getattr(args, "no_lock", False)),
+                )
+                last = enrich_incident_summary(result.get("last") or {})
+                last["config"] = config_snapshot(config)
+                last["watch"] = {
+                    "mode": result.get("mode"),
+                    "iterations": result.get("iterations"),
+                    "interrupted": bool(last.get("interrupted") or result.get("last", {}).get("interrupted")),
+                }
+                # Full final report (human or json)
+                if as_json:
+                    print_json(
+                        {
+                            "product": "incident_runtime_v1",
+                            "command": "watch",
+                            "mode": result.get("mode"),
+                            "iterations": result.get("iterations"),
+                            "last": last,
+                            "config": config_snapshot(config),
+                        }
+                    )
+                else:
+                    print_incident_report(
+                        last,
+                        as_json=False,
+                        verbose=verbose,
+                        title=f"incident watch ({result.get('mode')}, {result.get('iterations')} iter)",
+                    )
+                if last.get("status") == "error":
+                    raise SystemExit(1)
+                return
+
+            print_error(f"unknown incident subcommand: {args.incident_command}")
+            raise SystemExit(2)
+
+        print_error(f"unknown command: {getattr(args, 'command', None)}")
+        raise SystemExit(2)
+
     except ValueError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+        print_error(str(exc), hint="see wildfire-front COMMAND --help")
+        raise SystemExit(2) from exc
+    except FileNotFoundError as exc:
+        print_error(str(exc))
         raise SystemExit(2) from exc

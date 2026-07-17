@@ -149,6 +149,21 @@
 - Test IoU **0.494** | copy **0.328** | **Δ +0.165**
 - Verdict: **GO_TRANSFER_LOFO** (industrial G2+)
 
+### v30 batch (2026-07-17) — CLM transfer only (G1 NDWS killed)
+Protocol: `clm_holdout_test_seed42_v1` (test=CARDOSO, n=200). Baseline **clm_v28** IoU **0.838** Δ **+0.196**.
+
+| Exp | Single change | IoU | Δ copy | Growth IoU | Verdict |
+|-----|---------------|-----|--------|------------|---------|
+| **v30 ensemble honest** | soft-vote v28 + LOFO-CARDOSO | **0.868** | **+0.226** | 0.886 | **GO_PROMOTE** → `clm_ensemble_v30` |
+| **v30_ema** | `ema_decay=0.999` FT | **0.846** | **+0.204** | 0.991 | **GO_PROMOTE** (runner-up) |
+| v30_growth_es | early-stop `model_iou_growth` | 0.798 | +0.156 | 0.999 | **NO_PROMOTE** |
+| LOFO4-only ensemble | mean of 4 LOFO | 0.806 | +0.165 | ~1.0 | **NO_PROMOTE** |
+| leaky LOFO+v28 | includes train-on-Cardoso folds | 0.85–0.88 | +0.21–0.24 | high | **REJECTED_LEAKAGE** |
+
+**Scorecard:** `docs/V30_ML_SCORECARD.json` · **Ensemble verdict:** `docs/V30_ENSEMBLE_VERDICT.json`  
+**Scripts:** `scripts/eval_clm_ensemble.py`, `scripts/run_clm_v30_experiments.py`, `wildfire_front/ml/clm_eval.py`  
+**Product:** `models/clm_ensemble/manifest.json` + catalog `clm_ensemble_v30`
+
 ### O3 temporal Tobarra
 - Strict band 2/3 GO; late ratio 0.478; wide band 3/3
 

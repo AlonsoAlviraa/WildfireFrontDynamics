@@ -1,6 +1,6 @@
 # Directorio ampliado: emergencias, universidades y centros de datos
 
-> **Uso:** TFG / validación operativa / datos de dinámica de frente (WFD).  
+> **Uso:** proyecto propio / validación operativa / datos de dinámica de frente (WFD).  
 > **Regla de fidelidad:** solo emails y canales **públicos** verificados en webs oficiales o documentos institucionales (revisión 2026).  
 > **No spamear:** 1 correo **personalizado** por organización. Priorizar 8–12 contactos de esta semana.  
 > **No existen “miles de emails de emergencias”** listos para scrape: lo legal y útil es un embudo de calidad + formularios + directorios de congresos.
@@ -11,7 +11,7 @@
 
 1. **Anclas operativas:** Vp media (m/min), superficie (ha), fecha/hora de parte — Cardoso, Hellín, La Estrella, multi-IF CLM.  
 2. **Perímetros vectoriales** (GeoJSON / SHP / GPKG) de 1–2 IF con secuencia térmica o BA satelital.  
-3. **Uso académico/TFG** + confidencialidad de crudos.  
+3. **Uso interno del proyecto** + confidencialidad de crudos (sin publicar sin acuerdo).  
 4. (Opcional) Feedback del informe HTML / capa de frente / envelope 15-30-60.
 
 CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUTREACH.csv)
@@ -65,11 +65,65 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 | CCAA / plan | Contacto público | Nota |
 |-------------|------------------|------|
 | **Castilla-La Mancha — INFOCAM / GEACAM** | Ver Prioridad 1 | Principal para vuestros IF |
+| **Castilla y León — INFOCAL / CDF / datos** | Ver bloque **CyL** abajo | Datos abiertos + CDF León |
 | **Andalucía — INFOCA / datos REDIAM** | `rediam.atiende.csmaea@juntadeandalucia.es` · `rediam.atiende.csma@juntadeandalucia.es` · cartografía medios: `cor.top.cagpds@juntadeandalucia.es` · ASEMA: `gerencia.asema@juntadeandalucia.es` | Datos espaciales y metadatos; no es el 112 |
 | **Galicia — PLADIGA / Medio Rural** | `forestal.mediorural@xunta.gal` · `monte.mediorural@xunta.gal` · `secretaria.cmr@xunta.gal` · `coordinacion-medios.medio-rural@xunta.gal` | Formación/medios; aviso incendios 085 (no email) |
 | **Catalunya — Bombers / Interior** | Formulario: https://interior.gencat.cat/ · CTFC más útil para ciencia | Operativo vía web; datos investigación vía CTFC |
 | **C. Valenciana — Bombers forestals / GVA** | Portales GVA / SGISE (form web; no listar buzones no verificados) | Investigación causas: GOIIF vía Conselleria Medio Ambiente |
-| **Resto CCAA** | Buscar en sede electrónica de cada consejería “incendios forestales” + “contacto” | INFOAR (Aragón), INFOCAL (CyL), INFOCAEX, etc. — **email solo si aparece en sede** |
+| **Resto CCAA** | Buscar en sede electrónica de cada consejería “incendios forestales” + “contacto” | INFOAR (Aragón), INFOCAEX, etc. — **email solo si aparece en sede** |
+
+---
+
+## Castilla y León (INFOCAL) — contactos y datos
+
+> Plan: **INFOCAL** (Protección Civil ante incendios forestales).  
+> Ops en campaña: **INFORCYL** (mapa + partes). Tragsa/personal operativo **no** es canal de datos GIS por email público.
+
+### Datos sin pedir permiso (primero)
+
+| Recurso | Qué da | Link |
+|---------|--------|------|
+| **INFORCYL** (mapa tiempo real) | Incendios activos, medios, info pública | https://servicios.jcyl.es/incyl/incyl |
+| **Open Data JCyL — incendios forestales** | CSV de **partes** en campaña (ha, fechas, etc.) | https://jcyl.opendatasoft.com/explore/dataset/incendios-forestales/custom/ |
+| **Portal medio natural CyL** | INFOCAL, planificación, info diaria | https://medioambiente.jcyl.es/web/es/medio-natural/planificacion-sobre-incendios-forestales.html · https://medioambiente.jcyl.es/web/es/medio-natural/informacion-diaria-incendios-forestales.html |
+| **EGIF nacional** | ha/fechas también para provincias CyL | https://servicio.mapa.gob.es/incendios/Search/Publico |
+
+### Emails públicos verificados (pedir **datos** o reenvío)
+
+| Organización | Contacto | Qué pedir | Nota |
+|--------------|----------|-----------|------|
+| **CDF — Centro para la Defensa Contra el Fuego** (Junta CyL, León) | **`centrofuego@jcyl.es`** · Tel. **987 840 603** · C/ Comandante Cortizo s/n, 24008 León | Reenvío al servicio de incendios / cartografía: **perímetros vectoriales** o **partes** liberables de 1–2 IF; o contacto del buzón correcto | Formación + investigación + educación en incendios; **no es el 112** pero es el email institucional más claro de CyL en fuego |
+| **ULE — Alfonso Fernández-Manso** (EIAF / teledetección y fuego) | **`aaferm@unileon.es`** · también aparece como `alfonso.manso@unileon.es` (máster) | Solo si tenéis IF en CyL o queréis reenvío; **no** es despacho ops | Profesor MásterFUEGO; remoto sensing / severidad |
+| **MásterFUEGO (coord. interuniv.)** | `etseafiv.coordmfuego@udl.cat` | Reenvío a parte ULE | Ya en directorio nacional |
+| **Servicios Territoriales Medio Ambiente** | Tel. provinciales (p. ej. León **987 296 000**); emails a menudo **no** públicos en web | Pedir en sede / registro “buzón sección incendios / forestal” | No inventar `info@` provinciales |
+| **112 CyL / Agencia Protección Civil** | https://www.jcyl.es · canales 112 | **No** canal de datos GIS | Solo emergencias |
+| **TRAGSA** (operativo extinción CyL) | Web empleo/contratos | **No** es buzón de perímetros para terceros | Operador, no open data |
+
+### Plantilla corta CyL (solo datos)
+
+```
+Para: centrofuego@jcyl.es
+Asunto: Solicitud de datos — perímetros / partes incendios forestales CyL (uso no comercial)
+
+Estimados/as del CDF,
+
+Desarrollo un proyecto propio de dinámica de frente (ROS desde termografía
+aérea). Necesito, si es liberable para uso interno sin publicar crudos:
+
+1) Perímetro vectorial (SHP/GPKG/GeoJSON) de 1–2 incendios recientes en CyL
+2) O, en su defecto, reenvío al servicio/sección que gestione cartografía
+   o partes INFOCAL / datos abiertos adicionales a INFORCYL
+
+Cualquier formato vale. Si el canal correcto es otro buzón de la Junta,
+agradecería la dirección.
+
+Gracias,
+Alonso Alvira
+[teléfono]
+alonso.alvbal@gmail.com
+```
+
+**Realismo:** CyL publica **partes en CSV** en campaña; los **perímetros finos** suelen ir por DG Patrimonio Natural / ST Medio Ambiente y a menudo exigen registro formal. CDF es el mejor **email de entrada** público.
 
 ---
 
@@ -82,8 +136,9 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 | **UCLM — Grupo Fuego / FIREC** | `JoseM.Moreno@uclm.es` · `Jorge.Heras@uclm.es` · `juanmanuel.sanchez@uclm.es` · https://blog.uclm.es/grupofuego/ | Régimen incendios CLM, cartografía, colaboración TFG |
 | **UdL — MásterFUEGO (coord.)** | `etseafiv.coordmfuego@udl.cat` (Víctor Resco de Dios / coordinación) · https://www.masterfuegoforestal.udl.cat | Red máster incendios UDL–ULE–UPV; reenvío a especialistas |
 | **UCO — Ingeniería Forestal / fuego** | `jrmolina@uco.es` (Juan Ramón Molina) · https://www.uco.es/idep/gestion-del-fuego | FirEUrisk, gestión del fuego, modelos |
-| **CTFC (Solsona)** | `secretaria@ctfc.cat` · Tel. +34 973 481 752 · form: https://www.ctfc.cat | Incendios mediterráneos, modelos, living labs |
-| **FIRE-RES (coord. CTFC)** | `fire-res@ctfc.cat` · https://fire-res.eu/contact-us/ | Innovación WFRM UE; partners living labs |
+| **CTFC — Pau Brunet Navarro** | Investigador; coord. adjunto **FIRE-RES** (H2020) | **`pau.brunet@ctfc.cat`** · [ficha CTFC](https://www.ctfc.cat/es/personal24_det.php?id=19) | **Prioridad alta:** feedback WFRM, living labs, reenvío partners, datos/validación si procede |
+| **CTFC (Solsona) genérico** | `secretaria@ctfc.cat` · Tel. +34 973 481 752 · form: https://www.ctfc.cat | Canal institucional si no contesta el investigador |
+| **FIRE-RES (buzón proyecto)** | `fire-res@ctfc.cat` · https://fire-res.eu/contact-us/ | CC opcional junto a Pau Brunet |
 | **Pau Costa Foundation** | `info@paucostafoundation.org` · https://www.paucostafoundation.org | Red profesional, formación, Firelogue legacy |
 | **USC** (grupos I+D) | `imaisd@usc.gal` (gestión grupos; pedir IP incendios/restauración) | Galicia — ecología/restauración post-fuego |
 | **UPV Máster incendios** | https://www.upv.es/estudios/master/muifcgi/ (contacto vía web máster) | Gestión integral emergencias |

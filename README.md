@@ -78,10 +78,27 @@ pip install -e ".[all]"
 ```bash
 python scripts/install_dual_weights.py
 python scripts/predict_spread.py --list-products
-python scripts/predict_spread.py --product clm_v28 --npz path/to/patches --eval
+python scripts/predict_spread.py --product clm_ensemble_v30 --npz path/to/patches --eval
+python scripts/smoke_production_products.py --clm-max 10
+# Unified ops + ML field smoke
+python scripts/smoke_ops_ml.py
 ```
 
-See `docs/PRODUCTO_DUAL.md`. Ops ROS (drone fronts) is **not** ML — use `scripts/build_observatory_pack.py`.
+See `docs/PRODUCTO_DUAL.md`. Ops ROS (drone fronts) is **not** ML — use `scripts/build_observatory_pack.py` or `incident watch`.
+
+### Live incident runtime (watch)
+
+```bash
+python -m wildfire_front --help
+python -m wildfire_front incident doctor --inbox path/to/inbox
+python -m wildfire_front incident update --inbox path/to/inbox --work-dir outputs/incidents/IF_demo --force
+python -m wildfire_front incident watch  --inbox path/to/inbox --work-dir outputs/incidents/IF_demo
+python -m wildfire_front incident status --work-dir outputs/incidents/IF_demo
+# --json machine output · -v more detail · -q quiet watch
+```
+
+Windows field kit: `scripts\run_incident.cmd D:\drops\inbox outputs\incidents\IF_demo`  
+Docs: `docs/INCIDENT_RUNTIME_V1.md` · smoke: `python scripts/smoke_incident_runtime.py`
 
 ### Synthetic Demo
 

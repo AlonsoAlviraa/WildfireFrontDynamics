@@ -1,57 +1,88 @@
 #!/usr/bin/env python3
-"""Ensure dual-product weight files are in models/production and models/clm_specialist."""
+"""Install production ML products under models/ (NDWS + CLM + ensemble).
+
+Copies known sources into canonical paths used by models/catalog.json.
+"""
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-NDWS_TARGETS = [
-    (ROOT / "kaggle_outputs_v21" / "weights_pretrained_best.pt", ROOT / "models" / "production" / "weights_v21_best.pt"),
-]
-CLM_TARGETS = [
-    (ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt", ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt"),
-    (ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt", ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt"),
+# (source candidates in order, destination)
+INSTALL_PLAN: list[tuple[list[Path], Path]] = [
+    (
+        [
+            ROOT / "kaggle_outputs_v21" / "weights_pretrained_best.pt",
+            ROOT / "models" / "production" / "weights_v21_best.pt",
+        ],
+        ROOT / "models" / "production" / "weights_v21_best.pt",
+    ),
+    (
+        [
+            ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt",
+            ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
+        ],
+        ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
+    ),
+    # Ensemble members (vendored under models/clm_ensemble)
+    (
+        [
+            ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
+            ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt",
+            ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
+        ],
+        ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
+    ),
+    (
+        [
+            ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
+            ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
+        ],
+        ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
+    ),
 ]
 
 
-def _ensure(src: Path, dst: Path) -> str:
+def _ensure(sources: list[Path], dst: Path) -> str:
     if dst.is_file() and dst.stat().st_size > 1000:
         return f"OK exists {dst.relative_to(ROOT)} ({dst.stat().st_size} bytes)"
-    if src.is_file():
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        if src.resolve() != dst.resolve():
-            shutil.copy2(src, dst)
-        return f"COPIED {src} -> {dst}"
-    return f"MISSING {dst} (source {src} not found)"
+    for src in sources:
+        if src.is_file() and src.stat().st_size > 1000:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if src.resolve() != dst.resolve():
+                shutil.copy2(src, dst)
+            return f"COPIED {src.relative_to(ROOT) if src.is_relative_to(ROOT) else src} -> {dst.relative_to(ROOT)}"
+    return f"MISSING {dst.relative_to(ROOT)} (no source found)"
 
 
 def main() -> int:
-    lines = []
+    lines: list[str] = []
     ok = True
-    for src, dst in NDWS_TARGETS:
-        msg = _ensure(src, dst)
+    for sources, dst in INSTALL_PLAN:
+        msg = _ensure(sources, dst)
         lines.append(msg)
         if msg.startswith("MISSING"):
             ok = False
-    for src, dst in CLM_TARGETS:
-        if dst.is_file() and dst.stat().st_size > 1000:
-            lines.append(f"OK exists {dst.relative_to(ROOT)}")
-            break
-        msg = _ensure(src, dst)
-        lines.append(msg)
-        if msg.startswith("MISSING") and src == CLM_TARGETS[-1][0]:
-            ok = False
+
     for line in lines:
         print(line)
-    # Verify catalog
+
     sys.path.insert(0, str(ROOT))
     from wildfire_front.ml.product_catalog import list_products
 
-    print(json_dumps := __import__("json").dumps(list_products(), indent=2))
+    products = list_products()
+    print(json.dumps(products, indent=2))
+    not_ready = [p["id"] for p in products if not p.get("ready")]
+    if not_ready:
+        print("NOT READY:", not_ready, file=sys.stderr)
+        ok = False
+    else:
+        print("All catalog products ready.")
     return 0 if ok else 1
 
 

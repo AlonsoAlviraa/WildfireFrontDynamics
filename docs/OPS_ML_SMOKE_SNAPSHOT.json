@@ -1,0 +1,105 @@
+{
+  "generated_at_utc": "2026-07-17T08:50:11.334342+00:00",
+  "ok": true,
+  "tracks": {
+    "catalog": {
+      "products": [
+        {
+          "id": "clm_ensemble_v30",
+          "label": "CLM ensemble v30 (v28 + LOFO-CARDOSO soft-vote)",
+          "domain": "CLM_Spain_holdout_ensemble",
+          "product_type": "ensemble",
+          "ready": true,
+          "status": "ok (2 members)",
+          "manifest": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\manifest.json",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v28_clm_ft.pt",
+          "members": [
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_v28_clm_ft.pt",
+            "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_ensemble\\weights_lofo_cardoso.pt"
+          ],
+          "ensemble_mode": "mean_prob",
+          "use_when": "Best CLM next-day mask when both member weights available; soft-vote growth probs.",
+          "not_for": "Drone ROS; leakage-prone LOFO members trained on the eval fire source."
+        },
+        {
+          "id": "clm_v28",
+          "label": "CLM Spain specialist (single-model emergency ML)",
+          "domain": "CLM_Spain_holdout",
+          "product_type": "single",
+          "ready": true,
+          "status": "ok",
+          "manifest": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\manifest.json",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+          "members": null,
+          "ensemble_mode": null,
+          "use_when": "Spain-like legacy17 patches; single-checkpoint transfer.",
+          "not_for": "Drone ROS (use front_dynamics); NDWS paper protocol without re-export."
+        },
+        {
+          "id": "ndws_v21",
+          "label": "NDWS global next-day spread (research baseline)",
+          "domain": "NDWS_global",
+          "product_type": "single",
+          "ready": true,
+          "status": "ok",
+          "manifest": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\production\\manifest.json",
+          "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\production\\weights_v21_best.pt",
+          "members": null,
+          "ensemble_mode": null,
+          "use_when": "Research / NDWS-like patches only. Not the emergency primary.",
+          "not_for": "Spain emergency ROS, tactical dispatch, sole decision support."
+        }
+      ],
+      "not_ready": [],
+      "pass": true
+    },
+    "ml": {
+      "evals": [
+        {
+          "product": "clm_v28",
+          "n": 15,
+          "mean_iou": 0.7906670808988973,
+          "mean_delta": 0.08581829121447089,
+          "pass": true,
+          "n_members": 1
+        },
+        {
+          "product": "clm_ensemble_v30",
+          "n": 15,
+          "mean_iou": 0.7820143993102969,
+          "mean_delta": 0.07716560962587064,
+          "pass": true,
+          "n_members": 2
+        }
+      ],
+      "pass": true,
+      "ensemble_competitive": true
+    },
+    "ops_synthetic": {
+      "status": "updated",
+      "n_staged": 3,
+      "quality_grade": "B",
+      "primary_ros_m_min": 11.283791670955129,
+      "latency_s": 0.2054,
+      "missing_artifacts": [],
+      "pass": true,
+      "work_dir": "C:\\Users\\Mariano\\AppData\\Local\\Temp\\ops_ml_incident_x813qib2\\work"
+    },
+    "ops_tobarra": {
+      "status": "updated",
+      "n_staged": 4,
+      "quality_grade": "B",
+      "primary_ros_m_min": 17.590514966830742,
+      "latency_s": 19.1333,
+      "heartbeat": true,
+      "pass": true,
+      "error": null
+    },
+    "ops_pack_tobarra": {
+      "present": true,
+      "quality_grade": "A",
+      "ros": 5.712726709599541,
+      "pass": true
+    }
+  }
+}

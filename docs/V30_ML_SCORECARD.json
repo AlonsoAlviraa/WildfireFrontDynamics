@@ -1,0 +1,86 @@
+{
+  "batch": "v30_clm_transfer",
+  "generated_at_utc": "2026-07-17T07:57:00Z",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "baseline_v28": {
+    "model_iou": 0.8382,
+    "improvement_vs_copy_iou": 0.1964,
+    "model_iou_growth": 0.6943
+  },
+  "gates": {
+    "G1_ndws": "KILLED (features+temporal)",
+    "G2_clm": "delta_copy > 0 on holdout test",
+    "stretch": "IoU >= 0.845 OR delta >= 0.205"
+  },
+  "experiments": {
+    "v30_clm_ensemble_honest": {
+      "single_change": "soft-vote mean growth: clm_v28 + LOFO held-out CARDOSO",
+      "model_iou": 0.8683,
+      "improvement_vs_copy_iou": 0.2265,
+      "model_iou_growth": 0.8860,
+      "verdict": "GO_PROMOTE",
+      "note": "No train-on-test leakage for holdout test=CARDOSO"
+    },
+    "v30_ema": {
+      "single_change": "ema_decay=0.999 only (same FT recipe as v28)",
+      "model_iou": 0.8462,
+      "improvement_vs_copy_iou": 0.2044,
+      "model_iou_growth": 0.9909,
+      "verdict": "GO_PROMOTE",
+      "weights": "outputs/ml_eval/v30_ema/weights_pretrained_best.pt",
+      "note": "Beats stretch; weaker than honest ensemble"
+    },
+    "v30_growth_es": {
+      "single_change": "early_stop_metric=model_iou_growth",
+      "model_iou": 0.7982,
+      "improvement_vs_copy_iou": 0.1564,
+      "model_iou_growth": 0.9999,
+      "verdict": "NO_PROMOTE_KEEP_V28",
+      "note": "Growth ES collapses full IoU — kill as selection metric alone"
+    },
+    "v30_lofo4_only_ensemble": {
+      "model_iou": 0.8063,
+      "improvement_vs_copy_iou": 0.1645,
+      "verdict": "NO_PROMOTE",
+      "note": "Without v28, full IoU drops"
+    },
+    "v30_leaky_ensembles_rejected": {
+      "v28_plus_all_lofo_including_train_on_cardoso": {
+        "model_iou": 0.8508,
+        "delta": 0.2090,
+        "verdict": "REJECTED_LEAKAGE"
+      },
+      "v28_plus_lofo_trained_on_cardoso": {
+        "model_iou": 0.8839,
+        "delta": 0.2421,
+        "verdict": "REJECTED_LEAKAGE"
+      }
+    },
+    "v30_ema_plus_cardoso_lofo": {
+      "model_iou": 0.802,
+      "delta": 0.1602,
+      "verdict": "NO_PROMOTE",
+      "note": "EMA does not combine well with LOFO-CARDOSO on this protocol"
+    }
+  },
+  "champion": {
+    "id": "clm_ensemble_v30",
+    "members": [
+      "models/clm_specialist/weights_v28_clm_ft.pt",
+      "outputs/ml_eval/lofo_v1/CARDOSO/weights_pretrained_best.pt"
+    ],
+    "model_iou": 0.8683,
+    "improvement_vs_copy_iou": 0.2265,
+    "delta_vs_v28": 0.0301
+  },
+  "runner_up": {
+    "id": "v30_ema",
+    "model_iou": 0.8462,
+    "improvement_vs_copy_iou": 0.2044
+  },
+  "kill_list_additions": [
+    "early_stop on model_iou_growth alone",
+    "soft-vote LOFO members trained on the holdout test fire source",
+    "reopen NDWS G1 features/temporal"
+  ]
+}

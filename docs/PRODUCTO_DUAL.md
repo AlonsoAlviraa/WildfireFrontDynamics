@@ -6,7 +6,10 @@
 |----------|--------|---------|----------------|
 | **NDWS global** | `ndws_v21` | Next-day patches Google NDWS | IoU **0.226**, Δ copy **+0.076** |
 | **CLM España** | `clm_v28` | Holdout incendios CLM | IoU **0.838**, Δ copy **+0.196** (test holdout) |
+| **CLM ensemble** | `clm_ensemble_v30` | Soft-vote v28 + LOFO-CARDOSO | IoU **0.868**, Δ **+0.226** (honest, no leak) |
 | **Ops frente** | (no ML) | Secuencias LWIR reales | ROS multi-estimador (`front_dynamics_v1`) |
+
+**v30 (2026-07-17):** G1 NDWS features/temporal sigue KILL. Nuevo campeón ML CLM = ensemble honesto (`docs/V30_ML_SCORECARD.json`). Inferencia ensemble: `python scripts/eval_clm_ensemble.py`.
 
 **No mezclar:** ROS de dron ≠ predicción NDWS ≠ specialist CLM.
 
@@ -18,16 +21,21 @@ Smoke local (2026-07-15): `clm_v28` en 20 parches holdout test → mean IoU **0.
 # Inventario + readiness (manifest + pesos)
 python scripts/predict_spread.py --list-products
 
-# Asegurar pesos en models/
+# Asegurar pesos single-model en models/
 python scripts/install_dual_weights.py
 
-# NDWS (default)
-python scripts/predict_spread.py --product ndws_v21 --npz path/patch.npz --output pred.npz
+# CLM ensemble v30 (default emergency product — soft-vote v28 + LOFO-CARDOSO)
+python scripts/predict_spread.py --product clm_ensemble_v30 \
+  --npz artifacts/clm_ndws_patches/holdout_v1/test \
+  --eval --max-patches 50
 
-# CLM specialist (eval si hay target_fire)
+# CLM single specialist
 python scripts/predict_spread.py --product clm_v28 \
   --npz artifacts/clm_ndws_patches/holdout_v1/test \
   --eval --max-patches 50
+
+# NDWS research
+python scripts/predict_spread.py --product ndws_v21 --npz path/patch.npz --output pred.npz
 ```
 
 ## Rutas

@@ -340,7 +340,7 @@ def build_dataloaders(
                 sampler=sampler,
                 shuffle=False,
                 num_workers=num_workers,
-                pin_memory=True,
+                pin_memory=torch.cuda.is_available(),
                 persistent_workers=persistent,
             )
         return DataLoader(
@@ -348,7 +348,7 @@ def build_dataloaders(
             batch_size=config.batch_size,
             shuffle=shuffle,
             num_workers=num_workers,
-            pin_memory=True,
+            pin_memory=torch.cuda.is_available(),
             persistent_workers=persistent,
         )
 
@@ -426,16 +426,49 @@ def evaluate_loader(
             results["model_iou"] = agg.get("model_iou", 0.0)
             results["model_iou_changed"] = agg.get("model_iou_changed", 0.0)
             results["model_iou_growth"] = agg.get("model_iou_growth", 0.0)
+            results["improvement_vs_copy_iou_growth"] = agg.get(
+                "improvement_vs_copy_iou_growth", 0.0
+            )
+            results["improvement_vs_dilated_copy_iou_growth"] = agg.get(
+                "improvement_vs_dilated_copy_iou_growth", 0.0
+            )
 
     return results
 
 
+# Metrics acceptable for early stopping (must appear on val_results top-level or thresh_0.5).
+EARLY_STOP_METRICS = frozenset(
+    {
+        "val_loss",
+        "improvement_vs_copy_iou",
+        "improvement_vs_copy_iou_changed",
+        "improvement_vs_dilated_copy_iou",
+        "improvement_vs_dilated_copy_iou_changed",
+        "improvement_vs_copy_iou_growth",
+        "improvement_vs_dilated_copy_iou_growth",
+        "model_iou",
+        "model_iou_changed",
+        "model_iou_growth",
+    }
+)
+
+
 def _early_stop_score(val_results: dict, metric: str) -> float:
-    primary = val_results.get("thresh_0.5", val_results)
+    """Higher is better. ``val_loss`` is negated."""
     if metric == "val_loss":
         return -float(val_results.get("loss", 0.0))
-    if metric in primary:
-        return float(primary[metric])
+    # Prefer top-level flattened keys (see evaluate_loader) then thresh primary.
+    if metric in val_results and not isinstance(val_results.get(metric), dict):
+        try:
+            return float(val_results[metric])
+        except (TypeError, ValueError):
+            pass
+    primary = val_results.get("thresh_0.5", val_results)
+    if isinstance(primary, dict) and metric in primary:
+        try:
+            return float(primary[metric])
+        except (TypeError, ValueError):
+            pass
     return float(val_results.get(metric, -1e9))
 
 

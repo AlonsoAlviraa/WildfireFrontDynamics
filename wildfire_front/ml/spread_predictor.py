@@ -1,11 +1,11 @@
-"""Production inference for NDWS wildfire spread models (v21+)."""
+"""Production inference for NDWS / CLM single and ensemble spread models."""
 
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import torch
@@ -29,23 +29,38 @@ class SpreadModelManifest:
     metrics: dict[str, float]
     weights_file: str
     repo_commit: str | None = None
+    product_type: str = "single"
+    ensemble_mode: str = "mean_prob"
+    members: tuple[str, ...] = ()
 
     @classmethod
     def from_json(cls, path: Path | str) -> SpreadModelManifest:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
+        metrics_raw = dict(data.get("metrics", {}))
+        metrics: dict[str, float] = {}
+        for k, v in metrics_raw.items():
+            try:
+                metrics[k] = float(v)
+            except (TypeError, ValueError):
+                continue
+        members = tuple(str(m) for m in (data.get("members") or []))
+        product_type = str(data.get("product_type") or ("ensemble" if members else "single"))
         return cls(
-            version=str(data["version"]),
-            architecture=str(data["architecture"]),
-            target_mode=str(data["target_mode"]),
-            in_channels=int(data["in_channels"]),
+            version=str(data.get("version") or data.get("id") or "unknown"),
+            architecture=str(data.get("architecture", "residual")),
+            target_mode=str(data.get("target_mode", "delta")),
+            in_channels=int(data.get("in_channels", 18)),
             sequence_timesteps=int(data.get("sequence_timesteps", 1)),
             sequence_channels=int(data.get("sequence_channels", 17)),
             patch_size=int(data.get("patch_size", 64)),
             threshold=float(data.get("threshold", 0.5)),
             filter_mode=str(data.get("filter_mode", "any_fire")),
-            metrics={k: float(v) for k, v in dict(data.get("metrics", {})).items()},
-            weights_file=str(data["weights_file"]),
+            metrics=metrics,
+            weights_file=str(data.get("weights_file") or ""),
             repo_commit=data.get("repo_commit"),
+            product_type=product_type,
+            ensemble_mode=str(data.get("ensemble_mode") or "mean_prob"),
+            members=members,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -62,6 +77,9 @@ class SpreadModelManifest:
             "metrics": self.metrics,
             "weights_file": self.weights_file,
             "repo_commit": self.repo_commit,
+            "product_type": self.product_type,
+            "ensemble_mode": self.ensemble_mode,
+            "members": list(self.members),
         }
 
 
@@ -161,3 +179,154 @@ class SpreadPredictor:
         if fire.dim() == 2:
             fire = fire.unsqueeze(0)
         return fire.to(self.device)
+
+
+class EnsembleSpreadPredictor:
+    """Soft-vote ensemble of residual delta models (CLM v30).
+
+    ``mean_prob`` (default): average **growth** sigmoid across members, then
+    decode absolute fire as ``clamp(prev + mean_growth, 0, 1)``.
+    """
+
+    def __init__(
+        self,
+        manifest: SpreadModelManifest,
+        member_weights: Sequence[Path | str],
+        *,
+        ensemble_mode: str = "mean_prob",
+        device: torch.device | str | None = None,
+    ) -> None:
+        paths = [Path(p) for p in member_weights]
+        if len(paths) < 2:
+            raise ValueError("ensemble requires >= 2 member weight files")
+        missing = [str(p) for p in paths if not p.is_file()]
+        if missing:
+            raise FileNotFoundError(f"missing ensemble members: {missing}")
+
+        self.manifest = manifest
+        self.member_paths = paths
+        self.ensemble_mode = ensemble_mode or manifest.ensemble_mode or "mean_prob"
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(device)
+
+        from wildfire_front.ml.unet_train import UNetTrainConfig
+
+        config = UNetTrainConfig(
+            architecture=manifest.architecture,
+            target_mode=manifest.target_mode,
+            version_tag=manifest.version,
+        )
+        self._config = config
+        self.models: list[torch.nn.Module] = []
+        for wpath in paths:
+            model = build_model(config, manifest.in_channels).to(self.device)
+            state = torch.load(wpath, map_location=self.device, weights_only=True)
+            model.load_state_dict(state, strict=True)
+            model.eval()
+            self.models.append(model)
+
+    @classmethod
+    def from_manifest(
+        cls,
+        manifest_path: Path | str,
+        *,
+        member_weights: Sequence[Path | str] | None = None,
+        repo_root: Path | str | None = None,
+        device: torch.device | str | None = None,
+    ) -> EnsembleSpreadPredictor:
+        manifest_path = Path(manifest_path)
+        manifest = SpreadModelManifest.from_json(manifest_path)
+        root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[2]
+        if member_weights is not None:
+            members = list(member_weights)
+        else:
+            members = []
+            for rel in manifest.members:
+                p = Path(rel)
+                members.append(p if p.is_absolute() else (root / p).resolve())
+        return cls(
+            manifest,
+            members,
+            ensemble_mode=manifest.ensemble_mode,
+            device=device,
+        )
+
+    @classmethod
+    def from_product_spec(cls, spec: Any, *, device: torch.device | str | None = None) -> EnsembleSpreadPredictor:
+        """Build from ``ProductSpec`` (catalog)."""
+        manifest = SpreadModelManifest.from_json(spec.manifest_path)
+        return cls(
+            manifest,
+            list(spec.member_paths),
+            ensemble_mode=getattr(spec, "ensemble_mode", None) or manifest.ensemble_mode,
+            device=device,
+        )
+
+    def _as_sequence_tensor(self, sequence: np.ndarray | torch.Tensor) -> torch.Tensor:
+        if isinstance(sequence, torch.Tensor):
+            seq = sequence.float()
+        else:
+            seq = torch.from_numpy(np.asarray(sequence, dtype=np.float32))
+        if seq.dim() == 4:
+            seq = seq.unsqueeze(0)
+        if seq.dim() != 5:
+            raise ValueError(f"sequence must be (T,C,H,W), got {tuple(seq.shape)}")
+        return seq.to(self.device)
+
+    def _as_fire_tensor(self, current_fire: np.ndarray | torch.Tensor) -> torch.Tensor:
+        if isinstance(current_fire, torch.Tensor):
+            fire = current_fire.float()
+        else:
+            fire = torch.from_numpy(np.asarray(current_fire, dtype=np.float32))
+        if fire.dim() == 2:
+            fire = fire.unsqueeze(0)
+        return fire.to(self.device)
+
+    @torch.no_grad()
+    def predict(
+        self,
+        sequence: np.ndarray | torch.Tensor,
+        current_fire: np.ndarray | torch.Tensor,
+    ) -> np.ndarray:
+        seq_t = self._as_sequence_tensor(sequence)
+        fire_t = self._as_fire_tensor(current_fire)
+        x = prepare_input(seq_t, fire_t)
+
+        growth_list: list[torch.Tensor] = []
+        abs_list: list[torch.Tensor] = []
+        for model in self.models:
+            logits = model_forward(model, x, fire_t, self.manifest.architecture)
+            growth = torch.sigmoid(logits)
+            growth_list.append(growth)
+            if self.manifest.target_mode == "delta":
+                prev_bin = (fire_t >= self.manifest.threshold).float().unsqueeze(1)
+                abs_list.append(torch.clamp(prev_bin + growth, 0.0, 1.0))
+            else:
+                abs_list.append(growth)
+
+        if self.ensemble_mode == "mean_abs":
+            probs = torch.stack(abs_list, dim=0).mean(dim=0)
+        else:
+            mean_g = torch.stack(growth_list, dim=0).mean(dim=0)
+            if self.manifest.target_mode == "delta":
+                prev_bin = (fire_t >= self.manifest.threshold).float().unsqueeze(1)
+                probs = torch.clamp(prev_bin + mean_g, 0.0, 1.0)
+            else:
+                probs = mean_g
+        return probs[0, 0].detach().cpu().numpy()
+
+    @torch.no_grad()
+    def predict_binary(
+        self,
+        sequence: np.ndarray | torch.Tensor,
+        current_fire: np.ndarray | torch.Tensor,
+        *,
+        threshold: float | None = None,
+    ) -> np.ndarray:
+        thr = self.manifest.threshold if threshold is None else threshold
+        return (self.predict(sequence, current_fire) >= thr).astype(np.float32)
+
+    @property
+    def n_members(self) -> int:
+        return len(self.models)

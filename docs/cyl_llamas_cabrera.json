@@ -1,0 +1,33 @@
+{
+  "generated_at_utc": "2026-07-17T08:46:58.029381+00:00",
+  "source": "https://jcyl.opendatasoft.com/api/explore/v2.1/catalog/datasets/incendios-forestales/records",
+  "where": "search(termino_municipal, \"LLAMAS DE CABRERA\")",
+  "total_count_api": 160,
+  "n_returned": 100,
+  "n_unique": 1,
+  "fires": [
+    {
+      "fecha_de_inicio": "2025-08-08",
+      "provincia": "LEÓN",
+      "termino_municipal": "LLAMAS DE CABRERA(BENUZA)",
+      "nivel_maximo_alcanzado": "2",
+      "situacion_actual": "CONTROLADO",
+      "superficie_texto": "MIXTA:ARBOLADO:3.739,66 HA. ; MATORRAL:16.365,58 HA. ; PASTO:2.152,96 HA. ; AGRICOLA:25,68 HA. ;",
+      "fecha_del_parte": "2025-10-03",
+      "hora_del_parte": "10:00",
+      "posicion": {
+        "lon": -6.707616,
+        "lat": 42.401711
+      }
+    }
+  ],
+  "transparency_hint": {
+    "doc": "docs/SOLICITUD_TRANSPARENCIA_CYL.md",
+    "recommended": "Llamas de Cabrera (Benuza), León, 2025-08-08",
+    "ask_for": [
+      "perímetro vectorial",
+      "ficha ha finales",
+      "IGR/nivel"
+    ]
+  }
+}

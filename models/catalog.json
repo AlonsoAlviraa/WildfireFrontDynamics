@@ -11,16 +11,32 @@
     },
     "clm_v28": {
       "id": "clm_v28",
-      "label": "CLM Spain specialist (emergency ML for Spain-like patches)",
+      "label": "CLM Spain specialist (single-model emergency ML)",
       "domain": "CLM_Spain_holdout",
       "manifest": "models/clm_specialist/manifest.json",
       "weights": "models/clm_specialist/weights_v28_clm_ft.pt",
-      "use_when": "Spain-like legacy17 patches; holdout + LOFO-validated transfer.",
+      "use_when": "Spain-like legacy17 patches; single-checkpoint transfer.",
       "not_for": "Drone ROS (use front_dynamics); NDWS paper protocol without re-export."
+    },
+    "clm_ensemble_v30": {
+      "id": "clm_ensemble_v30",
+      "label": "CLM ensemble v30 (v28 + LOFO-CARDOSO soft-vote)",
+      "domain": "CLM_Spain_holdout_ensemble",
+      "product_type": "ensemble",
+      "ensemble_mode": "mean_prob",
+      "manifest": "models/clm_ensemble/manifest.json",
+      "weights": "models/clm_ensemble/weights_v28_clm_ft.pt",
+      "members": [
+        "models/clm_ensemble/weights_v28_clm_ft.pt",
+        "models/clm_ensemble/weights_lofo_cardoso.pt"
+      ],
+      "use_when": "Best CLM next-day mask when both member weights available; soft-vote growth probs.",
+      "not_for": "Drone ROS; leakage-prone LOFO members trained on the eval fire source."
     }
   },
-  "default_product": "clm_v28",
-  "emergency_ml_product": "clm_v28",
+  "default_product": "clm_ensemble_v30",
+  "emergency_ml_product": "clm_ensemble_v30",
+  "fallback_ml_product": "clm_v28",
   "research_ml_product": "ndws_v21",
   "ops_product": "front_dynamics_v1",
   "ops_note": "Observed front ROS + sector ROS + envelope are front_dynamics_v1 — not ML. Entry: scripts/smoke_emergency_products.py"

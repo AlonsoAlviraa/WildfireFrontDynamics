@@ -1,0 +1,33 @@
+{
+  "version": "v30_ema",
+  "rail": "transfer",
+  "single_change": "ema_decay=0.999 only",
+  "early_stop_metric": "improvement_vs_copy_iou",
+  "ema_decay": 0.999,
+  "training_summary": {
+    "test_iou": 0.8461543457729764,
+    "improvement_vs_copy_iou": 0.20435217542828876,
+    "model_iou_growth": 0.9909244255421609,
+    "best_epoch": 2,
+    "epochs_ran": null
+  },
+  "holdout_test_eval": {
+    "model_iou": 0.8461543457729764,
+    "copy_baseline_iou": 0.6418021703446877,
+    "improvement_vs_copy_iou": 0.20435217542828876,
+    "model_iou_growth": 0.9909244255421609,
+    "improvement_vs_dilated_copy_iou_growth": 0.9591486994513566,
+    "n_patches": 200
+  },
+  "vs_v28": {
+    "iou_diff": 0.00795434577297649,
+    "delta_diff": 0.007952175428288771,
+    "growth_diff": 0.2969244255421609,
+    "beats_v28_iou": true,
+    "beats_v28_delta": true
+  },
+  "weights": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\v30_ema\\weights_pretrained_best.pt",
+  "generated_at_utc": "2026-07-17T07:56:35.857804+00:00",
+  "verdict": "GO_PROMOTE",
+  "go": true
+}

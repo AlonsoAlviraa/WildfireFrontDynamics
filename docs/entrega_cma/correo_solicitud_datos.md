@@ -126,10 +126,51 @@ alonso.alvbal@gmail.com
 
 ---
 
-### A4) CTFC / FIRE-RES
+### A4) Pau Brunet Navarro — CTFC / FIRE-RES (prioridad)
+
+**Para:** `pau.brunet@ctfc.cat`  
+**CC (opcional):** `fire-res@ctfc.cat`  
+**Asunto:** Proyecto propio — dinámica de frente con termografía aérea (CLM) / posible feedback FIRE-RES–CTFC
+
+```
+Hola Pau,
+
+Me llamo Alonso Alvira. Desarrollo un proyecto propio de dinámica de
+frente en incendios forestales a partir de secuencias térmicas aéreas
+(LWIR) reales en Castilla-La Mancha, en contacto con operadores
+regionales (CMA / GEACAM / Heligrafics).
+
+Qué hago
+--------
+Estimo velocidad de propagación (ROS) con varios métodos, sectores
+cabeza/flanco/cola y envolventes de avance a 15–30–60 min orientadas a
+apoyo de emergencias (con estados de baja confianza / “bloqueado”
+cuando faltan datos). El foco es utilidad en sala, no solo métricas de
+paper. En Tobarra ya tenemos ROS observada del orden de ~5–6 m/min y
+productos GIS en WGS84.
+
+En qué me podrías ayudar
+------------------------
+• Feedback desde CTFC / FIRE-RES: ¿el producto se entiende y sería
+  útil como apoyo (no despacho automático)?
+• Si conoces datasets de perímetros, living labs o partners a los que
+  reenviar para validación geométrica / operativa.
+• Cualquier orientación sobre comportamiento del fuego mediterráneo o
+  productos WFRM comparables.
+
+Puedo adjuntar un informe técnico corto y demo (Tobarra). Uso interno
+del proyecto; no publicaré crudos sin acuerdo.
+
+Muchas gracias por tu tiempo,
+Alonso Alvira
+[teléfono]
+alonso.alvbal@gmail.com
+```
+
+### A4b) CTFC / FIRE-RES buzón genérico (si no usas el de Pau)
 
 **Para:** `fire-res@ctfc.cat`  
-**CC:** `secretaria@ctfc.cat`  
+**CC:** `secretaria@ctfc.cat` · (ideal: reenviar también a `pau.brunet@ctfc.cat`)  
 **Asunto:** Independent project — aerial IR fire-front ROS / possible data or feedback
 
 ```
@@ -148,6 +189,7 @@ I would appreciate:
   that could help validate fronts/perimeters
 • feedback if you see a fit with FIRE-RES / CTFC fire work
 • a contact if another partner is more appropriate
+  (e.g. Pau Brunet Navarro if relevant)
 
 I can share a short technical brief and GIS demo (Tobarra pack).
 
@@ -498,7 +540,7 @@ alonso.alvbal@gmail.com
 | 1 | EFFIS | `jrc-effis@ec.europa.eu` + form web |
 | 2 | INIA | `incendio@inia.es` |
 | 3 | UCLM | `JoseM.Moreno@uclm.es` + CC Heras |
-| 4 | CTFC / FIRE-RES | `fire-res@ctfc.cat` + CC secretaria |
+| 4 | **Pau Brunet (CTFC / FIRE-RES)** | `pau.brunet@ctfc.cat` (+ CC `fire-res@` opcional) |
 | 5 | Pau Costa | `info@paucostafoundation.org` |
 | 6 | Firelogue | `info@firelogue.eu` |
 | 7 | MásterFUEGO | `etseafiv.coordmfuego@udl.cat` |
@@ -517,12 +559,115 @@ alonso.alvbal@gmail.com
 
 - [x] Pablo GEACAM  
 - [x] Heligrafics  
+- [x] INIA (`incendio@` → **Javier Madrigal**: sin datos; solo contrato CSIC de pago)  
+- [x] CTFC Pau Brunet → **redirige a admin/stakeholders CLM** (propuesta WFRM en marcha)  
 - [ ] EFFIS + form  
-- [ ] INIA  
 - [ ] UCLM  
-- [ ] CTFC  
+- [ ] Responder Pau (abajo) + reforzar hilo GEACAM/Pablo con marco CTFC  
+- [ ] Responder Madrigal (cortesía, sin contrato por ahora)  
 - [ ] Pau Costa  
 - [ ] Resto bloque B–D  
-- [ ] Actualizar `CONTACTOS_OUTREACH.csv` al enviar  
 - [ ] Teléfono real en firmas  
 - [ ] Adjuntar informe Tobarra cuando encaje  
+
+---
+
+## Respuestas recibidas (2026-07-16) y réplicas
+
+### Lectura rápida
+
+| Quién | Mensaje | Implicación |
+|-------|---------|-------------|
+| **Pau Brunet (CTFC)** | Interés + redirige a **administración/stakeholders CLM** de una **nueva propuesta** de WFRM/resiliencia | No hay datos CTFC ahora; **sí hay puerta regional**. Actuar con GEACAM/INFOCAM/JCCM citando este marco. Opcional: pedir a Pau un contacto nominal o intro. |
+| **Javier Madrigal (INIA-CSIC)** | Sin datos de laboratorio; asesoría = **contrato de servicios CSIC de pago** | No insistir en datos gratis. Respuesta cortés; aparcar colaboración de pago hasta presupuesto/cliente. |
+
+### R1) Respuesta a Pau Brunet (EN, mismo tono)
+
+**Para:** `pau.brunet@ctfc.cat`  
+**CC:** Laia (si estaba en el hilo)  
+**Asunto:** Re: … (mantener hilo)
+
+```
+Dear Pau,
+
+Thank you for the clear and constructive reply — and for the note about
+the new wildfire risk management / resilience proposal with
+Castilla-La Mancha stakeholders.
+
+I am already in contact with regional emergency operators (CMA / GEACAM
+and related channels). Following your recommendation, I will engage the
+regional side so they can assess whether our fire-front dynamics work
+(aerial LWIR → ROS, sector speeds, short-horizon guidance envelopes)
+fits their priorities for that proposal.
+
+If it is appropriate and not a burden, I would be grateful for:
+• the name of the main CLM institutional contact you are working with
+  on the proposal, or
+• a short introduction by email if that is already agreed with them.
+
+Either way, thank you again for the guidance and for the work of
+FIRE-RES / CTFC. I will keep the development focused on operational
+usefulness for the region.
+
+Kind regards,
+Alonso Alvira
+[teléfono]
+alonso.alvbal@gmail.com
+```
+
+### R2) Correo a Pablo / GEACAM (apoyado en respuesta CTFC)
+
+**Para:** `pablo.arroyobretano@geacam.com`  
+**CC:** `contacto@geacam.com` · Cma si aplica  
+**Asunto:** CTFC / FIRE-RES — propuesta WFRM CLM y posible encaje de dinámica de frente
+
+```
+Hola Pablo,
+
+Actualización breve: he contactado con CTFC (Pau Brunet-Navarro,
+coordinación adjunta FIRE-RES). Me indican que están preparando una
+nueva propuesta de gestión del riesgo y resiliencia frente a incendios
+con stakeholders de Castilla-La Mancha, y que el encaje de herramientas
+como la nuestra debe valorarse con la administración / operadores
+regionales (prioridades y necesidades del proyecto).
+
+Seguimos trabajando el producto de dinámica de frente (ROS multi-
+estimador, sectores, envolventes 15–30–60, brief GIS) sobre las
+secuencias que nos facilitasteis.
+
+Si por vuestra parte hay algún contacto técnico de INFOCAM / JCCM o
+alguien del equipo que esté en esa propuesta con CTFC, me vendría muy
+bien el reenvío o una intro de una línea. Mientras tanto, cualquier
+ancla Vp/ha o perímetro vectorial de 1 IF sigue siendo el cuello de
+botella para validación multi-incendio.
+
+Gracias y un saludo,
+Alonso Alvira
+[teléfono]
+alonso.alvbal@gmail.com
+```
+
+### R3) Respuesta a Javier Madrigal (ES, cortés, sin contrato aún)
+
+**Para:** (hilo de Javier Madrigal / `incendio@inia.es`)  
+**Asunto:** Re: …
+
+```
+Estimado Javier,
+
+Muchas gracias por la respuesta clara y por el tiempo.
+
+Entiendo perfectamente: sin datos liberables en el laboratorio y que
+cualquier asesoría de validación debería formalizarse mediante un
+contrato de prestación de servicios tecnológicos con el CSIC.
+
+De momento no estamos en disposición de abrir ese contrato; si más
+adelante el proyecto dispone de marco y presupuesto para una
+colaboración público-privada, me pondré en contacto de nuevo por este
+cauce.
+
+Un cordial saludo,
+Alonso Alvira
+alonso.alvbal@gmail.com
+```
+

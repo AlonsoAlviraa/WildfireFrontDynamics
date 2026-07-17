@@ -1,0 +1,551 @@
+{
+  "high_nivel_sample": [
+    {
+      "fecha_del_parte": "2025-09-27",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "ACCIDENTAL (MOTORES Y M\u00c1QUINAS)",
+      "termino_municipal": "VILLASINTA DE TORIO(VILLAQUILAMBRE)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-09-25",
+      "hora_de_inicio": "14:07",
+      "medios_de_extincion": "1 T\u00e9cnicos;10 A.M.;1 HT-CAMPOSAGRADO;1 HT-RABANAL;1 HT-SAHECHORES;4 ELIF;2 Bulldozer;3 Autobombas;3 Cuadrillas de tierra;2 Cuadrillas Nocturnas;1 Dotaci\u00f3n de Bomberos municipales;PMA CYL M2",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "MIXTA:ARBOLADO:5,00 HA. ; MATORRAL:5,00 HA. ; AGRICOLA:15,00 HA. ;",
+      "fecha_extinguido": "2025-09-27",
+      "hora_extinguido": "15:17",
+      "codigo_ine": "24222",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -5.55877,
+        "lat": 42.646313
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-09-27 19:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-10-06",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "SEGOVIA,SEGOVIA"
+      ],
+      "causa_probable": "EN INVESTIGACI\u00d3N",
+      "termino_municipal": "CARDOSO DE LA SIERRA (EL) (GUADALAJARA) - CEREZO DE ARRIBA",
+      "nivel": "SE: - SE2)",
+      "fecha_de_inicio": "2025-09-21",
+      "hora_de_inicio": "8:13",
+      "medios_de_extincion": "44 T\u00e9cnicos;105 A.M.;2 HT-COCA;2 HT-CEBREROS;2 HOTEL;6 HT-MADRID;2 HT-EL MAILLO;2 HT-LAS CASILLAS;2 HT-GARRAY;2 2HT-LA IGLESUELA;2 2HT-TABUYO;2 2HT-LUBIA;2 HT-QUINTANILLA;2 HT-ROSINOS;2 HT-SAHECHORES;2 HT-VILLARDECIERVOS;2 2HT-;29 ELIF;4 ELIF de MADRID;6 BRIF;11 Bulldozer;27 Autobombas;39 Cuadrillas de tierra;2 Unidad de brigada y Autobomba;2 Cuadrillas Nocturnas;1 Protecci\u00f3n Civil;2 Unidad de Intervencion UME;BULDOZER PRIVADO J.L\u00d3PEZ;PMA CYL1;BULLDOZER TRAGSA;UPACYL;UAT PMACYL AV;BULDOZER PRIVADO J.L\u00d3PEZ;PMA CYL1;BULLDOZER TRAGSA;UPACYL;UAT PMACYL AV",
+      "situacion_actual": null,
+      "tipo_y_has_de_superficie_afectada": "SEGOVIA:- SEGOVIA:FORESTAL:ARBOLADO:122,00 HA. ; MATORRAL:100,00 HA. ; PASTO:20,00 HA. ;",
+      "fecha_extinguido": null,
+      "hora_extinguido": null,
+      "codigo_ine": "19067",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": null,
+      "codigo_municipio_ine": null,
+      "orden": "2025-10-06 19:00 SEGOVIA,SEGOVIA"
+    },
+    {
+      "fecha_del_parte": "2025-10-04",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "ZAMORA"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "CASTROMIL(HERMISENDE)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-09-06",
+      "hora_de_inicio": "10:58",
+      "medios_de_extincion": "6 T\u00e9cnicos;17 A.M.;2 AA-LABACOLLA;1 HT-VILLAELES;1 HT-VILLARALBO;1 HT-RABANAL;2 HT-ROSINOS;2 ACT-ROSINOS;2 ACT-GALICIA;1 HOTEL;1 ACO-VIRGEN DEL CAMINO;1 HT-VILLARDECIERVOS;1 2HT-TABUYO;1 AA-MATACAN;1 2HT-LAZA;1 ACT-VIRGEN DEL CAMINO;6 ELIF;2 BRIF;5 Bulldozer;11 Autobombas;9 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;2 Cuadrillas Nocturnas;1 Dotaci\u00f3n de Bomberos diputaci\u00f3n;1 UMAP;1 Unidad de Intervencion UME;PMA CYL1;PMA-CYL 1;PMA 112;PMA 2-LE",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2025-09-11",
+      "hora_extinguido": "21:00",
+      "codigo_ine": "49094",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.893091,
+        "lat": 41.969934
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-10-04 10:00 ZAMORA"
+    },
+    {
+      "fecha_del_parte": "2025-10-10",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "ZAMORA,LE\u00d3N"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "PORTO - BA\u00d1A (LA)(ENCINEDO)",
+      "nivel": "ZA:2) - LE2)",
+      "fecha_de_inicio": "2025-08-14",
+      "hora_de_inicio": "10:00",
+      "medios_de_extincion": "23 T\u00e9cnicos;115 A.M.;1 AA-LABACOLLA;1 HT-GARRAY;2 AA-MATACAN;1 HT-PIEDRALAVES;1 ACT-;1 HK-CARAVACA;2 AA-TORREJON;1 2HT-PINOFRANQUEADO;3 AA-;1 -;2 HT-ROSINOS;1 2HT-LA IGLESUELA;2 ACT-AGONCILLO;2 ACT-XINZO;1 ACO-;2 HK-VILLARES;2 ACT-GALICIA;1 HT-GUADRAMIRO;1 HK-PLASENCIA DEL MONTE;1 HT-PRADOLUENGO;1 HT-QUINTANILLA;1 HT-VILLARALBO;1 ACT-ROSINOS;1 ACO-VIRGEN DEL CAMINO;1 HT-VILLARDECIERVOS;1 2HT-;2 HT-RABANAL;1 HOTEL;1 AA-CASTILLA LA MANCHA;2 2HT-DAROCA;2 HT-CUETO;15 ELIF;4 BRIF;7 Bulldozer;29 Autobombas;40 Cuadrillas de tierra;2 Unidad de brigada y Autobomba;6 Cuadrillas Nocturnas;1 Unidad de Intervencion UME;PMA CYL 4;Convoy Jaen;Convoy Franc\u00e9s;Convoy Melilla;UPACYL;PMA CYL 3;BOMBEROS DE RIONEGRO;Convoy Aleman;D.TRAGSA CUENCA;PMA CYL 1;D.TRAGSA CUENCA",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "ZAMORA:EN PERIMETRACION - LE\u00d3N:FORESTAL:ARBOLADO:644,00 HA. ; MATORRAL:2.423,00 HA. ; PASTO:391,00 HA. ; OTRAS:42,00 HA. ;",
+      "fecha_extinguido": "2025-09-04",
+      "hora_extinguido": "12:00",
+      "codigo_ine": "49162",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.898934,
+        "lat": 42.167951
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-10-10 10:00 ZAMORA,LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-09-26",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "LE\u00d3N,PALENCIA"
+      ],
+      "causa_probable": "RAYOS",
+      "termino_municipal": "BARNIEDO DE LA REINA(BOCA DE HUERGANO) - CARDA\u00d1O DE ARRIBA(VELILLA DEL RIO CARRION)",
+      "nivel": "LE:2) - PA2)",
+      "fecha_de_inicio": "2025-08-13",
+      "hora_de_inicio": "23:40",
+      "medios_de_extincion": "16 T\u00e9cnicos;50 A.M.;1 HT-LAS CASILLAS;1 HT-MEDINA DE POMAR;1 2HT-LA IGLESUELA;1 2HT-;1 HT-CANTABRIA;1 AA-TORREJON;1 HT-PIEDRALAVES;2 -;1 HT-SAHECHORES;1 HT-VILLAELES;1 HOTEL;1 HT-COCA;1 HT-QUINTANILLA;2 HT-CASTILLA LA MANCHA;1 HT-GARRAY;1 HT-ZARAGOZA;1 HT-CEBREROS;11 ELIF;1 ELIF de ZARAGOZA;1 ELIF de TOLEDO;1 ELIF de GUADALAJARA;5 Bulldozer;16 Autobombas;28 Cuadrillas de tierra;2 Cuadrillas Nocturnas;1 Unidad de Intervencion UME;CONVOY BURGOS--1;DELTA_8 TRAGSA;DELTA_EMPRESA_BU;2-DELTA UME;PMA CYL 2;2 -DELTAS CIVILES;CONVOY PAIS VASCO;DELTA_6.0;CONVOY CANTABRIA( 1AM+1R);FORMACION TALUD PAISES BAJOS",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "LE\u00d3N:EN PERIMETRACION - PALENCIA:EN PERIMETRACION",
+      "fecha_extinguido": "2025-09-22",
+      "hora_extinguido": "13:16",
+      "codigo_ine": "24020",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -4.925394,
+        "lat": 42.972363
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-09-26 19:00 LE\u00d3N,PALENCIA"
+    },
+    {
+      "fecha_del_parte": "2025-09-27",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "PALENCIA"
+      ],
+      "causa_probable": "RAYOS",
+      "termino_municipal": "RESOBA(CERVERA DE PISUERGA)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-08-10",
+      "hora_de_inicio": "11:37",
+      "medios_de_extincion": "7 T\u00e9cnicos;44 A.M.;1 ACT-EL MAILLO;2 HT-ASTURIAS;1 HT-VILLAELES;1 AA-TORREJON;1 HT-MEDINA DE POMAR;1 AA-EXTREMADURA;1 2HT-;2 AA-CASTILLA LA MANCHA;1 HT-ZARAGOZA;1 HT-COCA;1 2HT-LUBIA;1 HT-PRADOLUENGO;6 ELIF;1 ELIF de ZARAGOZA;1 BRIF;6 Bulldozer;11 Autobombas;9 Cuadrillas de tierra;1 Cuadrillas Nocturnas;1 Dotaci\u00f3n de Bomberos diputaci\u00f3n;1 Guardia Civil;3 Cuadrillas Terrestre Cantabria;1 Autobomba Cantabria;3 Cuadrillas Cantabria",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "FORESTAL:ARBOLADO:89,25 HA. ; MATORRAL:1.011,87 HA. ; PASTO:168,38 HA. ;",
+      "fecha_extinguido": "2025-09-26",
+      "hora_extinguido": "20:00",
+      "codigo_ine": "34056",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -4.499209,
+        "lat": 42.865796
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-09-27 10:00 PALENCIA"
+    },
+    {
+      "fecha_del_parte": "2025-08-11",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "YERES(PUENTE DE DOMINGO FLOREZ)",
+      "nivel": "2",
+      "fecha_de_inicio": "2025-08-09",
+      "hora_de_inicio": "16:33",
+      "medios_de_extincion": "5 T\u00e9cnicos;8 A.M.;2 HK-VILLARES;1 HT-QUINTANILLA;1 HT-CUETO;1 HT-SAHECHORES;1 ACO-TALAVERA;1 HOTEL;1 HT-VILLARDECIERVOS;3 ELIF;3 Bulldozer;6 Autobombas;7 Cuadrillas de tierra;3 Cuadrillas Nocturnas;1 Unidad de Intervencion UME;UAT PMA CYL",
+      "situacion_actual": "ACTIVO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": null,
+      "hora_extinguido": null,
+      "codigo_ine": "24122",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.818355,
+        "lat": 42.410721
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-08-11 10:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-08-11",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "LLAMAS DE CABRERA(BENUZA)",
+      "nivel": "2",
+      "fecha_de_inicio": "2025-08-08",
+      "hora_de_inicio": "21:06",
+      "medios_de_extincion": "5 T\u00e9cnicos;10 A.M.;1 HT-CAMPOSAGRADO;1 HT-GUADRAMIRO;1 HT-QUINTANILLA;2 AA-MATACAN;1 ACO-TALAVERA;2 HT-ROSINOS;1 ACT-ROSINOS;1 2HT-LUBIA;1 HT-CUETO;1 ACO-VIRGEN DEL CAMINO;5 ELIF;4 BRIF;1 Bulldozer;6 Autobombas;7 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;1 Cuadrillas Nocturnas;PMA_CYL1;CAMION 112",
+      "situacion_actual": "ACTIVO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": null,
+      "hora_extinguido": null,
+      "codigo_ine": "24016",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.707616,
+        "lat": 42.401711
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-08-11 10:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-10-12",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "RAYOS",
+      "termino_municipal": "FASGAR(MURIAS DE PAREDES)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-08-08",
+      "hora_de_inicio": "17:24",
+      "medios_de_extincion": "11 T\u00e9cnicos;43 A.M.;2 AA-TALAVERA;1 2HT-DAROCA;3 HK-;1 HT-GUADRAMIRO;1 HT-ROSINOS;1 HK-;1 ACT-ROSINOS;1 2HT-LUBIA;1 HK-PLASENCIA;1 HT-CUETO;1 HT-RABANAL;1 HOTEL;1 ACT-;1 ACO-VIRGEN DEL CAMINO;2 HT-MADRID;1 2HT-TABUYO;2 -;1 HT-CAMPOSAGRADO;1 HT-SAHECHORES;2 AA-MATACAN;1 AA-TORREJON;1 HT-QUINTANILLA;1 HT-COCA;1 HT-MEDINA DE POMAR;15 ELIF;6 Bulldozer;19 Autobombas;26 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;3 Cuadrillas Nocturnas;UPACYL;BRIGADA H_MD13",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2025-09-11",
+      "hora_extinguido": "19:15",
+      "codigo_ine": "24101",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.191238,
+        "lat": 42.850201
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-10-12 19:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-08-09",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "AVILA"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "SAN BARTOLOME DE PINARES",
+      "nivel": "2",
+      "fecha_de_inicio": "2025-08-08",
+      "hora_de_inicio": "14:45",
+      "medios_de_extincion": "8 T\u00e9cnicos;22 A.M.;1 HT-COCA;1 HT-LAS CASILLAS;2 AA-MATACAN;1 HT-PIEDRALAVES;1 HK-MADRID;4 HT-MADRID;1 HT-VILLAELES;1 HT-CEBREROS;1 ACO-VIRGEN DEL CAMINO;1 HOTEL;1 2HT-LA IGLESUELA;1 HT-PUERTO EL PICO;1 HT-EL BARCO DE AVILA;10 ELIF;2 BRIF;5 Bulldozer;19 Autobombas;17 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;6 Cuadrillas Nocturnas;1 UMAP;1 Unidad de Intervencion UME;1 PMA_MAD;pick up 112;PMA 112;UAT PMA REFUERZO;3 operadores UALE;T\u00e9cnico CCE",
+      "situacion_actual": "ACTIVO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": null,
+      "hora_extinguido": null,
+      "codigo_ine": "5201",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -4.540079,
+        "lat": 40.543187
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-08-09 10:00 AVILA"
+    },
+    {
+      "fecha_del_parte": "2025-08-09",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "AVILA"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "CUEVAS DEL VALLE",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-07-28",
+      "hora_de_inicio": "23:10",
+      "medios_de_extincion": "35 T\u00e9cnicos;92 A.M.;2 HT-MADRID;1 HT-QUINTANILLA;2 HK-VILLARES;1 HT-PRADOLUENGO;1 HT-EL MAILLO;1 2HT-PINOFRANQUEADO;2 AA-TORREJON;1 ACT-EL MAILLO;1 HK-PLASENCIA;1 HT-LAS CASILLAS;1 2HT-DAROCA;1 AA-;1 HT-COCA;2 AA-MATACAN;1 HT-EL BARCO DE AVILA;1 ACO-VIRGEN DEL CAMINO;1 HOTEL;1 HT-VILLARALBO;1 2HT-LA IGLESUELA;1 HT-PUERTO EL PICO;1 2HT-LUBIA;1 HT-PIEDRALAVES;1 ACO-TALAVERA;2 HT-CASTILLA LA MANCHA;1 HT-CEBREROS;14 ELIF;10 BRIF;11 Bulldozer;1 Bulldozer de MADRID;45 Autobombas;3 Autobombas de MADRID;47 Cuadrillas de tierra;3 Unidad de brigada y Autobomba;6 Cuadrillas Nocturnas;1 Dotaci\u00f3n de Bomberos diputaci\u00f3n;1 Guardia Civil;1 Protecci\u00f3n Civil;2 UMAP;1 Unidad de Intervencion UME;PMA_AVILA;UPACYL",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2025-08-01",
+      "hora_extinguido": "19:45",
+      "codigo_ine": "5066",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -5.009394,
+        "lat": 40.294204
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-08-09 19:00 AVILA"
+    },
+    {
+      "fecha_del_parte": "2025-07-27",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "ACCIDENTAL (MOTORES Y M\u00c1QUINAS)",
+      "termino_municipal": "RIOFRIO(QUINTANA DEL CASTILLO)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-07-22",
+      "hora_de_inicio": "18:21",
+      "medios_de_extincion": "2 T\u00e9cnicos;16 A.M.;1 HT-ROSINOS;1 ACT-ROSINOS;1 HT-CAMPOSAGRADO;1 2HT-TABUYO;1 HT-RABANAL;2 AA-MATACAN;1 HT-CUETO;1 HOTEL;1 HT-SAHECHORES;6 ELIF;1 BRIF;2 Bulldozer;7 Autobombas;6 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;3 Cuadrillas Nocturnas;GUARDIA CIVIL;PMA CYL 2;BOMBEROS DE DIPUTACI\u00d3N",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2025-07-25",
+      "hora_extinguido": "9:30",
+      "codigo_ine": "24123",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.045955,
+        "lat": 42.661303
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-07-27 10:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2025-07-29",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "PALENCIA"
+      ],
+      "causa_probable": "ACCIDENTAL (MOTORES Y M\u00c1QUINAS)",
+      "termino_municipal": "PAREDES DE MONTE(PALENCIA)",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-07-20",
+      "hora_de_inicio": "17:17",
+      "medios_de_extincion": "5 T\u00e9cnicos;13 A.M.;1 HT-COCA;1 HT-QUINTANILLA;2 AA-MATACAN;1 ACT-ROSINOS;1 HT-PRADOLUENGO;1 HT-VILLAELES;1 HT-VILLARALBO;6 ELIF;2 Bulldozer;5 Autobombas;5 Cuadrillas de tierra;3 Cuadrillas Nocturnas;Bomberos de Palencia;Bomberos Palencia;CONDUCTOR GUARDIA_1;UPACYL;CONDUCTOR GUARDIA_2;BOMB. PALENCIA;PMA",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "MIXTA:ARBOLADO:25,05 HA. ; MATORRAL:7,97 HA. ; PASTO:2,49 HA. ; AGRICOLA:321,91 HA. ;",
+      "fecha_extinguido": "2025-07-21",
+      "hora_extinguido": "17:52",
+      "codigo_ine": "34120",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -4.534601,
+        "lat": 42.007837
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-07-29 19:00 PALENCIA"
+    },
+    {
+      "fecha_del_parte": "2025-07-29",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "AVILA"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "NAVALUENGA",
+      "nivel": "0",
+      "fecha_de_inicio": "2025-07-18",
+      "hora_de_inicio": "14:10",
+      "medios_de_extincion": "11 T\u00e9cnicos;33 A.M.;1 ACT-EL MAILLO;2 AA-MATACAN;1 AA-TORREJON;1 HT-PUERTO EL PICO;1 HOTEL;1 2HT-TABUYO;1 HT-EL MAILLO;1 HT-CEBREROS;1 HT-EL BARCO DE AVILA;1 HT-PIEDRALAVES;1 ACO-VIRGEN DEL CAMINO;1 HT-VILLARALBO;1 2HT-LA IGLESUELA;1 AA-;9 ELIF;5 BRIF;2 Bulldozer;23 Autobombas;20 Cuadrillas de tierra;1 Unidad de brigada y Autobomba;2 Cuadrillas Nocturnas;2 UMAP;1 Unidad de Intervencion UME;UNIDAD REF PMA;GUARDIA CIVIL;BOMBEROS DIPUTACI\u00d3N;PMA;PROTECCI\u00d3N CIVIL;PMA CYL 4;UME;UPACYL;3 charlies CMadrid;BOMBEROS \u00c1VILA;2 VEHICULOS PERSONAL MANDO;PROTECCION CIVIL NAVALUENGA",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2025-07-27",
+      "hora_extinguido": "18:15",
+      "codigo_ine": "5163",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -4.708148,
+        "lat": 40.412733
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2025-07-29 10:00 AVILA"
+    },
+    {
+      "fecha_del_parte": "2024-09-26",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "NEGLIGENCIAS (OTRAS ACTIVIDADES O USOS DEL MONTE)",
+      "termino_municipal": "BRA\u00d1UELAS(VILLAGATON)",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-09-16",
+      "hora_de_inicio": "13:21",
+      "medios_de_extincion": null,
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "FORESTAL:ARBOLADO:11,95 HA. ; MATORRAL:463,57 HA. ;",
+      "fecha_extinguido": "2024-09-21",
+      "hora_extinguido": "9:00",
+      "codigo_ine": "24210",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.161846,
+        "lat": 42.634792
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-09-26 19:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2024-08-23",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "SORIA"
+      ],
+      "causa_probable": "NEGLIGENCIAS (FUMADORES)",
+      "termino_municipal": "ALMAZAN",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-08-22",
+      "hora_de_inicio": "15:08",
+      "medios_de_extincion": "2 Cuadrillas de tierra;3 Autobombas;3 A.M.",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "AGRICOLA:8,07 HA. ;",
+      "fecha_extinguido": "2024-08-22",
+      "hora_extinguido": "18:30",
+      "codigo_ine": "42020",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -2.53291,
+        "lat": 41.486994
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-08-23 10:00 SORIA"
+    },
+    {
+      "fecha_del_parte": "2024-08-27",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "CASTRILLO DE LOS POLVAZARES(ASTORGA)",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-08-19",
+      "hora_de_inicio": "16:10",
+      "medios_de_extincion": "7 Bulldozer;14 Cuadrillas de tierra;2 Unidad de brigada y Autobomba;11 Autobombas;1 HT-SAHECHORES;2 AA-MATACAN;1 2HT-TABUYO;1 HOTEL;1 HK-IBIAS;2 HT-ROSINOS;1 HT-QUINTANILLA;1 ACO-VIRGEN DEL CAMINO;1 HT-RABANAL;1 AA-TORREJON;1 HT-VILLAELES;1 HK-ROSINOS;1 HT-CUETO;22 A.M.;16 T\u00e9cnicos;PMA APCyE;Bomberos Diputaci\u00f3n;PMA CYL REFUERZO;PMA CYL 2;UPACYL;7 ELIF;2 BRIF;1 Dotaci\u00f3n de Bomberos diputaci\u00f3n;1 Guardia Civil;1 Unidad de Intervencion UME;5 Cuadrillas Nocturnas",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2024-08-23",
+      "hora_extinguido": "20:30",
+      "codigo_ine": "24008",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.057144,
+        "lat": 42.457631
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-08-27 10:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2024-08-24",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "ZAMORA"
+      ],
+      "causa_probable": "INTENCIONADO",
+      "termino_municipal": "TRABAZOS",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-08-17",
+      "hora_de_inicio": "17:10",
+      "medios_de_extincion": "8 Bulldozer;17 Cuadrillas de tierra;2 Unidad de brigada y Autobomba;14 Autobombas;2 AA-MATACAN;1 HK-ROSINOS;2 HT-ROSINOS;1 HT-GUADRAMIRO;1 HT-VILLARDECIERVOS;1 HT-VILLARALBO;1 HOTEL;1 2HT-TABUYO;32 A.M.;10 T\u00e9cnicos;UPACYL;PMA;7 ELIF;1 BRIF;1 UMAP;1 Unidad de Intervencion UME;4 Cuadrillas Nocturnas",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "MIXTA:ARBOLADO:211,65 HA. ; MATORRAL:27,55 HA. ; AGRICOLA:17,20 HA. ;",
+      "fecha_extinguido": "2024-08-20",
+      "hora_extinguido": "11:27",
+      "codigo_ine": "49223",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.492206,
+        "lat": 41.747526
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-08-24 10:00 ZAMORA"
+    },
+    {
+      "fecha_del_parte": "2024-08-20",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "EN INVESTIGACION",
+      "termino_municipal": "ALDEA DE LA VALDONCINA (LA)(VALVERDE DE LA VIRGEN)",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-08-17",
+      "hora_de_inicio": "17:11",
+      "medios_de_extincion": "2 Bulldozer;4 Cuadrillas de tierra;5 Autobombas;1 HT-VILLAELES;1 HT-RABANAL;1 HT-SAHECHORES;1 HT-CAMPOSAGRADO;9 A.M.;2 T\u00e9cnicos;PMA CYL;4 ELIF;1 Dotaci\u00f3n de Bomberos municipales;2 Cuadrillas Nocturnas",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACION",
+      "fecha_extinguido": "2024-08-19",
+      "hora_extinguido": "18:45",
+      "codigo_ine": "24189",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -5.682925,
+        "lat": 42.56918
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-08-20 10:00 LE\u00d3N"
+    },
+    {
+      "fecha_del_parte": "2024-07-05",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "\u00c1VILA"
+      ],
+      "causa_probable": "ACCIDENTAL (MOTORES Y M\u00c1QUINAS)",
+      "termino_municipal": "MOMBELTRAN",
+      "nivel": "0",
+      "fecha_de_inicio": "2024-07-04",
+      "hora_de_inicio": "12:08",
+      "medios_de_extincion": "1 Cuadrillas de tierra;3 Autobombas;1 HT-PUERTO EL PICO;1 HT-PIEDRALAVES;4 A.M.;1 ELIF;1 BRIF;1 Guardia Civil;1 Protecci\u00f3n Civil",
+      "situacion_actual": "EXTINGUIDO",
+      "tipo_y_has_de_superficie_afectada": "AGRICOLA:0,01 HA. ;",
+      "fecha_extinguido": "2024-07-04",
+      "hora_extinguido": "13:45",
+      "codigo_ine": "5132",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -5.017888,
+        "lat": 40.260166
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2024-07-05 10:00 \u00c1VILA"
+    },
+    {
+      "fecha_del_parte": "2023-08-29",
+      "hora_del_parte": "19:00",
+      "provincia": [
+        "ZAMORA"
+      ],
+      "causa_probable": "EN INVESTIGACI\u00d3N",
+      "termino_municipal": "FORNILLOS DE ALISTE(FONFRIA)",
+      "nivel": "0",
+      "fecha_de_inicio": "2023-08-29",
+      "hora_de_inicio": "13:54",
+      "medios_de_extincion": "6 A.M.;HT-VILLARDECIERVOS;HT-VILLARALBO;2 ELIF;1 BULLDOZER;3 AUTOBOMBAS;1 CUADRILLAS DE TIERRA;1 UNIDAD DE BRIGADA Y AUTOBOMBA",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "MATORRAL:2,23 HA.;",
+      "fecha_extinguido": "2023-08-29",
+      "hora_extinguido": "16:45",
+      "codigo_ine": "49071",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -6.139885,
+        "lat": 41.635726
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2023-08-29 19:00 ZAMORA"
+    },
+    {
+      "fecha_del_parte": "2023-08-28",
+      "hora_del_parte": "10:00",
+      "provincia": [
+        "LE\u00d3N"
+      ],
+      "causa_probable": "RAYOS",
+      "termino_municipal": "SAN BARTOLOME DE RUEDA(GRADEFES)",
+      "nivel": "0",
+      "fecha_de_inicio": "2023-08-23",
+      "hora_de_inicio": "15:09",
+      "medios_de_extincion": "3 A.M.;4 AUTOBOMBAS;2 CUADRILLAS DE TIERRA;1 CUADRILLAS NOCTURNAS",
+      "situacion_actual": "CONTROLADO",
+      "tipo_y_has_de_superficie_afectada": "EN PERIMETRACI\u00d3N",
+      "fecha_extinguido": "2023-08-27",
+      "hora_extinguido": "9:00",
+      "codigo_ine": "24079",
+      "nivel_maximo_alcanzado": "2",
+      "posicion": {
+        "lon": -5.226177,
+        "lat": 42.623816
+      },
+      "codigo_municipio_ine": null,
+      "orden": "2023-08-28 10:00 LE\u00d3N"
+    }
+  ]
+}

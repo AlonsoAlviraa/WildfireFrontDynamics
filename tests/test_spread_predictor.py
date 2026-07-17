@@ -63,3 +63,26 @@ class TestSpreadPredictor:
         current_fire[25:35, 25:35] = 1.0
         pred = predictor.predict_binary(seq, current_fire, threshold=0.5)
         assert pred[30, 30] == 1.0
+
+    def test_ensemble_soft_vote(self, manifest_path: Path, weights_path: Path, tmp_path: Path):
+        from wildfire_front.ml.spread_predictor import (
+            EnsembleSpreadPredictor,
+            SpreadModelManifest,
+        )
+
+        # second random member
+        from models.unet_model import ResidualWildfireUNetSmall
+
+        w2 = tmp_path / "weights2.pt"
+        torch.save(ResidualWildfireUNetSmall(in_channels=18).state_dict(), w2)
+
+        manifest = SpreadModelManifest.from_json(manifest_path)
+        ens = EnsembleSpreadPredictor(manifest, [weights_path, w2], ensemble_mode="mean_prob")
+        assert ens.n_members == 2
+        seq = np.random.randn(1, 17, 64, 64).astype(np.float32) * 0.1
+        fire = np.zeros((64, 64), dtype=np.float32)
+        fire[10:20, 10:20] = 1.0
+        pred = ens.predict(seq, fire)
+        assert pred.shape == (64, 64)
+        assert np.isfinite(pred).all()
+        assert pred.min() >= 0.0 and pred.max() <= 1.0

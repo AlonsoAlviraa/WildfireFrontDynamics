@@ -13,8 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from wildfire_front.ml.ndws_metrics import evaluate_sample  # noqa: E402
-from wildfire_front.ml.product_catalog import get_product, list_products  # noqa: E402
-from wildfire_front.ml.spread_predictor import SpreadPredictor  # noqa: E402
+from wildfire_front.ml.product_catalog import (  # noqa: E402
+    list_products,
+    load_predictor_for_product,
+)
 
 
 def main() -> int:
@@ -23,11 +25,19 @@ def main() -> int:
     products = list_products()
     report["products"] = products
     ready = {p["id"]: bool(p.get("ready")) for p in products}
-    report["checks"]["dual_ready"] = all(ready.values()) and len(ready) >= 2
+    # Require dual core + ensemble when present in catalog
+    need = {"ndws_v21", "clm_v28"}
+    report["checks"]["dual_ready"] = need.issubset(set(ready)) and all(
+        ready.get(k) for k in need
+    )
+    if "clm_ensemble_v30" in ready:
+        report["checks"]["ensemble_ready"] = bool(ready["clm_ensemble_v30"])
+        if not ready["clm_ensemble_v30"]:
+            report["ok"] = False
     if not report["checks"]["dual_ready"]:
         report["ok"] = False
 
-    # CLM smoke
+    # CLM smoke (prefer ensemble, always also check v28)
     test_dir = ROOT / "artifacts" / "clm_ndws_patches" / "holdout_v1" / "test"
     paths = sorted(test_dir.glob("*.npz"))[:12]
     if not paths:
@@ -35,22 +45,27 @@ def main() -> int:
         report["ok"] = False
         report["clm_error"] = "no holdout test patches"
     else:
-        spec = get_product("clm_v28")
-        pred = SpreadPredictor.from_manifest(
-            spec.manifest_path, weights_path=str(spec.weights_path)
+        for pid in ("clm_v28", "clm_ensemble_v30"):
+            if pid not in ready or not ready.get(pid):
+                continue
+            pred = load_predictor_for_product(pid)
+            ious, copies = [], []
+            for path in paths:
+                with np.load(path) as d:
+                    pp = pred.predict(d["sequence"], d["current_fire"])
+                    s = evaluate_sample(pp, d["current_fire"], d["target_fire"])
+                    ious.append(s["model_full"].iou)
+                    copies.append(s["copy_full"].iou)
+            delta = float(np.mean(np.array(ious) - np.array(copies)))
+            report["checks"][f"{pid}_mean_delta"] = delta
+            report["checks"][f"{pid}_delta_positive"] = delta > 0
+            if delta <= 0:
+                report["ok"] = False
+        # backward-compatible key
+        report["checks"]["clm_mean_delta"] = report["checks"].get("clm_v28_mean_delta")
+        report["checks"]["clm_delta_positive"] = report["checks"].get(
+            "clm_v28_delta_positive", False
         )
-        ious, copies = [], []
-        for path in paths:
-            with np.load(path) as d:
-                pp = pred.predict(d["sequence"], d["current_fire"])
-                s = evaluate_sample(pp, d["current_fire"], d["target_fire"])
-                ious.append(s["model_full"].iou)
-                copies.append(s["copy_full"].iou)
-        delta = float(np.mean(np.array(ious) - np.array(copies)))
-        report["checks"]["clm_mean_delta"] = delta
-        report["checks"]["clm_delta_positive"] = delta > 0
-        if delta <= 0:
-            report["ok"] = False
 
     # Tobarra ops
     pack = ROOT / "outputs" / "observatorio" / "tobarra_20240802"

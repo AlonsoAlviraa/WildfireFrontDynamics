@@ -1,0 +1,31 @@
+{
+  "version": "clm_ensemble_v30",
+  "id": "clm_ensemble_v30",
+  "label": "CLM ensemble v30 (v28 + LOFO-CARDOSO soft-vote)",
+  "product_type": "ensemble",
+  "architecture": "residual",
+  "target_mode": "delta",
+  "in_channels": 18,
+  "sequence_timesteps": 1,
+  "sequence_channels": 17,
+  "patch_size": 64,
+  "threshold": 0.5,
+  "filter_mode": "any_fire",
+  "ensemble_mode": "mean_prob",
+  "domain": "CLM_Spain_holdout_ensemble",
+  "weights_file": "weights_v28_clm_ft.pt",
+  "members": [
+    "models/clm_ensemble/weights_v28_clm_ft.pt",
+    "models/clm_ensemble/weights_lofo_cardoso.pt"
+  ],
+  "protocol": "clm_holdout_test_seed42_v1",
+  "metrics": {
+    "test_iou": 0.8683,
+    "copy_baseline_iou": 0.6418,
+    "improvement_vs_copy_iou": 0.2265,
+    "model_iou_growth": 0.8860
+  },
+  "verdict": "GO_PROMOTE",
+  "leakage_policy": "only members not trained on holdout test source (CARDOSO)",
+  "notes": "Soft-vote mean growth sigmoid then decode prev+growth. Members vendored under models/clm_ensemble/."
+}

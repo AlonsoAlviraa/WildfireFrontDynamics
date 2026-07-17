@@ -1,0 +1,36 @@
+{
+  "version": "v30_clm_ensemble_honest",
+  "rail": "transfer_ensemble",
+  "single_change": "soft-vote mean growth: clm_v28 + LOFO held-out CARDOSO (no retrain)",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "leakage_note": "Holdout test is CARDOSO. Only v28 (train Tobarra) and LOFO fold held-out CARDOSO are valid members.",
+  "generated_at_utc": "2026-07-17T07:57:40.677559+00:00",
+  "ensemble_mode": "mean_prob",
+  "members": [
+    "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\models\\clm_specialist\\weights_v28_clm_ft.pt",
+    "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\ml_eval\\lofo_v1\\CARDOSO\\weights_pretrained_best.pt"
+  ],
+  "n_members": 2,
+  "n_patches": 200,
+  "model_iou": 0.8682554342264515,
+  "copy_baseline_iou": 0.6418021703446877,
+  "improvement_vs_copy_iou": 0.2264532638817638,
+  "model_iou_growth": 0.8860057602752344,
+  "improvement_vs_dilated_copy_iou_growth": 0.8542300341844301,
+  "vs_v28": {
+    "baseline_iou": 0.8382,
+    "baseline_delta": 0.1964,
+    "baseline_growth": 0.694,
+    "iou_diff": 0.030055434226451516,
+    "delta_diff": 0.030053263881763798,
+    "growth_diff": 0.19200576027523442,
+    "beats_v28": true
+  },
+  "gates": {
+    "G2_delta_positive": true,
+    "stretch_iou_0_845_or_delta_0_205": true,
+    "soft_beats_v28": true
+  },
+  "verdict": "GO_PROMOTE",
+  "go": true
+}

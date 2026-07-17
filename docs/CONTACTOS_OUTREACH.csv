@@ -24,15 +24,16 @@ prioridad,org,rol,email,canal_web,que_pedir,estado,fecha_envio,notas
 4,Galicia monte,Medio Rural monte,monte.mediorural@xunta.gal,,Monte/incendios docs,OPCIONAL,,
 4,Galicia secretar铆a CMR,Secretar铆a,secretaria.cmr@xunta.gal,,Institucional,OPCIONAL,,
 4,Galicia coordinaci贸n medios,Medios,coordinacion-medios.medio-rural@xunta.gal,,Formaci贸n/medios,OPCIONAL,,
-5,INIA lab incendios,CIFOR/ICIFOR,incendio@inia.es,https://www.inia.es,Validaci贸n ROS combustibles,PENDIENTE,,Tel +34 913476780
+5,INIA lab incendios,CIFOR/ICIFOR,incendio@inia.es,https://www.inia.es,Validaci贸n ROS combustibles,RESPONDIDO,2026-07-16,"Javier Madrigal: sin datos; asesor铆a solo con contrato CSIC de pago. No insistir gratis."
 5,INIA Guijarro,Investigadora,guijarro@inia.es,,Solo si encaja l铆nea; preferir incendio@,HOLD,,Publicado en directorios
 5,UCLM Moreno,Grupo Fuego,JoseM.Moreno@uclm.es,https://blog.uclm.es/grupofuego/,Colaboraci贸n proyecto propio CLM,PENDIENTE,,
 5,UCLM Heras,Grupo Fuego,Jorge.Heras@uclm.es,,CC Moreno,PENDIENTE,,
 5,UCLM S谩nchez,Grupo Fuego,juanmanuel.sanchez@uclm.es,,CC,OPCIONAL,,
 5,UdL MasterFUEGO,Coordinaci贸n m谩ster,etseafiv.coordmfuego@udl.cat,https://www.masterfuegoforestal.udl.cat,Red m谩ster incendios,PENDIENTE,,
 5,UCO Molina,Ing. Forestal fuego,jrmolina@uco.es,https://www.uco.es/idep/gestion-del-fuego,FirEUrisk modelos,PENDIENTE,,
-5,CTFC secretar铆a,Centro forestal Cat,secretaria@ctfc.cat,https://www.ctfc.cat,Consulta general,PENDIENTE,,Tel +34 973481752
-5,FIRE-RES CTFC,Proyecto UE,fire-res@ctfc.cat,https://fire-res.eu/contact-us/,Living labs datos,PENDIENTE,,
+5,CTFC Pau Brunet Navarro,Investigador / FIRE-RES adjunto,pau.brunet@ctfc.cat,https://www.ctfc.cat/es/personal24_det.php?id=19,Feedback WFRM; living labs; reenv铆o partners; validaci贸n,RESPONDIDO,2026-07-16,"Redirige a admin CLM: preparan propuesta WFRM con stakeholders CLM. Pedir intro o contactar GEACAM/JCCM en ese marco."
+5,CTFC secretar铆a,Centro forestal Cat,secretaria@ctfc.cat,https://www.ctfc.cat,CC institucional si hace falta,PENDIENTE,,Tel +34 973481752
+5,FIRE-RES CTFC,Proyecto UE buz贸n,fire-res@ctfc.cat,https://fire-res.eu/contact-us/,CC opcional con Pau,PENDIENTE,,
 5,Pau Costa Foundation,Red profesional,info@paucostafoundation.org,https://www.paucostafoundation.org,Red WFRM formaci贸n,PENDIENTE,,
 5,USC I+D grupos,Gesti贸n grupos,imaisd@usc.gal,,Pedir IP incendios,OPCIONAL,,
 6,Firelogue,Red UE,info@firelogue.eu,https://firelogue.eu,Partners WFRM,OPCIONAL,,
@@ -50,3 +51,10 @@ prioridad,org,rol,email,canal_web,que_pedir,estado,fecha_envio,notas
 7,ELMFIRE,Modelo operativo,,https://elmfire.io,Docs/GitHub,WEB,,
 4,Arag贸n INFOAR,Incendios forestales,incendios@aragon.es,https://www.aragon.es,Per铆metros/anclas AR,PENDIENTE,,Nuevo
 4,Arag贸n gesti贸n forestal,DG Gesti贸n Forestal,gestionforestal@aragon.es,,CC INFOAR,PENDIENTE,,
+
+4,CyL CDF Centro Defensa Fuego,Formaci髇 e investigaci髇 incendios CyL,centrofuego@jcyl.es,https://medioambiente.jcyl.es/web/es/medio-natural/centro-para-defensa-contra.html,Reenv韔 a servicio incendios / datos si liberables,PENDIENTE,,Le髇 Tel 987840603
+4,CyL INFORCYL open data,Partes incendios activos CSV,,https://jcyl.opendatasoft.com/explore/dataset/incendios-forestales/custom/,Descargar partes ha/fechas campa馻,WEB,,Sin email
+4,CyL INFORCYL mapa,Incendios activos tiempo real,,https://servicios.jcyl.es/incyl/incyl,Contexto ops no raw GIS,WEB,,
+4,ULE Fern醤dez-Manso,M醩ter FUEGO / teledetecci髇 fuego,aaferm@unileon.es,https://eiaf.unileon.es,No es ops; posible reenv韔 o datos investigaci髇,PENDIENTE,,alt alfonso.manso@unileon.es
+4,Protecci髇 Civil estatal (no CyL),DGPC nacional,dgpce@proteccioncivil.es,https://www.proteccioncivil.es/,NO prioritario CyL,NO,,No es buz髇 INFOCAL
+4,CyL Transparencia formal,Derecho acceso info ambiental,tramite web,https://gobiernoabierto.jcyl.es/web/es/transparencia/derecho-informacion-publica.html,Perimetro+ficha Llamas de Cabrera 2025-08-08 Leon,PENDIENTE_ENVIAR,,Ver docs/SOLICITUD_TRANSPARENCIA_CYL.md
