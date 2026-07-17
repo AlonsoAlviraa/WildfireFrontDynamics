@@ -40,7 +40,7 @@ def _product_choices() -> list[str]:
     try:
         return sorted((load_catalog().get("products") or {}).keys())
     except OSError:
-        return ["ndws_v21", "clm_v28", "clm_ensemble_v30"]
+        return ["ndws_v21", "clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"]
 
 
 def main() -> int:

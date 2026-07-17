@@ -5,7 +5,7 @@ PYTHON := python
 PKG    := wildfire_front
 TESTS  := tests
 
-.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke
+.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -44,3 +44,14 @@ batch-fires:  ## Process all real wildfire sequences through the ingest pipeline
 
 smoke:  ## Quick smoke test of the ML pipeline
 	$(PYTHON) scripts/smoke_test_finetune.py
+
+smoke-ops:  ## Incident runtime synthetic smoke
+	set PYTHONPATH=. && $(PYTHON) scripts/smoke_incident_runtime.py
+
+smoke-ml:  ## CLM v28 + ensemble v34 holdout smoke
+	set PYTHONPATH=. && $(PYTHON) scripts/smoke_production_products.py --products clm_v28,clm_ensemble_v34 --max-patches 12
+
+demo:  ## One-command dual product demo (ops + ML)
+	set PYTHONPATH=. && $(PYTHON) scripts/demo_dual_product.py
+
+industrial: test smoke-ops  ## Unit tests + ops smoke

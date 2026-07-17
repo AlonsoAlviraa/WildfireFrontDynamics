@@ -49,7 +49,7 @@ def main() -> int:
     ap.add_argument("--clm-max", type=int, default=10)
     ap.add_argument(
         "--products",
-        default="clm_v28,clm_ensemble_v30",
+        default="clm_v28,clm_ensemble_v34",
         help="Comma list of CLM products to eval (default: v28 + ensemble)",
     )
     args = ap.parse_args()
@@ -82,10 +82,11 @@ def main() -> int:
 
     # Ensemble should not be worse than single on mean_delta (soft gate)
     by_id = {r["product"]: r for r in reports if "mean_delta" in r}
-    if "clm_v28" in by_id and "clm_ensemble_v30" in by_id:
-        soft = by_id["clm_ensemble_v30"]["mean_delta"] >= by_id["clm_v28"]["mean_delta"] - 0.02
+    ens_id = "clm_ensemble_v34" if "clm_ensemble_v34" in by_id else "clm_ensemble_v30"
+    if "clm_v28" in by_id and ens_id in by_id:
+        soft = by_id[ens_id]["mean_delta"] >= by_id["clm_v28"]["mean_delta"] - 0.02
         comparison = {
-            "ensemble_delta": by_id["clm_ensemble_v30"]["mean_delta"],
+            "ensemble_delta": by_id[ens_id]["mean_delta"],
             "v28_delta": by_id["clm_v28"]["mean_delta"],
             "ensemble_not_much_worse": soft,
         }

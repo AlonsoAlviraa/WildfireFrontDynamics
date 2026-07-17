@@ -78,7 +78,7 @@ pip install -e ".[all]"
 ```bash
 python scripts/install_dual_weights.py
 python scripts/predict_spread.py --list-products
-python scripts/predict_spread.py --product clm_ensemble_v30 --npz path/to/patches --eval
+python scripts/predict_spread.py --product clm_ensemble_v34 --npz path/to/patches --eval
 python scripts/smoke_production_products.py --clm-max 10
 # Unified ops + ML field smoke
 python scripts/smoke_ops_ml.py

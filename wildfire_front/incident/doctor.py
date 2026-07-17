@@ -130,6 +130,56 @@ def doctor_incident(
             f"{n_no_ts}/{len(tiffs)} files lack timestamps (will be rejected)",
         )
 
+    # Monotonic timestamps + gap heuristic (field kit plan S2)
+    ts_parsed = []
+    for row in inbox_files:
+        if not row.get("timestamp"):
+            continue
+        try:
+            from datetime import datetime
+
+            raw = str(row["timestamp"])
+            for fmt in (
+                "%Y-%m-%dT%H:%M:%S",
+                "%Y%m%d_%H%M%S",
+                "%Y-%m-%d_%H-%M-%S",
+            ):
+                try:
+                    ts_parsed.append((row["name"], datetime.fromisoformat(raw.replace("Z", "")) if "T" in raw else datetime.strptime(raw[:15], fmt)))
+                    break
+                except ValueError:
+                    continue
+        except Exception:  # noqa: BLE001
+            continue
+    if len(ts_parsed) >= 2:
+        ordered = sorted(ts_parsed, key=lambda x: x[1])
+        names_chrono = [n for n, _ in ordered]
+        names_inbox = [r["name"] for r in inbox_files if r.get("timestamp")]
+        # compare chronological order vs listing order among dated files
+        dated_order = [r["name"] for r in inbox_files if r.get("timestamp")]
+        if dated_order != names_chrono and sorted(dated_order) == sorted(names_chrono):
+            add(
+                "warn",
+                "timestamps_order",
+                "Inbox file order is not chronological — pipeline sorts by time, OK if intentional",
+            )
+        else:
+            add("pass", "timestamps_order", "Timestamp sequence is consistent")
+        deltas = [
+            (ordered[i + 1][1] - ordered[i][1]).total_seconds()
+            for i in range(len(ordered) - 1)
+        ]
+        if deltas:
+            max_gap = max(deltas)
+            if max_gap > 3600:
+                add(
+                    "warn",
+                    "timestamp_gaps",
+                    f"Largest inter-frame gap ≈ {max_gap/60:.1f} min — ROS may be noisy",
+                )
+            else:
+                add("pass", "timestamp_gaps", f"Max inter-frame gap ≈ {max_gap:.0f}s")
+
     if masks_dir is None:
         add("info", "masks", "No --masks: MAD adaptive segmentation will be used")
     elif masks_dir.is_dir():

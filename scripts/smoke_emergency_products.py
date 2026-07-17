@@ -30,9 +30,10 @@ def main() -> int:
     report["checks"]["dual_ready"] = need.issubset(set(ready)) and all(
         ready.get(k) for k in need
     )
-    if "clm_ensemble_v30" in ready:
-        report["checks"]["ensemble_ready"] = bool(ready["clm_ensemble_v30"])
-        if not ready["clm_ensemble_v30"]:
+    ens_key = "clm_ensemble_v34" if "clm_ensemble_v34" in ready else "clm_ensemble_v30"
+    if ens_key in ready:
+        report["checks"]["ensemble_ready"] = bool(ready[ens_key])
+        if not ready[ens_key]:
             report["ok"] = False
     if not report["checks"]["dual_ready"]:
         report["ok"] = False
@@ -45,7 +46,7 @@ def main() -> int:
         report["ok"] = False
         report["clm_error"] = "no holdout test patches"
     else:
-        for pid in ("clm_v28", "clm_ensemble_v30"):
+        for pid in ("clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"):
             if pid not in ready or not ready.get(pid):
                 continue
             pred = load_predictor_for_product(pid)

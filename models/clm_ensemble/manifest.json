@@ -1,7 +1,7 @@
 {
   "version": "clm_ensemble_v34",
-  "id": "clm_ensemble_v30",
-  "label": "CLM ensemble (v28 + EMA + multi-IF, VAL temp-calibrated mix)",
+  "id": "clm_ensemble_v34",
+  "label": "CLM ensemble v34 (v28 + EMA + multi-IF, VAL temp-calibrated mix)",
   "product_type": "ensemble",
   "architecture": "residual",
   "target_mode": "delta",

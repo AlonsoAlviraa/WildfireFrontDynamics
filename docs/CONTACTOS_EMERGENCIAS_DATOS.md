@@ -18,6 +18,18 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 
 ---
 
+## Seguimiento CyL — Llamas de Cabrera (2026-07-17)
+
+| Campo | Valor |
+|-------|-------|
+| Solicitud | `docs/SOLICITUD_TRANSPARENCIA_CYL.md` + `scripts/fetch_cyl_incendios.py` |
+| Incendio | Llamas de Cabrera 2025-08-08 |
+| Estado | **FOLLOW_UP_DUE** — formulario/transparencia enviado o listo; falta respuesta con perímetro/Vp/ha |
+| Acción | Reenviar o registrar nº de registro si ya enviado; no inventar anclas |
+| Gate | D1 / O1-O2 desbloqueo parcial si llegan vectores oficiales |
+
+---
+
 ## Prioridad 1 — Operativo CLM / hilo actual (ENVIAR YA)
 
 | Organización | Rol | Contacto público | Qué pedir |

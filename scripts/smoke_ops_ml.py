@@ -183,7 +183,7 @@ def main() -> int:
     paths = sorted(test_dir.glob("*.npz"))[:15]
     ml_evals = []
     if paths:
-        for pid in ("clm_v28", "clm_ensemble_v30"):
+        for pid in ("clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"):
             try:
                 ml_evals.append(_ml_eval(pid, paths))
             except Exception as exc:  # noqa: BLE001
@@ -193,8 +193,9 @@ def main() -> int:
             report["ok"] = False
         # soft: ensemble mean_delta not much worse
         by = {e["product"]: e for e in ml_evals if "mean_delta" in e}
-        if "clm_v28" in by and "clm_ensemble_v30" in by:
-            soft = by["clm_ensemble_v30"]["mean_delta"] >= by["clm_v28"]["mean_delta"] - 0.05
+        ens_id = "clm_ensemble_v34" if "clm_ensemble_v34" in by else "clm_ensemble_v30"
+        if "clm_v28" in by and ens_id in by:
+            soft = by[ens_id]["mean_delta"] >= by["clm_v28"]["mean_delta"] - 0.05
             report["tracks"]["ml"]["ensemble_competitive"] = soft
             if not soft:
                 report["ok"] = False

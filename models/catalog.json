@@ -18,9 +18,9 @@
       "use_when": "Spain-like legacy17 patches; single-checkpoint transfer.",
       "not_for": "Drone ROS (use front_dynamics); NDWS paper protocol without re-export."
     },
-    "clm_ensemble_v30": {
-      "id": "clm_ensemble_v30",
-      "label": "CLM ensemble (v28 + EMA + multi-IF, VAL temp-calibrated)",
+    "clm_ensemble_v34": {
+      "id": "clm_ensemble_v34",
+      "label": "CLM ensemble v34 (v28 + EMA + multi-IF, VAL temp-calibrated)",
       "domain": "CLM_Spain_holdout_ensemble",
       "product_type": "ensemble",
       "ensemble_mode": "mean_prob",
@@ -35,10 +35,28 @@
       "member_temperatures": [0.7, 0.7, 1.3],
       "use_when": "Best CLM next-day mask; weighted soft-vote + per-member temperature (VAL-calibrated).",
       "not_for": "Drone ROS; never tune mix/temps on LOFO-CARDOSO/test (identical to holdout test)."
+    },
+    "clm_ensemble_v30": {
+      "id": "clm_ensemble_v30",
+      "label": "CLM ensemble (alias → v34; keep for CLI backward compat)",
+      "domain": "CLM_Spain_holdout_ensemble",
+      "product_type": "ensemble",
+      "ensemble_mode": "mean_prob",
+      "manifest": "models/clm_ensemble/manifest.json",
+      "weights": "models/clm_ensemble/weights_v28_clm_ft.pt",
+      "members": [
+        "models/clm_ensemble/weights_v28_clm_ft.pt",
+        "models/clm_ensemble/weights_v30_ema.pt",
+        "models/clm_ensemble/weights_multi_if.pt"
+      ],
+      "member_weights": [0.28, 0.32, 0.4],
+      "member_temperatures": [0.7, 0.7, 1.3],
+      "use_when": "Alias of clm_ensemble_v34. Prefer --product clm_ensemble_v34.",
+      "not_for": "Drone ROS; never tune mix/temps on LOFO-CARDOSO/test."
     }
   },
-  "default_product": "clm_ensemble_v30",
-  "emergency_ml_product": "clm_ensemble_v30",
+  "default_product": "clm_ensemble_v34",
+  "emergency_ml_product": "clm_ensemble_v34",
   "fallback_ml_product": "clm_v28",
   "research_ml_product": "ndws_v21",
   "ops_product": "front_dynamics_v1",

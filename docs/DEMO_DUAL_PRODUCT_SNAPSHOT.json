@@ -1,0 +1,32 @@
+{
+  "started_at_utc": "2026-07-17T15:47:08.988190+00:00",
+  "product_ml": "clm_ensemble_v34",
+  "product_ops": "incident_runtime_v1 / front_dynamics_v1",
+  "steps": [
+    {
+      "name": "list_products",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/predict_spread.py",
+        "--list-products"
+      ],
+      "returncode": 0,
+      "stdout_tail": "no\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v28_clm_ft.pt\",\n    \"members\": [\n      \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v28_clm_ft.pt\",\n      \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v30_ema.pt\",\n      \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_multi_if.pt\"\n    ],\n    \"ensemble_mode\": \"mean_prob\",\n    \"use_when\": \"Best CLM next-day mask; weighted soft-vote + per-member temperature (VAL-calibrated).\",\n    \"not_for\": \"Drone ROS; never tune mix/temps on LOFO-CARDOSO/test (identical to holdout test).\"\n  },\n  {\n    \"id\": \"clm_v28\",\n    \"label\": \"CLM Spain specialist (single-model emergency ML)\",\n    \"domain\": \"CLM_Spain_holdout\",\n    \"product_type\": \"single\",\n    \"ready\": true,\n    \"status\": \"ok\",\n    \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\manifest.json\",\n    \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\weights_v28_clm_ft.pt\",\n    \"members\": null,\n    \"ensemble_mode\": null,\n    \"use_when\": \"Spain-like legacy17 patches; single-checkpoint transfer.\",\n    \"not_for\": \"Drone ROS (use front_dynamics); NDWS paper protocol without re-export.\"\n  },\n  {\n    \"id\": \"ndws_v21\",\n    \"label\": \"NDWS global next-day spread (research baseline)\",\n    \"domain\": \"NDWS_global\",\n    \"product_type\": \"single\",\n    \"ready\": true,\n    \"status\": \"ok\",\n    \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\manifest.json\",\n    \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\weights_v21_best.pt\",\n    \"members\": null,\n    \"ensemble_mode\": null,\n    \"use_when\": \"Research / NDWS-like patches only. Not the emergency primary.\",\n    \"not_for\": \"Spain emergency ROS, tactical dispatch, sole decision support.\"\n  }\n]\n",
+      "stderr_tail": "",
+      "ok": true
+    },
+    {
+      "name": "smoke_incident_synthetic",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/smoke_incident_runtime.py"
+      ],
+      "returncode": 0,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"synthetic\": {\n    \"mode\": \"synthetic\",\n    \"ok\": true,\n    \"status\": \"updated\",\n    \"n_staged\": 3,\n    \"quality_grade\": \"B\",\n    \"primary_ros_m_min\": 11.283791670955129,\n    \"latency_s\": 0.1725,\n    \"work_dir\": \"C:\\\\Users\\\\Mariano\\\\AppData\\\\Local\\\\Temp\\\\incident_smoke_8q1ds9co\\\\work\",\n    \"error\": null\n  }\n}\n",
+      "stderr_tail": "",
+      "ok": true
+    }
+  ],
+  "ok": true,
+  "finished_at_utc": "2026-07-17T15:47:12.997789+00:00"
+}

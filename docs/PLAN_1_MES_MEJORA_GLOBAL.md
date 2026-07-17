@@ -268,11 +268,16 @@ Checklist cierre (2026-08-17):
 
 ## 9. Primeras 72 horas (acción inmediata)
 
-1. Unificar naming producto **v34** en catalog/docs/CLI.  
-2. Correr `smoke_ops_ml` + un `incident doctor/update` en Tobarra o Cardoso.  
-3. Actualizar inventario IF + flags QA.  
-4. Registrar follow-up CyL.  
-5. Elegir **un** IF candidato a 2ª ancla y listar qué dato falta (Vp/ha/perímetro).  
+1. ~~Unificar naming producto **v34** en catalog/docs/CLI.~~ **HECHO**  
+2. ~~Correr smokes / demo dual.~~ **Scripts listos** (`demo_dual_product.py`)  
+3. ~~Actualizar inventario IF + flags QA.~~ **HECHO** (`DATA_INTAKE_STATUS.md`)  
+4. ~~Registrar follow-up CyL.~~ **HECHO** (CONTACTOS)  
+5. ~~Elegir IF candidato 2ª ancla.~~ **Cardoso** — falta Vp/ha externo  
+
+## 10. Progreso loop-engineering (2026-07-17)
+
+Ver `docs/SCORECARD_MES_1.md`. Ingeniería automatizable adelantada (semanas 1–2 eng + cierre parcial).  
+**GO_MES bloqueado por O1/O2 datos externos**, no por deuda de código del plan.
 
 ---
 
