@@ -680,7 +680,7 @@ def run_training(config: UNetTrainConfig) -> dict:
     total_time = time.time() - start_time
     log(f"\nTraining completed in {total_time:.0f}s")
 
-    model.load_state_dict(torch.load(best_weights, map_location=device))
+    model.load_state_dict(torch.load(best_weights, map_location=device, weights_only=True))
     test_results = evaluate_loader(model, test_loader, device, config, use_amp=use_amp)
 
     primary_test = test_results.get(f"thresh_{config.primary_threshold}", {})

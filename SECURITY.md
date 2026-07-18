@@ -14,14 +14,18 @@ WildfireFrontDynamics. We encourage responsible disclosure.
 
 ### Please DO NOT open public GitHub issues for security vulnerabilities.
 
-Instead, please report them **privately**:
+Instead, please report them **privately** via GitHub’s built-in private
+vulnerability reporting (no public security email is published yet):
 
-1. **Email**: Send a description to the maintainers via GitHub's private
-   vulnerability reporting:
-   - Go to the **Security** tab → **Report a vulnerability**
-   - Or email: `security@example.org` (replace with real contact)
+1. Open the repository on GitHub → **Security** tab → **Report a vulnerability**
+2. Or use the direct advisory form if enabled for this repo:
+   `https://github.com/AlonsoAlviraa/WildfireFrontDynamics/security/advisories/new`
 
-2. **Include** (if possible):
+> **Note:** A dedicated security contact email may be added later. Until then,
+> GitHub private vulnerability reporting is the **only** supported channel.
+> Do not invent or use placeholder addresses such as `security@example.org`.
+
+3. **Include** (if possible):
    - Description of the vulnerability and its impact
    - Steps to reproduce or proof-of-concept
    - Affected versions/commit hashes
@@ -47,15 +51,23 @@ prefer to remain anonymous).
 - **Non-root Docker container**: The runtime image runs as an unprivileged user.
 - **Pinned dependencies**: Core dependencies use lower-bound version pins to
   receive security patches.
+- **Safe model loads**:
+  - PyTorch checkpoints use `torch.load(..., weights_only=True)` where possible.
+  - Meta-Labeler serialization prefers **joblib** + JSON metadata; legacy
+    pickle loads are restricted to allowlisted roots (default: `models/`) and
+    emit a warning. Treat model files as untrusted input.
 
 ## Dependency scanning
 
 This project is scanned automatically via:
 
 - **GitHub Dependabot** (enabled in `.github/dependabot.yml`)
-- **CodeQL** analysis (if enabled in repo settings)
+- **CodeQL** (optional workflow in `.github/workflows/codeql.yml` — enable
+  GitHub Advanced Security / Code scanning in repo settings if available on
+  your plan; otherwise treat CodeQL as a future hardening step)
 
-Results appear in the **Security** tab under **Dependency advisories**.
+Results appear in the **Security** tab under **Dependency advisories** and,
+when CodeQL is enabled, **Code scanning alerts**.
 
 ## Data handling
 

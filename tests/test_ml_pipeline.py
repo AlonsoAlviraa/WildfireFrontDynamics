@@ -58,7 +58,7 @@ class MLPipelineTests(unittest.TestCase):
                 f"fixture left shape mismatches: {report['shape_mismatch']}",
             )
             # Same-arch full state_dict: smart_init should not fire for missing layers
-            ckpt = torch.load(weights_path, map_location="cpu", weights_only=False)
+            ckpt = torch.load(weights_path, map_location="cpu", weights_only=True)
             self.assertIn("model_state_dict", ckpt)
             self.assertGreater(len(ckpt["model_state_dict"]), 0)
 
@@ -496,7 +496,8 @@ class MLPipelineTests(unittest.TestCase):
         from wildfire_front.ml.meta_labeler import WildfireMetaLabeler
 
         with tempfile.TemporaryDirectory() as tmp:
-            path = os.path.join(tmp, "meta.pkl")
+            # Prefer joblib extension; .pkl names are rewritten to .joblib by save()
+            path = os.path.join(tmp, "meta.joblib")
 
             # Two-class model
             ml = WildfireMetaLabeler(n_estimators=5, max_depth=3, random_state=7)
@@ -514,7 +515,7 @@ class MLPipelineTests(unittest.TestCase):
             np.testing.assert_allclose(ml.predict_probability(X), loaded.predict_probability(X))
 
             # Single-class roundtrip
-            path2 = os.path.join(tmp, "single.pkl")
+            path2 = os.path.join(tmp, "single.joblib")
             ml_single = WildfireMetaLabeler(n_estimators=3, random_state=0)
             ml_single.train(X, np.ones(len(X), dtype=np.int64))
             ml_single.save(path2)

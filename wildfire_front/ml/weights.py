@@ -100,7 +100,9 @@ def load_pretrained_weights(
     ``"skipped_legacy"``, and ``"smart_init"`` key lists.
     """
 
-    checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
+    # weights_only=True avoids arbitrary code execution via pickle in checkpoints.
+    # Dict/tensor payloads (model_state_dict or bare state_dict) remain supported.
+    checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
     state_dict = checkpoint.get("model_state_dict", checkpoint)
 
     model_state = model.state_dict()

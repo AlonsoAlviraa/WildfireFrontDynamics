@@ -4,15 +4,65 @@ This module implements a secondary safety filter (Meta-Labeler) that evaluates
 the reliability of the primary spatiotemporal model predictions. If the primary
 model is likely to make an error (due to high prediction entropy, steep slope,
 or adverse wind conditions), the Meta-Labeler votes to veto the prediction.
+
+Serialization security
+----------------------
+``save`` / ``load`` prefer **joblib** (sklearn standard) and write a small
+JSON metadata sidecar. Raw ``pickle`` is still accepted for legacy ``.pkl``
+files, but only when the path resolves under an **allowlisted root**
+(default: the repository ``models/`` directory). Loading untrusted pickles is
+remote-code-execution risk; treat model files as untrusted input.
 """
 
 from __future__ import annotations
 
-import pickle
+import json
+import logging
+import warnings
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+
+logger = logging.getLogger(__name__)
+
+# Schema version for on-disk meta-labeler artifacts.
+_ARTIFACT_VERSION = 1
+
+# Default directory name (relative to repo root) allowed for legacy pickle loads.
+_DEFAULT_ALLOWLIST_DIRNAME = "models"
+
+
+def _repo_root() -> Path:
+    """Return the repository root (parent of the ``wildfire_front`` package)."""
+    return Path(__file__).resolve().parents[2]
+
+
+def default_allowlisted_roots() -> list[Path]:
+    """Roots under which legacy pickle loads are permitted."""
+    return [_repo_root() / _DEFAULT_ALLOWLIST_DIRNAME]
+
+
+def _path_under_roots(path: Path, roots: list[Path]) -> bool:
+    """True if *path* resolves under any of *roots*."""
+    resolved = path.resolve()
+    for root in roots:
+        try:
+            resolved.relative_to(root.resolve())
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def _try_import_joblib() -> Any | None:
+    try:
+        import joblib
+
+        return joblib
+    except ImportError:
+        return None
 
 
 class WildfireMetaLabeler:
@@ -189,13 +239,202 @@ class WildfireMetaLabeler:
             return np.full(len(X), float(self._single_class_label), dtype=np.float64)
         return self.model.predict_proba(X)[:, 1]
 
-    def save(self, path: Path | str) -> None:
-        """Save Meta-Labeler weights via pickle serialization."""
+    def _metadata_dict(self) -> dict[str, Any]:
+        """JSON-serializable metadata (no sklearn objects)."""
+        return {
+            "artifact_version": _ARTIFACT_VERSION,
+            "format": "wildfire_meta_labeler",
+            "is_trained": self.is_trained,
+            "single_class_label": self._single_class_label,
+            "n_estimators": int(self.model.n_estimators),
+            "max_depth": self.model.max_depth,
+            "random_state": self.model.random_state,
+        }
+
+    def _write_metadata_sidecar(self, model_path: Path) -> Path:
+        """Write ``{name}.meta.json`` next to the model artifact."""
+        meta_path = model_path.parent / f"{model_path.name}.meta.json"
+        meta_path.write_text(json.dumps(self._metadata_dict(), indent=2) + "\n", encoding="utf-8")
+        return meta_path
+
+    def save(self, path: Path | str) -> Path:
+        """Save Meta-Labeler via joblib (preferred) or restricted pickle.
+
+        Preferred path: joblib dump of a versioned payload dict plus a JSON
+        metadata sidecar. joblib is the sklearn-standard serializer and is
+        used when available (it ships with scikit-learn).
+
+        If joblib is unavailable, falls back to pickle **with a warning**.
+        Prefer saving under ``models/`` so legacy loads remain allowlisted.
+
+        Returns
+        -------
+        Path
+            Path written for the model artifact.
+        """
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        payload: dict[str, Any] = {
+            **self._metadata_dict(),
+            "model": self.model,
+        }
+
+        joblib = _try_import_joblib()
+        if joblib is not None:
+            # Normalize extension toward .joblib when caller passed .pkl
+            out = path
+            if out.suffix.lower() == ".pkl":
+                out = out.with_suffix(".joblib")
+            elif out.suffix == "":
+                out = out.with_suffix(".joblib")
+            joblib.dump(payload, out)
+            self._write_metadata_sidecar(out)
+            return out
+
+        warnings.warn(
+            "joblib is not available; falling back to pickle for Meta-Labeler "
+            "serialization. Install scikit-learn/joblib and prefer paths under "
+            "models/. Pickle can execute arbitrary code on load — only load "
+            "artifacts you trust.",
+            stacklevel=2,
+        )
+        import pickle
+
         with open(path, "wb") as f:
-            pickle.dump(self, f)
+            pickle.dump(payload, f)
+        self._write_metadata_sidecar(path)
+        return path
 
     @classmethod
-    def load(cls, path: Path | str) -> WildfireMetaLabeler:
-        """Load Meta-Labeler from a serialized pickle file."""
+    def load(
+        cls,
+        path: Path | str,
+        *,
+        allowlisted_roots: list[Path] | None = None,
+        allow_pickle: bool = True,
+    ) -> WildfireMetaLabeler:
+        """Load Meta-Labeler from a joblib (preferred) or allowlisted pickle file.
+
+        Parameters
+        ----------
+        path
+            Path to a ``.joblib`` / ``.pkl`` artifact produced by :meth:`save`,
+            or a legacy full-object pickle of ``WildfireMetaLabeler``.
+        allowlisted_roots
+            Directories under which **pickle** loads are permitted. Defaults to
+            the repository ``models/`` directory. joblib loads are not restricted
+            by path (still only load trusted files).
+        allow_pickle
+            If False, refuse pickle fallback entirely (joblib-only).
+
+        Raises
+        ------
+        FileNotFoundError
+            If *path* does not exist (and no sibling ``.joblib`` is found).
+        PermissionError
+            If a pickle load is requested outside allowlisted roots.
+        ValueError
+            If the artifact cannot be interpreted as a Meta-Labeler.
+        """
+        path = Path(path)
+        roots = allowlisted_roots if allowlisted_roots is not None else default_allowlisted_roots()
+
+        # Prefer sibling .joblib when caller still points at a legacy .pkl name.
+        candidates = [path]
+        if path.suffix.lower() == ".pkl":
+            candidates.insert(0, path.with_suffix(".joblib"))
+        elif path.suffix == "":
+            candidates.insert(0, path.with_suffix(".joblib"))
+
+        resolved: Path | None = None
+        for candidate in candidates:
+            if candidate.is_file():
+                resolved = candidate
+                break
+        if resolved is None:
+            raise FileNotFoundError(f"Meta-Labeler artifact not found: {path}")
+
+        payload = cls._load_payload(resolved, roots=roots, allow_pickle=allow_pickle)
+        return cls._from_payload(payload)
+
+    @classmethod
+    def _load_payload(
+        cls,
+        path: Path,
+        *,
+        roots: list[Path],
+        allow_pickle: bool,
+    ) -> Any:
+        suffix = path.suffix.lower()
+        joblib = _try_import_joblib()
+
+        # joblib path (preferred)
+        if suffix == ".joblib" or (joblib is not None and suffix != ".pkl"):
+            if joblib is not None:
+                try:
+                    return joblib.load(path)
+                except Exception:
+                    # Fall through to pickle only for true .pkl or when joblib fails
+                    if suffix == ".joblib":
+                        raise
+
+        if suffix == ".joblib" and joblib is None:
+            raise ImportError(
+                "joblib is required to load .joblib Meta-Labeler artifacts "
+                "(install scikit-learn)."
+            )
+
+        # Legacy / pickle path — restricted
+        if not allow_pickle:
+            raise PermissionError(
+                f"Pickle load disabled (allow_pickle=False) for path: {path}"
+            )
+        if not _path_under_roots(path, roots):
+            roots_str = ", ".join(str(r) for r in roots)
+            raise PermissionError(
+                f"Refusing to unpickle Meta-Labeler from outside allowlisted roots. "
+                f"path={path.resolve()} roots=[{roots_str}]. "
+                f"Re-save with joblib (WildfireMetaLabeler.save) or place the "
+                f"file under models/. Pickle can execute arbitrary code."
+            )
+        warnings.warn(
+            f"Loading Meta-Labeler via pickle from {path}. Pickle is unsafe for "
+            f"untrusted files (arbitrary code execution). Prefer joblib artifacts "
+            f"produced by WildfireMetaLabeler.save under models/.",
+            stacklevel=3,
+        )
+        import pickle
+
         with open(path, "rb") as f:
             return pickle.load(f)
+
+    @classmethod
+    def _from_payload(cls, payload: Any) -> WildfireMetaLabeler:
+        """Rebuild instance from joblib/pickle payload (dict or legacy instance)."""
+        # Legacy: full object was pickled
+        if isinstance(payload, cls):
+            return payload
+
+        if not isinstance(payload, dict):
+            raise ValueError(
+                f"Unrecognized Meta-Labeler artifact type: {type(payload)!r}"
+            )
+
+        n_estimators = int(payload.get("n_estimators", 100))
+        max_depth = payload.get("max_depth", 10)
+        random_state = payload.get("random_state", 42)
+        instance = cls(
+            n_estimators=n_estimators,
+            max_depth=max_depth if max_depth is not None else 10,
+            random_state=random_state if random_state is not None else 42,
+        )
+        instance.is_trained = bool(payload.get("is_trained", False))
+        scl = payload.get("single_class_label", None)
+        instance._single_class_label = int(scl) if scl is not None else None
+
+        model = payload.get("model")
+        if model is not None and instance._single_class_label is None:
+            instance.model = model
+            instance.is_trained = True
+        return instance
