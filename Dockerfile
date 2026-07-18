@@ -9,7 +9,7 @@
 #   docker run --rm -it wildfire-front-dynamics:0.1.0 bash
 
 # ─── Stage 1: Builder ───────────────────────────────────────────────────────
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -44,7 +44,7 @@ COPY models/ models/
 RUN pip wheel . -w /wheels
 
 # ─── Stage 2: Runtime ───────────────────────────────────────────────────────
-FROM python:3.11-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 LABEL org.opencontainers.image.title="WildfireFrontDynamics" \
       org.opencontainers.image.description="Wildfire front reconstruction from thermal imagery" \
