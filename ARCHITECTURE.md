@@ -1,120 +1,237 @@
-# 🏗️ ARCHITECTURE — WildfireFrontDynamics
+# ARCHITECTURE — WildfireFrontDynamics
 
-## System Overview
+Dual-product system: **ops geometry** (observed front / ROS) and **ML next-day masks** (U-Net v21 / CLM ensemble v34), fused only at the Decision Card. Ops is not ML; ML is not drone ROS.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    DATA LAYER                                │
-│  NDWS TFRecords (train/val/test) → NpzWildfireDataset       │
-│  Real GeoTIFF (Tobarra) → WildfireDataset (30×30 patches)   │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                    MODEL LAYER                               │
-│                                                              │
-│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
-│  │ A3C_PerCellModel    │    │ WildfireUNetSmall (NEW)     │ │
-│  │ (legacy, bs=1)      │    │ batch_size=32, 4.3M params  │ │
-│  │ models/model.py     │    │ models/unet_model.py        │ │
-│  └─────────────────────┘    └─────────────────────────────┘ │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                    TRAINING LAYER                            │
-│  wildfire_front/ml/train.py     → Loss functions (focal BCE)│
-│  wildfire_front/ml/dataset.py   → Data loading + augment    │
-│  wildfire_front/ml/physics.py   → Rothermel ROS physics loss│
-│  kaggle_job/run_mega_training.py → A3C pipeline (Kaggle GPU)│
-│  kaggle_job/run_unet_training_v13.py → U-Net pipeline       │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                    EVALUATION LAYER                          │
-│  wildfire_front/evaluation.py  → IoU, Recall, Precision     │
-│  wildfire_front/quality.py     → Quality checks             │
-│  scripts/archive/analyze_training_curves.py → Legacy plots  │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                    INFERENCE LAYER                           │
-│  wildfire_front/cli.py         → Command-line interface     │
-│  wildfire_front/real_if.py     → Real fire ingestion        │
-│  wildfire_front/ingestion/     → GeoTIFF pipeline           │
-│  wildfire_front/geometry_speed.py → Fire front geometry     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Key Directory Structure
+## System overview
 
 ```
-WildfireFrontDynamics/
-├── wildfire_front/          # Python package (core logic)
-│   ├── ml/                  # ML pipeline (train, dataset, physics, meta-labeler)
-│   └── ingestion/           # GeoTIFF ingestion
-├── models/                  # Model definitions
-│   ├── model.py             # A3C_PerCellModel_LSTM (legacy)
-│   └── unet_model.py        # WildfireUNet (new, industry standard)
-├── kaggle_job/              # Kaggle training scripts
-│   ├── run_mega_training.py     # A3C training (v10-v12)
-│   └── run_unet_training_v13.py # U-Net training (v13+)
-├── scripts/                 # Utility scripts
-├── tests/                   # Test suite (38 tests)
-├── docs/                    # Documentation + experiment logs
-├── research/                # Academic references
-├── data/                    # Real fire data (Tobarra, semireal)
-└── pyproject.toml           # Python project config
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         PRODUCT SURFACE                                  │
+│  Decision Card (GO / HOLD / ABSTAIN)  ·  incident outbox  ·  open packs  │
+│  wildfire_front/product/   ·   wildfire_front/incident/   ·   open_if/   │
+└───────────────────────────────┬──────────────────────────────────────────┘
+                                │ fuse (never train on fused labels)
+          ┌─────────────────────┴─────────────────────┐
+          │                                           │
+┌─────────▼─────────┐                     ┌───────────▼───────────┐
+│  OPS (geometry)   │                     │  ML (next-day mask)   │
+│  front_dynamics   │                     │  Residual U-Net       │
+│  geometry_speed   │                     │  product_catalog      │
+│  incident runtime │                     │  ndws_v21 · clm_v28   │
+│  emergency_products                     │  clm_ensemble_v34     │
+└─────────┬─────────┘                     └───────────┬───────────┘
+          │                                           │
+┌─────────▼───────────────────────────────────────────▼───────────┐
+│  INGEST / DATA                                                   │
+│  GeoTIFF LWIR (real_if) · NDWS npz · CLM holdout patches         │
+│  open CEMS/EFFIS packs · STAC dNBR (open_if)                     │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-## Data Pipeline
+**Hard rule:** do not mix drone ROS with ML IoU claims. Catalog `ops_product` is `front_dynamics_v1`; ML defaults to `clm_ensemble_v34`.
 
-### Training Data (NDWS Benchmark)
-```
-NDWS TFRecords (15 shards)
-  → preprocess_ndws.py splits: train[0-11], val[12-13], test[14]
-  → NpzWildfireDataset loads .npz patches (30×30 or 64×64)
-  → DataLoader with batch_size=1 (A3C) or 32 (U-Net)
-```
+## Product map
 
-### Real Data (Castilla-La Mancha)
-```
-GeoTIFF images (Tobarra LWIR)
-  → prepare_real_if_geotiffs.py
-  → WildfireDataset (patches of 30×30)
-  → Fine-tuning on best NDWS checkpoint
-```
+| Product ID | Role | Entry points |
+|------------|------|--------------|
+| `front_dynamics_v1` | Observed front, multi-estimator ROS, envelope | `wildfire_front/front_dynamics.py`, `scripts/smoke_emergency_products.py` |
+| `incident_runtime_v1` | Inbox LWIR → state/outbox + Decision Card | `wildfire_front/incident/`, `python -m wildfire_front incident` |
+| open CEMS packs | Public multi-day perimeters (no NDA) | `wildfire_front/open_if/`, `outputs/open_if/*` |
+| `ndws_v21` | NDWS research baseline (Residual U-Net) | `models/production/`, `scripts/predict_spread.py --product ndws_v21` |
+| `clm_v28` | CLM Spain single-checkpoint specialist | `models/clm_specialist/` |
+| `clm_ensemble_v34` | **Emergency ML default** — soft-vote ensemble | `models/clm_ensemble/`, catalog default |
+| Decision Card | GO / HOLD / ABSTAIN + confidence + forensics | `wildfire_front/product/`, `python -m wildfire_front decide` |
 
-## Model Comparison
+Catalog source of truth: `models/catalog.json` + `wildfire_front/ml/product_catalog.py`.
 
-| Aspect | A3C-LSTM (v10-v12) | U-Net (v13+) |
-|---|---|---|
-| Architecture | Per-cell iteration | Encoder-decoder |
-| Batch size | **1** (forced) | **32** (native) |
-| Parameters | ~2.5M | 4.3M |
-| Patch size | 30×30 | 30×30 (64×64 planned) |
-| Forward pass | Cell-by-cell loop | Single convolution |
-| Best IoU achieved | 0.035 (v11) | Pending (v13b) |
-| Industry standard | ❌ | ✅ (NDWS paper) |
+### Published ML metrics (honest)
 
-## Kaggle Training Infrastructure
+| Product | Domain | IoU | Notes |
+|---------|--------|-----|-------|
+| `ndws_v21` | NDWS test | **0.226** | Δ vs copy **+0.076**; research / NDWS-like only |
+| `clm_v28` | CLM holdout test | **0.838** | Δ vs copy **+0.196** |
+| `clm_ensemble_v34` | CLM holdout ensemble | **0.8963** | Δ **+0.2545**; mix/temps on VAL only |
 
-- **Account:** `alonsoalviraaaa` (university)
-- **GPU:** Tesla P100 16GB (sm_60 — needs PyTorch ≤2.1.x)
-- **Dataset:** `fantineh/next-day-wildfire-spread` (public)
-- **Budget:** 30 GPU-hours/week
-- **Typical run:** ~2-4 hours per experiment
+Weights (`*.pt`) are gitignored; install via `scripts/install_dual_weights.py` (local workspace). CI without weights cannot assert real product paths.
 
-## Evaluation Protocol (Leak-Free)
+## Package layout
 
 ```
-1. Train on NDWS train shards [0-11]
-2. Validate on NDWS val shards [12-13] → model selection
-3. Test on NDWS test shard [14] → ONE evaluation (honest metrics)
-4. Meta-labeler: trained on VAL predictions, evaluated on TEST
+wildfire_front/
+├── front_dynamics.py      # Coreg, front geometry, ROS estimators
+├── geometry_speed.py      # Perimeter / speed helpers
+├── geometry / scientific  # scientific_ops, sector_ros_local, evaluation
+├── incident/              # Live runtime: doctor, update, watch, state
+│   ├── pipeline.py
+│   ├── watch.py
+│   ├── doctor.py
+│   └── state.py
+├── product/               # Decision surface
+│   ├── confidence.py      # Decision Card + reliability report
+│   ├── policy.py
+│   ├── decide_service.py
+│   ├── forensics.py
+│   └── api_server.py      # POST /v1/decide
+├── open_if/               # Public perimeter / STAC dNBR helpers
+│   ├── dnbr.py
+│   └── stac_s2.py
+├── ml/                    # Training, eval, product catalog, predictors
+│   ├── product_catalog.py
+│   ├── spread_predictor.py
+│   ├── unet_train.py
+│   ├── clm_eval.py
+│   ├── dataset.py
+│   ├── train.py           # Legacy A3C / fine-tune paths
+│   └── ...
+├── ingestion/geotiff.py   # GeoTIFF contract
+├── emergency_products.py
+└── cli.py                 # CLI: decide, incident, serve-decide, ...
 ```
+
+Supporting trees:
+
+```
+models/
+├── catalog.json                 # Product registry
+├── unet_model.py                # Residual U-Net (production architecture)
+├── model.py                     # A3C-LSTM LEGACY (not production)
+├── production/                  # ndws_v21 manifests (+ local weights)
+├── clm_specialist/              # clm_v28
+└── clm_ensemble/                # clm_ensemble_v34
+
+kaggle_job/
+├── run_unet_training_v21.py     # Active NDWS / production train script
+├── kernel-metadata-v21.json     # Canonical Kaggle kernel metadata
+├── preprocess_ndws.py
+├── kaggle_common.py
+└── archive/                     # Historical kernels (mega, v13–v27, …)
+    ├── run_mega_training.py     # Archived A3C pipeline — not active
+    ├── run_unet_training_v13.py # Archived — superseded by v21
+    └── run_unet_training_v*.py  # Older U-Net experiments
+
+scripts/                         # Ops/ML demos, smokes, scorecards, loops
+tests/                           # ~270+ test functions across ~40 modules
+docs/                            # Product docs, scorecards, design, archive
+data/                            # real_if, candidates (not fully git-tracked)
+```
+
+## Data paths
+
+### Ops / incident
+
+```
+LWIR GeoTIFF inbox
+  → incident doctor (timestamps, CRS, masks)
+  → front_dynamics + geometry_speed
+  → outbox: ROS, sectors, envelope, fire_decision_card.json
+```
+
+Contract: `docs/GEOTIFF_INPUT_CONTRACT.md`, runbook `docs/FIELD_KIT_INCIDENT.md`.
+
+### ML training (NDWS)
+
+```
+NDWS TFRecords
+  → kaggle_job/preprocess_ndws.py → .npz patches
+  → NpzWildfireDataset / U-Net train (kaggle_job/run_unet_training_v21.py)
+  → models/production (v21)
+```
+
+### ML transfer (CLM Spain)
+
+```
+CLM GeoTIFF / patches
+  → holdout splits (scripts/build_clm_holdout_splits.py, LOFO helpers)
+  → fine-tune / ensemble members
+  → models/clm_specialist (v28) + models/clm_ensemble (v34)
+```
+
+### Open perimeter
+
+```
+CEMS / EFFIS / STAC
+  → scripts/build_open_if_*.py
+  → outputs/open_if/<pack>
+  → Decision Card via --open-pack
+```
+
+## Model comparison (current)
+
+| Aspect | Residual U-Net (production) | A3C-LSTM |
+|--------|----------------------------|----------|
+| Status | **Active** (`ndws_v21`, CLM products) | **Legacy** (`models/model.py`) |
+| Code | `models/unet_model.py`, `wildfire_front/ml/unet_train.py` | `models/model.py`, `wildfire_front/ml/train.py` |
+| Kaggle entry | `kaggle_job/run_unet_training_v21.py` | `kaggle_job/archive/run_mega_training.py` |
+| Patch / channels | 64×64, residual delta target | Historical 30×30 per-cell |
+| Product metrics | v21 IoU 0.226; ensemble v34 0.8963 | Obsolete for product claims |
+
+Do not cite mega/v13 paths as active training. Older scripts live under `kaggle_job/archive/` for reproducibility only.
+
+## Inference and decision flow
+
+```
+1. Ops path (optional): incident update / emergency products → ROS + quality
+2. ML path (optional): predict_spread --product clm_ensemble_v34 (or v21/v28)
+3. Open path (optional): load open_if pack
+4. product.decide_service / CLI `decide`
+     → policy + confidence → GO | HOLD | ABSTAIN
+     → forensics / provenance hashes
+```
+
+CLI examples:
+
+```powershell
+python scripts/predict_spread.py --list-products
+python -m wildfire_front decide
+python -m wildfire_front decide --use-ml-v34 --open-pack outputs\open_if\emsr578 --require-ops-for-go
+python -m wildfire_front serve-decide --port 8765
+python -m wildfire_front incident doctor --inbox path/to/inbox
+```
+
+## Evaluation protocol (leak-free)
+
+1. NDWS: train [0–11], val [12–13], single test [14] (or documented re-export).
+2. CLM: holdout protocol `clm_holdout_test_seed42_v1`; ensemble mix/temperatures **VAL only**.
+3. Never tune ensemble weights on LOFO-CARDOSO / holdout test.
+4. Meta-labeler: fit on VAL predictions, evaluate on TEST when used.
+5. Ops metrics (ROS, Hausdorff) stay separate from ML IoU scorecards.
+
+## Kaggle training (active)
+
+- Canonical kernel metadata: `kaggle_job/kernel-metadata-v21.json` → `run_unet_training_v21.py`
+- Root `kaggle_job/kernel-metadata.json` may lag; prefer the v21 file for pushes
+- Historical A3C / U-Net v13–v27 scripts: `kaggle_job/archive/` only
+- GPU constraints and account notes: see `RULES.md` and experiment tracker
+
+## Tests and quality gates
+
+| Check | Scope (matches CI) |
+|-------|--------------------|
+| Suite size | **~270+** `test_*` functions in **~40** modules under `tests/` |
+| Lint | `ruff check wildfire_front tests scripts` |
+| Format | `ruff format --check wildfire_front tests` |
+| Types | `mypy wildfire_front --ignore-missing-imports` |
+| Tests | `pytest tests/` (weights-dependent tests need local `*.pt`) |
+
+See `CONTRIBUTING.md` and `.github/workflows/ci.yml`.
 
 ## Dependencies
 
-- **Python 3.11+**
-- **PyTorch** (≤2.1.x for P100 compatibility)
-- **NumPy, rasterio, scikit-learn, matplotlib**
-- **Kaggle CLI** (for remote training)
+- Python 3.11+
+- Core: numpy, rasterio, shapely, pyproj, affine
+- ML extras: torch (Kaggle P100/sm_60 historically needed ≤2.1.x for some kernels)
+- Dev: ruff, mypy, pytest (see `pyproject.toml` extras)
+
+## Related docs
+
+| Doc | Role |
+|-----|------|
+| `docs/PRODUCTO_DUAL.md` | Dual-product CLI and gates |
+| `docs/INCIDENT_RUNTIME_V1.md` | Incident field runtime |
+| `docs/GEOTIFF_INPUT_CONTRACT.md` | Ingest contract |
+| `docs/design/DECISION_POLICY.md` | GO / HOLD / ABSTAIN policy |
+| `VISION.md` | Product north star |
+| `RULES.md` | Loop engineering rules |
+| `MEMORY.md` | Short loop memory (current baselines) |
+| `docs/EXPERIMENT_TRACKER.md` | Experiment log |
+| `docs/CLEANUP_2026_07.md` | Removed dumps / path cleanup |

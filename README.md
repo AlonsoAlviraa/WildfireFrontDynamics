@@ -99,6 +99,8 @@ python scripts\install_dual_weights.py
 | [`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md) | Todos los comandos |
 | [`docs/PLAN_3_MESES.md`](docs/PLAN_3_MESES.md) | Roadmap |
 
+Arquitectura dual (ops + ML v21/v34): [`ARCHITECTURE.md`](ARCHITECTURE.md) · producto: [`docs/PRODUCTO_DUAL.md`](docs/PRODUCTO_DUAL.md) · contribuir: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
 El resto de `docs/` es archivo técnico (scorecards, FIRE-RES, experimentos). No hace falta para la primera demo.
 
 ---
@@ -116,9 +118,18 @@ El resto de `docs/` es archivo técnico (scorecards, FIRE-RES, experimentos). No
 ## Desarrollo
 
 ```powershell
+# Slice de producto (rápido)
 pytest tests\test_confidence_product.py tests\test_decide_cli.py tests\test_product_catalog.py -q
-python scripts\run_plan_cycle.py
+
+# Suite completa (~270+ tests / ~40 módulos)
+pytest tests\ -q
+
+# Lint como CI
+ruff check wildfire_front tests scripts
+ruff format --check wildfire_front tests
 ```
+
+Ver [`CONTRIBUTING.md`](CONTRIBUTING.md) y [`RULES.md`](RULES.md). Pesos locales: `python scripts\install_dual_weights.py`.
 
 ## License
 
