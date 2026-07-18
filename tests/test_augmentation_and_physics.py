@@ -21,6 +21,8 @@ from wildfire_front.ml.physics import (
     compute_ffmc,
     ffmc_to_moisture,
     physics_loss_cell,
+    physics_loss_cell_vectorized,
+    physics_loss_from_sequence_channels,
     rothermel_ros,
 )
 
@@ -424,6 +426,28 @@ class TestPhysicsDenormParity:
         assert float(legacy.item()) > 0.0
         assert float(vec.item()) > 0.0
         assert float(vec.item()) <= lam + 1e-6
+
+    def test_ffmc_is_normalized_flag_matches_physical(self) -> None:
+        """ffmc_is_normalized=True denorms ch16 consistently with physical path."""
+        probs = torch.ones(1, 8) * 0.5
+        wind_n = torch.tensor([0.5])
+        slope_n = torch.tensor([0.2])
+        ffmc_phys = 85.0
+        ffmc_norm = (ffmc_phys - 50.0) / 51.0
+        a = physics_loss_cell_vectorized(probs, wind_n, slope_n, ffmc=ffmc_phys, lambda_physics=0.1)
+        b = physics_loss_cell_vectorized(
+            probs,
+            wind_n,
+            slope_n,
+            ffmc=ffmc_norm,
+            lambda_physics=0.1,
+            ffmc_is_normalized=True,
+        )
+        c = physics_loss_from_sequence_channels(
+            probs, wind_n, slope_n, ffmc_norm, channels_normalized=True, lambda_physics=0.1
+        )
+        assert abs(float(a.item()) - float(b.item())) < 1e-5
+        assert abs(float(b.item()) - float(c.item())) < 1e-5
 
     def test_legacy_call_site_passes_physical_units_to_physics(self, monkeypatch: Any) -> None:
         """Integration: calculate_local_spread_loss denorms sequence channels before physics."""

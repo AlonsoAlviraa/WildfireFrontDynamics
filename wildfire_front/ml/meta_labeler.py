@@ -432,12 +432,29 @@ class WildfireMetaLabeler:
             max_depth=max_depth if max_depth is not None else 10,
             random_state=random_state if random_state is not None else 42,
         )
-        instance.is_trained = bool(payload.get("is_trained", False))
+        meta_trained = bool(payload.get("is_trained", False))
         scl = payload.get("single_class_label", None)
         instance._single_class_label = int(scl) if scl is not None else None
 
         model = payload.get("model")
         if model is not None and instance._single_class_label is None:
             instance.model = model
-            instance.is_trained = True
+            # Honor metadata; model presence implies trained when flag missing.
+            instance.is_trained = True if "is_trained" not in payload else meta_trained
+        elif instance._single_class_label is not None:
+            # Single-class shortcut stores no sklearn model.
+            instance.model = None
+            instance.is_trained = True if "is_trained" not in payload else meta_trained
+        else:
+            instance.is_trained = meta_trained
+            if model is None:
+                # Do not leave an unfitted __init__ model when artifact has none.
+                instance.model = None
+
+        # Fail closed: trained without a usable model (or single-class label).
+        if instance.is_trained and model is None and instance._single_class_label is None:
+            raise ValueError(
+                "Meta-Labeler artifact claims is_trained but model is missing "
+                "(fail-closed deserialization)"
+            )
         return instance

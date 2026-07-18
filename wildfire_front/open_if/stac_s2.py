@@ -107,8 +107,13 @@ def read_cog_window(
     *,
     max_size: int = 256,
     scale: float = 1e-4,
+    http_timeout_s: int = 30,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Windowed read of a COG (HTTP) clipped to bbox, downsampled to max_size."""
+    """Windowed read of a COG (HTTP) clipped to bbox, downsampled to max_size.
+
+    Uses GDAL HTTP timeouts and curl multi-range for connection reuse on
+    remote COGs (small win; no full STAC rewrite).
+    """
     import rasterio
     from rasterio.enums import Resampling
     from rasterio.warp import transform_bounds
@@ -120,6 +125,11 @@ def read_cog_window(
         rasterio.Env(
             GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
             CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif,.TIF,.tiff",
+            GDAL_HTTP_TIMEOUT=str(int(http_timeout_s)),
+            GDAL_HTTP_CONNECTTIMEOUT=str(min(15, int(http_timeout_s))),
+            CPL_VSIL_CURL_USE_HEAD="NO",
+            GDAL_HTTP_MULTIRANGE="YES",
+            GDAL_HTTP_MERGE_CONSECUTIVE_RANGES="YES",
         ),
         rasterio.open(href) as ds,
     ):

@@ -161,7 +161,6 @@ def doctor_incident(
     if len(ts_parsed) >= 2:
         ordered = sorted(ts_parsed, key=lambda x: x[1])
         names_chrono = [n for n, _ in ordered]
-        [r["name"] for r in inbox_files if r.get("timestamp")]
         # compare chronological order vs listing order among dated files
         dated_order = [r["name"] for r in inbox_files if r.get("timestamp")]
         if dated_order != names_chrono and sorted(dated_order) == sorted(names_chrono):

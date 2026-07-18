@@ -20,6 +20,10 @@ PRODUCT_ID = "fire_decision_card"
 # Max JSON body size for POST /v1/decide (and shared service callers that care).
 MAX_BODY_BYTES = 1_048_576  # 1 MiB
 
+# Free-floating R1–R4 booleans are only accepted when callers opt in *and*
+# use an allowlisted channel (tests). Prefer file-based gate reports.
+CLIENT_RELIABILITY_CHANNELS = frozenset({"test", "unit_test", "pytest"})
+
 
 class PathNotAllowedError(ValueError):
     """Raised when work_dir/open_pack resolves outside the allowlist."""
@@ -33,9 +37,21 @@ def _is_under(path: Path, root: Path) -> bool:
         return False
 
 
-def _allow_roots(base: Path | None = None) -> list[Path]:
+def _allow_roots(
+    base: Path | None = None,
+    *,
+    include_repo_root: bool = True,
+) -> list[Path]:
+    """Return path allow roots.
+
+    Untrusted HTTP sandboxes must pass ``include_repo_root=False`` so only
+    ``base`` is accepted (never the full repository tree).
+    """
     roots: list[Path] = []
-    for r in (base, REPO_ROOT):
+    candidates: list[Path | None] = [base]
+    if include_repo_root:
+        candidates.append(REPO_ROOT)
+    for r in candidates:
         if r is None:
             continue
         try:
@@ -44,7 +60,16 @@ def _allow_roots(base: Path | None = None) -> list[Path]:
             continue
         if rr not in roots:
             roots.append(rr)
-    return roots or [REPO_ROOT.resolve()]
+    if roots:
+        return roots
+    if include_repo_root:
+        return [REPO_ROOT.resolve()]
+    if base is not None:
+        try:
+            return [Path(base).resolve()]
+        except OSError:
+            pass
+    return [REPO_ROOT.resolve()]
 
 
 def _as_path(
@@ -52,17 +77,26 @@ def _as_path(
     *,
     base: Path | None = None,
     allow_roots: Sequence[Path] | None = None,
+    include_repo_root: bool = True,
 ) -> Path | None:
-    """Resolve a path and reject anything outside base/REPO_ROOT allowlist.
+    """Resolve a path and reject anything outside the allowlist.
 
-    Relative paths try ``base`` first, then REPO_ROOT (when different).
+    Relative paths try ``base`` first, then each allow root.
     Absolute paths must still fall under an allowed root after resolve.
     """
     if value is None or value == "":
         return None
     p = Path(value)
-    roots = [Path(r).resolve() for r in (allow_roots or _allow_roots(base))]
-    base_r = Path(base).resolve() if base is not None else REPO_ROOT.resolve()
+    roots = [
+        Path(r).resolve()
+        for r in (allow_roots or _allow_roots(base, include_repo_root=include_repo_root))
+    ]
+    if base is not None:
+        base_r = Path(base).resolve()
+    elif roots:
+        base_r = roots[0]
+    else:
+        base_r = REPO_ROOT.resolve()
 
     if p.is_absolute():
         try:
@@ -123,8 +157,9 @@ def load_ops_metrics_from_work_dir(
     work_dir: str | Path | None,
     *,
     base: Path | None = None,
+    include_repo_root: bool = True,
 ) -> dict[str, Any] | None:
-    wd = _as_path(work_dir, base=base)
+    wd = _as_path(work_dir, base=base, include_repo_root=include_repo_root)
     if wd is None:
         return None
     # Prefer full decision card already written, else incident_state, else ops json
@@ -171,8 +206,9 @@ def load_open_metrics_from_pack(
     open_pack: str | Path | None,
     *,
     base: Path | None = None,
+    include_repo_root: bool = True,
 ) -> dict[str, Any] | None:
-    pack = _as_path(open_pack, base=base)
+    pack = _as_path(open_pack, base=base, include_repo_root=include_repo_root)
     if pack is None:
         return None
     scp = pack / "scorecard_pista_b.json"
@@ -194,6 +230,7 @@ def resolve_sources(
     request: Mapping[str, Any],
     *,
     base: Path | None = None,
+    include_repo_root: bool = True,
 ) -> dict[str, Any | None]:
     """Resolve ml/ops/open metrics from request paths or inline dicts."""
     base = base or Path.cwd()
@@ -201,11 +238,20 @@ def resolve_sources(
     ops_m = request.get("ops_metrics")
     open_m = request.get("open_metrics")
     if ml_m is None and request.get("use_ml_v34"):
-        ml_m = load_ml_metrics_v34(base=base)
+        # Catalog ML is always repo-local research metadata (not sandboxed).
+        ml_m = load_ml_metrics_v34(base=base if include_repo_root else REPO_ROOT)
     if ops_m is None and request.get("work_dir"):
-        ops_m = load_ops_metrics_from_work_dir(request.get("work_dir"), base=base)
+        ops_m = load_ops_metrics_from_work_dir(
+            request.get("work_dir"),
+            base=base,
+            include_repo_root=include_repo_root,
+        )
     if open_m is None and request.get("open_pack"):
-        open_m = load_open_metrics_from_pack(request.get("open_pack"), base=base)
+        open_m = load_open_metrics_from_pack(
+            request.get("open_pack"),
+            base=base,
+            include_repo_root=include_repo_root,
+        )
     return {
         "ml_metrics": dict(ml_m) if isinstance(ml_m, Mapping) else None,
         "ops_metrics": dict(ops_m) if isinstance(ops_m, Mapping) else None,
@@ -223,16 +269,29 @@ def _opt_bool_strict(value: Any) -> bool | None:
     return None
 
 
+def _is_docs_reliability_path(path: Path) -> bool:
+    """True if path sits under repository docs/ (never a field unlock key)."""
+    try:
+        docs_root = (REPO_ROOT / "docs").resolve()
+        path.resolve().relative_to(docs_root)
+        return True
+    except (ValueError, OSError):
+        return False
+
+
 def load_reliability_gate_mapping(
     value: Mapping[str, Any] | str | Path | None,
     *,
     base: Path | None = None,
     allow_inline: bool = True,
+    include_repo_root: bool = True,
+    reject_docs: bool = False,
 ) -> Mapping[str, Any] | None:
     """Load a reliability gate report; string paths must pass allowlist.
 
     Inline mappings are allowed only when ``allow_inline`` is True
-    (trusted CLI / in-process). HTTP must pass a path under base/REPO_ROOT.
+    (trusted CLI / in-process). HTTP must pass a path under the server base
+    sandbox only (no REPO_ROOT / docs/).
     """
     if value is None or value == "":
         return None
@@ -240,9 +299,11 @@ def load_reliability_gate_mapping(
         if not allow_inline:
             return None
         return dict(value)
-    path = _as_path(value, base=base)
+    path = _as_path(value, base=base, include_repo_root=include_repo_root)
     if path is None or not path.is_file():
         return None
+    if reject_docs and _is_docs_reliability_path(path):
+        raise PathNotAllowedError(f"reliability_gate under docs/ is not a field unlock key: {path}")
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -260,13 +321,21 @@ def decide_from_request(
     """Build Decision Card payload + latency_ms from a request dict.
 
     Empty / missing sources → ABSTAIN (honest default).
-    ``work_dir`` / ``open_pack`` / ``reliability_gate`` paths must resolve
-    under ``base`` or REPO_ROOT.
 
-    Unauthenticated HTTP (``channel=http_api``) cannot self-assert reliability
-    flags or inline gate reports. Only allowlisted gate *files* are accepted.
-    Trusted CLI / in-process callers may pass explicit kwargs or inline maps.
-    Set ``trust_client_reliability=True`` only for trusted local callers.
+    Path isolation
+    --------------
+    * Untrusted channels (``channel=http_api`` or
+      ``trust_client_reliability=False``): ``work_dir`` / ``open_pack`` /
+      ``reliability_gate`` resolve only under ``base`` (server sandbox).
+      ``docs/`` gate paths are always rejected.
+    * Trusted CLI / in-process: ``base`` and ``REPO_ROOT`` are allowed.
+
+    Reliability flags
+    -----------------
+    Free-floating ``gates_ok`` / ``determinism_ok`` / ``abstention_enforced`` /
+    ``provenance_ok`` are accepted **only** when
+    ``trust_client_reliability=True`` **and** ``channel`` is in
+    :data:`CLIENT_RELIABILITY_CHANNELS` (tests). Prefer file-based gate reports.
     """
     t0 = time.perf_counter()
     req = dict(request or {})
@@ -274,15 +343,23 @@ def decide_from_request(
     require_ops = bool(req.get("require_ops_for_go", False))
     policy_id = req.get("policy") or req.get("policy_id")
     channel = str(req.get("channel") or "decide_service")
-    sources = resolve_sources(req, base=base)
 
-    # HTTP is untrusted by default; CLI/service trusted unless overridden.
-    if trust_client_reliability is None:
-        trusted = channel != "http_api"
+    # Path trust: HTTP / explicit False → sandbox base only (no REPO_ROOT).
+    if trust_client_reliability is False or channel == "http_api":
+        include_repo_root = False
+        allow_inline_gate = False
+        reject_docs_gate = True
     else:
-        trusted = bool(trust_client_reliability)
+        include_repo_root = True
+        allow_inline_gate = True
+        reject_docs_gate = False
 
-    if trusted:
+    # Free-floating R1–R4 booleans: opt-in + channel allowlist only.
+    accept_client_bools = bool(trust_client_reliability) and channel in CLIENT_RELIABILITY_CHANNELS
+
+    sources = resolve_sources(req, base=base, include_repo_root=include_repo_root)
+
+    if accept_client_bools:
         gates_ok = _opt_bool_strict(req["gates_ok"]) if "gates_ok" in req else None
         determinism_ok = (
             _opt_bool_strict(req["determinism_ok"]) if "determinism_ok" in req else None
@@ -291,21 +368,28 @@ def decide_from_request(
             _opt_bool_strict(req["abstention_enforced"]) if "abstention_enforced" in req else None
         )
         provenance_ok = _opt_bool_strict(req["provenance_ok"]) if "provenance_ok" in req else None
-        reliability_gate = load_reliability_gate_mapping(
-            req.get("reliability_gate"),
-            base=base,
-            allow_inline=True,
-        )
     else:
-        # Ignore client-asserted gate booleans and inline reports (Issue 4).
         gates_ok = None
         determinism_ok = None
         abstention_enforced = None
         provenance_ok = None
+
+    reliability_gate = load_reliability_gate_mapping(
+        req.get("reliability_gate"),
+        base=base,
+        allow_inline=allow_inline_gate and accept_client_bools,
+        include_repo_root=include_repo_root,
+        reject_docs=reject_docs_gate,
+    )
+    # Trusted non-test channels may still pass inline gate maps or files under
+    # base/REPO_ROOT (file-based preferred over free-floating booleans).
+    if reliability_gate is None and allow_inline_gate and not accept_client_bools:
         reliability_gate = load_reliability_gate_mapping(
             req.get("reliability_gate"),
             base=base,
-            allow_inline=False,
+            allow_inline=True,
+            include_repo_root=include_repo_root,
+            reject_docs=reject_docs_gate,
         )
 
     card: DecisionCard = build_decision_card(
@@ -325,7 +409,8 @@ def decide_from_request(
             "channel": channel,
             "api_version": API_VERSION,
             "policy_id": policy_id or "default",
-            "reliability_trusted_client": trusted,
+            "reliability_trusted_client": accept_client_bools,
+            "path_include_repo_root": include_repo_root,
         },
     )
     latency_ms = round((time.perf_counter() - t0) * 1000.0, 3)

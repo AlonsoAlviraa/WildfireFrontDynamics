@@ -420,47 +420,62 @@ def physics_loss_cell_vectorized(
     ffmc: torch.Tensor | float = 90.0,
     dt_min: float = DEFAULT_DT_MIN,
     lambda_physics: float = 0.1,
+    *,
+    ffmc_is_normalized: bool = False,
 ) -> torch.Tensor:
     """Vectorized physics loss for ALL burning cells at once.
 
     Replaces the slow per-cell Python loop in ``calculate_local_spread_loss``.
 
-    **Unit contract (asymmetric — read carefully):**
+    **Unit contract:**
 
     * ``wind_norm`` / ``slope_norm``: **normalized** sequence channels
       (``raw/20`` wind, ``raw/1.5708`` slope). Denormalized **inside** this
       function before Rothermel.
-    * ``ffmc``: **physical** Fine Fuel Moisture Code in **[0, 101]**.
-      This arg is **not** denormalized here. Callers that read ch16 after
-      ``normalize_channels`` must restore first:
-      ``ffmc_phys = ffmc_norm * 51 + 50`` (see ``train.calculate_local_spread_loss*``).
+    * ``ffmc``: **physical** Fine Fuel Moisture Code in **[0, 101]** by
+      default. Set ``ffmc_is_normalized=True`` when passing ch16 after
+      ``normalize_channels`` (``(ffmc-50)/51``) so it is denormalized here
+      consistently with wind/slope.
 
-    **Footgun:** Passing normalized ch16 (~0.7 for FFMC 85) as ``ffmc`` is
-    treated as near-zero FFMC → moisture ≈ 147% and absurd ROS penalties.
-    Prefer physical defaults (e.g. 90.0) or explicit denorm at the call site.
+    **Footgun:** Passing normalized ch16 (~0.7 for FFMC 85) with the default
+    ``ffmc_is_normalized=False`` is treated as near-zero FFMC → moisture ≈ 147%
+    and absurd ROS penalties. Prefer ``physics_loss_from_sequence_channels``
+    or set the flag / denorm at the call site.
 
     Args:
         predicted_probs: (N, 8) tensor — probabilities for each neighbor
                          of each burning cell (detached, no gradient).
         wind_norm: (N,) tensor — wind speed channel values (NORMALIZED [0,1]).
         slope_norm: (N,) tensor — slope channel values (NORMALIZED [0,1]).
-        ffmc: (N,) tensor or scalar — **physical** FFMC in [0, 101], not ch16 norm.
+        ffmc: (N,) tensor or scalar — physical FFMC [0, 101], or normalized
+            ch16 when ``ffmc_is_normalized=True``.
         dt_min: Time step in minutes.
         lambda_physics: Loss weight.
+        ffmc_is_normalized: If True, denorm FFMC with ``*51 + 50`` first.
 
     Returns:
         Scalar loss tensor (CLAMPED to [0, lambda_physics] so physics
         never dominates the focal BCE term).
     """
-    # --- Des-normalize wind/slope to physical units (ffmc already physical) ---
+    # --- Des-normalize wind/slope to physical units ---
     wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
     slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT  # radians
     slope_deg = torch.rad2deg(slope_rad)
 
-    if isinstance(ffmc, torch.Tensor):
-        moisture = 147.2 * (101.0 - ffmc.float()) / (59.5 + ffmc.float())
+    if ffmc_is_normalized:
+        if isinstance(ffmc, torch.Tensor):
+            ffmc_phys: torch.Tensor | float = ffmc.float() * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+        else:
+            ffmc_phys = float(ffmc) * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
     else:
-        moisture = torch.full_like(wind_ms, 147.2 * (101.0 - ffmc) / (59.5 + ffmc))
+        ffmc_phys = ffmc
+
+    if isinstance(ffmc_phys, torch.Tensor):
+        moisture = 147.2 * (101.0 - ffmc_phys.float()) / (59.5 + ffmc_phys.float())
+    else:
+        moisture = torch.full_like(
+            wind_ms, 147.2 * (101.0 - float(ffmc_phys)) / (59.5 + float(ffmc_phys))
+        )
 
     # --- Vectorized Rothermel ROS (all N cells at once) ---
     ros_max = _rothermel_ros_torch(wind_ms, slope_deg, moisture, DEFAULT_FUEL)  # (N,)
@@ -491,6 +506,38 @@ def physics_loss_cell_vectorized(
     return loss
 
 
+def physics_loss_from_sequence_channels(
+    predicted_probs: torch.Tensor,
+    wind_channel: torch.Tensor,
+    slope_channel: torch.Tensor,
+    ffmc_channel: torch.Tensor | float,
+    *,
+    channels_normalized: bool = True,
+    dt_min: float = DEFAULT_DT_MIN,
+    lambda_physics: float = 0.1,
+) -> torch.Tensor:
+    """Physics loss entry point that denorms wind/slope/FFMC consistently.
+
+    Prefer this over ``physics_loss_cell_vectorized`` when all three values
+    come from the same normalized sequence tensor (avoids FFMC unit footgun).
+
+    Args:
+        predicted_probs: (N, 8) neighbor probabilities.
+        wind_channel / slope_channel / ffmc_channel: (N,) values from sequence.
+        channels_normalized: If True (default), all three are denormalized
+            with :data:`_CHANNEL_STATS` before Rothermel.
+    """
+    return physics_loss_cell_vectorized(
+        predicted_probs,
+        wind_channel,
+        slope_channel,
+        ffmc=ffmc_channel,
+        dt_min=dt_min,
+        lambda_physics=lambda_physics,
+        ffmc_is_normalized=channels_normalized,
+    )
+
+
 __all__ = [
     "RothermelParams",
     "DEFAULT_FUEL",
@@ -501,4 +548,5 @@ __all__ = [
     "physics_loss",
     "physics_loss_cell",
     "physics_loss_cell_vectorized",
+    "physics_loss_from_sequence_channels",
 ]

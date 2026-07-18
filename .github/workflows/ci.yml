@@ -12,7 +12,7 @@ concurrency:
 
 permissions:
   contents: read
-  actions: write  # GHA cache for docker/build-push-action
+  # actions: write scoped to docker job only (GHA cache for build-push-action)
 
 jobs:
   lint:
@@ -71,7 +71,7 @@ jobs:
 
       - name: Run tests with coverage
         # Gate starts modest (coverage ~74% locally); raise gradually toward 80+.
-        run: pytest --cov=wildfire_front --cov-report=term-missing --cov-report=xml --cov-fail-under=60
+        run: pytest --cov=wildfire_front --cov-report=term-missing --cov-report=xml --cov-fail-under=62
 
       - name: Upload coverage artifact
         if: matrix.python-version == '3.11'
@@ -179,6 +179,10 @@ jobs:
   docker:
     name: Docker build (runtime + inference)
     runs-on: ubuntu-latest
+    # GHA cache write only needed here (not lint/test/ml-smoke).
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -201,7 +205,11 @@ jobs:
           docker run --rm --entrypoint python wildfire-front-dynamics:runtime -c \
             "import shapely, pyproj, rasterio, numpy, affine, wildfire_front; print('runtime-deps-ok')"
 
+      # Inference image is heavier (CPU torch). Full load+smoke only on main/tags;
+      # PRs skip the second load to cut CI wall-time (runtime smoke already covers
+      # the geospatial stack). Re-enable via push to main or a release tag.
       - name: Build inference image
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -213,6 +221,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Smoke import inference stack (weights optional)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
         run: |
           docker run --rm --entrypoint python wildfire-front-dynamics:inference -c \
             "import torch; import wildfire_front.ml.spread_predictor as s; print('inference-import-ok')"
@@ -224,3 +233,7 @@ jobs:
             echo "Inject via bind-mount or place under models/production/ before docker build."
             echo "See CONTRIBUTING.md Model weights section."
           fi
+
+      - name: Note inference skipped on PR
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
+        run: echo "Inference image build skipped on PR (built only on main/tags)."

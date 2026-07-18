@@ -287,9 +287,12 @@ def test_http_ignores_client_asserted_gates(tmp_path: Path):
 
 
 def test_http_reliability_gate_allowlisted_file_ok(tmp_path: Path):
-    """HTTP may load reliability from an allowlisted path with full checks."""
+    """HTTP may load reliability from a sandbox path with full checks + event_id."""
     report = {
         "ok": True,
+        "event_id": "http_gate_file",
+        "suite_only": False,
+        "field_unlock": True,
         "system_reliability": {
             "checks": {
                 "R1_determinism": True,
@@ -323,3 +326,91 @@ def test_http_reliability_gate_allowlisted_file_ok(tmp_path: Path):
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_http_rejects_repo_docs_reliability_gate(tmp_path: Path):
+    """HTTP with base_dir=tmp_path must not load docs/RELIABILITY_GATE_REPORT.json."""
+    from wildfire_front.product.decide_service import REPO_ROOT
+
+    docs_gate = REPO_ROOT / "docs" / "RELIABILITY_GATE_REPORT.json"
+    assert docs_gate.is_file(), "checked-in docs sample must exist"
+
+    httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        # Absolute path under REPO_ROOT docs/ must be rejected (sandbox isolation).
+        body = json.dumps(
+            {
+                "event_id": "http_docs_escape",
+                "reliability_gate": str(docs_gate),
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req, timeout=5)
+            raise AssertionError("expected HTTPError for docs gate path")
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+            detail = json.loads(exc.read().decode("utf-8"))
+            assert detail.get("error") == "path_not_allowed"
+
+        # Relative repo-style path also cannot resolve under sandbox base.
+        body2 = json.dumps(
+            {
+                "event_id": "http_docs_rel",
+                "reliability_gate": "docs/RELIABILITY_GATE_REPORT.json",
+            }
+        ).encode("utf-8")
+        req2 = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body2,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req2, timeout=5) as resp:
+            card = json.loads(resp.read().decode("utf-8"))
+        # Missing/unresolvable gate → no reliability PASS (not repo docs load).
+        assert card.get("system_reliability_pass") is False
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_client_reliability_bools_require_allowlisted_channel():
+    """Free-floating gates_ok only with trust_client_reliability + test channel."""
+    strong = {
+        "event_id": "bools",
+        "ops_metrics": {
+            "quality_grade": "A",
+            "primary_ros_m_min": 6.0,
+            "n_frames_staged": 20,
+            "speed_vs_ref_ratio": 0.9,
+            "area_ha_max": 50,
+        },
+        "open_metrics": {"max_area_ha": 2000, "n_timeline_steps": 5},
+        "gates_ok": True,
+        "determinism_ok": True,
+        "abstention_enforced": True,
+        "provenance_ok": True,
+        "policy_id": "field_ops",
+    }
+    # Default decide_service channel: booleans ignored
+    denied = decide_from_request({**strong, "channel": "decide_service"})
+    assert denied.get("system_reliability_pass") is False
+    # Explicit trust without allowlisted channel: still denied
+    denied2 = decide_from_request(
+        {**strong, "channel": "decide_service"},
+        trust_client_reliability=True,
+    )
+    assert denied2.get("system_reliability_pass") is False
+    # Test channel + trust: accepted
+    ok = decide_from_request(
+        {**strong, "channel": "test"},
+        trust_client_reliability=True,
+    )
+    assert ok.get("system_reliability_pass") is True

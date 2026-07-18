@@ -187,6 +187,9 @@ def test_field_ops_fail_closed_without_gates():
 def test_reliability_gate_report_injection(tmp_path):
     report = {
         "ok": True,
+        "event_id": "from_report",
+        "suite_only": False,
+        "field_unlock": True,
         "system_reliability": {
             "system_reliability_pass": True,
             "checks": {
@@ -205,3 +208,70 @@ def test_reliability_gate_report_injection(tmp_path):
         reliability_gate=path,
     )
     assert card.system_reliability_pass is True
+
+
+def test_suite_only_report_does_not_unlock():
+    """docs-style suite_only / field_unlock=false reports must not grant PASS."""
+    report = {
+        "ok": True,
+        "suite_only": True,
+        "field_unlock": False,
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    card = build_decision_card(
+        "suite",
+        ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+        reliability_gate=report,
+    )
+    assert card.system_reliability_pass is False
+
+
+def test_gate_report_event_id_mismatch_rejected():
+    report = {
+        "event_id": "other_event",
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    card = build_decision_card(
+        "my_event",
+        ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+        reliability_gate=report,
+    )
+    assert card.system_reliability_pass is False
+
+
+def test_ml_holdout_not_fused_into_live_confidence():
+    """Static catalog IoU is holdout_quality research metadata, weight 0."""
+    from wildfire_front.product.confidence import score_ml_source
+
+    src = score_ml_source({"test_iou": 0.9, "improvement_vs_copy_iou": 0.25})
+    assert src["role"] == "holdout_quality"
+    assert src["weight"] == 0.0
+    assert src["available"] is True
+    # Ops-only fusion must match ops+ml fusion (ml not fused)
+    ops = {
+        "quality_grade": "A",
+        "primary_ros_m_min": 5.0,
+        "n_frames_staged": 10,
+        "speed_vs_ref_ratio": 0.9,
+    }
+    a = build_decision_card("a", ops_metrics=ops)
+    b = build_decision_card(
+        "b",
+        ops_metrics=ops,
+        ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+    )
+    assert abs(a.confidence_pred - b.confidence_pred) < 1e-9

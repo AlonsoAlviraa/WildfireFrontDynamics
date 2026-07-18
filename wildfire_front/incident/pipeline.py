@@ -429,6 +429,69 @@ def ops_metrics_for_decision(ops: dict[str, Any], *, n_frames: int = 0) -> dict[
     }
 
 
+def _link_or_copy(src: Path, dst: Path) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists() or dst.is_symlink():
+        dst.unlink()
+    try:
+        os.link(src, dst)
+    except OSError:
+        try:
+            dst.symlink_to(src.resolve())
+        except OSError:
+            shutil.copy2(src, dst)
+
+
+def _prepare_incremental_ingest(
+    config: IncidentConfig,
+    *,
+    n_keep: int = 2,
+) -> tuple[Path | None, Path | None]:
+    """Build a temporary stage with the last ``n_keep`` images (and masks).
+
+    Returns ``(images_dir, masks_dir|None)``. On failure returns ``(None, None)``
+    so the caller falls back to full re-ingest.
+    """
+    staged = list_inbox_tiffs(config.stage_images)
+    if len(staged) < n_keep:
+        return None, None
+    keep = staged[-n_keep:]
+    inc_root = config.work_dir / "stage" / "incremental"
+    inc_images = inc_root / "images"
+    if inc_images.is_dir():
+        for p in inc_images.iterdir():
+            if p.is_file() or p.is_symlink():
+                p.unlink(missing_ok=True)
+    else:
+        inc_images.mkdir(parents=True, exist_ok=True)
+    for src in keep:
+        _link_or_copy(src, inc_images / src.name)
+
+    inc_masks: Path | None = None
+    if config.stage_masks.is_dir() and any(config.stage_masks.glob("*.tif*")):
+        mask_dir = inc_root / "masks"
+        if mask_dir.is_dir():
+            for p in mask_dir.iterdir():
+                if p.is_file() or p.is_symlink():
+                    p.unlink(missing_ok=True)
+        else:
+            mask_dir.mkdir(parents=True, exist_ok=True)
+        for src in keep:
+            # Match common mask naming: same stem or stem + _mask
+            candidates = [
+                config.stage_masks / src.name,
+                config.stage_masks / f"{src.stem}_mask{src.suffix}",
+                config.stage_masks / f"{src.stem}_mask.tif",
+            ]
+            for m in candidates:
+                if m.is_file():
+                    _link_or_copy(m, mask_dir / m.name)
+                    break
+        if any(mask_dir.glob("*.tif*")):
+            inc_masks = mask_dir
+    return inc_images, inc_masks
+
+
 def render_decision_card_md(card_dict: dict[str, Any]) -> str:
     """Human one-pager for the Fire Decision Card in the outbox."""
     dec = card_dict.get("decision") or "—"
@@ -476,6 +539,101 @@ def render_decision_card_md(card_dict: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def write_this_run_reliability_gate(
+    outbox: Path,
+    event_id: str,
+    ops_m: dict[str, Any],
+    *,
+    ml_metrics: dict[str, Any] | None = None,
+    open_metrics: dict[str, Any] | None = None,
+    require_ops_for_go: bool = True,
+    decision_policy: str = "field_ops",
+    git_commit: str | None = None,
+) -> Path:
+    """Lightweight this-run R1–R4 self-check for the current incident event.
+
+    Writes ``outbox/reliability_gate_report.json`` with real measured flags
+    for *this* event (input hashes, determinism of card scores, abstention
+    heuristic, provenance). Does **not** copy docs suite samples.
+    """
+    from ..product.confidence import (
+        build_decision_card,
+        content_hash,
+        system_reliability_report,
+    )
+
+    outbox = Path(outbox)
+    outbox.mkdir(parents=True, exist_ok=True)
+    kwargs: dict[str, Any] = {
+        "ml_metrics": ml_metrics,
+        "ops_metrics": ops_m,
+        "open_metrics": open_metrics,
+        "require_ops_for_go": require_ops_for_go,
+        "git_commit": git_commit,
+        "policy_id": decision_policy or "field_ops",
+    }
+    card_a = build_decision_card(event_id, **kwargs)
+    card_b = build_decision_card(event_id, **kwargs)
+    ha = content_hash(
+        {
+            "d": card_a.decision.value,
+            "c": card_a.confidence_pred,
+            "s": card_a.sources,
+            "r": card_a.reasons,
+        }
+    )
+    hb = content_hash(
+        {
+            "d": card_b.decision.value,
+            "c": card_b.confidence_pred,
+            "s": card_b.sources,
+            "r": card_b.reasons,
+        }
+    )
+    determinism_ok = ha == hb
+    # R2: ops present with quality grade when require_ops; engine produced a card.
+    gates_ok = bool(ops_m) and bool(ops_m.get("quality_grade") or ops_m.get("primary_ros_m_min"))
+    abstention_enforced = bool(card_a.audit.get("abstention_heuristic_ok"))
+    provenance_ok = bool(
+        card_a.audit.get("input_hash")
+        and card_a.audit.get("output_hash")
+        and card_a.audit.get("schema") == "fire_decision_card_v1"
+    )
+    rel = system_reliability_report(
+        gates_ok=gates_ok,
+        determinism_ok=determinism_ok,
+        abstention_enforced=abstention_enforced,
+        provenance_ok=provenance_ok,
+    )
+    failures: list[str] = []
+    if not determinism_ok:
+        failures.append("determinism_hash_mismatch")
+    if not provenance_ok:
+        failures.append("provenance_incomplete")
+    if not gates_ok:
+        failures.append("ops_gates_incomplete")
+    report: dict[str, Any] = {
+        "ok": bool(rel.get("system_reliability_pass")),
+        "failures": failures,
+        "suite_only": False,
+        "field_unlock": True,
+        "event_id": event_id,
+        "provenance": {
+            "kind": "this_run",
+            "event_id": event_id,
+            "input_hash": card_a.audit.get("input_hash"),
+            "output_hash": card_a.audit.get("output_hash"),
+            "git_commit": git_commit,
+        },
+        "system_reliability": rel,
+    }
+    path = outbox / "reliability_gate_report.json"
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    tmp.replace(path)
+    return path
+
+
 def publish_decision_card(
     outbox: Path,
     event_id: str,
@@ -488,6 +646,9 @@ def publish_decision_card(
     decision_policy: str = "field_ops",
     git_commit: str | None = None,
     reliability_gate: Path | str | dict | None = None,
+    ml_metrics: dict[str, Any] | None = None,
+    open_metrics: dict[str, Any] | None = None,
+    write_this_run_gate: bool = True,
 ) -> dict[str, str]:
     """Write Fire Decision Card (JSON + MD) into the operator outbox.
 
@@ -496,19 +657,36 @@ def publish_decision_card(
     Default policy ``field_ops`` (stricter organism template).
 
     Reliability: does **not** auto-load checked-in ``docs/RELIABILITY_GATE_REPORT.json``
-    (stale PASS would unlock field_ops GO). Pass ``reliability_gate`` explicitly, or
-    place a this-run report at ``outbox/reliability_gate_report.json``.
+    (stale PASS would unlock field_ops GO). Generates a this-run gate report
+    under ``outbox/reliability_gate_report.json`` when ``write_this_run_gate``
+    is True (default). Pass ``reliability_gate`` explicitly to override.
     """
     from ..product.confidence import build_decision_card
 
     outbox = Path(outbox)
     outbox.mkdir(parents=True, exist_ok=True)
     ops_m = ops_metrics_for_decision(ops, n_frames=n_frames)
-    ml_m = _load_ml_metrics_optional() if include_ml_metrics else None
-    open_m = _load_open_metrics(open_pack_dir)
-    # Explicit only — never silent docs/ stale report for field_ops GO.
+    # Reuse in-memory metrics when caller already resolved them (avoid re-reads).
+    ml_m = (
+        ml_metrics
+        if ml_metrics is not None
+        else (_load_ml_metrics_optional() if include_ml_metrics else None)
+    )
+    open_m = open_metrics if open_metrics is not None else _load_open_metrics(open_pack_dir)
+
     gate: Path | str | dict | None = reliability_gate
-    if gate is None:
+    if gate is None and write_this_run_gate:
+        gate = write_this_run_reliability_gate(
+            outbox,
+            event_id,
+            ops_m,
+            ml_metrics=ml_m,
+            open_metrics=open_m,
+            require_ops_for_go=require_ops_for_go,
+            decision_policy=decision_policy or "field_ops",
+            git_commit=git_commit,
+        )
+    elif gate is None:
         outbox_gate = outbox / "reliability_gate_report.json"
         if outbox_gate.is_file():
             gate = outbox_gate
@@ -775,7 +953,7 @@ def process_incident_once(
         publish_operator_telemetry(config.outbox, summary)
         return summary
 
-    # Recompute full pack from staged images
+    # Recompute pack from staged images (full or incremental last-pair)
     masks_arg: Path | None = None
     mad_z = config.mad_z
     threshold = config.threshold
@@ -797,10 +975,38 @@ def process_incident_once(
             publish_operator_telemetry(config.outbox, summary)
             return summary
 
+    # Incremental: when only new frames arrived on a prior successful run, feed
+    # last-pair subset of staged images rather than re-ingesting every frame.
+    # Full reprocess on force / first update / missing prior ops / config error.
+    images_dir = config.stage_images
+    ingest_masks = masks_arg
+    incremental = False
+    ops_path = config.outbox / "operational_metrics.json"
+    can_incremental = (
+        not force
+        and len(new_frames) > 0
+        and n_staged >= 2
+        and state.n_updates > 0
+        and ops_path.is_file()
+        and not state.last_error
+    )
+    if can_incremental:
+        try:
+            inc_images, inc_masks = _prepare_incremental_ingest(config, n_keep=2)
+            if inc_images is not None:
+                images_dir = inc_images
+                if inc_masks is not None:
+                    ingest_masks = inc_masks
+                incremental = True
+        except OSError:
+            images_dir = config.stage_images
+            ingest_masks = masks_arg
+            incremental = False
+
     try:
         metrics = run_geotiff_ingest(
-            config.stage_images,
-            masks_arg,
+            images_dir,
+            ingest_masks,
             config.outbox,
             config.event_id,
             config.sensor_id,
@@ -820,14 +1026,27 @@ def process_incident_once(
         )
         latency = time.perf_counter() - t0
         ops = metrics.get("operational") if isinstance(metrics.get("operational"), dict) else {}
-        # Prefer full ops file for grade/ROS
-        ops_path = config.outbox / "operational_metrics.json"
-        if ops_path.is_file():
-            full_ops = json.loads(ops_path.read_text(encoding="utf-8"))
-            ops = full_ops
+        # Prefer ops already returned in-memory; fall back to disk only if thin.
+        if not (isinstance(ops, dict) and ops.get("quality_grade") is not None):
+            if ops_path.is_file():
+                full_ops = json.loads(ops_path.read_text(encoding="utf-8"))
+                ops = full_ops
+        elif ops_path.is_file():
+            # Merge any extra disk fields not present in the in-memory dict.
+            try:
+                disk_ops = json.loads(ops_path.read_text(encoding="utf-8"))
+                if isinstance(disk_ops, dict):
+                    merged = dict(disk_ops)
+                    merged.update(ops)
+                    ops = merged
+            except (OSError, json.JSONDecodeError):
+                pass
 
         decision_artifacts: dict[str, Any] = {}
         if isinstance(ops, dict) and ops:
+            # Preload open/ml once for this tick (decision card + this-run gate).
+            ml_pre = _load_ml_metrics_optional() if config.include_ml_metrics else None
+            open_pre = _load_open_metrics(config.open_pack_dir)
             decision_artifacts = publish_decision_card(
                 config.outbox,
                 config.event_id,
@@ -837,7 +1056,10 @@ def process_incident_once(
                 include_ml_metrics=config.include_ml_metrics,
                 require_ops_for_go=config.require_ops_for_go,
                 decision_policy=config.decision_policy or "field_ops",
+                ml_metrics=ml_pre,
+                open_metrics=open_pre,
             )
+            decision_artifacts["ingest_mode"] = "incremental_last_pair" if incremental else "full"
 
         emergency = publish_emergency_layers(
             config.outbox,

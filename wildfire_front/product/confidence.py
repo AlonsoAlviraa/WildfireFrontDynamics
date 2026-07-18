@@ -71,23 +71,42 @@ def content_hash(obj: Any) -> str:
 
 
 def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Score static catalog / holdout ML metrics as research metadata.
+
+    Catalog IoU is **not** live fire-spread confidence. Weight is 0 so fusion
+    does not treat holdout quality as a phenomenon signal on field incidents.
+    ``confidence`` / ``holdout_quality`` remain available for research display
+    and ml-only HOLD policies.
+    """
     if not metrics:
-        return {"id": "ml", "available": False, "weight": 0.0, "confidence": 0.0}
+        return {
+            "id": "ml",
+            "available": False,
+            "weight": 0.0,
+            "confidence": 0.0,
+            "role": "holdout_quality",
+            "source_type": "research_metadata",
+        }
     iou = float(metrics.get("test_iou") or metrics.get("model_iou") or 0.0)
     delta = float(
         metrics.get("improvement_vs_copy_iou") or metrics.get("improvement_vs_copy") or 0.0
     )
-    # map holdout quality to 0..1 (calibrated loosely; not probability of next fire)
+    # Holdout quality 0..1 (research metadata; not probability of next fire)
     conf = _clip01(0.35 * (iou / 0.9) + 0.45 * (delta / 0.25) + 0.2)
     return {
         "id": "ml_clm_ensemble",
         "available": True,
-        "weight": 0.25,
+        # Never fuse static holdout IoU as live phenomenon confidence.
+        "weight": 0.0,
         "confidence": conf,
+        "holdout_quality": conf,
+        "role": "holdout_quality",
+        "source_type": "research_metadata",
         "metrics": {
             "test_iou": iou,
             "improvement_vs_copy_iou": delta,
             "model_iou_growth": metrics.get("model_iou_growth"),
+            "holdout_quality": conf,
         },
     }
 
@@ -161,8 +180,12 @@ def fuse_confidence(sources: Sequence[Mapping[str, Any]]) -> tuple[float, list[s
         if not s.get("available"):
             reasons.append(f"missing:{s.get('id')}")
             continue
-        w = float(s.get("weight") or 0.0)
         c = float(s.get("confidence") or 0.0)
+        # Research holdout metadata is display-only — never fused as live fire quality.
+        if s.get("role") == "holdout_quality" or s.get("source_type") == "research_metadata":
+            reasons.append(f"{s.get('id')}:holdout_quality={c:.3f}:not_fused")
+            continue
+        w = float(s.get("weight") or 0.0)
         num += w * c
         den += w
         reasons.append(f"{s.get('id')}:conf={c:.3f}:w={w:.2f}")
@@ -302,13 +325,38 @@ def _load_reliability_gate_report(
     return data if isinstance(data, dict) else None
 
 
+def _report_rejected_for_field(
+    report: Mapping[str, Any],
+    *,
+    event_id: str | None = None,
+) -> str | None:
+    """Return rejection reason if report must not unlock field_ops, else None."""
+    if report.get("suite_only") is True or report.get("field_unlock") is False:
+        return "suite_only_or_field_unlock_false"
+    prov = report.get("provenance")
+    if isinstance(prov, Mapping):
+        kind = str(prov.get("kind") or "")
+        if kind in {"suite_sample", "docs_sample", "synthetic_suite"}:
+            return f"provenance_kind:{kind}"
+        prov_event = prov.get("event_id")
+        if event_id and prov_event is not None and str(prov_event) != str(event_id):
+            return "event_id_mismatch"
+    report_event = report.get("event_id")
+    if event_id and report_event is not None and str(report_event) != str(event_id):
+        return "event_id_mismatch"
+    return None
+
+
 def _gate_flags_from_report(
     report: Mapping[str, Any] | None,
+    *,
+    event_id: str | None = None,
 ) -> dict[str, bool | None]:
     """Extract R1–R4 flags from a reliability gate report if present.
 
     Only explicit ``system_reliability.checks`` keys count. Top-level
     ``ok`` is advisory metadata and must NOT grant R1–R4 PASS by itself.
+    Suite-only / docs sample reports and event_id mismatches yield unknowns.
     """
     empty: dict[str, bool | None] = {
         "gates_ok": None,
@@ -317,6 +365,8 @@ def _gate_flags_from_report(
         "provenance_ok": None,
     }
     if not report:
+        return empty
+    if _report_rejected_for_field(report, event_id=event_id):
         return empty
     sys_rel = report.get("system_reliability")
     checks: Mapping[str, Any] = {}
@@ -403,6 +453,16 @@ def build_decision_card(
         score_open_cems_source(open_metrics),
     ]
     conf, fuse_reasons = fuse_confidence(sources)
+    # ML-only cards: surface holdout quality for research/monitoring display
+    # without claiming live phenomenon confidence from multi-source fusion.
+    if (
+        conf <= 0.0
+        and sources[0].get("available")
+        and not sources[1].get("available")
+        and not sources[2].get("available")
+    ):
+        conf = float(sources[0].get("holdout_quality") or sources[0].get("confidence") or 0.0)
+        fuse_reasons = list(fuse_reasons) + ["ml_holdout_quality_display"]
     decision, dec_reasons = decide(
         conf,
         sources,
@@ -412,7 +472,8 @@ def build_decision_card(
 
     # Merge optional external gate report; explicit kwargs win when not None.
     # R3/R4 stay None unless report/kwargs supply them (do not auto-claim verified).
-    from_report = _gate_flags_from_report(_load_reliability_gate_report(reliability_gate))
+    loaded_gate = _load_reliability_gate_report(reliability_gate)
+    from_report = _gate_flags_from_report(loaded_gate, event_id=event_id)
     g_ok = from_report["gates_ok"] if gates_ok is None else gates_ok
     d_ok = from_report["determinism_ok"] if determinism_ok is None else determinism_ok
     p_ok = from_report["provenance_ok"] if provenance_ok is None else provenance_ok

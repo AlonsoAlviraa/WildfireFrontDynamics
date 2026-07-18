@@ -52,17 +52,20 @@ def rasterize_main(
     shape: tuple[int, int],
     *,
     soft_fill: float = SOFT_FILL_VALUE,
+    soft_band: int = 2,
 ) -> np.ndarray:
     """Coarse raster of main component(s) for correlation.
 
-    Fills each component bounding box with ``soft_fill`` mass, then stamps
-    polygon vertices and a small centroid neighbourhood at 1.0 so alignment
-    has both extent and structural peaks.
+    Soft mass is applied as a **perimeter band** around each component
+    bounding box (not a full AABB fill) so elongated fronts align on shape
+    rather than box geometry. Vertices and a small centroid neighbourhood
+    stamp at 1.0 for structural peaks.
     """
     h, w = shape
     grid = np.zeros((h, w), dtype=np.float32)
     ox, oy = origin
     fill = float(soft_fill)
+    band = max(1, int(soft_band))
     for comp in obs.components:
         pts = np.asarray(comp, dtype=float)
         if len(pts) < 3:
@@ -76,9 +79,16 @@ def rasterize_main(
         c0, c1 = max(0, c0), min(w, c1)
         r0, r1 = max(0, r0), min(h, r1)
         if c1 > c0 and r1 > r0:
-            # Soft bbox fill for correlation mass (was no-op np.maximum(..., 0)).
+            # Perimeter band soft fill (reduces box-biased IoU lock-on).
             if fill > 0:
-                grid[r0:r1, c0:c1] = np.maximum(grid[r0:r1, c0:c1], fill)
+                top = slice(r0, min(r0 + band, r1))
+                bot = slice(max(r1 - band, r0), r1)
+                left = slice(c0, min(c0 + band, c1))
+                right = slice(max(c1 - band, c0), c1)
+                grid[top, c0:c1] = np.maximum(grid[top, c0:c1], fill)
+                grid[bot, c0:c1] = np.maximum(grid[bot, c0:c1], fill)
+                grid[r0:r1, left] = np.maximum(grid[r0:r1, left], fill)
+                grid[r0:r1, right] = np.maximum(grid[r0:r1, right], fill)
             for x, y in pts:
                 cc = int((x - ox) / resolution)
                 rr = int((y - oy) / resolution)
@@ -95,6 +105,47 @@ def rasterize_main(
     return grid
 
 
+def _shift_binary(mask: np.ndarray, dx: int, dy: int) -> np.ndarray:
+    """Shift binary occupancy with zero fill (no wrap)."""
+    shifted = np.roll(np.roll(mask, dy, axis=0), dx, axis=1)
+    if dy > 0:
+        shifted[:dy, :] = 0
+    elif dy < 0:
+        shifted[dy:, :] = 0
+    if dx > 0:
+        shifted[:, :dx] = 0
+    elif dx < 0:
+        shifted[:, dx:] = 0
+    return shifted
+
+
+def _iou_binary(a: np.ndarray, b: np.ndarray) -> float:
+    inter = np.logical_and(a, b).sum(dtype=np.int64)
+    union = np.logical_or(a, b).sum(dtype=np.int64)
+    return float(inter) / float(union) if union else 0.0
+
+
+def _fft_peak_shift(a_bin: np.ndarray, b_bin: np.ndarray, max_pix: int) -> tuple[int, int]:
+    """Coarse translation of *b* onto *a* via FFT cross-correlation peak."""
+    wy = np.hanning(a_bin.shape[0]).astype(np.float32)
+    wx = np.hanning(a_bin.shape[1]).astype(np.float32)
+    win = wy[:, None] * wx[None, :]
+    af = np.fft.rfft2(a_bin.astype(np.float32) * win)
+    bf = np.fft.rfft2(b_bin.astype(np.float32) * win)
+    corr = np.fft.irfft2(af * np.conj(bf), s=a_bin.shape)
+    # Zero-lag is at [0,0]; shifts wrap. Search local window only.
+    best = (0, 0)
+    best_v = float(corr[0, 0])
+    h, w = corr.shape
+    for dy in range(-max_pix, max_pix + 1):
+        for dx in range(-max_pix, max_pix + 1):
+            v = float(corr[dy % h, dx % w])
+            if v > best_v:
+                best_v = v
+                best = (dx, dy)
+    return best
+
+
 def estimate_coreg_translation(
     previous: FrontObservation,
     current: FrontObservation,
@@ -104,8 +155,9 @@ def estimate_coreg_translation(
 ) -> dict[str, float]:
     """Estimate translation (dx, dy) to apply to *current* to align with previous.
 
-    Maximises coarse IoU of rasterised fronts. Structural fix for residual
-    georeferencing drift between consecutive drone orthos.
+    Maximises coarse IoU of rasterised fronts via FFT coarse peak + local
+    refine. Structural fix for residual georeferencing drift between
+    consecutive drone orthos.
     """
     all_pts = []
     for obs in (previous, current):
@@ -131,39 +183,45 @@ def estimate_coreg_translation(
     if a.sum() == 0 or b.sum() == 0:
         return {"dx_m": 0.0, "dy_m": 0.0, "peak_iou": 0.0, "applied": 0.0, "iou0": 0.0}
 
+    a_bin = a > 0
+    b_bin = b > 0
+    max_pix = int(math.ceil(max_shift_m / resolution_m))
+
     def _iou_at(dx: int, dy: int) -> float:
-        # Binary occupancy is intentional: soft fill (0.3) adds mass for
-        # correlation extent, not a weighted IoU contribution.
-        shifted = np.roll(np.roll(b, dy, axis=0), dx, axis=1)
-        if dy > 0:
-            shifted[:dy, :] = 0
-        elif dy < 0:
-            shifted[dy:, :] = 0
-        if dx > 0:
-            shifted[:, :dx] = 0
-        elif dx < 0:
-            shifted[:, dx:] = 0
-        inter = np.logical_and(a > 0, shifted > 0).sum()
-        union = np.logical_or(a > 0, shifted > 0).sum()
-        return float(inter) / float(union) if union else 0.0
+        return _iou_binary(a_bin, _shift_binary(b_bin, dx, dy))
 
     iou0 = _iou_at(0, 0)
-    max_pix = int(math.ceil(max_shift_m / resolution_m))
     best_iou = iou0
     best = (0, 0)
-    # Coarse search every 2 pixels then refine
-    step = 2 if max_pix > 6 else 1
-    for dy in range(-max_pix, max_pix + 1, step):
-        for dx in range(-max_pix, max_pix + 1, step):
-            iou = _iou_at(dx, dy)
-            if iou > best_iou:
-                best_iou = iou
-                best = (dx, dy)
 
-    # Local refine
+    # FFT coarse peak when grid is large enough to amortize the transform.
+    if max_pix > 2 and a_bin.size >= 256:
+        try:
+            cdx, cdy = _fft_peak_shift(a_bin, b_bin, max_pix)
+            if abs(cdx) <= max_pix and abs(cdy) <= max_pix:
+                iou = _iou_at(cdx, cdy)
+                if iou > best_iou:
+                    best_iou = iou
+                    best = (cdx, cdy)
+        except (ValueError, np.linalg.LinAlgError):
+            pass
+
+    # Coarse-to-fine exhaustive (stride 2 then refine) around identity + FFT peak.
+    step = 2 if max_pix > 6 else 1
+    seeds = {(0, 0), best}
+    for sdy, sdx in list(seeds):
+        for dy in range(max(-max_pix, sdy - max_pix), min(max_pix, sdy + max_pix) + 1, step):
+            for dx in range(max(-max_pix, sdx - max_pix), min(max_pix, sdx + max_pix) + 1, step):
+                iou = _iou_at(dx, dy)
+                if iou > best_iou:
+                    best_iou = iou
+                    best = (dx, dy)
+
+    # Local refine around best (full step neighbourhood)
     cx, cy = best
-    for dy in range(cy - step, cy + step + 1):
-        for dx in range(cx - step, cx + step + 1):
+    refine = max(step, 2)
+    for dy in range(cy - refine, cy + refine + 1):
+        for dx in range(cx - refine, cx + refine + 1):
             if abs(dx) > max_pix or abs(dy) > max_pix:
                 continue
             iou = _iou_at(dx, dy)

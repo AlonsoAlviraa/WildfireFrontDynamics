@@ -3,13 +3,23 @@
 
 Does NOT claim 99.9999% fire prediction accuracy.
 Fails hard if a card would GO without sufficient sources.
+
+Output
+------
+Writes a **run-local** report under ``outputs/reliability_gate_report.json``
+by default. Optionally updates ``docs/RELIABILITY_GATE_REPORT.json`` as a
+**suite-only sample** (``suite_only=true``, ``field_unlock=false``, checks
+cleared) so it cannot unlock field_ops GO. Operators must not copy the docs
+sample into an incident outbox as a production unlock key.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -22,7 +32,35 @@ from wildfire_front.product.confidence import (  # noqa: E402
 )
 
 
-def main() -> int:
+def _measure_provenance_ok(samples: dict[str, Any]) -> bool:
+    """R4: sample cards must carry schema + input/output content hashes."""
+    if not samples:
+        return False
+    for name, card in samples.items():
+        if not isinstance(card, dict):
+            return False
+        audit = card.get("audit")
+        if not isinstance(audit, dict):
+            return False
+        if audit.get("schema") != "fire_decision_card_v1":
+            return False
+        ih = audit.get("input_hash")
+        oh = audit.get("output_hash")
+        if not isinstance(ih, str) or len(ih) < 16:
+            return False
+        if not isinstance(oh, str) or len(oh) < 16:
+            return False
+        # Hashes must look like hex digests
+        try:
+            int(ih, 16)
+            int(oh, 16)
+        except (TypeError, ValueError):
+            return False
+        _ = name
+    return True
+
+
+def build_suite_report() -> dict[str, Any]:
     failures: list[str] = []
 
     # 1) empty → ABSTAIN
@@ -97,26 +135,117 @@ def main() -> int:
     if ha != hb:
         failures.append("determinism_hash_mismatch")
 
+    samples = {
+        "empty": empty.to_dict(),
+        "open_only": open_only.to_dict(),
+        "both": both.to_dict(),
+    }
+    provenance_ok = _measure_provenance_ok(samples)
+
     rel = system_reliability_report(
         gates_ok=len(failures) == 0,
         determinism_ok="determinism_hash_mismatch" not in failures,
         abstention_enforced="empty_sources_must_abstain" not in failures,
-        provenance_ok=True,
+        provenance_ok=provenance_ok,
     )
 
-    report = {
-        "ok": len(failures) == 0,
-        "failures": failures,
-        "system_reliability": rel,
-        "samples": {
-            "empty": empty.to_dict(),
-            "open_only": open_only.to_dict(),
-            "both": both.to_dict(),
+    return {
+        "ok": len(failures) == 0 and provenance_ok,
+        "failures": failures + ([] if provenance_ok else ["provenance_hashes_missing"]),
+        "suite_only": False,
+        "field_unlock": True,
+        "provenance": {
+            "kind": "suite_run",
+            "note": (
+                "This-run suite report from reliability_gate.py. "
+                "Not a per-incident field unlock unless event_id/hashes match."
+            ),
+            "sample_input_hashes": {
+                k: (v.get("audit") or {}).get("input_hash") for k, v in samples.items()
+            },
         },
+        "system_reliability": rel,
+        "samples": samples,
     }
-    out = ROOT / "docs" / "RELIABILITY_GATE_REPORT.json"
+
+
+def suite_sample_for_docs(live: dict[str, Any]) -> dict[str, Any]:
+    """Neutralize a live suite report for committed docs/ (not a field key)."""
+    return {
+        "ok": live.get("ok"),
+        "failures": live.get("failures") or [],
+        "suite_only": True,
+        "field_unlock": False,
+        "provenance": {
+            "kind": "suite_sample",
+            "note": (
+                "SUITE-ONLY SAMPLE — NOT a field unlock key. "
+                "Consumers must reject suite_only/field_unlock=false for field_ops GO. "
+                "Regenerate a this-run report via scripts/reliability_gate.py "
+                "(outputs/) or the incident pipeline outbox/reliability_gate_report.json."
+            ),
+        },
+        "system_reliability": {
+            "system_reliability_pass": False,
+            "status": "unknown",
+            "checks": {
+                "R1_determinism": None,
+                "R2_gates": None,
+                "R3_abstention_enforced": None,
+                "R4_provenance": None,
+            },
+            "residual_silent_go_risk_bound": 1.0,
+            "five_nines_claim": (
+                "UNKNOWN: docs sample is not measured field reliability. "
+                "Does NOT unlock field_ops GO."
+            ),
+            "fire_prediction_accuracy_claim": "NOT_CLAIMED",
+        },
+        "samples": live.get("samples") or {},
+        "measured_suite_ok": live.get("ok"),
+        "measured_suite_reliability": live.get("system_reliability"),
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=ROOT / "outputs" / "reliability_gate_report.json",
+        help="Run-local report path (default: outputs/reliability_gate_report.json)",
+    )
+    parser.add_argument(
+        "--write-docs-sample",
+        action="store_true",
+        help="Also write neutralized suite-only sample under docs/",
+    )
+    args = parser.parse_args(argv)
+
+    report = build_suite_report()
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
-    print(json.dumps({"ok": report["ok"], "failures": failures, "five_nines": rel}, indent=2))
+
+    if args.write_docs_sample:
+        docs_path = ROOT / "docs" / "RELIABILITY_GATE_REPORT.json"
+        docs_path.write_text(
+            json.dumps(suite_sample_for_docs(report), indent=2, default=str),
+            encoding="utf-8",
+        )
+
+    print(
+        json.dumps(
+            {
+                "ok": report["ok"],
+                "failures": report["failures"],
+                "out": str(out),
+                "five_nines": report["system_reliability"],
+                "note": "docs sample is suite-only; not a field unlock key",
+            },
+            indent=2,
+        )
+    )
     return 0 if report["ok"] else 2
 
 

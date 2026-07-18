@@ -283,6 +283,24 @@ class TestSaveLoad(unittest.TestCase):
             self.assertTrue(loaded.is_trained)
 
 
+class TestFailClosedDeserialization(unittest.TestCase):
+    """is_trained=True without model must raise (Issue 8 residual)."""
+
+    def test_trained_without_model_raises(self):
+        with self.assertRaises(ValueError) as ctx:
+            WildfireMetaLabeler._from_payload(
+                {
+                    "is_trained": True,
+                    "model": None,
+                    "single_class_label": None,
+                    "n_estimators": 5,
+                    "max_depth": 3,
+                    "random_state": 0,
+                }
+            )
+        self.assertIn("fail-closed", str(ctx.exception).lower())
+
+
 class TestDeterminism(unittest.TestCase):
     """Same random_state → identical predictions across instances."""
 

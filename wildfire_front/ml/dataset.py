@@ -239,23 +239,41 @@ class WildfireDataset(Dataset):
     def _generate_sequence_patches(self) -> list[dict[str, int]]:
         """Identify all spatial patches containing active fire sequences.
 
-        Uses the in-memory ``_mask_cache`` instead of opening rasterio for
-        every candidate window — a major speedup for thousands of patches.
+        Uses the in-memory ``_mask_cache`` and integral-image fire occupancy
+        so window enumeration is O(frames × windows) without per-window
+        ``patch.sum()`` Python loops. Patch semantics unchanged.
         """
-        patches = []
+        patches: list[dict[str, int]] = []
         half = self.patch_size // 2
-        # Loop through all possible sequence starting indices
+        ps = self.patch_size
+        max_patches = self.max_patches
+
         for i in range(len(self.samples) - self.sequence_length):
-            # Target is the next step immediately following the sequence
             target_idx = i + self.sequence_length
             target_mask = self._mask_cache[target_idx]
+            # Binary fire occupancy; integral image for O(1) window sums.
+            fire = (np.asarray(target_mask) > 0).astype(np.int32, copy=False)
+            if fire.sum() == 0:
+                continue
+            integral = np.pad(fire, ((1, 0), (1, 0)), mode="constant").cumsum(0).cumsum(1)
 
-            # Slide windows of patch_size x patch_size
-            for row in range(0, self.height - self.patch_size + 1, half):
-                for col in range(0, self.width - self.patch_size + 1, half):
-                    # Quick check: Is there fire active in the target patch?
-                    patch = target_mask[row : row + self.patch_size, col : col + self.patch_size]
-                    if patch.sum() > 0:
+            rows = range(0, self.height - ps + 1, half)
+            cols = range(0, self.width - ps + 1, half)
+            for row in rows:
+                r1 = row + ps
+                # Early-exit row: if entire strip has no fire, skip cols.
+                strip = int(integral[r1, self.width] - integral[row, self.width])
+                if strip <= 0:
+                    continue
+                for col in cols:
+                    c1 = col + ps
+                    window_sum = int(
+                        integral[r1, c1]
+                        - integral[row, c1]
+                        - integral[r1, col]
+                        + integral[row, col]
+                    )
+                    if window_sum > 0:
                         patches.append(
                             {
                                 "start_idx": i,
@@ -264,8 +282,8 @@ class WildfireDataset(Dataset):
                                 "col": col,
                             }
                         )
-                    if self.max_patches is not None and len(patches) >= self.max_patches:
-                        return patches
+                        if max_patches is not None and len(patches) >= max_patches:
+                            return patches
         return patches
 
     def __len__(self) -> int:

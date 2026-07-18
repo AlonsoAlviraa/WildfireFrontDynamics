@@ -114,15 +114,40 @@ def apply_weighted_loss(
     targets: torch.Tensor,
     weights: torch.Tensor,
     pos_weight: float = 5.0,
+    *,
+    loss_name: str | None = None,
+    allow_force_bce: bool = False,
 ) -> torch.Tensor:
     """Element-wise loss with spatial weights, reduced to scalar mean.
 
     ``pos_weight`` comes from config (not hard-coded) so experiments that vary
     positive-class weighting (e.g. changed_weighted) are isolated (H2).
-    ``loss_fn`` is kept for call-site API stability; this path applies
-    BCE-with-logits so spatial weights multiply a per-pixel map.
+
+    **Contract:** ``target_mode=changed_weighted`` only supports element-wise
+    BCE-with-logits. Configured focal/dice/composite/tversky losses are
+    incompatible with per-pixel spatial weights. Pass ``loss_name="bce"``
+    (or omit), or set ``allow_force_bce=True`` to explicitly force BCE
+    (emits a one-shot warning). Other combinations raise ``ValueError``.
     """
-    _ = loss_fn
+    name = (loss_name or getattr(loss_fn, "__name__", "") or "").lower()
+    # Detect non-BCE configured losses via name/qualname heuristics.
+    non_bce_tokens = ("focal", "dice", "tversky", "composite", "combined")
+    looks_non_bce = any(t in name for t in non_bce_tokens)
+    if looks_non_bce and not allow_force_bce:
+        raise ValueError(
+            "target_mode=changed_weighted requires BCE-with-logits for spatial "
+            f"weights; got loss={name!r}. Use loss='bce', or pass "
+            "allow_force_bce=True to force BCE (configured loss discarded)."
+        )
+    if looks_non_bce and allow_force_bce:
+        import warnings
+
+        warnings.warn(
+            f"changed_weighted forces BCE; configured loss {name!r} is ignored.",
+            UserWarning,
+            stacklevel=2,
+        )
+    _ = loss_fn  # API stability; spatial path is BCE-only
     logits = torch.clamp(logits, -10.0, 10.0)
     pw = torch.tensor(pos_weight, device=logits.device, dtype=logits.dtype)
     bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none", pos_weight=pw)
@@ -597,12 +622,23 @@ def run_training(config: UNetTrainConfig) -> dict:
             logits = logits.float()
 
             if config.target_mode == "changed_weighted":
+                if config.loss not in (None, "", "bce"):
+                    raise ValueError(
+                        "target_mode=changed_weighted is incompatible with "
+                        f"loss={config.loss!r}; use loss='bce' (spatial weights "
+                        "force element-wise BCE-with-logits)."
+                    )
                 weights = change_pixel_weights(
                     target_fire, current_fire, change_weight=config.change_loss_weight
                 )
                 loss = (
                     apply_weighted_loss(
-                        loss_fn, logits, target, weights, pos_weight=config.pos_weight
+                        loss_fn,
+                        logits,
+                        target,
+                        weights,
+                        pos_weight=config.pos_weight,
+                        loss_name=config.loss or "bce",
                     )
                     / config.grad_accum
                 )
