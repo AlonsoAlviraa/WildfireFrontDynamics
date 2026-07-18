@@ -35,6 +35,34 @@ class MLPipelineTests(unittest.TestCase):
         self.masks_dir = Path("data/candidates/semireal_controlled_001/masks")
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
+    def test_minimal_a3c_weights_load_clean(self) -> None:
+        """Fixture checkpoint must load with no missing/shape-mismatched keys."""
+        import tempfile
+
+        from models.model import A3C_PerCellModel_LSTM
+        from wildfire_front.ml.weights import load_pretrained_weights
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            weights_path = _minimal_a3c_weights(Path(tmpdir) / "a3c_minimal.pt")
+            model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
+            report = load_pretrained_weights(model, weights_path)
+
+            self.assertEqual(
+                report["missing"],
+                [],
+                f"fixture left missing keys: {report['missing']}",
+            )
+            self.assertEqual(
+                report["shape_mismatch"],
+                [],
+                f"fixture left shape mismatches: {report['shape_mismatch']}",
+            )
+            # Same-arch full state_dict: smart_init should not fire for missing layers
+            ckpt = torch.load(weights_path, map_location="cpu", weights_only=False)
+            self.assertIn("model_state_dict", ckpt)
+            self.assertGreater(len(ckpt["model_state_dict"]), 0)
+
+    @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_wildfire_dataset_loading_and_shapes(self) -> None:
         from wildfire_front.ml.dataset import WildfireDataset
 

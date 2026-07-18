@@ -10,13 +10,7 @@ from wildfire_front.ml.product_catalog import get_product, list_products, load_c
 
 ROOT = Path(__file__).resolve().parents[1]
 
-
-def _require_product_weights(pid: str) -> None:
-    """Skip when .pt weights are absent (gitignored; not in clean clones)."""
-    spec = get_product(pid)
-    ok, msg = spec.resolve_existing()
-    if not ok:
-        pytest.skip(f"requires_weights: {msg}")
+_PRODUCT_IDS = ("ndws_v21", "clm_v28", "clm_ensemble_v34", "clm_ensemble_v30")
 
 
 def test_catalog_has_both_products():
@@ -36,22 +30,44 @@ def test_catalog_has_both_products():
     assert data.get("fallback_ml_product") == "clm_v28"
 
 
-def test_list_products_ready():
-    for pid in ("ndws_v21", "clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"):
-        _require_product_weights(pid)
+def test_list_products_ready_matches_resolve():
+    """Always-on: list_products()['ready'] must match resolve_existing()[0].
+
+    On clean clones without .pt weights, this still asserts ready is False
+    rather than skipping the whole readiness contract.
+    """
     products = {p["id"]: p for p in list_products()}
-    assert products["ndws_v21"]["ready"] is True
-    assert products["clm_v28"]["ready"] is True
-    assert products["clm_ensemble_v34"]["ready"] is True
-    assert products["clm_ensemble_v30"]["ready"] is True
+    for pid in _PRODUCT_IDS:
+        assert pid in products, f"missing product in list_products: {pid}"
+        ok, _msg = get_product(pid).resolve_existing()
+        assert products[pid]["ready"] is ok, (
+            f"{pid}: ready={products[pid]['ready']} but resolve_existing()={ok}"
+        )
+
+
+def test_list_products_ready_when_weights_present():
+    """When all weight artifacts exist, every product reports ready=True."""
+    missing = []
+    for pid in _PRODUCT_IDS:
+        ok, msg = get_product(pid).resolve_existing()
+        if not ok:
+            missing.append(f"{pid}: {msg}")
+    if missing:
+        pytest.skip("requires_weights: " + "; ".join(missing))
+    products = {p["id"]: p for p in list_products()}
+    for pid in _PRODUCT_IDS:
+        assert products[pid]["ready"] is True
 
 
 def test_get_product_paths_exist():
-    for pid in ("ndws_v21", "clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"):
-        _require_product_weights(pid)
+    """Per-product path checks; skip only products whose weights are missing."""
+    any_checked = False
+    for pid in _PRODUCT_IDS:
         spec = get_product(pid)
         ok, msg = spec.resolve_existing()
-        assert ok, msg
+        if not ok:
+            continue
+        any_checked = True
         assert spec.manifest_path.is_file()
         if pid.startswith("clm_ensemble"):
             assert spec.product_type == "ensemble"
@@ -59,6 +75,8 @@ def test_get_product_paths_exist():
             assert all(p.is_file() for p in spec.member_paths)
         else:
             assert spec.weights_path.is_file()
+    if not any_checked:
+        pytest.skip("requires_weights: no product weight artifacts present")
 
 
 def test_ensemble_manifest_has_v34_temps():

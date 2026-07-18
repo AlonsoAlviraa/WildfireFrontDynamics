@@ -186,7 +186,11 @@ def summarize_main_front_speeds(
         if e.quality_score is not None and e.quality_score < 0.25:
             continue
         dt_s = float(e.time_end_s - e.time_start_s)
-        spd = float(e.speed_m_min)  # type: ignore[arg-type]
+        # all_obs is pre-filtered to speed_m_min is not None; re-bind for narrowing
+        speed_val = e.speed_m_min
+        if speed_val is None:
+            continue
+        spd = float(speed_val)
         if dt_s < MIN_PLAUSIBLE_DT_S:
             n_implausible += 1
             continue

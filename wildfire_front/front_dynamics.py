@@ -111,13 +111,8 @@ def _rasterize_main(
                 rr = int((y - oy) / resolution)
                 if 0 <= rr < h and 0 <= cc < w:
                     grid[rr, cc] = 1
-            grid[r0:r1, c0:c1] = np.maximum(
-                grid[r0:r1, c0:c1],
-                0,  # keep points; fill bbox lightly
-            )
-            # soft bbox fill at 0.3 for area mass
-            grid[r0:r1, c0:c1]
-            # mark centroid neighborhood
+            # Bbox soft-fill deferred (would be grid[r0:r1,c0:c1]=max(..., 0.3));
+            # current raster is vertex stamps + centroid neighborhood only.
             cx, cy = component_centroid(comp)
             cc = int((cx - ox) / resolution)
             rr = int((cy - oy) / resolution)

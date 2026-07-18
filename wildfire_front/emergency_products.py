@@ -322,9 +322,7 @@ def _sector_wedge_ring(
     """Wedge ring centered on bearing (deg from north, clockwise)."""
     if radius_m <= 0:
         return [[cx, cy], [cx, cy]]
-    math.radians((bearing_deg - half_width_deg) % 360.0)
-    math.radians((bearing_deg + half_width_deg) % 360.0)
-    # Walk clockwise from b0 to b1
+    # Walk clockwise across the wedge (start bearing + span in degrees)
     start = (bearing_deg - half_width_deg) % 360.0
     span = (2.0 * half_width_deg) % 360.0
     if span <= 0:
