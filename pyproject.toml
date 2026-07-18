@@ -61,6 +61,9 @@ filterwarnings = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+markers = [
+    "requires_weights: needs local .pt checkpoints under models/ (gitignored; see CONTRIBUTING)",
+]
 
 [tool.ruff]
 line-length = 100

@@ -45,6 +45,7 @@ def test_list_products_ready_matches_resolve():
         )
 
 
+@pytest.mark.requires_weights
 def test_list_products_ready_when_weights_present():
     """When all weight artifacts exist, every product reports ready=True."""
     missing = []
@@ -59,6 +60,7 @@ def test_list_products_ready_when_weights_present():
         assert products[pid]["ready"] is True
 
 
+@pytest.mark.requires_weights
 def test_get_product_paths_exist():
     """Per-product path checks; skip only products whose weights are missing."""
     any_checked = False

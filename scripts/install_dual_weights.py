@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 """Install production ML products under models/ (NDWS + CLM + ensemble).
 
-Copies known sources into canonical paths used by models/catalog.json.
+``.pt`` weight files are **gitignored** (see ``.gitignore`` and CONTRIBUTING).
+This script copies known local sources into the canonical paths used by
+``models/catalog.json``. If a destination already exists and is non-trivial
+size, it is left alone.
+
+Sources may be Kaggle output dirs (often deleted after CLEANUP), local
+``models/production/`` / ``models/clm_*`` copies, or ``outputs/ml_eval/``
+training runs. Clean clones without any of these will report MISSING and exit 1.
+
+For v21-only install::
+
+    python scripts/install_production_weights.py
 """
 
 from __future__ import annotations

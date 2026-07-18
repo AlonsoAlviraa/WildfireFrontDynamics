@@ -16,13 +16,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# System build deps for rasterio/GDAL
+# System build deps for rasterio/GDAL, shapely/GEOS, pyproj/PROJ
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     g++ \
     libgdal-dev \
     gdal-bin \
+    libgeos-dev \
+    libproj-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV GDAL_VERSION=3.6
@@ -37,9 +39,9 @@ COPY pyproject.toml README.md ./
 COPY wildfire_front/ wildfire_front/
 COPY models/ models/
 
-# Build wheel
-RUN pip wheel . --no-deps -w /wheels && \
-    pip wheel numpy rasterio affine -w /wheels
+# Wheel package + all install_requires (numpy, rasterio, affine, shapely, pyproj
+# and their transitive deps) so runtime --no-index install succeeds.
+RUN pip wheel . -w /wheels
 
 # ─── Stage 2: Runtime ───────────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm AS runtime
@@ -53,10 +55,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# Runtime system deps: GDAL libs (no -dev) + curl for healthchecks
+# Runtime system libs: GDAL + GEOS + PROJ (no -dev) + curl for healthchecks
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdal32 \
     gdal-bin \
+    libgeos-c1v5 \
+    libproj25 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

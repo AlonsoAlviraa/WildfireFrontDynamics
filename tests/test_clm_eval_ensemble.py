@@ -60,9 +60,10 @@ def test_evaluate_single_and_ensemble_smoke(tmp_path: Path) -> None:
     assert "model_iou_growth" in ens
 
 
+@pytest.mark.requires_weights
 @pytest.mark.skipif(
     not (ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt").is_file(),
-    reason="clm_v28 weights missing",
+    reason="requires_weights: clm_v28 weights missing",
 )
 def test_v28_baseline_smoke_real_holdout() -> None:
     test_dir = ROOT / "artifacts" / "clm_ndws_patches" / "holdout_v1" / "test"

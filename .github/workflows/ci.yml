@@ -117,3 +117,32 @@ jobs:
           assert value.shape == (1, 1)
           print("ML smoke test OK")
           PY
+
+  docker:
+    name: Docker build (runtime + inference)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          tags: wildfire-front-dynamics:runtime
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build inference image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: inference
+          push: false
+          tags: wildfire-front-dynamics:inference
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

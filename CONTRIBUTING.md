@@ -63,6 +63,50 @@ This project enforces strict separation between observed, inferred, and ground-t
 - **Never** modify provenance records after creation.
 - **Always** document data sources in `docs/PROVENANCE.md`.
 
+## Model weights (`.pt`)
+
+**`.pt` / `.pth` files are gitignored** and are not present in a clean clone.
+
+| Location | Role |
+|----------|------|
+| `models/production/` | NDWS v21 weights + TorchScript (research baseline) |
+| `models/clm_specialist/` | CLM Spain single-model specialist |
+| `models/clm_ensemble/` | CLM ensemble members (emergency ML product) |
+
+Manifests/JSON under those dirs **are** tracked; only binary checkpoints are not.
+
+### Install weights locally
+
+```bash
+# v21 production only
+python scripts/install_production_weights.py
+
+# Full dual-product catalog (NDWS + CLM + ensemble)
+python scripts/install_dual_weights.py
+```
+
+Search order prefers already-present files under `models/production/` (and other
+catalog paths), then optional Kaggle output dirs / training exports. The
+historical `kaggle_outputs_v21/` tree is **not** required if weights already
+live under `models/`.
+
+For CI or release packaging, attach weights as release assets or restore them
+via a private cache — never commit large checkpoints.
+
+### Tests that need weights
+
+Tests that assert on real checkpoints **skip** with a clear reason when artifacts
+are missing (`pytest.skip("requires_weights: ...")`, marker `requires_weights`).
+The default suite must stay green on a clean clone without downloading weights.
+
+```bash
+# Full suite (skips weight-gated cases when .pt missing)
+pytest tests/ -q
+
+# Only weight-gated tests (need local .pt install first)
+pytest tests/ -m requires_weights -q
+```
+
 ## Testing
 
 ```bash
@@ -76,7 +120,8 @@ pytest tests/ --cov=wildfire_front --cov-report=term-missing
 pytest tests/test_ml_pipeline.py -q
 ```
 
-Tests use lightweight fixtures and must pass without external data downloads.
+Tests use lightweight fixtures and must pass without external data downloads
+(except weight-gated tests; see **Model weights** above).
 
 ## Data Handling
 
