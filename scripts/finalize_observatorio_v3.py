@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,7 +56,7 @@ def main() -> int:
 
     tobarra = next((r for r in results if "tobarra" in r["fire_id"]), {})
     scorecard = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "source": "observatorio_v3_structural",
         "engine": "front_dynamics_v1",
         "leap": {

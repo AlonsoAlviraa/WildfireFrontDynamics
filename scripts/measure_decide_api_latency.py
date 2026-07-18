@@ -12,15 +12,15 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.product.api_server import start_background
-from wildfire_front.product.decide_service import decide_from_request
+from wildfire_front.product.api_server import start_background  # noqa: E402
+from wildfire_front.product.decide_service import decide_from_request  # noqa: E402
 
 N = 40
 P95_BUDGET_MS = 500.0
@@ -87,7 +87,7 @@ def main() -> int:
         http_ms.sort()
         report = {
             "schema": "decide_api_latency_v1",
-            "measured_at_utc": datetime.now(timezone.utc).isoformat(),
+            "measured_at_utc": datetime.now(UTC).isoformat(),
             "n": N,
             "scenario": "metrics_only_ml_v34_optional_open",
             "budget_p95_ms": P95_BUDGET_MS,

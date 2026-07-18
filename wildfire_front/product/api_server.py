@@ -220,8 +220,7 @@ def serve(
     """Blocking serve (Ctrl+C to stop)."""
     httpd = DecideHTTPServer((host, port), base_dir=base_dir, verbose=verbose)
     print(
-        f"decide API {API_VERSION} on http://{host}:{port}  "
-        f"(POST /v1/decide · GET /health)",
+        f"decide API {API_VERSION} on http://{host}:{port}  (POST /v1/decide · GET /health)",
         flush=True,
     )
     try:

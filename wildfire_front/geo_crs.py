@@ -6,7 +6,7 @@ Used so geojson.io / Leaflet see lon/lat, not projected meters.
 from __future__ import annotations
 
 import math
-from typing import Any, Iterable
+from typing import Any
 
 
 def utm_to_wgs84(
@@ -56,11 +56,15 @@ def utm_to_wgs84(
         + (61 + 90 * t1 + 298 * c1 + 45 * t1**2 - 252 * ep2 - 3 * c1**2) * d**6 / 720
     )
     lon0 = math.radians((zone - 1) * 6 - 180 + 3)
-    lon = lon0 + (
-        d
-        - (1 + 2 * t1 + c1) * d**3 / 6
-        + (5 - 2 * c1 + 28 * t1 - 3 * c1**2 + 8 * ep2 + 24 * t1**2) * d**5 / 120
-    ) / cos_phi
+    lon = (
+        lon0
+        + (
+            d
+            - (1 + 2 * t1 + c1) * d**3 / 6
+            + (5 - 2 * c1 + 28 * t1 - 3 * c1**2 + 8 * ep2 + 24 * t1**2) * d**5 / 120
+        )
+        / cos_phi
+    )
 
     return math.degrees(lon), math.degrees(lat)
 
@@ -88,9 +92,7 @@ def transform_coords(
                 out.append(coords[2])
             return out
         return list(coords)
-    return [
-        transform_coords(c, zone=zone, northern=northern) for c in coords
-    ]
+    return [transform_coords(c, zone=zone, northern=northern) for c in coords]
 
 
 def geojson_to_wgs84(

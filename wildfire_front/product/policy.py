@@ -6,9 +6,10 @@ Dream M2.10: GEACAM-style field_ops ≠ research_open ≠ default.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CATALOG = REPO_ROOT / "config" / "decision_policies.json"
@@ -119,8 +120,7 @@ def get_policy(
             pol = DecisionPolicy(
                 **{
                     **asdict(pol),
-                    "notes": (pol.notes or "")
-                    + f" [unknown policy_id={pid!r}; using {pol.id}]",
+                    "notes": (pol.notes or "") + f" [unknown policy_id={pid!r}; using {pol.id}]",
                 }
             )
     else:

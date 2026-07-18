@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
-import numpy as np
-
 from wildfire_front.front_dynamics import (
     estimate_coreg_translation,
     perimeter_m,

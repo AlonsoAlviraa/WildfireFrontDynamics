@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import atexit
+import contextlib
 import json
 import os
 import shutil
@@ -56,9 +57,7 @@ def acquire_work_dir_lock(work_dir: Path) -> Path:
                 lock_path.unlink(missing_ok=True)
                 fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             else:
-                raise RuntimeError(
-                    f"another incident runtime holds {lock_path} (pid={old or '?'})"
-                )
+                raise RuntimeError(f"another incident runtime holds {lock_path} (pid={old or '?'})")
         except RuntimeError:
             raise
         except OSError as exc:
@@ -67,10 +66,8 @@ def acquire_work_dir_lock(work_dir: Path) -> Path:
         os.write(fd, str(os.getpid()).encode("utf-8"))
         os.close(fd)
     except OSError:
-        try:
+        with contextlib.suppress(OSError):
             os.close(fd)
-        except OSError:
-            pass
         raise
 
     def _release() -> None:
@@ -365,9 +362,7 @@ def build_emergency_briefing_md(
         if sector.get("label_es"):
             lines.append(f"- _{sector.get('label_es')}_")
     else:
-        lines.append(
-            f"- **Abstained:** {sector.get('reason') or 'no sectors / need ≥2 frames'}"
-        )
+        lines.append(f"- **Abstained:** {sector.get('reason') or 'no sectors / need ≥2 frames'}")
 
     lines += ["", "## Short-horizon envelope (extrapolated)", ""]
     if env.get("label_es") or env.get("label_en"):
@@ -478,8 +473,7 @@ def render_decision_card_md(card_dict: dict[str, Any]) -> str:
         conf_src = s.get("confidence")
         conf_src_s = f"{float(conf_src):.3f}" if isinstance(conf_src, (int, float)) else "—"
         lines.append(
-            f"- **{s.get('id')}**: available={avail} · conf={conf_src_s} · "
-            f"w={s.get('weight')}"
+            f"- **{s.get('id')}**: available={avail} · conf={conf_src_s} · w={s.get('weight')}"
         )
     lines += ["", "## Reasons", ""]
     for r in (card_dict.get("reasons") or [])[:16]:
@@ -621,8 +615,7 @@ def publish_emergency_layers(
         gj_path,
         center_xy=center,
         fire_id=event_id,
-        expansion_bearing_deg=bearing
-        or (ops.get("sector_ros") or {}).get("expansion_bearing_deg"),
+        expansion_bearing_deg=bearing or (ops.get("sector_ros") or {}).get("expansion_bearing_deg"),
     )
     artifacts["emergency_envelope_guidance_geojson"] = str(gj_path)
 
@@ -724,7 +717,7 @@ def process_incident_once(
     config.outbox.mkdir(parents=True, exist_ok=True)
 
     if not config.inbox.is_dir():
-        summary = {
+        early_summary: dict[str, Any] = {
             "product": "incident_runtime_v1",
             "event_id": config.event_id,
             "new_frames": 0,
@@ -734,8 +727,8 @@ def process_incident_once(
             "status": "waiting_for_frames",
             "error": f"inbox_missing:{config.inbox}",
         }
-        publish_operator_telemetry(config.outbox, summary)
-        return summary
+        publish_operator_telemetry(config.outbox, early_summary)
+        return early_summary
 
     state = load_state(config.state_path) or IncidentState(
         event_id=config.event_id,
@@ -803,8 +796,9 @@ def process_incident_once(
             mad_z = 6.0
         else:
             summary["status"] = "error"
-            summary["error"] = "masks_dir_set_but_no_stage_masks_and_no_mad"
-            state.last_error = summary["error"]
+            err_msg = "masks_dir_set_but_no_stage_masks_and_no_mad"
+            summary["error"] = err_msg
+            state.last_error = err_msg
             save_state(state, config.state_path)
             summary["state"] = state.to_dict()
             publish_operator_telemetry(config.outbox, summary)
@@ -865,16 +859,10 @@ def process_incident_once(
         state.last_error = None
         state.quality_grade = ops.get("quality_grade") if isinstance(ops, dict) else None
         state.quality_label_es = ops.get("quality_label_es") if isinstance(ops, dict) else None
-        state.primary_ros_m_min = (
-            ops.get("speed_median_m_min") if isinstance(ops, dict) else None
-        )
-        state.speed_n_observable = (
-            ops.get("speed_n_observable") if isinstance(ops, dict) else None
-        )
+        state.primary_ros_m_min = ops.get("speed_median_m_min") if isinstance(ops, dict) else None
+        state.speed_n_observable = ops.get("speed_n_observable") if isinstance(ops, dict) else None
         state.area_ha_max = ops.get("area_ha_max") if isinstance(ops, dict) else None
-        state.speed_vs_ref_ratio = (
-            ops.get("speed_vs_ref_ratio") if isinstance(ops, dict) else None
-        )
+        state.speed_vs_ref_ratio = ops.get("speed_vs_ref_ratio") if isinstance(ops, dict) else None
         state.engine = ops.get("engine") if isinstance(ops, dict) else None
         state.n_frames_staged = n_staged
         for f in state.frames:
@@ -908,9 +896,7 @@ def process_incident_once(
         summary["engine"] = state.engine
         summary["decision"] = decision_artifacts.get("decision")
         summary["confidence_pred"] = decision_artifacts.get("confidence_pred")
-        summary["confidence_pred_label"] = decision_artifacts.get(
-            "confidence_pred_label"
-        )
+        summary["confidence_pred_label"] = decision_artifacts.get("confidence_pred_label")
         summary["artifacts"] = state.artifacts
         summary["new_frame_stems"] = [f.stem for f in new_frames]
         summary["metrics"] = {

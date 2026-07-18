@@ -13,6 +13,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import math
 import re
@@ -20,7 +21,7 @@ import shutil
 import sys
 import urllib.request
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 try:
-    from shapely.geometry import MultiPolygon, Polygon, mapping, shape
+    from shapely.geometry import mapping, shape
     from shapely.ops import transform, unary_union
 except ImportError:  # pragma: no cover
     print("shapely required: pip install shapely", file=sys.stderr)
@@ -45,7 +46,7 @@ PAGE = "https://mapping.emergency.copernicus.eu/activations"
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def fetch_activation_vectors(code: str) -> list[str]:
@@ -183,12 +184,10 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
         # also load extracted
         for p in extract_dir.rglob("*"):
             if p.suffix.lower() in {".json", ".geojson"}:
-                try:
+                with contextlib.suppress(OSError, json.JSONDecodeError):
                     geo_items.append(
                         {"member": str(p.relative_to(extract_dir)), "geojson": json.loads(p.read_text(encoding="utf-8"))}
                     )
-                except (OSError, json.JSONDecodeError):
-                    pass
 
         # Prefer observedEventA (fire area polygons). Never AOI/hydro/buildings.
         def _rank(member: str) -> int:
@@ -337,8 +336,8 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
             if g0 is not None and g1 is not None and Transformer is not None:
                 tf = Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True)
 
-                def _proj(x, y, z=None):
-                    return tf.transform(x, y)
+                def _proj(x, y, z=None, _tf=tf):
+                    return _tf.transform(x, y)
 
                 g0m = transform(_proj, g0)
                 g1m = transform(_proj, g1)
@@ -486,7 +485,7 @@ def _render_brief(report: dict[str, Any]) -> str:
         "## Qué es",
         f"- Activación **Copernicus EMS Rapid Mapping** `{act}`",
         f"- URL: {report['activation_url']}",
-        f"- **No** usa LWIR Heligrafics / CLM drone",
+        "- **No** usa LWIR Heligrafics / CLM drone",
         f"- Área máxima (CEMS): **{report.get('max_area_ha', 0):.1f} ha**",
         "",
         "## Timeline de productos vectoriales",
@@ -518,7 +517,7 @@ def _render_brief(report: dict[str, Any]) -> str:
             "## Gates (honesto)",
             f"- O2 CEMS delineation: **{report['gates']['O2_open_cems_delineation']}**",
             f"- O2 perímetro nacional oficial: **{report['gates']['O2_official_national_perimeter']}**",
-            f"- LWIR requerido: **no**",
+            "- LWIR requerido: **no**",
             "",
             "## No usar como",
             "- ROS táctico de dron ni orden de extinción",

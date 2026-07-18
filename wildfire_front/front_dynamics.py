@@ -28,16 +28,14 @@ import numpy as np
 from .geometry_speed import (
     component_centroid,
     estimate_geometry_speeds,
-    signed_area,
     summarize_geometry_speeds,
 )
-from .models import FrontObservation, GeometrySpeedConfig, GeometrySpeedResult, Line, MultiLine
+from .models import FrontObservation, GeometrySpeedConfig, GeometrySpeedResult, Line
 from .scientific_ops import (
     MAX_PLAUSIBLE_SPEED_M_MIN,
     MIN_PLAUSIBLE_DT_S,
     OperationalReference,
     build_operational_metrics,
-    component_area_m2,
     observation_area_ha,
     observation_area_m2,
 )
@@ -118,7 +116,7 @@ def _rasterize_main(
                 0,  # keep points; fill bbox lightly
             )
             # soft bbox fill at 0.3 for area mass
-            sub = grid[r0:r1, c0:c1]
+            grid[r0:r1, c0:c1]
             # mark centroid neighborhood
             cx, cy = component_centroid(comp)
             cc = int((cx - ox) / resolution)
@@ -389,9 +387,7 @@ def run_front_dynamics(
         prev = observations[i - 1]
         curr = observations[i]
         if enable_coreg:
-            coreg = estimate_coreg_translation(
-                prev, curr, max_shift_m=max_coreg_shift_m
-            )
+            coreg = estimate_coreg_translation(prev, curr, max_shift_m=max_coreg_shift_m)
         else:
             coreg = {"dx_m": 0.0, "dy_m": 0.0, "peak_iou": 0.0, "applied": 0.0}
         pair_coreg.append(coreg)
@@ -420,9 +416,7 @@ def run_front_dynamics(
         n_med = float(np.median(normals)) if normals else None
         coreg = pair_coreg[i - 1] if i - 1 < len(pair_coreg) else {}
         shift = math.hypot(float(coreg.get("dx_m", 0)), float(coreg.get("dy_m", 0)))
-        primary, method, pquality = _fuse_ros(
-            ros_area, ros_r, n_med, shift, dt_min=dt_min
-        )
+        primary, method, pquality = _fuse_ros(ros_area, ros_r, n_med, shift, dt_min=dt_min)
         # Reject ROS if dt too small for any estimator
         if dt_min * 60 < MIN_PLAUSIBLE_DT_S:
             primary, method, pquality = None, "abstained_dt", "C"
@@ -465,9 +459,7 @@ def run_front_dynamics(
         and 0 <= p.ros_equiv_radius_m_min <= MAX_PLAUSIBLE_SPEED_M_MIN
     ]
     normal_vals = [
-        p.ros_normal_median_m_min
-        for p in pairs
-        if p.ros_normal_median_m_min is not None
+        p.ros_normal_median_m_min for p in pairs if p.ros_normal_median_m_min is not None
     ]
 
     def _stats(vals: list[float]) -> dict[str, float | int | None]:
@@ -485,9 +477,9 @@ def run_front_dynamics(
     # Structural grade
     n_primary = int(primary_arr.size)
     med_primary = float(np.median(primary_arr)) if n_primary else None
-    mean_shift = float(
-        np.mean([math.hypot(p.coreg_dx_m, p.coreg_dy_m) for p in pairs])
-    ) if pairs else 0.0
+    mean_shift = (
+        float(np.mean([math.hypot(p.coreg_dx_m, p.coreg_dy_m) for p in pairs])) if pairs else 0.0
+    )
     methods_used = sorted(set(methods))
 
     multi = len(methods_used) >= 2
@@ -517,9 +509,9 @@ def run_front_dynamics(
         "primary_ros_p75_m_min": float(np.percentile(primary_arr, 75)) if n_primary else None,
         "primary_ros_n": n_primary,
         "primary_methods_used": methods_used,
-        "ros_area": _stats([v for v in area_vals if v is not None]),  # type: ignore[misc]
-        "ros_equiv_radius": _stats([v for v in radius_vals if v is not None]),  # type: ignore[misc]
-        "ros_normal": _stats([v for v in normal_vals if v is not None]),  # type: ignore[misc]
+        "ros_area": _stats([v for v in area_vals if v is not None]),
+        "ros_equiv_radius": _stats([v for v in radius_vals if v is not None]),
+        "ros_normal": _stats([v for v in normal_vals if v is not None]),
         "mean_coreg_shift_m": mean_shift,
         "structural_grade": struct_grade,
         "structural_label_es": struct_label,
@@ -617,9 +609,7 @@ def build_structural_operational_bundle(
     if summary.get("calibration", {}).get("has_reference"):
         ops["speed_vs_ref_ratio"] = summary["calibration"].get("raw_vs_ref_ratio")
         ops["speed_vs_ref_grade"] = summary["calibration"].get("grade")
-        ops["speed_vs_ref_interpretation_es"] = summary["calibration"].get(
-            "interpretation_es"
-        )
+        ops["speed_vs_ref_interpretation_es"] = summary["calibration"].get("interpretation_es")
         ops["has_reference"] = True
         ops["reference_name"] = summary["calibration"].get("reference_name")
         ops["reference_vp_m_min"] = summary["calibration"].get("reference_vp_m_min")

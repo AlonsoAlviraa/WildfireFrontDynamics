@@ -17,7 +17,7 @@ from typing import Any
 import numpy as np
 
 from .geometry_speed import signed_area
-from .models import FrontObservation, GeometrySpeedResult, MultiLine, SpeedEstimate
+from .models import FrontObservation, GeometrySpeedResult, MultiLine
 
 try:
     from scipy import ndimage as ndi
@@ -112,7 +112,7 @@ def filter_components_main_front(
 ) -> MultiLine:
     """Keep largest components that explain most of the burned area."""
     if not components:
-        return tuple()
+        return ()
     scored = sorted(
         ((component_area_m2(c), c) for c in components),
         key=lambda t: t[0],
@@ -170,10 +170,11 @@ def summarize_main_front_speeds(
     max_plausible_speed_m_min: float = MAX_PLAUSIBLE_SPEED_M_MIN,
 ) -> dict[str, Any]:
     """Summarize speeds focusing on the largest component per pair when possible."""
-    all_obs = [
-        e for e in result.estimates if e.observable and e.speed_m_min is not None
-    ]
-    raw_speeds = np.asarray([float(e.speed_m_min) for e in all_obs], dtype=float)
+    all_obs = [e for e in result.estimates if e.observable and e.speed_m_min is not None]
+    raw_speeds = np.asarray(
+        [float(e.speed_m_min) for e in all_obs if e.speed_m_min is not None],
+        dtype=float,
+    )
     n_implausible = 0
 
     # Prefer estimates from the largest component index of each previous frame
@@ -208,11 +209,7 @@ def summarize_main_front_speeds(
             cos_m = float(np.mean(np.cos(ang)))
             dominant_bearing = float((math.degrees(math.atan2(sin_m, cos_m)) + 360.0) % 360.0)
 
-    uncert = [
-        float(e.uncertainty_m_min)
-        for e in all_obs
-        if e.uncertainty_m_min is not None
-    ]
+    uncert = [float(e.uncertainty_m_min) for e in all_obs if e.uncertainty_m_min is not None]
     return {
         "speed_n_raw_observable": int(raw_speeds.size),
         "speed_n_implausible_filtered": int(n_implausible),
@@ -225,9 +222,7 @@ def summarize_main_front_speeds(
         "speed_iqr_m_min": (
             float(np.percentile(main, 75) - np.percentile(main, 25)) if main.size >= 4 else None
         ),
-        "speed_uncertainty_median_m_min": (
-            float(np.median(uncert)) if uncert else None
-        ),
+        "speed_uncertainty_median_m_min": (float(np.median(uncert)) if uncert else None),
         "dominant_spread_bearing_deg": dominant_bearing,
         "speed_status": "estimated" if main.size else "abstained",
         "speed_defendable": bool(main.size >= 10),
@@ -248,7 +243,7 @@ def area_evolution(observations: list[FrontObservation]) -> dict[str, Any]:
                 "n_components": len(obs.components),
             }
         )
-    areas = [s["area_ha"] for s in series]
+    areas: list[float] = [float(s["area_ha"]) for s in series]
     return {
         "area_ha_series": series,
         "area_ha_first": areas[0],
@@ -390,9 +385,11 @@ def build_operational_metrics(
 ) -> dict[str, Any]:
     area = area_evolution(observations)
     speed = summarize_main_front_speeds(speed_result, observations)
+    med = speed.get("speed_median_m_min")
+    amax = area.get("area_ha_max")
     cmp = compare_to_reference(
-        speed.get("speed_median_m_min"),  # type: ignore[arg-type]
-        area.get("area_ha_max"),  # type: ignore[arg-type]
+        float(med) if isinstance(med, (int, float)) else None,
+        float(amax) if isinstance(amax, (int, float)) else None,
         ref,
     )
     # component stats from observations
@@ -436,12 +433,12 @@ def write_operational_report_html(
     if metrics.get("has_reference"):
         ref_block = f"""
         <h2>Comparación con ancla operativa</h2>
-        <p><strong>{metrics.get('reference_name')}</strong> —
-        Vp ref={metrics.get('reference_vp_m_min')} m/min,
-        área ref={metrics.get('reference_area_ha')} ha.</p>
-        <p>{metrics.get('speed_vs_ref_interpretation_es', '')}</p>
-        <p>{metrics.get('area_vs_ref_interpretation_es', '')}</p>
-        <p class="note">{metrics.get('reference_notes', '')}</p>
+        <p><strong>{metrics.get("reference_name")}</strong> —
+        Vp ref={metrics.get("reference_vp_m_min")} m/min,
+        área ref={metrics.get("reference_area_ha")} ha.</p>
+        <p>{metrics.get("speed_vs_ref_interpretation_es", "")}</p>
+        <p>{metrics.get("area_vs_ref_interpretation_es", "")}</p>
+        <p class="note">{metrics.get("reference_notes", "")}</p>
         """
 
     def _fmt(v: Any, nd: int = 3) -> str:
@@ -480,14 +477,14 @@ a{{color:#f5b942}}
 </div>
 
 <section class="grid">
-<article><span>Frames aceptados</span><strong>{_fmt(metrics.get('num_observations'),0)}</strong></article>
-<article><span>Área máx. (ha)</span><strong>{_fmt(metrics.get('area_ha_max'),2)}</strong></article>
-<article><span>ROS primaria (m/min)</span><strong>{_fmt(metrics.get('speed_median_m_min'),2)}</strong></article>
-<article><span>IQR / P25–P75</span><strong>{_fmt(metrics.get('speed_p25_m_min'),2)}–{_fmt(metrics.get('speed_p75_m_min'),2)}</strong></article>
-<article><span>Pares con ROS</span><strong>{_fmt(metrics.get('speed_n_observable'),0)}</strong></article>
-<article><span>Métodos</span><strong>{', '.join(metrics.get('primary_methods_used') or []) or '—'}</strong></article>
-<article><span>Coreg. medio (m)</span><strong>{_fmt(metrics.get('mean_coreg_shift_m'),1)}</strong></article>
-<article><span>Motor</span><strong>{metrics.get('engine','legacy')}</strong></article>
+<article><span>Frames aceptados</span><strong>{_fmt(metrics.get("num_observations"), 0)}</strong></article>
+<article><span>Área máx. (ha)</span><strong>{_fmt(metrics.get("area_ha_max"), 2)}</strong></article>
+<article><span>ROS primaria (m/min)</span><strong>{_fmt(metrics.get("speed_median_m_min"), 2)}</strong></article>
+<article><span>IQR / P25–P75</span><strong>{_fmt(metrics.get("speed_p25_m_min"), 2)}–{_fmt(metrics.get("speed_p75_m_min"), 2)}</strong></article>
+<article><span>Pares con ROS</span><strong>{_fmt(metrics.get("speed_n_observable"), 0)}</strong></article>
+<article><span>Métodos</span><strong>{", ".join(metrics.get("primary_methods_used") or []) or "—"}</strong></article>
+<article><span>Coreg. medio (m)</span><strong>{_fmt(metrics.get("mean_coreg_shift_m"), 1)}</strong></article>
+<article><span>Motor</span><strong>{metrics.get("engine", "legacy")}</strong></article>
 </section>
 
 <h2>Calidad de la señal</h2>

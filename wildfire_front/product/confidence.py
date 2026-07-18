@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Mapping, Sequence
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 
-class Decision(str, Enum):
+class Decision(StrEnum):
     GO = "GO"  # emit operational recommendation (with disclaimers)
     HOLD = "HOLD"  # usable for monitoring only
     ABSTAIN = "ABSTAIN"  # do not recommend action from this product
@@ -73,9 +74,7 @@ def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
         return {"id": "ml", "available": False, "weight": 0.0, "confidence": 0.0}
     iou = float(metrics.get("test_iou") or metrics.get("model_iou") or 0.0)
     delta = float(
-        metrics.get("improvement_vs_copy_iou")
-        or metrics.get("improvement_vs_copy")
-        or 0.0
+        metrics.get("improvement_vs_copy_iou") or metrics.get("improvement_vs_copy") or 0.0
     )
     # map holdout quality to 0..1 (calibrated loosely; not probability of next fire)
     conf = _clip01(0.35 * (iou / 0.9) + 0.45 * (delta / 0.25) + 0.2)
@@ -105,10 +104,7 @@ def score_ops_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     if metrics.get("speed_vs_ref_ratio") is not None:
         try:
             r = float(metrics["speed_vs_ref_ratio"])
-            if 0.5 <= r <= 2.0:
-                conf = _clip01(conf + 0.08)
-            else:
-                conf = _clip01(conf - 0.15)
+            conf = _clip01(conf + 0.08) if 0.5 <= r <= 2.0 else _clip01(conf - 0.15)
         except (TypeError, ValueError):
             pass
     return {
@@ -151,8 +147,7 @@ def score_open_cems_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
             "max_area_ha": area,
             "n_timeline_steps": steps,
             "activation": metrics.get("activation"),
-            "O2_cems_delineation": metrics.get("O2_cems_delineation")
-            or metrics.get("O2_cems"),
+            "O2_cems_delineation": metrics.get("O2_cems_delineation") or metrics.get("O2_cems"),
         },
     }
 
@@ -187,7 +182,7 @@ def decide(
     If ``policy`` is a DecisionPolicy, its thresholds win.
     ``require_ops_for_go`` overrides policy when True (CLI flag still works).
     """
-    from .policy import DecisionPolicy, LEGACY_DEFAULT
+    from .policy import LEGACY_DEFAULT, DecisionPolicy
 
     pol: DecisionPolicy = policy if isinstance(policy, DecisionPolicy) else LEGACY_DEFAULT
     # CLI/API may force ops requirement without switching full profile
@@ -199,9 +194,7 @@ def decide(
         return Decision.ABSTAIN, reasons + ["no_available_sources"]
 
     ops_ok = any(s.get("id") == "ops_thermal_front" and s.get("available") for s in sources)
-    open_ok = any(
-        s.get("id") == "open_cems_perimeter" and s.get("available") for s in sources
-    )
+    open_ok = any(s.get("id") == "open_cems_perimeter" and s.get("available") for s in sources)
     ml_ok = any(s.get("id") == "ml_clm_ensemble" and s.get("available") for s in sources)
 
     if confidence_pred < float(pol.abstain_below):
@@ -366,5 +359,5 @@ def build_decision_card(
         reasons=fuse_reasons + dec_reasons,
         disclaimers=list(DEFAULT_DISCLAIMERS),
         audit={**audit, "system_reliability": sys_rep},
-        built_at_utc=datetime.now(timezone.utc).isoformat(),
+        built_at_utc=datetime.now(UTC).isoformat(),
     )

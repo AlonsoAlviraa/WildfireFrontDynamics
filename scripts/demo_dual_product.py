@@ -12,7 +12,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ def _run(cmd: list[str], timeout: int = 600) -> dict:
         capture_output=True,
         text=True,
         timeout=timeout,
-        env={**dict(**{k: v for k, v in __import__("os").environ.items()}), "PYTHONPATH": str(ROOT)},
+        env={**dict(**dict(__import__("os").environ.items())), "PYTHONPATH": str(ROOT)},
     )
     return {
         "cmd": cmd,
@@ -43,7 +43,7 @@ def main() -> int:
     args = ap.parse_args()
 
     report: dict = {
-        "started_at_utc": datetime.now(timezone.utc).isoformat(),
+        "started_at_utc": datetime.now(UTC).isoformat(),
         "product_ml": "clm_ensemble_v34",
         "product_ops": "incident_runtime_v1 / front_dynamics_v1",
         "steps": [],
@@ -78,7 +78,7 @@ def main() -> int:
         if not r2["ok"]:
             report["ok"] = False
 
-    report["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
+    report["finished_at_utc"] = datetime.now(UTC).isoformat()
     out = ROOT / "docs" / "DEMO_DUAL_PRODUCT_SNAPSHOT.json"
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps({"ok": report["ok"], "snapshot": str(out), "steps": [s["name"] for s in report["steps"]]}, indent=2))

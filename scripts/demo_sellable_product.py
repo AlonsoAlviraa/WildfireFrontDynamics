@@ -11,7 +11,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +45,7 @@ def main() -> int:
     args = ap.parse_args()
 
     report: dict = {
-        "started_at_utc": datetime.now(timezone.utc).isoformat(),
+        "started_at_utc": datetime.now(UTC).isoformat(),
         "steps": [],
         "ok": True,
     }
@@ -101,7 +101,7 @@ def main() -> int:
         report["venta_go"] = False
         report["ok"] = False
 
-    report["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
+    report["finished_at_utc"] = datetime.now(UTC).isoformat()
     report["artifacts"] = {
         "compare_md": "docs/COMPARE_CLM_VS_OPEN.md",
         "compare_json": "docs/COMPARE_CLM_VS_OPEN_SCORECARD.json",

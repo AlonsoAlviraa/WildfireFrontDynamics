@@ -13,7 +13,7 @@ import json
 import shutil
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -163,7 +163,7 @@ def _ops_tobarra_stream(n_frames: int = 4) -> dict:
 
 def main() -> int:
     report: dict = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "ok": True,
         "tracks": {},
     }

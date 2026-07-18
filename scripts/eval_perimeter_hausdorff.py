@@ -23,7 +23,7 @@ import json
 import math
 import sys
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -83,7 +83,6 @@ def load_kmz_quad_utm(kmz_path: Path) -> tuple[tuple[float, float], ...] | None:
     for el in root.iter():
         if el.tag.endswith("coordinates") and el.text and "," in (el.text or ""):
             # prefer LatLonQuad block (4 corners)
-            parent = el
             coords_text = el.text.strip()
             break
     if not coords_text:
@@ -136,7 +135,7 @@ def main() -> int:
         return 1
 
     report: dict = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "observed": str(args.observed),
         "mode": args.mode,
         "sample_spacing_m": args.sample_spacing_m,
@@ -157,7 +156,7 @@ def main() -> int:
             report["status"] = "OK"
             report["o2_official"] = True
             report["metrics_m"] = metrics
-            p50 = metrics["front_distance_mean"]  # mean as proxy; add p50 via symmetric
+            metrics["front_distance_mean"]  # mean as proxy; add p50 via symmetric
             report["verdict"] = (
                 "GO" if metrics["front_distance_p95"] < 100 and metrics["front_distance_mean"] < 50 else "REVIEW"
             )

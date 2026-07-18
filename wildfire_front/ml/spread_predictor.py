@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -91,6 +92,7 @@ class SpreadModelManifest:
             "member_weights": list(self.member_weights),
             "member_temperatures": list(self.member_temperatures),
         }
+
 
 class SpreadPredictor:
     """Load a v21-style checkpoint and predict next-day fire masks."""
@@ -217,18 +219,22 @@ class EnsembleSpreadPredictor:
         self.member_paths = paths
         self.ensemble_mode = ensemble_mode or manifest.ensemble_mode or "mean_prob"
         # Prefer explicit mix, then manifest.member_weights, else equal
-        raw_mix = mix_weights if mix_weights is not None else (
-            list(manifest.member_weights) if manifest.member_weights else None
+        raw_mix = (
+            mix_weights
+            if mix_weights is not None
+            else (list(manifest.member_weights) if manifest.member_weights else None)
         )
+        mix: list[float] | None
         if raw_mix is not None:
             if len(raw_mix) != len(paths):
                 raise ValueError("mix_weights length must match members")
             s = float(sum(float(x) for x in raw_mix))
             if s <= 0:
                 raise ValueError("mix_weights sum must be positive")
-            self.mix_weights = [float(x) / s for x in raw_mix]
+            mix = [float(x) / s for x in raw_mix]
         else:
-            self.mix_weights = None
+            mix = None
+        self.mix_weights: list[float] | None = mix
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = torch.device(device)
@@ -276,7 +282,9 @@ class EnsembleSpreadPredictor:
         )
 
     @classmethod
-    def from_product_spec(cls, spec: Any, *, device: torch.device | str | None = None) -> EnsembleSpreadPredictor:
+    def from_product_spec(
+        cls, spec: Any, *, device: torch.device | str | None = None
+    ) -> EnsembleSpreadPredictor:
         """Build from ``ProductSpec`` (catalog)."""
         manifest = SpreadModelManifest.from_json(spec.manifest_path)
         return cls(
@@ -335,9 +343,9 @@ class EnsembleSpreadPredictor:
         def _mix(stacked: torch.Tensor) -> torch.Tensor:
             if self.mix_weights is None:
                 return stacked.mean(dim=0)
-            w = torch.tensor(
-                self.mix_weights, device=stacked.device, dtype=stacked.dtype
-            ).view(-1, *([1] * (stacked.dim() - 1)))
+            w = torch.tensor(self.mix_weights, device=stacked.device, dtype=stacked.dtype).view(
+                -1, *([1] * (stacked.dim() - 1))
+            )
             return (stacked * w).sum(dim=0)
 
         if self.ensemble_mode == "mean_abs":

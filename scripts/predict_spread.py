@@ -161,7 +161,7 @@ def main() -> int:
         with np.load(path) as data:
             seq = data["sequence"]
             current_fire = data["current_fire"]
-            target_fire = data["target_fire"] if "target_fire" in data else None
+            target_fire = data.get("target_fire", None)
 
         pred_prob = predictor.predict(seq, current_fire)
         thr = predictor.manifest.threshold

@@ -15,11 +15,24 @@ except ModuleNotFoundError:
 HAS_SKLEARN = importlib.util.find_spec("sklearn") is not None
 
 
+def _minimal_a3c_weights(path: Path) -> Path:
+    """Write a minimal A3C-LSTM checkpoint for fine-tune / cloud_train tests.
+
+    ``models/v3.pt`` was removed in CLEANUP_2026_07; tests generate random
+    init weights in tmp so the pipeline still exercises load + one epoch.
+    """
+    from models.model import A3C_PerCellModel_LSTM
+
+    model = A3C_PerCellModel_LSTM(in_channels=17, lstm_hidden=256, sequence_length=3)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"model_state_dict": model.state_dict()}, path)
+    return path
+
+
 class MLPipelineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.images_dir = Path("data/candidates/semireal_controlled_001/images")
         self.masks_dir = Path("data/candidates/semireal_controlled_001/masks")
-        self.weights_path = Path("models/v3.pt")
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_wildfire_dataset_loading_and_shapes(self) -> None:
@@ -52,30 +65,26 @@ class MLPipelineTests(unittest.TestCase):
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_fine_tuning_execution_one_epoch(self) -> None:
+        import tempfile
+
         from wildfire_front.ml.train import fine_tune_model
 
-        # Run fine-tuning for exactly one epoch on the semireal candidate
-        output_weights = Path("outputs/test-ml-weights/fine_tuned.pt")
-        if output_weights.exists():
-            output_weights.unlink()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            weights_path = _minimal_a3c_weights(Path(tmpdir) / "a3c_minimal.pt")
+            output_weights = Path(tmpdir) / "fine_tuned.pt"
 
-        result = fine_tune_model(
-            images_dir=self.images_dir,
-            masks_dir=self.masks_dir,
-            weights_path=self.weights_path,
-            output_weights_path=output_weights,
-            epochs=1,
-            lr=1e-4,
-        )
+            result = fine_tune_model(
+                images_dir=self.images_dir,
+                masks_dir=self.masks_dir,
+                weights_path=weights_path,
+                output_weights_path=output_weights,
+                epochs=1,
+                lr=1e-4,
+            )
 
-        self.assertEqual(result["status"], "success")
-        self.assertEqual(len(result["loss_history"]), 1)
-        self.assertTrue(output_weights.exists(), "Fine-tuned model checkpoint should be saved")
-
-        # Clean up output weights
-        if output_weights.exists():
-            output_weights.unlink()
-            output_weights.parent.rmdir()
+            self.assertEqual(result["status"], "success")
+            self.assertEqual(len(result["loss_history"]), 1)
+            self.assertTrue(output_weights.exists(), "Fine-tuned model checkpoint should be saved")
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_cloud_train_build_parser(self) -> None:
@@ -101,35 +110,32 @@ class MLPipelineTests(unittest.TestCase):
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_cloud_train_execution_one_epoch_without_upload(self) -> None:
+        import tempfile
+
         from wildfire_front.ml.cloud_train import main as cloud_main
 
-        output_weights = Path("outputs/test-ml-weights/cloud_fine_tuned.pt")
-        if output_weights.exists():
-            output_weights.unlink()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            weights_path = _minimal_a3c_weights(Path(tmpdir) / "a3c_minimal.pt")
+            output_weights = Path(tmpdir) / "cloud_fine_tuned.pt"
 
-        # Execute main with arguments
-        cloud_main(
-            [
-                "--images",
-                str(self.images_dir),
-                "--masks",
-                str(self.masks_dir),
-                "--weights",
-                str(self.weights_path),
-                "--output-weights",
-                str(output_weights),
-                "--epochs",
-                "1",
-                "--lr",
-                "1e-4",
-            ]
-        )
+            cloud_main(
+                [
+                    "--images",
+                    str(self.images_dir),
+                    "--masks",
+                    str(self.masks_dir),
+                    "--weights",
+                    str(weights_path),
+                    "--output-weights",
+                    str(output_weights),
+                    "--epochs",
+                    "1",
+                    "--lr",
+                    "1e-4",
+                ]
+            )
 
-        self.assertTrue(output_weights.exists(), "Cloud weights checkpoint should be saved")
-
-        if output_weights.exists():
-            output_weights.unlink()
-            output_weights.parent.rmdir()
+            self.assertTrue(output_weights.exists(), "Cloud weights checkpoint should be saved")
 
     @unittest.skipIf(torch is None, "PyTorch is not installed")
     def test_focal_loss_penalizes_false_negatives_more(self) -> None:

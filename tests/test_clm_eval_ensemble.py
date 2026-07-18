@@ -11,7 +11,6 @@ import torch
 from wildfire_front.ml.clm_eval import evaluate_clm_weights
 from wildfire_front.ml.unet_train import UNetTrainConfig, build_model
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

@@ -7,9 +7,10 @@ and a mando can read a short radio line. MD acta — no PDF dependency.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from collections.abc import Mapping
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .confidence import content_hash
 from .decide_service import API_VERSION, decide_from_request
@@ -32,19 +33,14 @@ def render_radio_bridge(card: Mapping[str, Any], *, lang: str = "es") -> str:
     conf_s = f"{float(conf):.2f}" if isinstance(conf, (int, float)) else "?"
     label = str(card.get("confidence_pred_label") or "")
     event = str(card.get("event_id") or "IF")
-    audit = card.get("audit") if isinstance(card.get("audit"), Mapping) else {}
+    _audit = card.get("audit")
+    audit: Mapping[str, Any] = _audit if isinstance(_audit, Mapping) else {}
     oh = str(audit.get("output_hash") or "")[:10]
 
     if lang == "en":
-        base = (
-            f"WFD {event}: {dec} conf={conf_s} ({label}). "
-            f"NOT dispatch order. hash={oh}…"
-        )
+        base = f"WFD {event}: {dec} conf={conf_s} ({label}). NOT dispatch order. hash={oh}…"
     else:
-        base = (
-            f"WFD {event}: {dec} conf={conf_s} ({label}). "
-            f"NO es orden táctica. hash={oh}…"
-        )
+        base = f"WFD {event}: {dec} conf={conf_s} ({label}). NO es orden táctica. hash={oh}…"
 
     # Optional one-line source hint
     avail = []
@@ -80,8 +76,9 @@ def render_acta_md(
     conf = card.get("confidence_pred")
     conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
     label = card.get("confidence_pred_label") or "—"
-    audit = card.get("audit") if isinstance(card.get("audit"), Mapping) else {}
-    built = card.get("built_at_utc") or datetime.now(timezone.utc).isoformat()
+    _audit = card.get("audit")
+    audit: Mapping[str, Any] = _audit if isinstance(_audit, Mapping) else {}
+    built = card.get("built_at_utc") or datetime.now(UTC).isoformat()
     hdr = title or f"Acta de decisión — {event}"
 
     lines = [
@@ -91,12 +88,11 @@ def render_acta_md(
         "",
         "## Decisión",
         "",
-        f"| Campo | Valor |",
-        f"|-------|-------|",
+        "| Campo | Valor |",
+        "|-------|-------|",
         f"| **Decisión** | **{dec}** |",
         f"| Confianza (fenómeno) | {conf_s} ({label}) |",
-        f"| System reliability | "
-        f"{'PASS' if card.get('system_reliability_pass') else 'FAIL'} |",
+        f"| System reliability | {'PASS' if card.get('system_reliability_pass') else 'FAIL'} |",
         f"| Evento | `{event}` |",
     ]
     if operator:
@@ -166,13 +162,11 @@ def extract_replay_sources(
     if open_metrics is None:
         open_metrics = _metrics_from_card_source(card, "open_cems_perimeter")
 
-    audit = card.get("audit") if isinstance(card.get("audit"), Mapping) else {}
-    metrics = card.get("metrics") if isinstance(card.get("metrics"), Mapping) else {}
-    policy_id = (
-        audit.get("policy_id")
-        or metrics.get("policy_id")
-        or "default"
-    )
+    _audit = card.get("audit")
+    audit: Mapping[str, Any] = _audit if isinstance(_audit, Mapping) else {}
+    _metrics = card.get("metrics")
+    metrics: Mapping[str, Any] = _metrics if isinstance(_metrics, Mapping) else {}
+    policy_id = audit.get("policy_id") or metrics.get("policy_id") or "default"
     return {
         "schema": REPLAY_SOURCES_SCHEMA,
         "event_id": card.get("event_id") or "decision",
@@ -188,23 +182,23 @@ def extract_replay_sources(
     }
 
 
-def _metrics_from_card_source(
-    card: Mapping[str, Any], source_id: str
-) -> dict[str, Any] | None:
+def _metrics_from_card_source(card: Mapping[str, Any], source_id: str) -> dict[str, Any] | None:
     for s in card.get("sources") or []:
         if isinstance(s, Mapping) and s.get("id") == source_id and s.get("available"):
             m = s.get("metrics")
             if isinstance(m, dict) and m:
                 return dict(m)
     # fallback nested metrics block
-    metrics = card.get("metrics") if isinstance(card.get("metrics"), Mapping) else {}
+    _metrics = card.get("metrics")
+    metrics: Mapping[str, Any] = _metrics if isinstance(_metrics, Mapping) else {}
     key = {
         "ml_clm_ensemble": "ml",
         "ops_thermal_front": "ops",
         "open_cems_perimeter": "open_cems",
     }.get(source_id)
     if key and isinstance(metrics.get(key), dict):
-        return dict(metrics[key])
+        nested = metrics[key]
+        return dict(nested) if isinstance(nested, dict) else None
     return None
 
 
@@ -226,7 +220,8 @@ def replay_decision(
     card = decide_from_request(req, base=base)
     expected_out = sources.get("expected_output_hash")
     expected_dec = sources.get("expected_decision")
-    audit = card.get("audit") if isinstance(card.get("audit"), dict) else {}
+    _audit = card.get("audit")
+    audit: dict[str, Any] = _audit if isinstance(_audit, dict) else {}
     got_out = audit.get("output_hash")
     match_hash = (expected_out is None) or (got_out == expected_out)
     match_dec = (expected_dec is None) or (card.get("decision") == expected_dec)
@@ -277,9 +272,7 @@ def write_forensic_bundle(
 
     paths: dict[str, str] = {}
     card_path = out / CARD_FILENAME
-    card_path.write_text(
-        json.dumps(card_dict, indent=2, default=str), encoding="utf-8"
-    )
+    card_path.write_text(json.dumps(card_dict, indent=2, default=str), encoding="utf-8")
     paths["card"] = str(card_path)
 
     radio_path = out / RADIO_FILENAME
@@ -291,16 +284,14 @@ def write_forensic_bundle(
     paths["acta"] = str(acta_path)
 
     replay_path = out / REPLAY_SOURCES_FILENAME
-    replay_path.write_text(
-        json.dumps(replay_src, indent=2, default=str), encoding="utf-8"
-    )
+    replay_path.write_text(json.dumps(replay_src, indent=2, default=str), encoding="utf-8")
     paths["replay_sources"] = str(replay_path)
 
     # Verify replay immediately (self-check)
     replay_result = replay_decision(replay_src)
     manifest = {
         "schema": FORENSIC_SCHEMA,
-        "written_at_utc": datetime.now(timezone.utc).isoformat(),
+        "written_at_utc": datetime.now(UTC).isoformat(),
         "event_id": card_dict.get("event_id"),
         "decision": card_dict.get("decision"),
         "files": {

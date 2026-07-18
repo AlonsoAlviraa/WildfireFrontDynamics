@@ -358,12 +358,14 @@ def test_corrupt_state_recovers(tmp_path: Path) -> None:
 
 def test_tobarra_stream_optional(tmp_path: Path) -> None:
     """Optional integration: stream first Tobarra frames if artifacts present."""
+    import pytest
+
     root = Path(__file__).resolve().parents[1]
     src = root / "artifacts" / "tobarra_reprojected_lwir"
     masks_src = root / "artifacts" / "tobarra_lwir_masks"
     tifs = sorted(src.glob("*.tif")) if src.is_dir() else []
     if len(tifs) < 3:
-        return  # skip silently like other optional tests
+        pytest.skip("Tobarra reprojected LWIR artifacts not present (optional integration)")
 
     inbox = tmp_path / "inbox"
     work = tmp_path / "work"

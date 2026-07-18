@@ -45,7 +45,7 @@ def step_ca(
     rng = np.random.default_rng(seed)
     rows, cols = grid.shape
     out = grid.copy()
-    burning = list(zip(*np.where(grid == 2)))
+    burning = list(zip(*np.where(grid == 2), strict=False))
     for r, c in burning:
         out[r, c] = 0  # burned out after this step
         for dr in (-1, 0, 1):

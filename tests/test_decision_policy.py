@@ -6,7 +6,6 @@ from wildfire_front.product.confidence import Decision, build_decision_card
 from wildfire_front.product.decide_service import decide_from_request
 from wildfire_front.product.policy import get_policy, list_policies
 
-
 ML = {"test_iou": 0.8963, "improvement_vs_copy_iou": 0.2545}
 OPS_A = {
     "quality_grade": "A",
@@ -44,7 +43,9 @@ def test_field_ops_blocks_ml_only_hold():
     assert demo.confidence_pred == field.confidence_pred
     assert demo.decision == Decision.HOLD
     assert field.decision == Decision.ABSTAIN
-    assert "ml_only_blocked_by_policy" in " ".join(field.reasons) or field.decision == Decision.ABSTAIN
+    assert (
+        "ml_only_blocked_by_policy" in " ".join(field.reasons) or field.decision == Decision.ABSTAIN
+    )
 
 
 def test_field_ops_go_needs_higher_ops_confidence():

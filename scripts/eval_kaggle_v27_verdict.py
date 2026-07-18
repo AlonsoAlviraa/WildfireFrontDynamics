@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,7 +38,7 @@ def main() -> int:
             "kernel": KERNEL,
             "status": "RUNNING_OR_PENDING",
             "raw_status": st,
-            "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+            "checked_at_utc": datetime.now(UTC).isoformat(),
             "verdict": None,
             "note": "Kernel not COMPLETE yet",
         }
@@ -117,7 +117,7 @@ def main() -> int:
         "version": "v27_temporal_t2",
         "kernel": KERNEL,
         "status": "COMPLETE",
-        "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+        "checked_at_utc": datetime.now(UTC).isoformat(),
         "test_iou": round(test_iou, 4),
         "copy_baseline_iou": round(copy_iou, 4) if copy_iou is not None else None,
         "improvement_vs_copy_iou": round(delta, 4),

@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -205,8 +204,8 @@ def exp_triple(v28: Path, ema: Path | None, lofo: Path, val: Path, test: Path) -
 
 
 def exp_continue_ft(v28: Path, data: Path, epochs: int, patience: int) -> dict:
-    from wildfire_front.ml.unet_train import UNetTrainConfig, run_training
     from wildfire_front.ml.clm_eval import evaluate_clm_weights as ev
+    from wildfire_front.ml.unet_train import UNetTrainConfig, run_training
 
     out_dir = ROOT / "outputs" / "ml_eval" / "v31_continue_v28"
     cfg = UNetTrainConfig(
@@ -293,7 +292,7 @@ def main() -> int:
 
     report: dict = {
         "batch": "v31_metric_push",
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "baseline_v30": V30,
         "jobs": jobs,
         "experiments": {},

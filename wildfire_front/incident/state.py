@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-
 PRODUCT_ID = "incident_runtime_v1"
 STATE_FILENAME = "incident_state.json"
 

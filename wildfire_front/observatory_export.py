@@ -65,7 +65,9 @@ def write_main_front_geojson(
         "crs": {
             "type": "name",
             "properties": {
-                "name": observations[0].crs if observations and observations[0].crs else "EPSG:32630"
+                "name": observations[0].crs
+                if observations and observations[0].crs
+                else "EPSG:32630"
             },
         },
         "features": features,

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,7 +78,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     report: dict = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "leap_id": "M2",
         "hypothesis": "H7 honest CLM transfer",
         "protocol": protocol,
@@ -148,7 +148,6 @@ def main() -> int:
     model.to(device)
 
     sample_metrics = []
-    copy_ious = []
     with torch.no_grad():
         for i in range(n):
             seq, cur, tgt = ds[i]

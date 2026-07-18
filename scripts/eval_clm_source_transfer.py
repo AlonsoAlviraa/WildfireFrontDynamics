@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -71,7 +71,7 @@ def main() -> int:
 
     deltas = [v["mean_delta"] for v in by_source.values()] or [0.0]
     report = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "product": args.product,
         "protocol": "clm_per_source_eval_holdout_v1",
         "by_source": by_source,

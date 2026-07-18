@@ -159,7 +159,9 @@ def _as_celsius(temp: np.ndarray) -> np.ndarray:
     return temp
 
 
-def _wind_components(wind_speed: np.ndarray, wind_dir_deg: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _wind_components(
+    wind_speed: np.ndarray, wind_dir_deg: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Convert meteorological wind direction (degrees) to sin/cos components.
 
     Direction is "from which the wind blows". Components are unitless direction
@@ -212,9 +214,9 @@ def compute_ffmc(
 
     is_drying = mo_rain > ed
     ko = np.where(is_drying, 1.0, ew / np.maximum(ed, 1e-6))
-    k0 = 0.424 * (1.0 - np.power(rh / 100.0, 1.7)) + 0.0694 * np.sqrt(
-        np.maximum(wind_kmh, 0.0)
-    ) * (1.0 - np.power(rh / 100.0, 8.0))
+    k0 = 0.424 * (1.0 - np.power(rh / 100.0, 1.7)) + 0.0694 * np.sqrt(np.maximum(wind_kmh, 0.0)) * (
+        1.0 - np.power(rh / 100.0, 8.0)
+    )
     kd = ko * k0 * 0.581 * np.exp(21.06 - 0.0495 * mo_rain)
     mo_new = np.where(
         is_drying,
@@ -294,7 +296,9 @@ def build_clean12_channels(
         # Optional: blend drought into ERC slot when ERC missing/constant.
         d = np.asarray(drought, dtype=np.float32)
         if float(np.nanstd(erc_norm)) < 1e-6 and float(np.nanstd(d)) > 0:
-            erc_norm = np.clip((d - float(np.nanmin(d))) / (float(np.nanmax(d) - np.nanmin(d)) + 1e-6), 0, 1)
+            erc_norm = np.clip(
+                (d - float(np.nanmin(d))) / (float(np.nanmax(d) - np.nanmin(d)) + 1e-6), 0, 1
+            )
 
     h, w = elev.shape
     channels = np.zeros((12, h, w), dtype=np.float32)

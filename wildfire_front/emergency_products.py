@@ -34,7 +34,9 @@ def expansion_bearing_deg_from_centroids(
     return float(ang)
 
 
-def ring_centroid(ring: list[tuple[float, float]] | tuple[tuple[float, float], ...]) -> tuple[float, float]:
+def ring_centroid(
+    ring: list[tuple[float, float]] | tuple[tuple[float, float], ...],
+) -> tuple[float, float]:
     pts = np.asarray(ring, dtype=float)
     if len(pts) > 1 and np.allclose(pts[0], pts[-1]):
         pts = pts[:-1]
@@ -92,7 +94,7 @@ def compute_sector_ros(
     rear = min(lo, flank)
 
     unc = abs(hi - lo)
-    sectors = {
+    sectors: dict[str, Any] = {
         "head_m_min": round(head, 4),
         "flank_m_min": round(flank, 4),
         "rear_m_min": round(rear, 4),
@@ -137,7 +139,7 @@ def compute_short_horizon_envelope(
     When sector ROS is provided, each horizon includes **head / flank / rear**
     radii (and optional head bearing). Label is mandatory: not official dispatch.
     """
-    base = {
+    base: dict[str, Any] = {
         "product": "short_horizon_envelope_v2_sector",
         "label_en": (
             "EXTRAPOLATED FRONT GUIDANCE from observed ROS (sector-aware) — "
@@ -159,9 +161,15 @@ def compute_short_horizon_envelope(
         return base
 
     ros = min(float(primary_ros_m_min), _ENVELOPE_MAX_ROS_M_MIN)
-    head = min(float(head_ros_m_min if head_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN)
-    flank = min(float(flank_ros_m_min if flank_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN)
-    rear = min(float(rear_ros_m_min if rear_ros_m_min is not None else ros * 0.55), _ENVELOPE_MAX_ROS_M_MIN)
+    head = min(
+        float(head_ros_m_min if head_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN
+    )
+    flank = min(
+        float(flank_ros_m_min if flank_ros_m_min is not None else ros), _ENVELOPE_MAX_ROS_M_MIN
+    )
+    rear = min(
+        float(rear_ros_m_min if rear_ros_m_min is not None else ros * 0.55), _ENVELOPE_MAX_ROS_M_MIN
+    )
     # Ensure head >= flank >= rear for guidance readability
     flank = min(flank, head)
     rear = min(rear, flank)
@@ -314,8 +322,8 @@ def _sector_wedge_ring(
     """Wedge ring centered on bearing (deg from north, clockwise)."""
     if radius_m <= 0:
         return [[cx, cy], [cx, cy]]
-    b0 = math.radians((bearing_deg - half_width_deg) % 360.0)
-    b1 = math.radians((bearing_deg + half_width_deg) % 360.0)
+    math.radians((bearing_deg - half_width_deg) % 360.0)
+    math.radians((bearing_deg + half_width_deg) % 360.0)
     # Walk clockwise from b0 to b1
     start = (bearing_deg - half_width_deg) % 360.0
     span = (2.0 * half_width_deg) % 360.0
@@ -400,9 +408,7 @@ def envelope_to_geojson(
                     },
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [
-                            _sector_wedge_ring(cx, cy, r_head, float(bearing), 45.0)
-                        ],
+                        "coordinates": [_sector_wedge_ring(cx, cy, r_head, float(bearing), 45.0)],
                     },
                 }
             )

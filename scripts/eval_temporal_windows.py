@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,6 @@ _pair_images_masks = _pack._pair_images_masks
 _select_coherent_pairs = _pack._select_coherent_pairs
 from wildfire_front.cli import run_geotiff_ingest  # noqa: E402
 from wildfire_front.models import GeometrySpeedConfig  # noqa: E402
-from wildfire_front.observatory_export import export_operator_bundle  # noqa: E402
 from wildfire_front.scientific_ops import OperationalReference  # noqa: E402
 
 
@@ -104,7 +103,7 @@ def run_window(
         max_component_centroid_distance_m=400.0,
         observability_ratio=1.5,
     )
-    metrics = run_geotiff_ingest(
+    run_geotiff_ingest(
         images=img_dir,
         masks=mask_dir,
         output=out_dir,
@@ -250,10 +249,9 @@ def main() -> int:
     n_pass = len(band)
     # go: 3/3 or 2/3 + 1 abstention
     # Also score against full-pack ROS as secondary stability (not only global 7).
-    full_ros = None
     for r in ok:
         if r.get("window") == "full":
-            full_ros = r.get("primary_ros_m_min")
+            r.get("primary_ros_m_min")
     # Wider band for phase-dependent ROS vs global INFOCAM mean
     n_pass_wide = 0
     for r in ok:
@@ -278,7 +276,7 @@ def main() -> int:
     protocol_block = o3_window_summary(results, ref_vp=float(spec.infocam_vp_m_min or 7.0))
 
     report = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "fire_id": args.fire,
         "leap_id": "O3",
         "hypothesis": "H3 temporal stability",

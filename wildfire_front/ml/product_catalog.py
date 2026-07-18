@@ -97,7 +97,7 @@ def get_product(product_id: str, catalog_path: Path | None = None) -> ProductSpe
 def list_products(catalog_path: Path | None = None) -> list[dict[str, Any]]:
     data = load_catalog(catalog_path)
     out = []
-    for pid in sorted((data.get("products") or {})):
+    for pid in sorted(data.get("products") or {}):
         spec = get_product(pid, catalog_path)
         ok, msg = spec.resolve_existing()
         out.append(

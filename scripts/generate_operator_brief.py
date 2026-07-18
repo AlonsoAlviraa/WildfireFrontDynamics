@@ -11,8 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,7 +22,7 @@ def brief_from_state(state: dict, *, event_id: str) -> str:
     lines = [
         f"# Brief operativo — {event_id}",
         "",
-        f"_Generado: {datetime.now(timezone.utc).isoformat()}_",
+        f"_Generado: {datetime.now(UTC).isoformat()}_",
         "",
         "## Resumen",
         f"- **Evento:** {state.get('event_id', event_id)}",

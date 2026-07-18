@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,7 +107,7 @@ def main() -> int:
     }
 
     report = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "title": "Priority stack 1–4 (dual + anchors + Hausdorff + physics15)",
         "priorities": [p1, p2, p3, p4],
         "honest_ceiling": {

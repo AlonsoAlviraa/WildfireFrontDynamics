@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -19,8 +19,8 @@ from .cli_report import (
     print_demo_report,
     print_doctor_report,
     print_error,
-    print_ingest_report,
     print_incident_report,
+    print_ingest_report,
     print_json,
     print_status_report,
     print_watch_line,
@@ -356,7 +356,9 @@ def _add_incident_segmentation_args(p: argparse.ArgumentParser) -> None:
 
 def _add_incident_anchor_args(p: argparse.ArgumentParser) -> None:
     anc = p.add_argument_group("operational anchor (optional INFOCAM-style)")
-    anc.add_argument("--ref-name", type=str, default=None, help="Anchor name (e.g. INFOCAM Tobarra)")
+    anc.add_argument(
+        "--ref-name", type=str, default=None, help="Anchor name (e.g. INFOCAM Tobarra)"
+    )
     anc.add_argument(
         "--ref-vp-m-min",
         type=float,
@@ -408,7 +410,9 @@ def _add_incident_runtime_args(p: argparse.ArgumentParser) -> None:
     )
 
 
-def _add_all_incident_process_args(p: argparse.ArgumentParser, *, require_work: bool = True) -> None:
+def _add_all_incident_process_args(
+    p: argparse.ArgumentParser, *, require_work: bool = True
+) -> None:
     _add_incident_io_args(p, require_work=require_work)
     _add_incident_identity_args(p)
     _add_incident_segmentation_args(p)
@@ -466,7 +470,9 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     ig = ingest.add_argument_group("paths")
-    ig.add_argument("--images", type=Path, required=True, metavar="DIR", help="GeoTIFF images folder")
+    ig.add_argument(
+        "--images", type=Path, required=True, metavar="DIR", help="GeoTIFF images folder"
+    )
     ig.add_argument("--masks", type=Path, metavar="DIR", help="Binary masks folder (optional)")
     ig.add_argument(
         "--output",
@@ -539,9 +545,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  status   Read last outbox state without processing\n"
         ),
     )
-    inc_subs = incident.add_subparsers(
-        dest="incident_command", required=True, metavar="SUBCOMMAND"
-    )
+    inc_subs = incident.add_subparsers(dest="incident_command", required=True, metavar="SUBCOMMAND")
 
     # doctor
     doc = inc_subs.add_parser(
@@ -698,7 +702,7 @@ def build_parser() -> argparse.ArgumentParser:
             "example:\n"
             "  wildfire-front serve-decide --port 8765\n"
             "  curl -s http://127.0.0.1:8765/health\n"
-            '  curl -s -X POST http://127.0.0.1:8765/v1/decide '
+            "  curl -s -X POST http://127.0.0.1:8765/v1/decide "
             '-H "Content-Type: application/json" '
             '-d "{\\"use_ml_v34\\": true, \\"require_ops_for_go\\": true}"\n'
         ),
@@ -786,7 +790,11 @@ def _incident_config_from_args(args: argparse.Namespace):
     mad_z = None if getattr(args, "no_mad", False) else getattr(args, "mad_z", 6.0)
     if getattr(args, "threshold", None) is not None:
         mad_z = None
-    if mad_z is None and getattr(args, "threshold", None) is None and getattr(args, "masks", None) is None:
+    if (
+        mad_z is None
+        and getattr(args, "threshold", None) is None
+        and getattr(args, "masks", None) is None
+    ):
         raise ValueError("--no-mad requires --masks or --threshold (or omit --no-mad)")
     return IncidentConfig(
         event_id=args.event_id,
@@ -871,17 +879,18 @@ def main(argv: Sequence[str] | None = None) -> None:
                 morph_close_pixels=args.morph_close_pixels,
                 min_component_area_m2=args.min_component_area_m2,
                 operational_ref=ref,
-                write_operational=bool(args.operational) or ref is not None or bool(args.scientific_clean),
+                write_operational=bool(args.operational)
+                or ref is not None
+                or bool(args.scientific_clean),
             )
-            print_ingest_report(
-                args.output, metrics, as_json=as_json, event_id=args.event_id
-            )
+            print_ingest_report(args.output, metrics, as_json=as_json, event_id=args.event_id)
             return
 
         if args.command == "decide":
+            import json as _json
+
             from .product.decide_service import decide_from_request
             from .product.policy import list_policies
-            import json as _json
 
             if getattr(args, "list_policies", False):
                 rows = list_policies()
@@ -910,19 +919,17 @@ def main(argv: Sequence[str] | None = None) -> None:
             out = getattr(args, "output", None)
             if out:
                 Path(out).parent.mkdir(parents=True, exist_ok=True)
-                Path(out).write_text(
-                    _json.dumps(payload, indent=2, default=str), encoding="utf-8"
-                )
+                Path(out).write_text(_json.dumps(payload, indent=2, default=str), encoding="utf-8")
             if as_json:
                 print_json(payload)
             else:
                 print(f"decision: {payload.get('decision')}")
                 conf = payload.get("confidence_pred")
                 conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
+                print(f"confidence_pred: {conf_s} ({payload.get('confidence_pred_label')})")
                 print(
-                    f"confidence_pred: {conf_s} ({payload.get('confidence_pred_label')})"
+                    f"policy: {payload.get('policy_id') or (payload.get('audit') or {}).get('policy_id')}"
                 )
-                print(f"policy: {payload.get('policy_id') or (payload.get('audit') or {}).get('policy_id')}")
                 print(f"system_reliability_pass: {payload.get('system_reliability_pass')}")
                 print(f"latency_ms: {payload.get('latency_ms')}")
                 print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
@@ -951,9 +958,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             if card_path is None and work is not None:
                 card_path = Path(work) / "outbox" / "fire_decision_card.json"
             if card_path is None or not Path(card_path).is_file():
-                raise SystemExit(
-                    "export-acta requires --card path or --work-dir with outbox card"
-                )
+                raise SystemExit("export-acta requires --card path or --work-dir with outbox card")
             card = _json.loads(Path(card_path).read_text(encoding="utf-8"))
             out_dir = getattr(args, "output", None)
             if out_dir is None:
@@ -987,9 +992,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if bundle is None and work is not None:
                     bundle = Path(work) / "outbox"
                 if bundle is None:
-                    raise SystemExit(
-                        "replay-decide requires --bundle, --sources, or --work-dir"
-                    )
+                    raise SystemExit("replay-decide requires --bundle, --sources, or --work-dir")
                 result = load_and_replay_bundle(bundle, base=Path.cwd())
             if as_json:
                 # omit full nested card if quiet? keep full for audit
@@ -1001,20 +1004,18 @@ def main(argv: Sequence[str] | None = None) -> None:
                     f"decision: expected={result.get('expected_decision')} "
                     f"got={result.get('got_decision')} match={result.get('match_decision')}"
                 )
-                print(
-                    f"output_hash match: {result.get('match_output_hash')}"
-                )
+                print(f"output_hash match: {result.get('match_output_hash')}")
                 if not ok:
                     raise SystemExit(2)
             return
 
         if args.command == "incident":
+            from .incident import process_incident_once, run_incident_watch
             from .incident.doctor import (
                 config_snapshot,
                 doctor_incident,
                 read_incident_status,
             )
-            from .incident import process_incident_once, run_incident_watch
 
             if args.incident_command == "doctor":
                 report = doctor_incident(
@@ -1052,6 +1053,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 return
 
             if args.incident_command == "watch":
+
                 def _on_update(s: dict[str, Any]) -> None:
                     if quiet:
                         return
@@ -1072,7 +1074,9 @@ def main(argv: Sequence[str] | None = None) -> None:
                 last["watch"] = {
                     "mode": result.get("mode"),
                     "iterations": result.get("iterations"),
-                    "interrupted": bool(last.get("interrupted") or result.get("last", {}).get("interrupted")),
+                    "interrupted": bool(
+                        last.get("interrupted") or result.get("last", {}).get("interrupted")
+                    ),
                 }
                 # Full final report (human or json)
                 if as_json:

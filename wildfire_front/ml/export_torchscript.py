@@ -8,7 +8,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from wildfire_front.ml.spread_predictor import SpreadModelManifest, SpreadPredictor
+from wildfire_front.ml.spread_predictor import SpreadPredictor
 from wildfire_front.ml.unet_train import model_forward, prepare_input
 
 

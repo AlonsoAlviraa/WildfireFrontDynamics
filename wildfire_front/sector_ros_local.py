@@ -88,7 +88,7 @@ def sector_ros_from_local_samples(
     head_sp: list[float] = []
     rear_sp: list[float] = []
     flank_sp: list[float] = []
-    for spd, ang in zip(speeds, angles):
+    for spd, ang in zip(speeds, angles, strict=False):
         if _angle_diff(float(ang), head_b) <= half_width_deg:
             head_sp.append(float(spd))
         elif _angle_diff(float(ang), rear_b) <= half_width_deg:
@@ -124,11 +124,7 @@ def sector_ros_from_local_samples(
 
     scale = 1.0
     scaled = False
-    if (
-        scale_to_primary_m_min is not None
-        and scale_to_primary_m_min > 0
-        and overall > 0
-    ):
+    if scale_to_primary_m_min is not None and scale_to_primary_m_min > 0 and overall > 0:
         scale = float(scale_to_primary_m_min) / overall
         head *= scale
         flank *= scale
@@ -138,8 +134,7 @@ def sector_ros_from_local_samples(
 
     return {
         "status": "estimated",
-        "method": "local_normal_ray_sectors"
-        + ("_scaled_to_bulk" if scaled else ""),
+        "method": "local_normal_ray_sectors" + ("_scaled_to_bulk" if scaled else ""),
         "half_width_deg": half_width_deg,
         "expansion_bearing_deg": round(head_b, 2),
         "scale_to_primary": round(scale, 4) if scaled else None,
@@ -164,20 +159,14 @@ def sector_ros_from_local_samples(
             "p25": round(float(np.percentile(speeds, 25)) * scale, 4),
             "p75": round(float(np.percentile(speeds, 75)) * scale, 4),
             "half_iqr": round(
-                0.5
-                * (float(np.percentile(speeds, 75) - np.percentile(speeds, 25)))
-                * scale,
+                0.5 * (float(np.percentile(speeds, 75) - np.percentile(speeds, 25))) * scale,
                 4,
             ),
             "n": int(len(samples)),
         },
         "label_es": (
             "ROS por sector desde rayos normales locales (ángulo de avance), "
-            + (
-                "escalado al ROS bulk multi-estimador. "
-                if scaled
-                else ""
-            )
+            + ("escalado al ROS bulk multi-estimador. " if scaled else "")
             + "No es despacho táctico validado."
         ),
     }

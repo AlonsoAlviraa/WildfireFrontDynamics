@@ -16,7 +16,7 @@ import io
 import json
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,10 +43,10 @@ def bbox_from_main_front(pack: Path, pad_deg: float = 0.15) -> tuple[float, floa
         xs: list[float] = []
         ys: list[float] = []
 
-        def walk(c):
+        def walk(c, _xs=xs, _ys=ys):
             if isinstance(c[0], (int, float)):
-                xs.append(float(c[0]))
-                ys.append(float(c[1]))
+                _xs.append(float(c[0]))
+                _ys.append(float(c[1]))
             else:
                 for x in c:
                     walk(x)
@@ -60,7 +60,7 @@ def bbox_from_main_front(pack: Path, pad_deg: float = 0.15) -> tuple[float, floa
         # if UTM, convert corners
         if abs(xs[0]) > 180 or abs(ys[0]) > 90:
             lons, lats = [], []
-            for x, y in zip(xs, ys):
+            for x, y in zip(xs, ys, strict=False):
                 lon, lat = utm_to_wgs84(x, y, zone=30, northern=True)
                 lons.append(lon)
                 lats.append(lat)
@@ -144,7 +144,7 @@ def rows_to_geojson(rows: list[dict], *, fire_id: str, source: str) -> dict:
         "properties": {
             "source": source,
             "n": len(feats),
-            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "generated_at_utc": datetime.now(UTC).isoformat(),
             "not_official_perimeter": True,
         },
     }
@@ -164,9 +164,7 @@ def main() -> int:
     date = args.date
     if date is None:
         # tobarra_20240802 -> 2024-08-02
-        if "2024" in args.fire and "0802" in args.fire.replace("-", ""):
-            date = "2024-08-02"
-        elif "20240802" in args.fire:
+        if "2024" in args.fire and "0802" in args.fire.replace("-", "") or "20240802" in args.fire:
             date = "2024-08-02"
         else:
             # try digits

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -57,10 +57,7 @@ def analyze_dir(data_dir: Path, max_patches: int) -> dict:
             seq = z["sequence"].astype(np.float32)
             prev = z["current_fire"].astype(np.float32)
             tgt = z["target_fire"].astype(np.float32)
-        if seq.ndim == 4:
-            frame = seq[-1]  # last timestep channels
-        else:
-            frame = seq
+        frame = seq[-1] if seq.ndim == 4 else seq  # last timestep channels
         c = frame.shape[0]
         prev_b = (prev >= 0.5).astype(np.float32)
         tgt_b = (tgt >= 0.5).astype(np.float32)
@@ -113,7 +110,7 @@ def analyze_dir(data_dir: Path, max_patches: int) -> dict:
 
     ranked_growth = sorted(channels, key=lambda x: abs(x["corr_growth"]), reverse=True)
     return {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "data_dir": str(data_dir),
         "n_patches": len(files),
         "n_channels": c,

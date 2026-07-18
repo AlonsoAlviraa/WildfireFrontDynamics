@@ -217,9 +217,7 @@ def envelope_radii_m(
     cap_m_min: float = 40.0,
 ) -> list[tuple[float, float]]:
     """(bearing, radius_m) for a horizon from polar ROS."""
-    return [
-        (b, round(min(r, cap_m_min) * float(horizon_min), 2)) for b, r in polar_ros
-    ]
+    return [(b, round(min(r, cap_m_min) * float(horizon_min), 2)) for b, r in polar_ros]
 
 
 def physics_prior_report(
@@ -370,8 +368,7 @@ def hybrid_ros_prior(
         "status": "ok",
         "model": "wang_mao_hybrid_obs_magnitude",
         "label_es": (
-            "Híbrido CN: magnitud=ROS observada, forma=王正非/毛贤敏. "
-            "NO despacho táctico validado."
+            "Híbrido CN: magnitud=ROS observada, forma=王正非/毛贤敏. NO despacho táctico validado."
         ),
         "observed_ros_m_min": round(obs, 4),
         "scale_factor": round(scale, 4),
@@ -385,9 +382,7 @@ def hybrid_ros_prior(
         "ros_mean_calibrated_m_min": round(sum(cal_vals) / len(cal_vals), 4),
         "polar_calibrated": polar_cal,
         "ros_8dir_raw_m_min": base["ros_8dir_m_min"],
-        "envelope_radii_m": {
-            str(h): envelope_radii_m(polar_cal, h) for h in (15, 30, 60)
-        },
+        "envelope_radii_m": {str(h): envelope_radii_m(polar_cal, h) for h in (15, 30, 60)},
         "raw_prior": {
             "ros_head_m_min": base["ros_head_m_min"],
             "ros_rear_m_min": base["ros_rear_m_min"],

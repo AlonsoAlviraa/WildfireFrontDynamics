@@ -9,12 +9,12 @@ Embeds live metrics, Decision Card, open-pack perimeters (simplified).
 
 from __future__ import annotations
 
+import contextlib
 import json
-import math
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -121,7 +121,7 @@ def _pack_payload(pack_dir: Path) -> dict[str, Any] | None:
 
 def collect_data() -> dict[str, Any]:
     # refresh hub quietly
-    try:
+    with contextlib.suppress(Exception):
         subprocess.run(
             [sys.executable, str(ROOT / "scripts" / "build_metrics_hub.py")],
             cwd=str(ROOT),
@@ -129,8 +129,6 @@ def collect_data() -> dict[str, Any]:
             capture_output=True,
             timeout=120,
         )
-    except Exception:
-        pass
 
     hub = _load(ROOT / "docs" / "METRICS_HUB.json") or {}
     card = hub.get("decision_card") or _load(ROOT / "docs" / "FIRE_DECISION_CARD.json") or {}
@@ -186,7 +184,7 @@ def collect_data() -> dict[str, Any]:
 
     return {
         "schema": "commander_app_data_v1",
-        "built_at_utc": datetime.now(timezone.utc).isoformat(),
+        "built_at_utc": datetime.now(UTC).isoformat(),
         "git": _git(),
         "title": "WFD COMMAND",
         "subtitle": "Sala de mando · Decision Card · Open CEMS · Ops térmico",

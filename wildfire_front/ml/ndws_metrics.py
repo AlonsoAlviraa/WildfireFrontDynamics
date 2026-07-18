@@ -241,17 +241,11 @@ def aggregate_ndws_evaluation(
         "dilated_copy_growth": dilated_copy_growth,
         "improvement_vs_copy_iou": model_iou - copy_iou,
         "improvement_vs_dilated_copy_iou": model_iou - dilated_copy_iou,
-        "improvement_vs_dilated_copy_iou_changed": (
-            model_iou_changed - dilated_copy_iou_changed
-        ),
-        "improvement_vs_dilated_copy_iou_growth": (
-            model_iou_growth - dilated_copy_iou_growth
-        ),
+        "improvement_vs_dilated_copy_iou_changed": (model_iou_changed - dilated_copy_iou_changed),
+        "improvement_vs_dilated_copy_iou_growth": (model_iou_growth - dilated_copy_iou_growth),
         "improvement_vs_copy_iou_growth": model_iou_growth - copy_iou_growth,
         # Redefined: meaningful dynamic baseline (was tautological vs naive copy).
-        "improvement_vs_copy_iou_changed": (
-            model_iou_changed - dilated_copy_iou_changed
-        ),
+        "improvement_vs_copy_iou_changed": (model_iou_changed - dilated_copy_iou_changed),
         "legacy_improvement_vs_naive_copy_iou_changed": legacy_improvement_changed,
         "copy_baseline_iou": copy_iou,
         "dilated_copy_baseline_iou": dilated_copy_iou,

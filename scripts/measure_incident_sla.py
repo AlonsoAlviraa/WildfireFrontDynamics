@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.incident import IncidentConfig, process_incident_once
+from wildfire_front.incident import IncidentConfig, process_incident_once  # noqa: E402
 
 
 def _write_tiff(path: Path, data: np.ndarray) -> None:
@@ -94,7 +94,7 @@ def main() -> int:
 
     report = {
         "schema": "incident_sla_latency_v1",
-        "measured_at_utc": datetime.now(timezone.utc).isoformat(),
+        "measured_at_utc": datetime.now(UTC).isoformat(),
         "scenario": "synthetic_2_frame_lwir",
         "wall_clock_s": round(wall_s, 4),
         "pipeline_latency_s": pipeline_latency,

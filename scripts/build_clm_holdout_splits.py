@@ -19,7 +19,7 @@ import json
 import re
 import shutil
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -109,7 +109,7 @@ def main() -> int:
 
     manifest = {
         "protocol": "clm_holdout_test_seed42_v1",
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "seed": args.seed,
         "train_frac": args.train_frac,
         "val_frac": args.val_frac,

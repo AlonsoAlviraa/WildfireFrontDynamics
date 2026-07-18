@@ -9,7 +9,6 @@ from wildfire_front.models import FrontObservation
 from wildfire_front.observatory_export import (
     export_operator_bundle,
     write_main_front_geojson,
-    write_ros_timeline_csv,
 )
 
 

@@ -5,8 +5,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +30,7 @@ def main() -> int:
                 {
                     "status": "PENDING",
                     "raw": status_line,
-                    "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+                    "checked_at_utc": datetime.now(UTC).isoformat(),
                 },
                 indent=2,
             ),
@@ -65,7 +64,7 @@ def main() -> int:
         "version": "v27b_temporal_t3",
         "kernel": KERNEL,
         "status": "COMPLETE",
-        "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+        "checked_at_utc": datetime.now(UTC).isoformat(),
         "test_iou": round(test_iou, 4),
         "copy_baseline_iou": round(copy, 4),
         "improvement_vs_copy_iou": round(delta, 4),
@@ -88,7 +87,7 @@ def main() -> int:
                     "status": "KILLED",
                     "reason": "features (v25/v26) and temporal (v27/v27b) failed to beat v21/G1",
                     "production_ndws": "ndws_v21 frozen",
-                    "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+                    "checked_at_utc": datetime.now(UTC).isoformat(),
                     "evidence": {
                         "v25": "NO_PROMOTE",
                         "v26": "NO_PROMOTE IoU 0.221",

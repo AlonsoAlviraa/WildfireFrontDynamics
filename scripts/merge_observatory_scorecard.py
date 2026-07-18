@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,7 +71,7 @@ def main() -> int:
         )
 
     scorecard = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "source": "merged_from_existing_packs",
         "gates": {
             "A1_ge3_fires": {"pass": a1, "n_ok": len(ok)},

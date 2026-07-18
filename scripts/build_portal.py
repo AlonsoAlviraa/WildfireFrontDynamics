@@ -7,10 +7,11 @@ Also: docs/START_HERE.md
 
 from __future__ import annotations
 
+import contextlib
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,7 +37,7 @@ def _git() -> str:
 
 def main() -> int:
     # refresh hub if possible
-    try:
+    with contextlib.suppress(Exception):
         subprocess.run(
             [sys.executable, str(ROOT / "scripts" / "build_metrics_hub.py")],
             cwd=str(ROOT),
@@ -44,8 +45,6 @@ def main() -> int:
             capture_output=True,
             timeout=120,
         )
-    except Exception:
-        pass
 
     hub = _load(ROOT / "docs" / "METRICS_HUB.json") or {}
     card = hub.get("decision_card") or {}
@@ -197,7 +196,7 @@ pre.cmd {{
         no un visor más de mapas gratis.
       </p>
       <p class="tag" style="margin-top:.75rem">
-        Actualizado: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC · git <code>{_git()}</code>
+        Actualizado: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M')} UTC · git <code>{_git()}</code>
       </p>
     </div>
   </header>
@@ -355,9 +354,9 @@ python scripts\\show_all.py</pre>
 
 **Apoyo a la decisión en incendios** con tres piezas claras:
 
-1. **Ops térmico** (si hay dron/LWIR) → ROS y brief  
-2. **Open CEMS** (si no hay dron) → perímetros públicos multi-día  
-3. **Decision Card** → GO / HOLD / **ABSTAIN** + métricas + auditoría  
+1. **Ops térmico** (si hay dron/LWIR) → ROS y brief
+2. **Open CEMS** (si no hay dron) → perímetros públicos multi-día
+3. **Decision Card** → GO / HOLD / **ABSTAIN** + métricas + auditoría
 
 No es “otro mapa de Copernicus”. Es **cuándo confiar y cuándo callarse**.
 
@@ -432,7 +431,7 @@ python -m wildfire_front serve-decide --port 8765
 
 
 if __name__ == "__main__":
-    from datetime import datetime, timezone
     import json
+    from datetime import datetime
 
     raise SystemExit(main())

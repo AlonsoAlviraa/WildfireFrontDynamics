@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from wildfire_front.geo_crs import geojson_to_wgs84, looks_projected_meters, utm_to_wgs84
 from wildfire_front.emergency_products import (
     compute_short_horizon_envelope,
-    envelope_to_geojson,
     write_envelope_geojson,
 )
+from wildfire_front.geo_crs import geojson_to_wgs84, looks_projected_meters, utm_to_wgs84
 
 
 def test_utm_tobarra_region_is_spain():
@@ -52,7 +51,11 @@ def test_geojson_to_wgs84_converts_polygon():
 
 def test_write_envelope_geojson_wgs84(tmp_path):
     env = compute_short_horizon_envelope(
-        5.71, head_ros_m_min=6.9, flank_ros_m_min=5.71, rear_ros_m_min=2.8, expansion_bearing_deg=200.0
+        5.71,
+        head_ros_m_min=6.9,
+        flank_ros_m_min=5.71,
+        rear_ros_m_min=2.8,
+        expansion_bearing_deg=200.0,
     )
     path = tmp_path / "emergency_envelope_guidance.geojson"
     # Tobarra-like UTM center

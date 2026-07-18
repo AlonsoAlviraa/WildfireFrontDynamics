@@ -10,10 +10,9 @@ import argparse
 import csv
 import io
 import json
-import math
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -141,7 +140,7 @@ def main() -> int:
         "properties": {
             "bbox": [minx, miny, maxx, maxy],
             "n_hotspots": len(feats),
-            "built_at_utc": datetime.now(timezone.utc).isoformat(),
+            "built_at_utc": datetime.now(UTC).isoformat(),
             "note": "Hotspots ~375m pixels, NOT fire perimeter",
         },
     }
@@ -157,6 +156,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     raise SystemExit(main())

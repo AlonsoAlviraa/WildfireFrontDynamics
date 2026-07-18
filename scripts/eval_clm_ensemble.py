@@ -12,7 +12,7 @@ import argparse
 import json
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -157,7 +157,7 @@ def main() -> int:
             "Holdout test is CARDOSO. Default members never train on Cardoso. "
             "Use --all-lofo only for research (LEAK risk)."
         ),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "ensemble_mode": args.mode,
         "members": [str(w) for w in weight_paths],
         "n_members": len(weight_paths),
@@ -190,7 +190,7 @@ def main() -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     out = args.output_dir / "v30_ensemble_verdict.json"
     # Drop bulky aggregate from file? keep slim report + optional full
-    slim = {k: v for k, v in report.items()}
+    slim = dict(report.items())
     out.write_text(json.dumps(slim, indent=2), encoding="utf-8")
     (args.output_dir / "v30_ensemble_metrics_full.json").write_text(
         json.dumps({**report, "aggregate": metrics.get("aggregate")}, indent=2, default=str),

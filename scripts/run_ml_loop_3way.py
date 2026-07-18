@@ -21,7 +21,7 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +29,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+
+import contextlib  # noqa: E402
 
 from wildfire_front.ml.clm_eval import (  # noqa: E402
     collect_member_growth_cache,
@@ -56,7 +58,7 @@ CHAMPION0 = {
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _load_scorecard() -> dict[str, Any]:
@@ -230,7 +232,7 @@ def track_multi_if(
     s = run_training(cfg)
     w = out / "weights_pretrained_best.pt"
     # Snapshot so later rounds do not overwrite a promoted member
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     snap = out / f"weights_multi_if_{stamp}.pt"
     if w.is_file():
         import shutil
@@ -900,7 +902,7 @@ def run_round(
                 _maybe_promote(sc, vb, recipe)
                 # On GO temp promote, freeze recipe into ensemble manifest-friendly sidecar
                 if vb.get("go") and temps is not None and vb.get("verdict") == "GO_PROMOTE":
-                    try:
+                    with contextlib.suppress(OSError):
                         (ROOT / "models" / "clm_ensemble" / "loop_champion_recipe.json").write_text(
                             json.dumps(
                                 {
@@ -916,8 +918,6 @@ def run_round(
                             ),
                             encoding="utf-8",
                         )
-                    except OSError:
-                        pass
 
         sm["latency_s"] = round(time.perf_counter() - t0, 2)
         round_rep["tracks"]["source_mix"] = sm

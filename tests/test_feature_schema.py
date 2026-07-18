@@ -43,9 +43,7 @@ def test_clean12_shape_and_no_dead_channels_with_variation() -> None:
     # (still may be constant per-channel if uniform dir — use gradient)
     h, w = 16, 16
     fields["wind_dir"] = (np.linspace(0, 350, h * w).reshape(h, w)).astype(np.float32)
-    fields["wind_speed"] = (2.0 + 0.1 * np.arange(h)[:, None] * np.ones((h, w))).astype(
-        np.float32
-    )
+    fields["wind_speed"] = (2.0 + 0.1 * np.arange(h)[:, None] * np.ones((h, w))).astype(np.float32)
     ch = build_channels_from_fields("clean12", **fields)
     assert ch.shape == (12, 16, 16)
     assert schema_channel_count("clean12") == 12

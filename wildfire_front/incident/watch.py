@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import sys
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .pipeline import IncidentConfig, acquire_work_dir_lock, process_incident_once
 
@@ -74,9 +75,7 @@ def run_incident_watch(
             iterations += 1
             # force only on first iteration so subsequent idle is cheap
             force = iterations == 1
-            summary = process_incident_once(
-                config, force=force, prev_sizes=prev_sizes
-            )
+            summary = process_incident_once(config, force=force, prev_sizes=prev_sizes)
             last = summary
             if on_update:
                 on_update(summary)

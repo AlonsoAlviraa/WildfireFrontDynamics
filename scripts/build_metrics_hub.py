@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +45,7 @@ def collect() -> dict[str, Any]:
     ml_loop = _load(ROOT / "docs" / "ML_LOOP_3WAY_SCORECARD.json") or {}
     industrial = _load(ROOT / "docs" / "INDUSTRIAL_READINESS_STATUS.json") or {}
     compare = _load(ROOT / "docs" / "COMPARE_CLM_VS_OPEN_SCORECARD.json") or {}
-    pista_b = _load(ROOT / "docs" / "PISTA_B_SCORECARD_SNAPSHOT.json") or {}
+    _load(ROOT / "docs" / "PISTA_B_SCORECARD_SNAPSHOT.json") or {}
 
     open_packs = []
     open_dir = ROOT / "outputs" / "open_if"
@@ -115,7 +115,7 @@ def collect() -> dict[str, Any]:
 
     hub = {
         "schema": "metrics_hub_v1",
-        "built_at_utc": datetime.now(timezone.utc).isoformat(),
+        "built_at_utc": datetime.now(UTC).isoformat(),
         "git_commit": _git_head(),
         "content_hash": "",
         "ml": {
@@ -184,8 +184,8 @@ def render_md(hub: dict[str, Any]) -> str:
         "",
         "## ML (CLM ensemble)",
         "",
-        f"| Métrica | Valor |",
-        f"|---------|------:|",
+        "| Métrica | Valor |",
+        "|---------|------:|",
         f"| product | {ml.get('product')} |",
         f"| test_iou | {mm.get('test_iou')} |",
         f"| improvement_vs_copy_iou | {mm.get('improvement_vs_copy_iou')} |",
@@ -195,8 +195,8 @@ def render_md(hub: dict[str, Any]) -> str:
         "",
         "## Ops (Tobarra representativo)",
         "",
-        f"| Métrica | Valor |",
-        f"|---------|------:|",
+        "| Métrica | Valor |",
+        "|---------|------:|",
         f"| grade | {ops.get('quality_grade')} |",
         f"| ROS m/min | {ops.get('primary_ros_m_min')} |",
         f"| frames | {ops.get('n_frames_staged')} |",

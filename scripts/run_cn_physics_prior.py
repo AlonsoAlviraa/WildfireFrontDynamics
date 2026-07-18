@@ -17,8 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.cn_cellular_ca import run_ca
-from wildfire_front.cn_wang_zhengfei import hybrid_polar_to_geojson_ring, hybrid_ros_prior
+from wildfire_front.cn_cellular_ca import run_ca  # noqa: E402
+from wildfire_front.cn_wang_zhengfei import (  # noqa: E402
+    hybrid_polar_to_geojson_ring,
+    hybrid_ros_prior,
+)
 
 
 def main() -> int:

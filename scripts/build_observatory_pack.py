@@ -21,12 +21,14 @@ import shutil
 import sys
 import traceback
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+import contextlib  # noqa: E402
 
 from wildfire_front.cli import run_geotiff_ingest  # noqa: E402
 from wildfire_front.models import GeometrySpeedConfig  # noqa: E402
@@ -303,10 +305,7 @@ def _select_coherent_pairs(
         else:
             med = float(sorted(dts)[len(dts) // 2])
             # Prefer med dt between 30s and 15 min
-            if 30 <= med <= 900:
-                score = 1000.0 - abs(med - 180.0)
-            else:
-                score = 100.0 / (1.0 + med / 3600.0)
+            score = 1000.0 - abs(med - 180.0) if 30 <= med <= 900 else 100.0 / (1.0 + med / 3600.0)
         if score > best_score:
             best_score = score
             best_window = window
@@ -359,10 +358,8 @@ def _manifest_component_stats(manifest_csv: Path) -> dict[str, float | int | Non
             status = (row.get("status") or "").lower()
             if status == "accepted":
                 accepted += 1
-                try:
+                with contextlib.suppress(ValueError):
                     counts.append(int(float(row.get("component_count") or 0)))
-                except ValueError:
-                    pass
             else:
                 rejected += 1
     return {
@@ -512,7 +509,7 @@ def write_scorecard(results: list[dict[str, object]], path: Path) -> dict[str, o
         )
 
     scorecard = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "gates": {
             "A1_ge3_fires": {"pass": a1, "n_ok": len(ok)},
             "A2_artifacts_present": {"pass": a2},

@@ -49,10 +49,10 @@ def test_ops_a_can_go():
 
 
 def test_determinism_of_scores():
-    kwargs = dict(
-        ml_metrics={"test_iou": 0.8963, "improvement_vs_copy_iou": 0.2545},
-        ops_metrics={"quality_grade": "B", "n_frames_staged": 5},
-    )
+    kwargs = {
+        "ml_metrics": {"test_iou": 0.8963, "improvement_vs_copy_iou": 0.2545},
+        "ops_metrics": {"quality_grade": "B", "n_frames_staged": 5},
+    }
     a = build_decision_card("d", **kwargs)
     b = build_decision_card("d", **kwargs)
     assert a.confidence_pred == b.confidence_pred

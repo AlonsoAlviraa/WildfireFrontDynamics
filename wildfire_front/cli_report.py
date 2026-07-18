@@ -101,30 +101,32 @@ def print_ingest_report(
     as_json: bool = False,
     event_id: str = "",
 ) -> None:
-    ops = metrics.get("operational") if isinstance(metrics.get("operational"), dict) else {}
-    payload = {
+    _ops = metrics.get("operational")
+    ops: dict[str, Any] = _ops if isinstance(_ops, dict) else {}
+    artifacts = _list_existing(
+        output,
+        [
+            "ingest_manifest.csv",
+            "summary.json",
+            "report.html",
+            "fronts.geojson",
+            "local_speeds.csv",
+            "arrival_time.csv",
+            "operational_metrics.json",
+            "front_dynamics.json",
+            "operational_report.html",
+            "main_front.geojson",
+            "ros_timeline.csv",
+            "brief_operativo.md",
+        ],
+    )
+    payload: dict[str, Any] = {
         "command": "ingest-geotiff",
         "event_id": event_id,
         "output": str(output.resolve()),
         "metrics": metrics,
         "operational": ops or None,
-        "artifacts": _list_existing(
-            output,
-            [
-                "ingest_manifest.csv",
-                "summary.json",
-                "report.html",
-                "fronts.geojson",
-                "local_speeds.csv",
-                "arrival_time.csv",
-                "operational_metrics.json",
-                "front_dynamics.json",
-                "operational_report.html",
-                "main_front.geojson",
-                "ros_timeline.csv",
-                "brief_operativo.md",
-            ],
-        ),
+        "artifacts": artifacts,
     }
     if as_json:
         print_json(payload)
@@ -153,7 +155,7 @@ def print_ingest_report(
         else:
             _out(_kv(k, v, width=32))
     section("Artifacts")
-    for name, path, exists in payload["artifacts"]:
+    for name, path, exists in artifacts:
         mark = _OK if exists else _MISS
         _out(f"  {mark} {name:<28} {path if exists else ''}")
     if metrics.get("operator_export_error"):
@@ -189,7 +191,8 @@ def enrich_incident_summary(summary: dict[str, Any]) -> dict[str, Any]:
     outbox = out.get("outbox")
     ops = _ops_detail_from_outbox(str(outbox) if outbox else None)
     if not ops:
-        state = out.get("state") if isinstance(out.get("state"), dict) else {}
+        _state = out.get("state")
+        state: dict[str, Any] = _state if isinstance(_state, dict) else {}
         art = state.get("artifacts") or out.get("artifacts") or {}
         if isinstance(art, dict) and art.get("operational_metrics"):
             ops = _ops_detail_from_outbox(Path(art["operational_metrics"]).parent)
@@ -259,7 +262,8 @@ def print_incident_report(
     if data.get("error"):
         _out(_kv("error", data.get("error")))
 
-    detail = data.get("detail") if isinstance(data.get("detail"), dict) else {}
+    _detail = data.get("detail")
+    detail: dict[str, Any] = _detail if isinstance(_detail, dict) else {}
     grade = data.get("quality_grade") or detail.get("quality_grade")
     label = data.get("quality_label_es") or detail.get("quality_label_es")
     ros = data.get("primary_ros_m_min")
@@ -282,9 +286,7 @@ def print_incident_report(
                 pass
     if decision is not None:
         section("Decision Card")
-        conf_s = (
-            f"{float(conf_pred):.3f}" if isinstance(conf_pred, (int, float)) else "—"
-        )
+        conf_s = f"{float(conf_pred):.3f}" if isinstance(conf_pred, (int, float)) else "—"
         label_s = f" · {conf_label}" if conf_label else ""
         _out(_kv("decision", f"{decision}  (conf={conf_s}{label_s})"))
         _out(_kv("artifact", "fire_decision_card.json"))
@@ -293,7 +295,12 @@ def print_incident_report(
     _out(_kv("grade", f"{_fmt(grade)} · {_fmt(label)}" if grade or label else "—"))
     _out(_kv("ROS m/min", ros))
     if detail:
-        _out(_kv("P25 / P75", f"{_fmt(detail.get('speed_p25_m_min'))} / {_fmt(detail.get('speed_p75_m_min'))}"))
+        _out(
+            _kv(
+                "P25 / P75",
+                f"{_fmt(detail.get('speed_p25_m_min'))} / {_fmt(detail.get('speed_p75_m_min'))}",
+            )
+        )
         _out(_kv("n observable", detail.get("speed_n_observable")))
         _out(_kv("area ha max", detail.get("area_ha_max")))
         _out(_kv("vs ref ratio", detail.get("speed_vs_ref_ratio")))
@@ -352,7 +359,8 @@ def print_incident_report(
                 continue
             _out(_kv(str(k), v, width=20))
 
-    state = data.get("state") if isinstance(data.get("state"), dict) else {}
+    _state = data.get("state")
+    state: dict[str, Any] = _state if isinstance(_state, dict) else {}
     artifacts = data.get("artifacts") or state.get("artifacts") or {}
     if isinstance(artifacts, dict) and artifacts:
         section("Artifacts")
@@ -408,12 +416,13 @@ def print_incident_report(
         _out("  3. Prefer --masks or rely on MAD segmentation")
     elif status == "updated":
         section("Next steps")
-        outbox = data.get("outbox")
-        if outbox:
-            _out(f"  · Decision  {Path(outbox) / 'fire_decision_card.md'}")
-            _out(f"  · Brief     {Path(outbox) / 'emergency_briefing.md'}")
-            _out(f"  · Open      {Path(outbox) / 'operational_report.html'}")
-            _out(f"  · GIS       {Path(outbox) / 'main_front.geojson'}")
+        outbox_raw = data.get("outbox")
+        if outbox_raw:
+            outbox_path = Path(str(outbox_raw))
+            _out(f"  · Decision  {outbox_path / 'fire_decision_card.md'}")
+            _out(f"  · Brief     {outbox_path / 'emergency_briefing.md'}")
+            _out(f"  · Open      {outbox_path / 'operational_report.html'}")
+            _out(f"  · GIS       {outbox_path / 'main_front.geojson'}")
     elif status == "error":
         section("Next steps")
         _out("  · Inspect outbox/ingest_manifest.csv for reject reasons")
@@ -465,7 +474,9 @@ def print_doctor_report(report: dict[str, Any], *, as_json: bool = False) -> Non
     _out(_kv("work_dir", report.get("work_dir")))
     _out(_kv("masks", report.get("masks_dir") or "(none — MAD)"))
     _out(_kv("ok", report.get("ok")))
-    section(f"Checks ({report.get('n_pass', 0)} pass · {report.get('n_warn', 0)} warn · {report.get('n_fail', 0)} fail)")
+    section(
+        f"Checks ({report.get('n_pass', 0)} pass · {report.get('n_warn', 0)} warn · {report.get('n_fail', 0)} fail)"
+    )
     for c in report.get("checks") or []:
         level = c.get("level", "info")
         mark = {_OK: _OK, "pass": _OK, "warn": _WARN, "fail": _ERR, "info": _MISS}.get(level, _MISS)
@@ -495,7 +506,9 @@ def print_doctor_report(report: dict[str, Any], *, as_json: bool = False) -> Non
     _out()
 
 
-def print_status_report(report: dict[str, Any], *, as_json: bool = False, verbose: bool = False) -> None:
+def print_status_report(
+    report: dict[str, Any], *, as_json: bool = False, verbose: bool = False
+) -> None:
     if as_json:
         print_json(report)
         return

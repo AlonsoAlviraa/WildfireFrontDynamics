@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import numpy as np
@@ -65,7 +64,5 @@ def test_scorecard_champion_protect_logic():
     m_iou = float(mem_c["model_iou"])
     d_delta = float(disk_c["improvement_vs_copy_iou"])
     m_delta = float(mem_c["improvement_vs_copy_iou"])
-    keep_disk = (d_iou > m_iou + 1e-6) or (
-        abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6
-    )
+    keep_disk = (d_iou > m_iou + 1e-6) or (abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6)
     assert keep_disk is True

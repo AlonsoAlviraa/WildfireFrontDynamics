@@ -17,7 +17,7 @@ import argparse
 import json
 import sys
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -27,8 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.open_if.dnbr import compute_dnbr, severity_fractions
-from wildfire_front.open_if.stac_s2 import (
+from wildfire_front.open_if.dnbr import compute_dnbr, severity_fractions  # noqa: E402
+from wildfire_front.open_if.stac_s2 import (  # noqa: E402
     KNOWN_EVENT_DATES,
     bbox_from_geojson,
     default_date_windows,
@@ -39,7 +39,7 @@ from wildfire_front.open_if.stac_s2 import (
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _write_json(path: Path, obj: Any) -> None:
@@ -96,8 +96,8 @@ def _render_md(status: dict[str, Any], summary: dict[str, Any] | None) -> str:
         lines += [
             "## Severity fractions (valid pixels)",
             "",
-            f"| Class | Fraction |",
-            f"|-------|----------|",
+            "| Class | Fraction |",
+            "|-------|----------|",
         ]
         for k, v in fr.items():
             lines.append(f"| {k} | {float(v):.3f} |")

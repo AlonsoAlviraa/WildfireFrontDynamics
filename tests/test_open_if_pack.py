@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import math
-
-from shapely.geometry import Polygon
-
 # import module under test
 import importlib.util
 from pathlib import Path
+
+from shapely.geometry import Polygon
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
@@ -39,10 +37,7 @@ def test_parse_product_kind():
         mod._parse_product_kind(".../EMSR578_AOI01_DEL_MONIT01_r1_vector.zip")
         == "delineation_monitoring"
     )
-    assert (
-        mod._parse_product_kind(".../EMSR578_AOI01_DEL_PRODUCT_r1_vector.zip")
-        == "delineation"
-    )
+    assert mod._parse_product_kind(".../EMSR578_AOI01_DEL_PRODUCT_r1_vector.zip") == "delineation"
     assert mod._parse_product_kind(".../EMSR578_AOI01_GRA_PRODUCT_r1_vector.zip") == "grading"
 
 
@@ -66,9 +61,11 @@ def test_geoms_from_fc():
 
 
 def test_scorecard_exists_if_built():
+    import pytest
+
     sc = ROOT / "outputs" / "open_if" / "emsr578" / "scorecard_pista_b.json"
     if not sc.is_file():
-        return  # optional when pack not built in CI
+        pytest.skip("open_if EMSR578 scorecard not built (optional artifact)")
     import json
 
     data = json.loads(sc.read_text(encoding="utf-8"))

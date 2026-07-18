@@ -145,7 +145,14 @@ def doctor_incident(
                 "%Y-%m-%d_%H-%M-%S",
             ):
                 try:
-                    ts_parsed.append((row["name"], datetime.fromisoformat(raw.replace("Z", "")) if "T" in raw else datetime.strptime(raw[:15], fmt)))
+                    ts_parsed.append(
+                        (
+                            row["name"],
+                            datetime.fromisoformat(raw.replace("Z", ""))
+                            if "T" in raw
+                            else datetime.strptime(raw[:15], fmt),
+                        )
+                    )
                     break
                 except ValueError:
                     continue
@@ -154,7 +161,7 @@ def doctor_incident(
     if len(ts_parsed) >= 2:
         ordered = sorted(ts_parsed, key=lambda x: x[1])
         names_chrono = [n for n, _ in ordered]
-        names_inbox = [r["name"] for r in inbox_files if r.get("timestamp")]
+        [r["name"] for r in inbox_files if r.get("timestamp")]
         # compare chronological order vs listing order among dated files
         dated_order = [r["name"] for r in inbox_files if r.get("timestamp")]
         if dated_order != names_chrono and sorted(dated_order) == sorted(names_chrono):
@@ -166,8 +173,7 @@ def doctor_incident(
         else:
             add("pass", "timestamps_order", "Timestamp sequence is consistent")
         deltas = [
-            (ordered[i + 1][1] - ordered[i][1]).total_seconds()
-            for i in range(len(ordered) - 1)
+            (ordered[i + 1][1] - ordered[i][1]).total_seconds() for i in range(len(ordered) - 1)
         ]
         if deltas:
             max_gap = max(deltas)
@@ -175,7 +181,7 @@ def doctor_incident(
                 add(
                     "warn",
                     "timestamp_gaps",
-                    f"Largest inter-frame gap ≈ {max_gap/60:.1f} min — ROS may be noisy",
+                    f"Largest inter-frame gap ≈ {max_gap / 60:.1f} min — ROS may be noisy",
                 )
             else:
                 add("pass", "timestamp_gaps", f"Max inter-frame gap ≈ {max_gap:.0f}s")
@@ -184,9 +190,7 @@ def doctor_incident(
         add("info", "masks", "No --masks: MAD adaptive segmentation will be used")
     elif masks_dir.is_dir():
         mask_files = [
-            p
-            for p in masks_dir.iterdir()
-            if p.is_file() and p.suffix.lower() in TIFF_EXTENSIONS
+            p for p in masks_dir.iterdir() if p.is_file() and p.suffix.lower() in TIFF_EXTENSIONS
         ]
         add("pass", "masks_dir", f"Masks directory OK ({len(mask_files)} TIFF)")
         if tiffs:
@@ -260,9 +264,9 @@ def doctor_incident(
         "command": "doctor",
         "event_id": event_id,
         "inbox": str(inbox.resolve()) if inbox.exists() else str(inbox),
-        "work_dir": str(work_dir.resolve()) if work_dir and work_dir.exists() else (
-            str(work_dir) if work_dir else None
-        ),
+        "work_dir": str(work_dir.resolve())
+        if work_dir and work_dir.exists()
+        else (str(work_dir) if work_dir else None),
         "masks_dir": str(masks_dir) if masks_dir else None,
         "ok": n_fail == 0,
         "n_pass": n_pass,

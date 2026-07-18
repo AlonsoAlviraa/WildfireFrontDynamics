@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,7 +95,7 @@ def main() -> int:
         if r.get("improvement_vs_copy_iou") is not None
     ]
     report = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "protocol": "clm_lofo_v1_all_folds",
         "folds": rows,
         "summary": {

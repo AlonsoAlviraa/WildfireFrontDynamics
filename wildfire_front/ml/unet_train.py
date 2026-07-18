@@ -275,9 +275,7 @@ def merge_clm_patches(
         if n:
             print(f"[clm] merged {n} patches into {dst}")
         if skipped:
-            print(
-                f"[clm] skipped {skipped} patches (shape != {ref_shape}) for {split}"
-            )
+            print(f"[clm] skipped {skipped} patches (shape != {ref_shape}) for {split}")
 
     return merged
 
@@ -694,9 +692,7 @@ def run_training(config: UNetTrainConfig) -> dict:
         "legacy_improvement_vs_naive_copy_iou_changed": float(
             primary_test.get("legacy_improvement_vs_naive_copy_iou_changed", 0.0)
         ),
-        "dilated_copy_baseline_iou": float(
-            primary_test.get("dilated_copy_baseline_iou", 0.0)
-        ),
+        "dilated_copy_baseline_iou": float(primary_test.get("dilated_copy_baseline_iou", 0.0)),
         "improvement_vs_dilated_copy_iou": float(
             primary_test.get("improvement_vs_dilated_copy_iou", 0.0)
         ),

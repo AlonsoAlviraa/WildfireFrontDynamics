@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -30,9 +31,15 @@ def _decode_delta(logits: torch.Tensor, prev: torch.Tensor) -> torch.Tensor:
     return torch.clamp(prev_b + prob, 0.0, 1.0)
 
 
-def _normalize_member_weights(
-    n: int, member_weights: Sequence[float] | None
-) -> list[float] | None:
+def _agg_float(agg: dict[str, Any], key: str, default: float = 0.0) -> float:
+    """Extract a numeric field from aggregate_ndws_evaluation output."""
+    v = agg.get(key, default)
+    if isinstance(v, (int, float)):
+        return float(v)
+    return default
+
+
+def _normalize_member_weights(n: int, member_weights: Sequence[float] | None) -> list[float] | None:
     if member_weights is None:
         return None
     if len(member_weights) != n:
@@ -72,7 +79,9 @@ def evaluate_clm_weights(
     temperatures:
         Optional per-member temperature scales (logit / T before soft-vote).
     """
-    weight_list = [Path(weights)] if isinstance(weights, (str, Path)) else [Path(w) for w in weights]
+    weight_list = (
+        [Path(weights)] if isinstance(weights, (str, Path)) else [Path(w) for w in weights]
+    )
     for w in weight_list:
         if not w.is_file():
             raise FileNotFoundError(f"missing weights: {w}")
@@ -95,14 +104,8 @@ def evaluate_clm_weights(
     models = [_load_model(w, in_ch, device) for w in weight_list]
     mix = _normalize_member_weights(len(models), member_weights)
     if temperatures is not None and len(temperatures) != len(models):
-        raise ValueError(
-            f"temperatures length {len(temperatures)} != n_models {len(models)}"
-        )
-    temps = (
-        [float(t) for t in temperatures]
-        if temperatures is not None
-        else [1.0] * len(models)
-    )
+        raise ValueError(f"temperatures length {len(temperatures)} != n_models {len(models)}")
+    temps = [float(t) for t in temperatures] if temperatures is not None else [1.0] * len(models)
     sample_metrics: list[dict] = []
 
     for i in range(n):
@@ -121,10 +124,7 @@ def evaluate_clm_weights(
             except TypeError:
                 logits = model(x)
             t = temps[mi]
-            if abs(t - 1.0) > 1e-9:
-                g = torch.sigmoid(logits / t)
-            else:
-                g = torch.sigmoid(logits)
+            g = torch.sigmoid(logits / t) if abs(t - 1.0) > 1e-09 else torch.sigmoid(logits)
             growth_probs.append(g)
             abs_probs.append(torch.clamp(cur_b.unsqueeze(1) + g, 0.0, 1.0))
 
@@ -152,9 +152,9 @@ def evaluate_clm_weights(
         sample_metrics.append(m)
 
     agg = aggregate_ndws_evaluation(sample_metrics)
-    model_iou = float(agg.get("model_iou") or 0.0)
-    copy_iou = float(agg.get("copy_baseline_iou") or 0.0)
-    delta = float(agg.get("improvement_vs_copy_iou", model_iou - copy_iou))
+    model_iou = _agg_float(agg, "model_iou")
+    copy_iou = _agg_float(agg, "copy_baseline_iou")
+    delta = _agg_float(agg, "improvement_vs_copy_iou", model_iou - copy_iou)
     return {
         "n_patches": n,
         "n_members": len(models),
@@ -168,16 +168,15 @@ def evaluate_clm_weights(
         "model_iou": model_iou,
         "copy_baseline_iou": copy_iou,
         "improvement_vs_copy_iou": delta,
-        "model_iou_growth": float(agg.get("model_iou_growth") or 0.0),
-        "improvement_vs_dilated_copy_iou_growth": float(
-            agg.get("improvement_vs_dilated_copy_iou_growth") or 0.0
+        "model_iou_growth": _agg_float(agg, "model_iou_growth"),
+        "improvement_vs_dilated_copy_iou_growth": _agg_float(
+            agg, "improvement_vs_dilated_copy_iou_growth"
         ),
-        "improvement_vs_copy_iou_changed": float(
-            agg.get("improvement_vs_copy_iou_changed") or 0.0
-        ),
-        "model_iou_changed": float(agg.get("model_iou_changed") or 0.0),
+        "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
+        "model_iou_changed": _agg_float(agg, "model_iou_changed"),
         "aggregate": agg,
     }
+
 
 @torch.no_grad()
 def collect_member_growth_cache(
@@ -295,13 +294,11 @@ def score_mix_from_cache(
         mean_g = (stacked * w.reshape(-1, 1, 1)).sum(axis=0)
         prev = np.asarray(prevs[i], dtype=np.float64)
         pred = np.clip(prev + mean_g, 0.0, 1.0)
-        sample_metrics.append(
-            evaluate_sample(pred, prevs[i], tgts[i], threshold=threshold)
-        )
+        sample_metrics.append(evaluate_sample(pred, prevs[i], tgts[i], threshold=threshold))
     agg = aggregate_ndws_evaluation(sample_metrics)
-    model_iou = float(agg.get("model_iou") or 0.0)
-    copy_iou = float(agg.get("copy_baseline_iou") or 0.0)
-    delta = float(agg.get("improvement_vs_copy_iou", model_iou - copy_iou))
+    model_iou = _agg_float(agg, "model_iou")
+    copy_iou = _agg_float(agg, "copy_baseline_iou")
+    delta = _agg_float(agg, "improvement_vs_copy_iou", model_iou - copy_iou)
     return {
         "n_patches": int(cache["n_patches"]),
         "n_members": n_m,
@@ -313,16 +310,15 @@ def score_mix_from_cache(
         "model_iou": model_iou,
         "copy_baseline_iou": copy_iou,
         "improvement_vs_copy_iou": delta,
-        "model_iou_growth": float(agg.get("model_iou_growth") or 0.0),
-        "improvement_vs_dilated_copy_iou_growth": float(
-            agg.get("improvement_vs_dilated_copy_iou_growth") or 0.0
+        "model_iou_growth": _agg_float(agg, "model_iou_growth"),
+        "improvement_vs_dilated_copy_iou_growth": _agg_float(
+            agg, "improvement_vs_dilated_copy_iou_growth"
         ),
-        "improvement_vs_copy_iou_changed": float(
-            agg.get("improvement_vs_copy_iou_changed") or 0.0
-        ),
-        "model_iou_changed": float(agg.get("model_iou_changed") or 0.0),
+        "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
+        "model_iou_changed": _agg_float(agg, "model_iou_changed"),
         "aggregate": agg,
     }
+
 
 def sweep_mix_threshold_from_cache(
     cache: dict[str, Any],
@@ -349,11 +345,15 @@ def sweep_mix_threshold_from_cache(
                 best["model_iou"],
             ):
                 best = row
-    return {"best": best, "n_grid": len(rows), "rows_top": sorted(
-        rows,
-        key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]),
-        reverse=True,
-    )[:8]}
+    return {
+        "best": best,
+        "n_grid": len(rows),
+        "rows_top": sorted(
+            rows,
+            key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]),
+            reverse=True,
+        )[:8],
+    }
 
 
 def default_lofo_weight_paths(root: Path) -> list[Path]:

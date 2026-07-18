@@ -18,7 +18,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -126,7 +126,7 @@ def _run_ft(
             > V28["improvement_vs_copy_iou"],
         },
         "weights": str(weights),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
     }
     iou = metrics["model_iou"]
     delta = metrics["improvement_vs_copy_iou"]
@@ -173,7 +173,7 @@ def main() -> int:
 
     results: dict = {
         "batch": "v30_clm",
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "jobs": jobs,
         "baseline_v28": V28,
         "experiments": {},

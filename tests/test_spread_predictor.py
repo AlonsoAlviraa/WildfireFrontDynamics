@@ -65,13 +65,12 @@ class TestSpreadPredictor:
         assert pred[30, 30] == 1.0
 
     def test_ensemble_soft_vote(self, manifest_path: Path, weights_path: Path, tmp_path: Path):
+        # second random member
+        from models.unet_model import ResidualWildfireUNetSmall
         from wildfire_front.ml.spread_predictor import (
             EnsembleSpreadPredictor,
             SpreadModelManifest,
         )
-
-        # second random member
-        from models.unet_model import ResidualWildfireUNetSmall
 
         w2 = tmp_path / "weights2.pt"
         torch.save(ResidualWildfireUNetSmall(in_channels=18).state_dict(), w2)

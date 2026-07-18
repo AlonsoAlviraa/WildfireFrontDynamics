@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +42,7 @@ def main() -> int:
     tob = next((f for f in fires if "tobarra" in f["fire_id"]), {})
     n_a = sum(1 for f in fires if f.get("grade") == "A")
     score = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "tranche": "close_O3_multiIF_v24_prep",
         "leaps": {
             "O3": {

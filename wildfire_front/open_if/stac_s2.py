@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -115,31 +116,36 @@ def read_cog_window(
 
     from .dnbr import scale_s2_reflectance
 
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif,.TIF,.tiff"):
-        with rasterio.open(href) as ds:
-            left, bottom, right, top = transform_bounds(
-                "EPSG:4326", ds.crs, bbox[0], bbox[1], bbox[2], bbox[3], densify_pts=21
-            )
-            window = from_bounds(left, bottom, right, top, transform=ds.transform)
-            # cap resolution
-            win_h = max(1, int(round(window.height)))
-            win_w = max(1, int(round(window.width)))
-            out_h = min(max_size, win_h)
-            out_w = min(max_size, win_w)
-            data = ds.read(
-                1,
-                window=window,
-                out_shape=(out_h, out_w),
-                resampling=Resampling.bilinear,
-                boundless=True,
-                fill_value=0,
-            )
-            meta = {
-                "crs": str(ds.crs),
-                "src_shape": [ds.height, ds.width],
-                "window_shape": [out_h, out_w],
-                "dtype": str(ds.dtypes[0]),
-            }
+    with (
+        rasterio.Env(
+            GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
+            CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif,.TIF,.tiff",
+        ),
+        rasterio.open(href) as ds,
+    ):
+        left, bottom, right, top = transform_bounds(
+            "EPSG:4326", ds.crs, bbox[0], bbox[1], bbox[2], bbox[3], densify_pts=21
+        )
+        window = from_bounds(left, bottom, right, top, transform=ds.transform)
+        # cap resolution
+        win_h = max(1, int(round(window.height)))
+        win_w = max(1, int(round(window.width)))
+        out_h = min(max_size, win_h)
+        out_w = min(max_size, win_w)
+        data = ds.read(
+            1,
+            window=window,
+            out_shape=(out_h, out_w),
+            resampling=Resampling.bilinear,
+            boundless=True,
+            fill_value=0,
+        )
+        meta = {
+            "crs": str(ds.crs),
+            "src_shape": [ds.height, ds.width],
+            "window_shape": [out_h, out_w],
+            "dtype": str(ds.dtypes[0]),
+        }
     arr = scale_s2_reflectance(data, scale=scale)
     return arr, meta
 
@@ -183,9 +189,9 @@ def default_date_windows(
     event_date: YYYY-MM-DD mid-fire estimate.
     """
     if event_date:
-        mid = datetime.strptime(event_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        mid = datetime.strptime(event_date, "%Y-%m-%d").replace(tzinfo=UTC)
     else:
-        mid = datetime.now(timezone.utc) - timedelta(days=180)
+        mid = datetime.now(UTC) - timedelta(days=180)
     # End pre-window well before fire peak so STAC does not pick an "active fire" scene as pre
     pre_end = mid - timedelta(days=7)
     pre_start = mid - timedelta(days=pre_days)

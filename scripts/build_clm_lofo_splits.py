@@ -7,7 +7,7 @@ import json
 import shutil
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,7 +37,7 @@ def main() -> int:
     OUT_ROOT.mkdir(parents=True)
 
     manifest = {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "sources": {k: len(v) for k, v in sorted(by_src.items())},
         "folds": {},
     }
@@ -54,7 +54,7 @@ def main() -> int:
         train_pool: list[Path] = []
         for src, paths in by_src.items():
             if src == held:
-                for i, p in enumerate(sorted(paths)):
+                for _i, p in enumerate(sorted(paths)):
                     # held-out source → test only
                     shutil.copy2(p, test_dir / p.name)
             else:

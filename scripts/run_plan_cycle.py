@@ -11,7 +11,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -212,7 +212,7 @@ def assess() -> dict:
     status = {
         "schema": "plan_3_meses_status_v1",
         "plan": "docs/PLAN_3_MESES.md",
-        "cycle_at_utc": datetime.now(timezone.utc).isoformat(),
+        "cycle_at_utc": datetime.now(UTC).isoformat(),
         "items": items,
         "live": {
             "n_open_packs": n_packs,
@@ -292,6 +292,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     raise SystemExit(main())

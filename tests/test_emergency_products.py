@@ -107,7 +107,9 @@ def test_envelope_to_geojson_feature_collection():
         rear_ros_m_min=2.8,
         expansion_bearing_deg=204.0,
     )
-    gj = envelope_to_geojson(e, center_xy=(500000.0, 4200000.0), fire_id="test", expansion_bearing_deg=204.0)
+    gj = envelope_to_geojson(
+        e, center_xy=(500000.0, 4200000.0), fire_id="test", expansion_bearing_deg=204.0
+    )
     assert gj["type"] == "FeatureCollection"
     assert len(gj["features"]) >= 3  # flank + head + rear for at least one horizon
     for feat in gj["features"]:
@@ -120,9 +122,11 @@ def test_envelope_to_geojson_feature_collection():
 
 
 def test_emergency_briefing_cli_multi_if():
+    import pytest
+
     packs_root = ROOT / "outputs" / "observatorio"
     if not (packs_root / "tobarra_20240802" / "operational_metrics.json").is_file():
-        return
+        pytest.skip("observatorio pack for tobarra_20240802 not built (optional artifact)")
     second = None
     for cand in ("cardoso_2025", "hellin_2024", "brazatortas_2025"):
         if (packs_root / cand / "operational_metrics.json").is_file():
@@ -168,9 +172,7 @@ def test_hausdorff_official_blocked_and_synthetic(tmp_path: Path):
                 "type": "Feature",
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [
-                        [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]
-                    ],
+                    "coordinates": [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
                 },
                 "properties": {},
             },
@@ -178,9 +180,7 @@ def test_hausdorff_official_blocked_and_synthetic(tmp_path: Path):
                 "type": "Feature",
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [
-                        [[1, 1], [11, 1], [11, 11], [1, 11], [1, 1]]
-                    ],
+                    "coordinates": [[[1, 1], [11, 1], [11, 11], [1, 11], [1, 1]]],
                 },
                 "properties": {},
             },
