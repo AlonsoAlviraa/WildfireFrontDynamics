@@ -507,12 +507,17 @@ def publish_decision_card(
     require_ops_for_go: bool = True,
     decision_policy: str = "field_ops",
     git_commit: str | None = None,
+    reliability_gate: Path | str | dict | None = None,
 ) -> dict[str, str]:
     """Write Fire Decision Card (JSON + MD) into the operator outbox.
 
     Paid-value artifact: GO / HOLD / ABSTAIN with confidence, sources, audit.
     Incident path is ops-primary (``require_ops_for_go=True`` by default).
     Default policy ``field_ops`` (stricter organism template).
+
+    Reliability: does **not** auto-load checked-in ``docs/RELIABILITY_GATE_REPORT.json``
+    (stale PASS would unlock field_ops GO). Pass ``reliability_gate`` explicitly, or
+    place a this-run report at ``outbox/reliability_gate_report.json``.
     """
     from ..product.confidence import build_decision_card
 
@@ -521,11 +526,12 @@ def publish_decision_card(
     ops_m = ops_metrics_for_decision(ops, n_frames=n_frames)
     ml_m = _load_ml_metrics_optional() if include_ml_metrics else None
     open_m = _load_open_metrics(open_pack_dir)
-    # Optional server-side gate report (repo docs/). Not client-asserted.
-    # field_ops GO requires verified R1–R4; without this report, fail-closed ABSTAIN.
-    _repo = Path(__file__).resolve().parents[2]
-    _gate_path = _repo / "docs" / "RELIABILITY_GATE_REPORT.json"
-    reliability_gate = _gate_path if _gate_path.is_file() else None
+    # Explicit only — never silent docs/ stale report for field_ops GO.
+    gate: Path | str | dict | None = reliability_gate
+    if gate is None:
+        outbox_gate = outbox / "reliability_gate_report.json"
+        if outbox_gate.is_file():
+            gate = outbox_gate
     card = build_decision_card(
         event_id,
         ml_metrics=ml_m,
@@ -534,12 +540,12 @@ def publish_decision_card(
         require_ops_for_go=require_ops_for_go,
         git_commit=git_commit,
         policy_id=decision_policy or "field_ops",
-        reliability_gate=reliability_gate,
+        reliability_gate=gate,
         extra_metrics={
             "product": "incident_runtime_v1",
             "outbox": str(outbox.resolve()),
             "n_frames": n_frames,
-            "reliability_gate_path": str(reliability_gate) if reliability_gate else None,
+            "reliability_gate_path": str(gate) if isinstance(gate, (str, Path)) else None,
         },
     )
     payload = card.to_dict()

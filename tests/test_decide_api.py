@@ -159,24 +159,46 @@ def test_http_api_path_traversal_400(tmp_path: Path):
 
 
 def test_http_api_body_too_large(tmp_path: Path):
+    """413 via Content-Length pre-check (no multi-MiB send — Windows-safe)."""
+    import socket
+
     httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
-    base = f"http://127.0.0.1:{port}"
     try:
-        fat = b"{" + b'"x":"' + (b"a" * (MAX_BODY_BYTES + 100)) + b'"}'
-        assert len(fat) > MAX_BODY_BYTES
-        req = urllib.request.Request(
-            f"{base}/v1/decide",
-            data=fat,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            urllib.request.urlopen(req, timeout=5)
-            assert False, "expected HTTPError 413"
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 413
-            detail = json.loads(exc.read().decode("utf-8"))
-            assert detail.get("error") == "body_too_large"
+        # Server rejects before reading body when Content-Length > MAX_BODY_BYTES.
+        # Raw socket avoids urllib/Windows ConnectionAbortedError on fat bodies.
+        oversized = MAX_BODY_BYTES + 1
+        req = (
+            f"POST /v1/decide HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            f"Content-Type: application/json\r\n"
+            f"Content-Length: {oversized}\r\n"
+            f"Connection: close\r\n"
+            f"\r\n"
+        ).encode("ascii")
+        with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+            sock.sendall(req)
+            # Do not send the declared body; server should 413 from header alone.
+            chunks: list[bytes] = []
+            while True:
+                try:
+                    data = sock.recv(4096)
+                except OSError:
+                    break
+                if not data:
+                    break
+                chunks.append(data)
+        raw = b"".join(chunks)
+        assert raw, "expected HTTP response"
+        status_line = raw.split(b"\r\n", 1)[0].decode("latin-1", errors="replace")
+        assert "413" in status_line, f"expected 413, got {status_line!r}"
+        # Body after headers
+        if b"\r\n\r\n" in raw:
+            body = raw.split(b"\r\n\r\n", 1)[1]
+            try:
+                detail = json.loads(body.decode("utf-8"))
+                assert detail.get("error") == "body_too_large"
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                assert b"body_too_large" in body
     finally:
         httpd.shutdown()
         httpd.server_close()
