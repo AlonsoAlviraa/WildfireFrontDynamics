@@ -24,9 +24,10 @@ fotosPrueba/
 # Kaggle jobs (run separately)
 kaggle_job/
 
-# Docs (optional in image)
+# Docs (optional in image) — keep root README for packaging (pyproject readme=)
 docs/
 *.md
+!README.md
 
 # IDE / OS
 .vscode/

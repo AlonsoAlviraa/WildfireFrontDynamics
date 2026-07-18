@@ -10,6 +10,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: write  # GHA cache for docker/build-push-action
+
 jobs:
   lint:
     name: Lint & Type-check
@@ -133,9 +137,15 @@ jobs:
           context: .
           target: runtime
           push: false
+          load: true
           tags: wildfire-front-dynamics:runtime
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke import geospatial stack (runtime)
+        run: |
+          docker run --rm --entrypoint python wildfire-front-dynamics:runtime -c \
+            "import shapely, pyproj, rasterio, numpy, affine, wildfire_front; print('runtime-deps-ok')"
 
       - name: Build inference image
         uses: docker/build-push-action@v6
@@ -143,6 +153,20 @@ jobs:
           context: .
           target: inference
           push: false
+          load: true
           tags: wildfire-front-dynamics:inference
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke import inference stack (weights optional)
+        run: |
+          docker run --rm --entrypoint python wildfire-front-dynamics:inference -c \
+            "import torch; import wildfire_front.ml.spread_predictor as s; print('inference-import-ok')"
+          # .pt are gitignored — do not fail CI when absent; only report status
+          if [ -f models/production/weights_v21_best.pt ] || [ -f models/production/spread_model_v21.pt ]; then
+            echo "Local production weight artifacts present in build context"
+          else
+            echo "NOTE: no production .pt in context (expected on clean clone)."
+            echo "Inject via bind-mount or place under models/production/ before docker build."
+            echo "See CONTRIBUTING.md Model weights section."
+          fi

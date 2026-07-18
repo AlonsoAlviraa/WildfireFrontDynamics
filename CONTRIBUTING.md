@@ -93,6 +93,28 @@ live under `models/`.
 For CI or release packaging, attach weights as release assets or restore them
 via a private cache — never commit large checkpoints.
 
+### Docker inference image
+
+`.pt` files are **not** baked into CI-built images (gitignored; clean clone has
+manifests/JSON only). The `inference` Docker target still builds and import-
+smokes without weights; CI does **not** fail when `.pt` are missing.
+
+Inject checkpoints at runtime with bind-mounts:
+
+```bash
+docker run --rm \
+  -v "$PWD/models/production/weights_v21_best.pt:/app/models/production/weights_v21_best.pt:ro" \
+  -v "$PWD/models/production/spread_model_v21.pt:/app/models/production/spread_model_v21.pt:ro" \
+  wildfire-front-dynamics:inference --help
+```
+
+Or place files under `models/production/` before `docker build --target inference`.
+
+Env defaults inside the image:
+
+- `WILDFIRE_MANIFEST=/app/models/production/manifest.json`
+- `WILDFIRE_TORCHSCRIPT=/app/models/production/spread_model_v21.pt`
+
 ### Tests that need weights
 
 Tests that assert on real checkpoints **skip** with a clear reason when artifacts

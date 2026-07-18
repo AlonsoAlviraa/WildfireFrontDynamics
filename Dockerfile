@@ -82,13 +82,22 @@ COPY --chown=wfapp:wfapp scripts/ /app/scripts/
 
 USER wfapp
 
+# Import geospatial stack + package (validates wheels + system libs)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import wildfire_front; print('healthy')" || exit 1
+    CMD python -c "import shapely, pyproj, rasterio, wildfire_front; print('healthy')" || exit 1
 
 ENTRYPOINT ["python", "-m", "wildfire_front"]
 CMD ["--help"]
 
 # ─── Stage 3: NDWS spread inference (v21 production) ───────────────────────
+# .pt weights are gitignored. CI builds this stage with manifests only.
+# For real inference, either:
+#   - place weights under models/production/ before `docker build`, or
+#   - bind-mount them at runtime, e.g.:
+#       docker run --rm \
+#         -v /path/to/weights_v21_best.pt:/app/models/production/weights_v21_best.pt:ro \
+#         -v /path/to/spread_model_v21.pt:/app/models/production/spread_model_v21.pt:ro \
+#         wildfire-front-dynamics:inference ...
 FROM runtime AS inference
 
 USER root
@@ -104,6 +113,7 @@ ENV WILDFIRE_MANIFEST=/app/models/production/manifest.json \
 
 USER wfapp
 
+# Import-only healthcheck (does not require .pt on disk)
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
     CMD python -c "import torch; import wildfire_front.ml.spread_predictor as s; print('inference-ok')" || exit 1
 

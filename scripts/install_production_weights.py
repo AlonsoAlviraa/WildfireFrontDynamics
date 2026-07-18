@@ -26,9 +26,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEST_DIR = PROJECT_ROOT / "models" / "production"
 DEST = DEST_DIR / "weights_v21_best.pt"
 
-# Prefer already-installed production artifacts, then Kaggle outputs, then exports.
+# Prefer local production alternate names, then Kaggle outputs, then exports.
+# (Canonical DEST is handled by the early-return below, not listed here.)
 CANDIDATES = [
-    DEST,  # already in place — no-op copy skipped below
     DEST_DIR / "weights_pretrained_best.pt",
     PROJECT_ROOT / "kaggle_outputs_v21" / "_top" / "weights_pretrained_best.pt",
     PROJECT_ROOT / "kaggle_outputs_v21" / "weights_pretrained_best.pt",
@@ -43,8 +43,6 @@ def main() -> int:
         return 0
 
     for src in CANDIDATES:
-        if src == DEST:
-            continue
         if src.is_file() and src.stat().st_size > 1000:
             DEST_DIR.mkdir(parents=True, exist_ok=True)
             if src.resolve() != DEST.resolve():

@@ -24,50 +24,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# (source candidates in order, destination)
+# (source candidates in order, destination).
+# Prefer already-local catalog paths / alternate names, then Kaggle, then exports.
 INSTALL_PLAN: list[tuple[list[Path], Path]] = [
     (
         [
+            # Local production first (align with install_production_weights.py)
+            ROOT / "models" / "production" / "weights_pretrained_best.pt",
+            ROOT / "kaggle_outputs_v21" / "_top" / "weights_pretrained_best.pt",
             ROOT / "kaggle_outputs_v21" / "weights_pretrained_best.pt",
-            ROOT / "models" / "production" / "weights_v21_best.pt",
+            ROOT / "kaggle_outputs_v21" / "weights_v21_best.pt",
+            ROOT / "outputs" / "ml_eval" / "v21" / "weights_pretrained_best.pt",
         ],
         ROOT / "models" / "production" / "weights_v21_best.pt",
     ),
     (
         [
-            ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt",
             ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
+            ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt",
         ],
         ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
     ),
     # Ensemble members (vendored under models/clm_ensemble)
     (
         [
+            ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
             ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt",
             ROOT / "outputs" / "ml_eval" / "v28_clm_ft" / "weights_pretrained_best.pt",
-            ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
         ],
         ROOT / "models" / "clm_ensemble" / "weights_v28_clm_ft.pt",
     ),
     (
         [
-            ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
             ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
+            ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
         ],
         ROOT / "models" / "clm_ensemble" / "weights_lofo_cardoso.pt",
     ),
     (
         [
-            ROOT / "outputs" / "ml_eval" / "v30_ema" / "weights_pretrained_best.pt",
             ROOT / "models" / "clm_ensemble" / "weights_v30_ema.pt",
+            ROOT / "outputs" / "ml_eval" / "v30_ema" / "weights_pretrained_best.pt",
         ],
         ROOT / "models" / "clm_ensemble" / "weights_v30_ema.pt",
     ),
     (
         [
+            ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
             ROOT / "outputs" / "ml_eval" / "loop_3way" / "multi_if" / "weights_multi_if_best_holdout.pt",
             ROOT / "outputs" / "ml_eval" / "loop_3way" / "multi_if" / "weights_pretrained_best.pt",
-            ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
         ],
         ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt",
     ),
