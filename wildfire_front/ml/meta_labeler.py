@@ -8,10 +8,13 @@ or adverse wind conditions), the Meta-Labeler votes to veto the prediction.
 Serialization security
 ----------------------
 ``save`` / ``load`` prefer **joblib** (sklearn standard) and write a small
-JSON metadata sidecar. Raw ``pickle`` is still accepted for legacy ``.pkl``
-files, but only when the path resolves under an **allowlisted root**
-(default: the repository ``models/`` directory). Loading untrusted pickles is
-remote-code-execution risk; treat model files as untrusted input.
+JSON metadata sidecar. **joblib is not RCE-safe**: it still uses pickle under
+the hood for sklearn estimators. Both joblib and pickle loads are therefore
+restricted to **allowlisted roots** (default: the repository ``models/``
+directory). Renaming ``.pkl`` → ``.joblib`` does not bypass the allowlist.
+Pass ``allowlisted_roots`` only for trusted directories (e.g. test temp dirs
+or operator-controlled model stores). Treat all model files as untrusted input
+unless their provenance is known.
 """
 
 from __future__ import annotations
@@ -30,7 +33,7 @@ logger = logging.getLogger(__name__)
 # Schema version for on-disk meta-labeler artifacts.
 _ARTIFACT_VERSION = 1
 
-# Default directory name (relative to repo root) allowed for legacy pickle loads.
+# Default directory name (relative to repo root) allowed for model loads.
 _DEFAULT_ALLOWLIST_DIRNAME = "models"
 
 
@@ -40,8 +43,21 @@ def _repo_root() -> Path:
 
 
 def default_allowlisted_roots() -> list[Path]:
-    """Roots under which legacy pickle loads are permitted."""
+    """Roots under which joblib/pickle Meta-Labeler loads are permitted."""
     return [_repo_root() / _DEFAULT_ALLOWLIST_DIRNAME]
+
+
+def _refuse_outside_allowlist(path: Path, roots: list[Path]) -> None:
+    """Raise PermissionError if *path* is not under any allowlisted root."""
+    if _path_under_roots(path, roots):
+        return
+    roots_str = ", ".join(str(r) for r in roots)
+    raise PermissionError(
+        f"Refusing to deserialize Meta-Labeler from outside allowlisted roots. "
+        f"path={path.resolve()} roots=[{roots_str}]. "
+        f"Place the file under models/ or pass allowlisted_roots for a trusted "
+        f"directory. joblib and pickle both can execute arbitrary code on load."
+    )
 
 
 def _path_under_roots(path: Path, roots: list[Path]) -> bool:
@@ -262,10 +278,11 @@ class WildfireMetaLabeler:
 
         Preferred path: joblib dump of a versioned payload dict plus a JSON
         metadata sidecar. joblib is the sklearn-standard serializer and is
-        used when available (it ships with scikit-learn).
+        used when available (it ships with scikit-learn). **joblib is not
+        RCE-safe** (pickle-based); prefer writing under ``models/`` so default
+        :meth:`load` allowlisting accepts the artifact.
 
         If joblib is unavailable, falls back to pickle **with a warning**.
-        Prefer saving under ``models/`` so legacy loads remain allowlisted.
 
         Returns
         -------
@@ -295,8 +312,8 @@ class WildfireMetaLabeler:
         warnings.warn(
             "joblib is not available; falling back to pickle for Meta-Labeler "
             "serialization. Install scikit-learn/joblib and prefer paths under "
-            "models/. Pickle can execute arbitrary code on load — only load "
-            "artifacts you trust.",
+            "models/. Pickle/joblib can execute arbitrary code on load — only "
+            "load artifacts you trust.",
             stacklevel=2,
         )
         import pickle
@@ -322,18 +339,19 @@ class WildfireMetaLabeler:
             Path to a ``.joblib`` / ``.pkl`` artifact produced by :meth:`save`,
             or a legacy full-object pickle of ``WildfireMetaLabeler``.
         allowlisted_roots
-            Directories under which **pickle** loads are permitted. Defaults to
-            the repository ``models/`` directory. joblib loads are not restricted
-            by path (still only load trusted files).
+            Directories under which **any** deserialization (joblib or pickle)
+            is permitted. Defaults to the repository ``models/`` directory.
+            joblib is still pickle-class risk; the allowlist applies to both.
         allow_pickle
-            If False, refuse pickle fallback entirely (joblib-only).
+            If False, refuse the pickle fallback path (``.pkl`` / raw pickle).
+            joblib loads under allowlisted roots remain permitted.
 
         Raises
         ------
         FileNotFoundError
             If *path* does not exist (and no sibling ``.joblib`` is found).
         PermissionError
-            If a pickle load is requested outside allowlisted roots.
+            If the path is outside allowlisted roots, or pickle is disabled.
         ValueError
             If the artifact cannot be interpreted as a Meta-Labeler.
         """
@@ -355,7 +373,10 @@ class WildfireMetaLabeler:
         if resolved is None:
             raise FileNotFoundError(f"Meta-Labeler artifact not found: {path}")
 
-        payload = cls._load_payload(resolved, roots=roots, allow_pickle=allow_pickle)
+        # Gate applies to joblib and pickle alike (joblib is pickle-based).
+        _refuse_outside_allowlist(resolved, roots)
+
+        payload = cls._load_payload(resolved, allow_pickle=allow_pickle)
         return cls._from_payload(payload)
 
     @classmethod
@@ -363,13 +384,13 @@ class WildfireMetaLabeler:
         cls,
         path: Path,
         *,
-        roots: list[Path],
         allow_pickle: bool,
     ) -> Any:
+        """Deserialize an already allowlisted artifact (joblib preferred)."""
         suffix = path.suffix.lower()
         joblib = _try_import_joblib()
 
-        # joblib path (preferred)
+        # Prefer joblib for .joblib and for non-.pkl suffixes when available.
         if suffix == ".joblib" or (joblib is not None and suffix != ".pkl"):
             if joblib is not None:
                 try:
@@ -385,23 +406,15 @@ class WildfireMetaLabeler:
                 "(install scikit-learn)."
             )
 
-        # Legacy / pickle path — restricted
+        # Legacy / pickle path (still only after allowlist gate in load())
         if not allow_pickle:
             raise PermissionError(
                 f"Pickle load disabled (allow_pickle=False) for path: {path}"
             )
-        if not _path_under_roots(path, roots):
-            roots_str = ", ".join(str(r) for r in roots)
-            raise PermissionError(
-                f"Refusing to unpickle Meta-Labeler from outside allowlisted roots. "
-                f"path={path.resolve()} roots=[{roots_str}]. "
-                f"Re-save with joblib (WildfireMetaLabeler.save) or place the "
-                f"file under models/. Pickle can execute arbitrary code."
-            )
         warnings.warn(
-            f"Loading Meta-Labeler via pickle from {path}. Pickle is unsafe for "
-            f"untrusted files (arbitrary code execution). Prefer joblib artifacts "
-            f"produced by WildfireMetaLabeler.save under models/.",
+            f"Loading Meta-Labeler via pickle from {path}. Pickle and joblib are "
+            f"unsafe for untrusted files (arbitrary code execution). Prefer "
+            f"joblib artifacts under allowlisted roots (default: models/).",
             stacklevel=3,
         )
         import pickle

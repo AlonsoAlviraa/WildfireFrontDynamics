@@ -148,7 +148,7 @@ class TestSingleClassGuard(unittest.TestCase):
 
 
 class TestSaveLoad(unittest.TestCase):
-    """Joblib round-trip preserves weights and predictions; pickle is restricted."""
+    """Joblib round-trip under allowlist; joblib/pickle both path-gated."""
 
     def test_save_load_roundtrip(self):
         ml = WildfireMetaLabeler(n_estimators=5)
@@ -158,15 +158,16 @@ class TestSaveLoad(unittest.TestCase):
         before = ml.predict_probability(X)
 
         with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
             # Callers may still pass .pkl; save prefers .joblib
-            path = Path(tmp) / "meta.pkl"
+            path = root / "meta.pkl"
             written = ml.save(path)
             self.assertEqual(written.suffix, ".joblib")
             self.assertTrue(written.is_file())
             meta_sidecar = written.parent / f"{written.name}.meta.json"
             self.assertTrue(meta_sidecar.is_file())
 
-            loaded = WildfireMetaLabeler.load(path)  # resolves sibling .joblib
+            loaded = WildfireMetaLabeler.load(path, allowlisted_roots=[root])
             after = loaded.predict_probability(X)
 
         np.testing.assert_allclose(before, after)
@@ -180,10 +181,52 @@ class TestSaveLoad(unittest.TestCase):
         before = ml.predict_probability(X)
 
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "meta.joblib"
+            root = Path(tmp)
+            path = root / "meta.joblib"
             ml.save(path)
-            loaded = WildfireMetaLabeler.load(path)
+            loaded = WildfireMetaLabeler.load(path, allowlisted_roots=[root])
             np.testing.assert_allclose(before, loaded.predict_probability(X))
+
+    def test_joblib_outside_allowlist_refused(self):
+        """Genuine joblib artifacts outside allowlisted roots must not load."""
+        ml = WildfireMetaLabeler(n_estimators=3, random_state=1)
+        X = _make_dummy_features(20)
+        y = (X[:, 0] > 0.5).astype(int)
+        ml.train(X, y)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "meta.joblib"
+            ml.save(path)
+            with self.assertRaises(PermissionError):
+                WildfireMetaLabeler.load(
+                    path, allowlisted_roots=[root / "not_here"]
+                )
+
+    def test_pickle_renamed_as_joblib_still_needs_allowlist(self):
+        """Renaming pickle → .joblib must not bypass the path allowlist."""
+        ml = WildfireMetaLabeler(n_estimators=3, random_state=1)
+        X = _make_dummy_features(20)
+        y = (X[:, 0] > 0.5).astype(int)
+        ml.train(X, y)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # Write raw pickle bytes under a .joblib extension
+            fake_joblib = root / "evil.joblib"
+            with open(fake_joblib, "wb") as f:
+                pickle.dump(ml, f)
+
+            with self.assertRaises(PermissionError):
+                WildfireMetaLabeler.load(
+                    fake_joblib, allowlisted_roots=[root / "not_here"]
+                )
+
+            # Under allowlist, load is permitted (joblib can open pickle payloads)
+            loaded = WildfireMetaLabeler.load(
+                fake_joblib, allowlisted_roots=[root]
+            )
+            self.assertTrue(loaded.is_trained)
 
     def test_pickle_outside_allowlist_refused(self):
         """Legacy pickle must not load from arbitrary temp paths."""
@@ -199,7 +242,9 @@ class TestSaveLoad(unittest.TestCase):
                 pickle.dump(ml, f)
 
             with self.assertRaises(PermissionError):
-                WildfireMetaLabeler.load(pkl_path, allowlisted_roots=[Path(tmp) / "not_here"])
+                WildfireMetaLabeler.load(
+                    pkl_path, allowlisted_roots=[Path(tmp) / "not_here"]
+                )
 
     def test_pickle_under_allowlist_loads_with_warning(self):
         ml = WildfireMetaLabeler(n_estimators=3, random_state=2)
@@ -220,6 +265,32 @@ class TestSaveLoad(unittest.TestCase):
                 loaded = WildfireMetaLabeler.load(pkl_path, allowlisted_roots=[root])
             self.assertTrue(any("pickle" in str(w.message).lower() for w in caught))
             np.testing.assert_allclose(before, loaded.predict_probability(X))
+
+    def test_allow_pickle_false_refuses_pkl(self):
+        """allow_pickle=False blocks .pkl even under an allowlisted root."""
+        ml = WildfireMetaLabeler(n_estimators=3, random_state=3)
+        X = _make_dummy_features(20)
+        y = (X[:, 0] > 0.5).astype(int)
+        ml.train(X, y)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pkl_path = root / "legacy.pkl"
+            with open(pkl_path, "wb") as f:
+                pickle.dump(ml, f)
+
+            with self.assertRaises(PermissionError):
+                WildfireMetaLabeler.load(
+                    pkl_path, allowlisted_roots=[root], allow_pickle=False
+                )
+
+            # joblib under allowlist still works with allow_pickle=False
+            joblib_path = root / "ok.joblib"
+            ml.save(joblib_path)
+            loaded = WildfireMetaLabeler.load(
+                joblib_path, allowlisted_roots=[root], allow_pickle=False
+            )
+            self.assertTrue(loaded.is_trained)
 
 
 class TestDeterminism(unittest.TestCase):

@@ -496,8 +496,11 @@ class MLPipelineTests(unittest.TestCase):
         from wildfire_front.ml.meta_labeler import WildfireMetaLabeler
 
         with tempfile.TemporaryDirectory() as tmp:
+            from pathlib import Path
+
+            root = Path(tmp)
             # Prefer joblib extension; .pkl names are rewritten to .joblib by save()
-            path = os.path.join(tmp, "meta.joblib")
+            path = str(root / "meta.joblib")
 
             # Two-class model
             ml = WildfireMetaLabeler(n_estimators=5, max_depth=3, random_state=7)
@@ -507,7 +510,7 @@ class MLPipelineTests(unittest.TestCase):
             ml.train(X, y)
             ml.save(path)
 
-            loaded = WildfireMetaLabeler.load(path)
+            loaded = WildfireMetaLabeler.load(path, allowlisted_roots=[root])
             self.assertTrue(loaded.is_trained)
             np.testing.assert_array_equal(
                 ml.predict_trustworthiness(X), loaded.predict_trustworthiness(X)
@@ -515,11 +518,11 @@ class MLPipelineTests(unittest.TestCase):
             np.testing.assert_allclose(ml.predict_probability(X), loaded.predict_probability(X))
 
             # Single-class roundtrip
-            path2 = os.path.join(tmp, "single.joblib")
+            path2 = str(root / "single.joblib")
             ml_single = WildfireMetaLabeler(n_estimators=3, random_state=0)
             ml_single.train(X, np.ones(len(X), dtype=np.int64))
             ml_single.save(path2)
-            loaded2 = WildfireMetaLabeler.load(path2)
+            loaded2 = WildfireMetaLabeler.load(path2, allowlisted_roots=[root])
             self.assertEqual(loaded2._single_class_label, 1)
             np.testing.assert_allclose(loaded2.predict_probability(X), 1.0)
 

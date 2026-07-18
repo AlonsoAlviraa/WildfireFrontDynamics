@@ -53,9 +53,12 @@ prefer to remain anonymous).
   receive security patches.
 - **Safe model loads**:
   - PyTorch checkpoints use `torch.load(..., weights_only=True)` where possible.
-  - Meta-Labeler serialization prefers **joblib** + JSON metadata; legacy
-    pickle loads are restricted to allowlisted roots (default: `models/`) and
-    emit a warning. Treat model files as untrusted input.
+  - Meta-Labeler serialization prefers **joblib** + JSON metadata, but **joblib
+    is not RCE-safe** (it uses pickle under the hood for sklearn objects).
+    Both joblib and pickle loads are restricted to allowlisted roots
+    (default: `models/`). Renaming `.pkl` → `.joblib` does not bypass the gate.
+    Pass `allowlisted_roots` only for trusted directories. Treat model files as
+    untrusted input unless their provenance is known.
 
 ## Dependency scanning
 
