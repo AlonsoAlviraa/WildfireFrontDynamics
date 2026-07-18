@@ -414,3 +414,34 @@ def test_client_reliability_bools_require_allowlisted_channel():
         trust_client_reliability=True,
     )
     assert ok.get("system_reliability_pass") is True
+
+
+def test_untrusted_without_base_fails_closed_on_repo_paths():
+    """include_repo_root=False + base=None must not fall back to REPO_ROOT."""
+    from wildfire_front.product.decide_service import REPO_ROOT
+
+    docs_gate = REPO_ROOT / "docs" / "RELIABILITY_GATE_REPORT.json"
+    with pytest.raises(PathNotAllowedError):
+        decide_from_request(
+            {
+                "event_id": "no_base",
+                "channel": "http_api",
+                "reliability_gate": str(docs_gate),
+            },
+            base=None,
+            trust_client_reliability=False,
+        )
+
+
+def test_http_default_base_is_not_repo_root():
+    """Unauthenticated server defaults to a temp sandbox, not REPO_ROOT."""
+    from wildfire_front.product.api_server import DecideHTTPServer
+    from wildfire_front.product.decide_service import REPO_ROOT
+
+    httpd, _thread, _port = start_background(host="127.0.0.1", port=0)
+    try:
+        assert isinstance(httpd, DecideHTTPServer)
+        assert httpd.base_dir.resolve() != REPO_ROOT.resolve()
+    finally:
+        httpd.shutdown()
+        httpd.server_close()

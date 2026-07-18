@@ -325,25 +325,43 @@ def _load_reliability_gate_report(
     return data if isinstance(data, dict) else None
 
 
+# Provenance kinds that are never valid field unlock keys (suite / docs / CI).
+_FIELD_REJECT_PROVENANCE_KINDS = frozenset(
+    {
+        "suite_sample",
+        "docs_sample",
+        "synthetic_suite",
+        "suite_run",
+    }
+)
+
+
 def _report_rejected_for_field(
     report: Mapping[str, Any],
     *,
     event_id: str | None = None,
 ) -> str | None:
-    """Return rejection reason if report must not unlock field_ops, else None."""
+    """Return rejection reason if report must not unlock field_ops, else None.
+
+    Field unlock requires a this-run (or other non-suite) report with an
+    explicit ``event_id`` that matches the card event when one is supplied.
+    """
     if report.get("suite_only") is True or report.get("field_unlock") is False:
         return "suite_only_or_field_unlock_false"
     prov = report.get("provenance")
-    if isinstance(prov, Mapping):
-        kind = str(prov.get("kind") or "")
-        if kind in {"suite_sample", "docs_sample", "synthetic_suite"}:
-            return f"provenance_kind:{kind}"
-        prov_event = prov.get("event_id")
-        if event_id and prov_event is not None and str(prov_event) != str(event_id):
-            return "event_id_mismatch"
+    prov_map = prov if isinstance(prov, Mapping) else {}
+    kind = str(prov_map.get("kind") or report.get("kind") or "")
+    if kind in _FIELD_REJECT_PROVENANCE_KINDS:
+        return f"provenance_kind:{kind}"
+    # Field-unlock reports must carry event_id; missing id is not a wildcard match.
     report_event = report.get("event_id")
-    if event_id and report_event is not None and str(report_event) != str(event_id):
-        return "event_id_mismatch"
+    if report_event is None:
+        report_event = prov_map.get("event_id")
+    if event_id is not None:
+        if report_event is None:
+            return "missing_event_id"
+        if str(report_event) != str(event_id):
+            return "event_id_mismatch"
     return None
 
 

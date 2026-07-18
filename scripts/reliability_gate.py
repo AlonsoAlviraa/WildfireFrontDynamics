@@ -152,13 +152,15 @@ def build_suite_report() -> dict[str, Any]:
     return {
         "ok": len(failures) == 0 and provenance_ok,
         "failures": failures + ([] if provenance_ok else ["provenance_hashes_missing"]),
-        "suite_only": False,
-        "field_unlock": True,
+        # Suite CI status only — never a per-incident field unlock key.
+        "suite_only": True,
+        "field_unlock": False,
         "provenance": {
             "kind": "suite_run",
             "note": (
-                "This-run suite report from reliability_gate.py. "
-                "Not a per-incident field unlock unless event_id/hashes match."
+                "Suite report from reliability_gate.py (CI/self-check). "
+                "Consumers reject suite_run / suite_only for field_ops GO. "
+                "Use incident this-run outbox/reliability_gate_report.json for field."
             ),
             "sample_input_hashes": {
                 k: (v.get("audit") or {}).get("input_hash") for k, v in samples.items()

@@ -394,3 +394,177 @@ def test_tobarra_stream_optional(tmp_path: Path) -> None:
     assert (work / "outbox" / "incident_state.json").is_file()
     if summary["status"] == "updated":
         assert (work / "outbox" / "emergency_briefing.md").is_file()
+
+
+def test_publish_this_run_reliability_gate(tmp_path: Path) -> None:
+    """publish_decision_card writes this-run gate and can unlock field_ops GO."""
+    from wildfire_front.incident.pipeline import (
+        publish_decision_card,
+        write_this_run_reliability_gate,
+    )
+
+    outbox = tmp_path / "outbox"
+    outbox.mkdir()
+    ops = {
+        "quality_grade": "A",
+        "speed_median_m_min": 5.5,
+        "n_frames_staged": 12,
+        "area_ha_max": 40,
+        "speed_vs_ref_ratio": 0.9,
+    }
+    gate = write_this_run_reliability_gate(
+        outbox,
+        "inc_evt",
+        {
+            "quality_grade": "A",
+            "primary_ros_m_min": 5.5,
+            "n_frames_staged": 12,
+            "area_ha_max": 40,
+            "speed_vs_ref_ratio": 0.9,
+        },
+        open_metrics={"max_area_ha": 2000, "n_timeline_steps": 5},
+        decision_policy="field_ops",
+    )
+    data = json.loads(gate.read_text(encoding="utf-8"))
+    assert data["event_id"] == "inc_evt"
+    assert data["provenance"]["kind"] == "this_run"
+    assert data["field_unlock"] is True
+    assert data["system_reliability"]["system_reliability_pass"] is True
+
+    artifacts = publish_decision_card(
+        outbox,
+        "inc_evt",
+        ops,
+        n_frames=12,
+        include_ml_metrics=False,
+        open_metrics={"max_area_ha": 2000, "n_timeline_steps": 5},
+        decision_policy="field_ops",
+        write_this_run_gate=True,
+    )
+    assert artifacts["decision"] == "GO"
+    assert (outbox / "reliability_gate_report.json").is_file()
+
+
+def test_suite_only_outbox_gate_does_not_unlock(tmp_path: Path) -> None:
+    """Neutralized suite sample in outbox must not unlock field_ops."""
+    from wildfire_front.incident.pipeline import publish_decision_card
+
+    outbox = tmp_path / "outbox"
+    outbox.mkdir()
+    suite = {
+        "suite_only": True,
+        "field_unlock": False,
+        "event_id": "x",
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    (outbox / "reliability_gate_report.json").write_text(json.dumps(suite), encoding="utf-8")
+    ops = {
+        "quality_grade": "A",
+        "speed_median_m_min": 6.0,
+        "n_frames_staged": 20,
+        "area_ha_max": 50,
+        "speed_vs_ref_ratio": 0.9,
+    }
+    artifacts = publish_decision_card(
+        outbox,
+        "x",
+        ops,
+        n_frames=20,
+        include_ml_metrics=False,
+        open_metrics={"max_area_ha": 2000, "n_timeline_steps": 5},
+        decision_policy="field_ops",
+        reliability_gate=outbox / "reliability_gate_report.json",
+        write_this_run_gate=False,
+    )
+    assert artifacts["decision"] == "ABSTAIN"
+
+
+def test_should_use_incremental_force_and_first_run() -> None:
+    from wildfire_front.incident.pipeline import should_use_incremental_ingest
+
+    assert (
+        should_use_incremental_ingest(
+            force=True,
+            n_new_frames=1,
+            n_staged=5,
+            n_updates=3,
+            has_ops_file=True,
+            last_error=None,
+        )
+        is False
+    )
+    assert (
+        should_use_incremental_ingest(
+            force=False,
+            n_new_frames=1,
+            n_staged=5,
+            n_updates=0,
+            has_ops_file=True,
+            last_error=None,
+        )
+        is False
+    )
+    assert (
+        should_use_incremental_ingest(
+            force=False,
+            n_new_frames=1,
+            n_staged=5,
+            n_updates=2,
+            has_ops_file=True,
+            last_error=None,
+        )
+        is True
+    )
+
+
+def test_prepare_incremental_ingest_last_pair(tmp_path: Path) -> None:
+    from wildfire_front.incident.pipeline import (
+        IncidentConfig,
+        _prepare_incremental_ingest,
+    )
+
+    work = tmp_path / "work"
+    images = work / "stage" / "images"
+    images.mkdir(parents=True)
+    for i, name in enumerate(["a.tif", "b.tif", "c.tif"]):
+        (images / name).write_bytes(b"II*\x00" + bytes([i]))
+    cfg = IncidentConfig(
+        event_id="inc",
+        sensor_id="t",
+        estimated_error_m=1.0,
+        inbox=tmp_path / "inbox",
+        work_dir=work,
+        min_file_age_s=0.0,
+    )
+    cfg.inbox.mkdir(exist_ok=True)
+    inc_images, _masks = _prepare_incremental_ingest(cfg, n_keep=2)
+    assert inc_images is not None
+    kept = sorted(p.name for p in inc_images.iterdir() if p.is_file() or p.is_symlink())
+    assert kept == ["b.tif", "c.tif"]
+
+
+def test_weak_ops_this_run_does_not_unlock(tmp_path: Path) -> None:
+    """Single-frame / low grade ops must not field_unlock via this-run gate."""
+    from wildfire_front.incident.pipeline import write_this_run_reliability_gate
+
+    outbox = tmp_path / "outbox"
+    gate = write_this_run_reliability_gate(
+        outbox,
+        "weak",
+        {
+            "quality_grade": "C",
+            "primary_ros_m_min": 1.0,
+            "n_frames_staged": 1,
+        },
+        decision_policy="field_ops",
+    )
+    data = json.loads(gate.read_text(encoding="utf-8"))
+    assert data["field_unlock"] is False
+    assert data["system_reliability"]["system_reliability_pass"] is False

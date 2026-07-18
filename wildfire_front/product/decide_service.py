@@ -46,6 +46,9 @@ def _allow_roots(
 
     Untrusted HTTP sandboxes must pass ``include_repo_root=False`` so only
     ``base`` is accepted (never the full repository tree).
+
+    When ``include_repo_root=False`` and ``base`` is missing/unresolvable,
+    returns an **empty** list (fail closed) — never falls back to REPO_ROOT.
     """
     roots: list[Path] = []
     candidates: list[Path | None] = [base]
@@ -64,12 +67,8 @@ def _allow_roots(
         return roots
     if include_repo_root:
         return [REPO_ROOT.resolve()]
-    if base is not None:
-        try:
-            return [Path(base).resolve()]
-        except OSError:
-            pass
-    return [REPO_ROOT.resolve()]
+    # Untrusted isolation with no base: empty roots → every path fails closed.
+    return []
 
 
 def _as_path(
@@ -91,12 +90,11 @@ def _as_path(
         Path(r).resolve()
         for r in (allow_roots or _allow_roots(base, include_repo_root=include_repo_root))
     ]
-    if base is not None:
-        base_r = Path(base).resolve()
-    elif roots:
-        base_r = roots[0]
-    else:
-        base_r = REPO_ROOT.resolve()
+    if not roots:
+        raise PathNotAllowedError(
+            f"path allowlist empty (untrusted channel requires base_dir; refusing: {value})"
+        )
+    base_r = Path(base).resolve() if base is not None else roots[0]
 
     if p.is_absolute():
         try:

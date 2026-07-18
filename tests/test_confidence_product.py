@@ -275,3 +275,55 @@ def test_ml_holdout_not_fused_into_live_confidence():
         ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
     )
     assert abs(a.confidence_pred - b.confidence_pred) < 1e-9
+
+
+def test_suite_run_report_does_not_unlock_field():
+    """suite_run (reliability_gate.py live output) must not unlock field_ops."""
+    report = {
+        "ok": True,
+        "suite_only": False,
+        "field_unlock": True,
+        "provenance": {"kind": "suite_run"},
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    card = build_decision_card(
+        "incident_x",
+        ops_metrics={
+            "quality_grade": "A",
+            "primary_ros_m_min": 6.0,
+            "n_frames_staged": 20,
+            "speed_vs_ref_ratio": 0.9,
+        },
+        reliability_gate=report,
+        policy_id="field_ops",
+    )
+    assert card.system_reliability_pass is False
+    assert card.decision == Decision.ABSTAIN
+
+
+def test_field_gate_requires_event_id_match():
+    """Full checks without event_id must not unlock when card has an event_id."""
+    report = {
+        "field_unlock": True,
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    card = build_decision_card(
+        "needs_event",
+        ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+        reliability_gate=report,
+    )
+    assert card.system_reliability_pass is False

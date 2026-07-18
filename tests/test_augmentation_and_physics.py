@@ -449,6 +449,61 @@ class TestPhysicsDenormParity:
         assert abs(float(a.item()) - float(b.item())) < 1e-5
         assert abs(float(b.item()) - float(c.item())) < 1e-5
 
+    def test_sequence_helper_physical_units_not_double_denormed(self) -> None:
+        """channels_normalized=False treats units as physical (no wind/slope re-denorm)."""
+        from wildfire_front.ml.physics import _SLOPE_DIVIDE_BY, _WIND_DIVIDE_BY
+
+        probs = torch.ones(1, 8) * 0.5
+        wind_phys_v, slope_phys_v, ffmc_phys_v = 10.0, 0.2, 85.0
+        wind_phys = torch.tensor([wind_phys_v])
+        slope_phys = torch.tensor([slope_phys_v])
+        ffmc_phys = torch.tensor([ffmc_phys_v])
+        # Equivalent normalized channels for the True path
+        wind_n = torch.tensor([wind_phys_v / _WIND_DIVIDE_BY])
+        slope_n = torch.tensor([slope_phys_v / _SLOPE_DIVIDE_BY])
+        ffmc_n = torch.tensor([(ffmc_phys_v - 50.0) / 51.0])
+
+        loss_phys = physics_loss_from_sequence_channels(
+            probs,
+            wind_phys,
+            slope_phys,
+            ffmc_phys,
+            channels_normalized=False,
+            lambda_physics=0.1,
+        )
+        loss_norm = physics_loss_from_sequence_channels(
+            probs,
+            wind_n,
+            slope_n,
+            ffmc_n,
+            channels_normalized=True,
+            lambda_physics=0.1,
+        )
+        # Physical and correctly normalized paths must agree.
+        assert abs(float(loss_phys.item()) - float(loss_norm.item())) < 1e-5
+        # Bug path: physical tensors with channels_normalized=True re-denorms → differs.
+        loss_bug = physics_loss_from_sequence_channels(
+            probs,
+            wind_phys,
+            slope_phys,
+            ffmc_phys,
+            channels_normalized=True,
+            lambda_physics=0.1,
+        )
+        # With wind 10 treated as normalized → 200 m/s; loss typically differs or both 0.
+        # Prefer checking flag wiring: False path matches wind_slope_normalized=False.
+        loss_flag = physics_loss_cell_vectorized(
+            probs,
+            wind_phys,
+            slope_phys,
+            ffmc=ffmc_phys,
+            lambda_physics=0.1,
+            ffmc_is_normalized=False,
+            wind_slope_normalized=False,
+        )
+        assert abs(float(loss_phys.item()) - float(loss_flag.item())) < 1e-6
+        _ = loss_bug  # documents the incorrect True+physical combination
+
     def test_legacy_call_site_passes_physical_units_to_physics(self, monkeypatch: Any) -> None:
         """Integration: calculate_local_spread_loss denorms sequence channels before physics."""
         from wildfire_front.ml import train as train_mod

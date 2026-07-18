@@ -1,17 +1,26 @@
 """Minimal Decision Card HTTP API (stdlib only).
 
-  python -m wildfire_front serve-decide --host 127.0.0.1 --port 8765
+  python -m wildfire_front serve-decide --host 127.0.0.1 --port 8765 --base-dir /path/sandbox
 
 Endpoints:
   GET  /health
   GET  /v1/openapi.json
   POST /v1/decide
+
+Path sandbox
+------------
+Unauthenticated HTTP only loads ``work_dir`` / ``open_pack`` / ``reliability_gate``
+paths under ``base_dir``. Default ``base_dir`` is an empty temp sandbox (not the
+repository root). Setting ``base_dir`` to the repo root is insecure for any
+exposed listener — every repo path becomes allowlisted.
 """
 
 from __future__ import annotations
 
 import json
+import tempfile
 import threading
+import warnings
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -73,10 +82,11 @@ OPENAPI: dict[str, Any] = {
                                     "reliability_gate": {
                                         "type": "string",
                                         "description": (
-                                            "Allowlisted path to reliability gate JSON "
-                                            "(under base/REPO_ROOT). Inline reports and "
-                                            "client-asserted gates_ok flags are ignored "
-                                            "on this unauthenticated HTTP channel."
+                                            "Path to reliability gate JSON under server "
+                                            "base_dir only (not REPO_ROOT, not docs/). "
+                                            "Inline reports and client-asserted gates_ok "
+                                            "flags are ignored on this unauthenticated "
+                                            "HTTP channel."
                                         ),
                                     },
                                 },
@@ -255,6 +265,29 @@ class DecideHandler(BaseHTTPRequestHandler):
         self._send(status, body, ctype)
 
 
+def _default_http_sandbox() -> Path:
+    """Empty temp sandbox for unauthenticated HTTP (never REPO_ROOT by default)."""
+    return Path(tempfile.mkdtemp(prefix="wfd_decide_api_sandbox_"))
+
+
+def _resolve_http_base_dir(base_dir: Path | None) -> Path:
+    if base_dir is None:
+        return _default_http_sandbox()
+    resolved = Path(base_dir).resolve()
+    try:
+        if resolved == REPO_ROOT.resolve():
+            warnings.warn(
+                "decide HTTP base_dir is REPO_ROOT — every repository path is "
+                "allowlisted on the unauthenticated API. Prefer an empty sandbox "
+                "outside the repo for multi-tenant or exposed listeners.",
+                UserWarning,
+                stacklevel=3,
+            )
+    except OSError:
+        pass
+    return resolved
+
+
 class DecideHTTPServer(ThreadingHTTPServer):
     def __init__(
         self,
@@ -264,7 +297,8 @@ class DecideHTTPServer(ThreadingHTTPServer):
         verbose: bool = False,
     ) -> None:
         super().__init__(server_address, DecideHandler)
-        self.base_dir = Path(base_dir) if base_dir else REPO_ROOT
+        # Default: empty temp sandbox. Explicit REPO_ROOT is allowed but warned.
+        self.base_dir = _resolve_http_base_dir(base_dir)
         self.verbose = verbose
 
 
@@ -275,10 +309,15 @@ def serve(
     base_dir: Path | None = None,
     verbose: bool = False,
 ) -> DecideHTTPServer:
-    """Blocking serve (Ctrl+C to stop)."""
+    """Blocking serve (Ctrl+C to stop).
+
+    Prefer an explicit ``base_dir`` sandbox. Default is a temp empty directory
+    (not REPO_ROOT). ``base_dir=REPO_ROOT`` is insecure for exposed listeners.
+    """
     httpd = DecideHTTPServer((host, port), base_dir=base_dir, verbose=verbose)
     print(
-        f"decide API {API_VERSION} on http://{host}:{port}  (POST /v1/decide · GET /health)",
+        f"decide API {API_VERSION} on http://{host}:{port}  "
+        f"(POST /v1/decide · GET /health · base_dir={httpd.base_dir})",
         flush=True,
     )
     try:

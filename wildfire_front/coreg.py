@@ -1,8 +1,9 @@
 """Residual coregistration between consecutive front observations.
 
 Estimates a translation that maximises coarse mask IoU so georef drift does
-not inflate ROS. Raster helpers stamp vertices and soft-fill component bboxes
-to provide correlation mass for structural alignment.
+not inflate ROS. Raster helpers stamp vertices and a **perimeter-band** soft
+fill around component bounding boxes (not full AABB fill) for correlation
+mass, reducing box-biased lock-on for elongated fronts.
 """
 
 from __future__ import annotations
@@ -206,19 +207,22 @@ def estimate_coreg_translation(
         except (ValueError, np.linalg.LinAlgError):
             pass
 
-    # Coarse-to-fine exhaustive (stride 2 then refine) around identity + FFT peak.
+    # Coarse search in a small radius around identity + FFT peak (not full ±max_pix).
     step = 2 if max_pix > 6 else 1
-    seeds = {(0, 0), best}
-    for sdy, sdx in list(seeds):
-        for dy in range(max(-max_pix, sdy - max_pix), min(max_pix, sdy + max_pix) + 1, step):
-            for dx in range(max(-max_pix, sdx - max_pix), min(max_pix, sdx + max_pix) + 1, step):
+    # Seeds store (dx, dy) — unpack as sdx, sdy.
+    seeds: set[tuple[int, int]] = {(0, 0), best}
+    # Radius grows modestly with max_pix but stays << full exhaustive grid.
+    radius = max(step * 3, min(max_pix, max(4, max_pix // 3)))
+    for sdx, sdy in list(seeds):
+        for dy in range(max(-max_pix, sdy - radius), min(max_pix, sdy + radius) + 1, step):
+            for dx in range(max(-max_pix, sdx - radius), min(max_pix, sdx + radius) + 1, step):
                 iou = _iou_at(dx, dy)
                 if iou > best_iou:
                     best_iou = iou
                     best = (dx, dy)
 
-    # Local refine around best (full step neighbourhood)
-    cx, cy = best
+    # Local refine around best (dense neighbourhood)
+    cx, cy = best  # (dx, dy)
     refine = max(step, 2)
     for dy in range(cy - refine, cy + refine + 1):
         for dx in range(cx - refine, cx + refine + 1):

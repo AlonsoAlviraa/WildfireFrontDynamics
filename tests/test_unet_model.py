@@ -387,6 +387,37 @@ class TestGradientFlow:
         assert "torch.tensor(5.0" not in apply_src
         assert "pos_weight" in apply_src
 
+    def test_apply_weighted_loss_rejects_non_bce_unless_forced(self):
+        """changed_weighted path: non-BCE loss_name raises; allow_force_bce warns."""
+        import warnings
+
+        from wildfire_front.ml.unet_train import apply_weighted_loss
+
+        logits = torch.full((1, 1, 4, 4), -1.0)
+        targets = torch.ones(1, 1, 4, 4)
+        weights = torch.ones_like(targets)
+
+        def _unused(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+            return a.sum() * 0.0
+
+        with pytest.raises(ValueError, match="changed_weighted|BCE"):
+            apply_weighted_loss(
+                _unused, logits, targets, weights, loss_name="focal", pos_weight=2.0
+            )
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            loss = apply_weighted_loss(
+                _unused,
+                logits,
+                targets,
+                weights,
+                loss_name="focal",
+                pos_weight=2.0,
+                allow_force_bce=True,
+            )
+        assert torch.isfinite(loss)
+        assert any("forces BCE" in str(w.message) for w in caught)
+
 
 class TestNpzDataset:
     """Test the NpzWildfireDataset with 64×64 patches."""

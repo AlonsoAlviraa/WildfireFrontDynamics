@@ -422,6 +422,7 @@ def physics_loss_cell_vectorized(
     lambda_physics: float = 0.1,
     *,
     ffmc_is_normalized: bool = False,
+    wind_slope_normalized: bool = True,
 ) -> torch.Tensor:
     """Vectorized physics loss for ALL burning cells at once.
 
@@ -429,13 +430,13 @@ def physics_loss_cell_vectorized(
 
     **Unit contract:**
 
-    * ``wind_norm`` / ``slope_norm``: **normalized** sequence channels
-      (``raw/20`` wind, ``raw/1.5708`` slope). Denormalized **inside** this
-      function before Rothermel.
+    * ``wind_norm`` / ``slope_norm``: by default **normalized** sequence
+      channels (``raw/20`` wind, ``raw/1.5708`` slope), denormalized inside
+      when ``wind_slope_normalized=True``. Pass physical m/s and radians with
+      ``wind_slope_normalized=False``.
     * ``ffmc``: **physical** Fine Fuel Moisture Code in **[0, 101]** by
       default. Set ``ffmc_is_normalized=True`` when passing ch16 after
-      ``normalize_channels`` (``(ffmc-50)/51``) so it is denormalized here
-      consistently with wind/slope.
+      ``normalize_channels`` (``(ffmc-50)/51``).
 
     **Footgun:** Passing normalized ch16 (~0.7 for FFMC 85) with the default
     ``ffmc_is_normalized=False`` is treated as near-zero FFMC → moisture ≈ 147%
@@ -445,21 +446,26 @@ def physics_loss_cell_vectorized(
     Args:
         predicted_probs: (N, 8) tensor — probabilities for each neighbor
                          of each burning cell (detached, no gradient).
-        wind_norm: (N,) tensor — wind speed channel values (NORMALIZED [0,1]).
-        slope_norm: (N,) tensor — slope channel values (NORMALIZED [0,1]).
+        wind_norm: (N,) wind (normalized if ``wind_slope_normalized``).
+        slope_norm: (N,) slope (normalized if ``wind_slope_normalized``).
         ffmc: (N,) tensor or scalar — physical FFMC [0, 101], or normalized
             ch16 when ``ffmc_is_normalized=True``.
         dt_min: Time step in minutes.
         lambda_physics: Loss weight.
         ffmc_is_normalized: If True, denorm FFMC with ``*51 + 50`` first.
+        wind_slope_normalized: If True (default), denorm wind/slope; if False,
+            treat them as already physical (m/s, radians).
 
     Returns:
         Scalar loss tensor (CLAMPED to [0, lambda_physics] so physics
         never dominates the focal BCE term).
     """
-    # --- Des-normalize wind/slope to physical units ---
-    wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
-    slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT  # radians
+    if wind_slope_normalized:
+        wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
+        slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT
+    else:
+        wind_ms = wind_norm.float()
+        slope_rad = slope_norm.float()
     slope_deg = torch.rad2deg(slope_rad)
 
     if ffmc_is_normalized:
@@ -516,16 +522,18 @@ def physics_loss_from_sequence_channels(
     dt_min: float = DEFAULT_DT_MIN,
     lambda_physics: float = 0.1,
 ) -> torch.Tensor:
-    """Physics loss entry point that denorms wind/slope/FFMC consistently.
+    """Physics loss entry point that treats wind/slope/FFMC units consistently.
 
     Prefer this over ``physics_loss_cell_vectorized`` when all three values
-    come from the same normalized sequence tensor (avoids FFMC unit footgun).
+    come from the same sequence tensor (avoids FFMC unit footgun).
 
     Args:
         predicted_probs: (N, 8) neighbor probabilities.
         wind_channel / slope_channel / ffmc_channel: (N,) values from sequence.
         channels_normalized: If True (default), all three are denormalized
-            with :data:`_CHANNEL_STATS` before Rothermel.
+            with :data:`_CHANNEL_STATS` before Rothermel. If False, all three
+            are treated as already physical (wind m/s, slope rad, FFMC [0,101])
+            — wind/slope are **not** denormed again.
     """
     return physics_loss_cell_vectorized(
         predicted_probs,
@@ -535,6 +543,7 @@ def physics_loss_from_sequence_channels(
         dt_min=dt_min,
         lambda_physics=lambda_physics,
         ffmc_is_normalized=channels_normalized,
+        wind_slope_normalized=channels_normalized,
     )
 
 

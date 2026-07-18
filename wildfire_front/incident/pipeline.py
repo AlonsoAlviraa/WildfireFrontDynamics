@@ -539,6 +539,29 @@ def render_decision_card_md(card_dict: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def should_use_incremental_ingest(
+    *,
+    force: bool,
+    n_new_frames: int,
+    n_staged: int,
+    n_updates: int,
+    has_ops_file: bool,
+    last_error: str | None,
+) -> bool:
+    """Whether last-pair incremental geotiff ingest is allowed.
+
+    Full reprocess when forced, first update, missing prior ops, or no new frames.
+    """
+    return (
+        not force
+        and n_new_frames > 0
+        and n_staged >= 2
+        and n_updates > 0
+        and has_ops_file
+        and not last_error
+    )
+
+
 def write_this_run_reliability_gate(
     outbox: Path,
     event_id: str,
@@ -550,11 +573,16 @@ def write_this_run_reliability_gate(
     decision_policy: str = "field_ops",
     git_commit: str | None = None,
 ) -> Path:
-    """Lightweight this-run R1–R4 self-check for the current incident event.
+    """This-run R1–R4 self-check bound to the current incident event.
 
-    Writes ``outbox/reliability_gate_report.json`` with real measured flags
-    for *this* event (input hashes, determinism of card scores, abstention
-    heuristic, provenance). Does **not** copy docs suite samples.
+    Writes ``outbox/reliability_gate_report.json``. PASS means:
+
+    * multi-frame ops quality floor (grade A/B, n_frames>=2, ROS present)
+    * card engine determinism + abstention heuristic for *this* inputs
+    * content hashes bound to this event's ops/ml/open metrics
+
+    It is **not** suite-level five-nines CI enforcement. Does not copy docs
+    suite samples. ``field_unlock`` is true only when all R1–R4 pass.
     """
     from ..product.confidence import (
         build_decision_card,
@@ -591,13 +619,32 @@ def write_this_run_reliability_gate(
         }
     )
     determinism_ok = ha == hb
-    # R2: ops present with quality grade when require_ops; engine produced a card.
-    gates_ok = bool(ops_m) and bool(ops_m.get("quality_grade") or ops_m.get("primary_ros_m_min"))
+
+    # R2: multi-frame thermal ops quality floor (not mere dict non-empty).
+    n_frames = int(ops_m.get("n_frames_staged") or ops_m.get("n_frames") or 0)
+    grade = str(ops_m.get("quality_grade") or "").strip().upper()
+    ros = ops_m.get("primary_ros_m_min")
+    try:
+        ros_ok = ros is not None and float(ros) >= 0.0
+    except (TypeError, ValueError):
+        ros_ok = False
+    gates_ok = n_frames >= 2 and grade in {"A", "B"} and ros_ok
+
     abstention_enforced = bool(card_a.audit.get("abstention_heuristic_ok"))
+    ops_hash = content_hash(
+        {
+            "quality_grade": ops_m.get("quality_grade"),
+            "primary_ros_m_min": ops_m.get("primary_ros_m_min"),
+            "n_frames_staged": n_frames,
+            "area_ha_max": ops_m.get("area_ha_max"),
+            "speed_vs_ref_ratio": ops_m.get("speed_vs_ref_ratio"),
+        }
+    )
     provenance_ok = bool(
         card_a.audit.get("input_hash")
         and card_a.audit.get("output_hash")
         and card_a.audit.get("schema") == "fire_decision_card_v1"
+        and ops_hash
     )
     rel = system_reliability_report(
         gates_ok=gates_ok,
@@ -611,19 +658,28 @@ def write_this_run_reliability_gate(
     if not provenance_ok:
         failures.append("provenance_incomplete")
     if not gates_ok:
-        failures.append("ops_gates_incomplete")
+        failures.append("ops_quality_floor_failed")
+    passed = bool(rel.get("system_reliability_pass"))
     report: dict[str, Any] = {
-        "ok": bool(rel.get("system_reliability_pass")),
+        "ok": passed,
         "failures": failures,
         "suite_only": False,
-        "field_unlock": True,
+        # Unlock field only when this-run quality floor + hashes all pass.
+        "field_unlock": passed,
         "event_id": event_id,
         "provenance": {
             "kind": "this_run",
             "event_id": event_id,
             "input_hash": card_a.audit.get("input_hash"),
             "output_hash": card_a.audit.get("output_hash"),
+            "ops_hash": ops_hash,
+            "n_frames": n_frames,
+            "quality_grade": grade or None,
             "git_commit": git_commit,
+            "note": (
+                "this_run PASS = multi-frame ops quality floor (A/B, n>=2, ROS) "
+                "+ card engine hashes for this event; not suite five-nines CI."
+            ),
         },
         "system_reliability": rel,
     }
@@ -982,13 +1038,13 @@ def process_incident_once(
     ingest_masks = masks_arg
     incremental = False
     ops_path = config.outbox / "operational_metrics.json"
-    can_incremental = (
-        not force
-        and len(new_frames) > 0
-        and n_staged >= 2
-        and state.n_updates > 0
-        and ops_path.is_file()
-        and not state.last_error
+    can_incremental = should_use_incremental_ingest(
+        force=force,
+        n_new_frames=len(new_frames),
+        n_staged=n_staged,
+        n_updates=int(state.n_updates or 0),
+        has_ops_file=ops_path.is_file(),
+        last_error=state.last_error,
     )
     if can_incremental:
         try:
