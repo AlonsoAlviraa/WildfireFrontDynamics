@@ -2,7 +2,7 @@
 """Production loop: monitor Kaggle experiment + refresh deploy artifacts.
 
 Steps per cycle:
-  1. Poll active kernel in experiment_queue.json (status=running)
+  1. Poll active kernel in scripts/archive/experiment_queue.json (status=running)
   2. On COMPLETE: download training_summary.json, update queue
   3. Re-export TorchScript if production weights exist
   4. Optionally verify Docker inference image
@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-QUEUE_FILE = PROJECT_ROOT / "scripts" / "experiment_queue.json"
+QUEUE_FILE = PROJECT_ROOT / "scripts" / "archive" / "experiment_queue.json"
 KAGGLE_USER = "alonsoalviraaaa"
 
 

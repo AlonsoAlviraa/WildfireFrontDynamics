@@ -1,4 +1,10 @@
 """
+LEGACY — A3C-LSTM (not production).
+
+Production spread models are U-Net / CLM ensemble:
+  models/unet_model.py, models/catalog.json, models/production/, models/clm_ensemble/.
+See models/README.md.
+
 A3C Model V3 with LSTM - 16 Channels (FULL FEATURES)
 Temporal modeling for wildfire spread prediction with all weather channels
 

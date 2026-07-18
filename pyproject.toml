@@ -65,7 +65,10 @@ addopts = "-q"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-extend-exclude = ["kaggle_job/run_training.py"]
+extend-exclude = [
+    "kaggle_job/archive",
+    "scripts/archive",
+]
 
 [tool.ruff.lint]
 # Defaults + useful extras: bugs (B), comprehensions (C4), import order (IUP),
@@ -82,7 +85,6 @@ ignore = [
 "scripts/run_experiment_loop.py" = ["E402"]
 "scripts/batch_process_fires.py" = ["E402"]  # sys.path manipulation before imports
 "scripts/process_one_fire.py" = ["E402"]  # sys.path manipulation before imports
-"scripts/compare_base_vs_finetuned.py" = ["E402"]
 "scripts/generate_semireal_candidate.py" = ["E402"]
 "scripts/run_data_validation_sprint.py" = ["E402"]
 "scripts/smoke_test_finetune.py" = ["E402"]
@@ -95,7 +97,6 @@ ignore = [
 "scripts/prepare_real_if_geotiffs.py" = ["E402"]
 "scripts/build_real_if_frame_manifest.py" = ["E402"]
 "scripts/audit_real_data_speeds.py" = ["E402"]
-"scripts/_fix_la_estrella_acom2_masks.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -105,7 +106,7 @@ python_version = "3.11"
 warn_unused_ignores = true
 warn_redundant_casts = true
 ignore_missing_imports = true
-exclude = "kaggle_job/run_training\\.py"
+exclude = "(kaggle_job/archive|scripts/archive)"
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]

@@ -1,7 +1,7 @@
 {
-  "id": "alonsoalviraaaa/wildfire-front-training-v20",
-  "title": "Wildfire Front Training V20",
-  "code_file": "run_unet_training_v20.py",
+  "id": "alonsoalviraaaa/wildfire-front-training-v21",
+  "title": "Wildfire Front Training V21",
+  "code_file": "run_unet_training_v21.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": true,
