@@ -14,7 +14,13 @@ path.
 | `finalize_observatorio_v2.py` / `v3.py` | Superseded by v4+ |
 | `_count_artifacts.py` / `_fix_la_estrella_acom2_masks.py` | One-off data repairs |
 | `run_overnight_monitor.py` | Overnight mega kernel (failed / obsolete) |
-| `experiment_queue*.json` | Historical queues; paths pointed at pre-archive Kaggle jobs |
+| `experiment_queue*.json` | Historical queues (terminal / forensic); **do not write here** |
+
+**Live experiment queue** (mutable): `scripts/experiment_queue.json`  
+(`run_experiment_loop.py` / `run_production_loop.py` read and write that path only.)
+
+This directory is **read-only history**. Copy a historical queue into
+`scripts/experiment_queue.json` if you need to re-drive a past experiment.
 
 **Production ML:** `models/unet_model.py` + `models/catalog.json` +
 `models/production/` / `models/clm_ensemble/`.

@@ -81,4 +81,5 @@ Output: `outputs/ml_eval/feature_signal_report.json`.
 hypothesis | single_change | schema | T | train_filter | eval_protocol | primary_metric | go_if
 ```
 
-Queue: `scripts/experiment_queue_features.json`
+Queue (historical, read-only): `scripts/archive/experiment_queue_features.json`  
+Live mutable queue: `scripts/experiment_queue.json`

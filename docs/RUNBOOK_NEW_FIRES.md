@@ -95,8 +95,11 @@ set PYTHONPATH=. && python scripts\smoke_test_finetune.py ^
 ### 3.4. Validación cualitativa
 
 ```bash
-set PYTHONPATH=. && python scripts\compare_base_vs_finetuned.py
+set PYTHONPATH=. && python scripts\archive\compare_base_vs_finetuned.py
 ```
+
+> Legacy A3C compare (archived). Prefer production U-Net / CLM eval via
+> `scripts\predict_spread.py` and CLM scorecards when validating product weights.
 
 Comparar `BASE acc` vs `FINE-TUNED acc`. El fine-tuned debe ser >= base y
 `target_spread > 0` confirma que hay transiciones reales.

@@ -32,7 +32,7 @@
 │                    EVALUATION LAYER                          │
 │  wildfire_front/evaluation.py  → IoU, Recall, Precision     │
 │  wildfire_front/quality.py     → Quality checks             │
-│  scripts/analyze_training_curves.py → Comparative plots     │
+│  scripts/archive/analyze_training_curves.py → Legacy plots  │
 └─────────────────────┬───────────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────────┐

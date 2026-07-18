@@ -39,7 +39,8 @@ from pathlib import Path
 # --------------------------------------------------------------------------- #
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TRACKER_FILE = REPO_ROOT / "docs" / "EXPERIMENT_TRACKER.md"
-QUEUE_FILE = REPO_ROOT / "scripts" / "archive" / "experiment_queue.json"
+# Live mutable queue (archive/ holds historical snapshots only).
+QUEUE_FILE = REPO_ROOT / "scripts" / "experiment_queue.json"
 KAGGLE_USER = "alonsoalviraaaa"
 
 

@@ -20,7 +20,7 @@ Feature rail closed for G1 (physics14/15 did not beat v21). Temporal rail is the
 
 ## Queue
 
-See `scripts/experiment_queue_features.json` (v25+). Active G1 attempt:
+See `scripts/archive/experiment_queue_features.json` (v25+, historical). Live queue: `scripts/experiment_queue.json`. Closed G1 attempt:
 
 ```bash
 cp kaggle_job/kernel-metadata-v27.json kaggle_job/kernel-metadata.json

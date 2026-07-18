@@ -82,9 +82,9 @@ Coregistro **no** se aplica a ciegas: solo si el IoU mejora ≥0.05 y ≥0.15 ab
 python scripts/build_observatory_pack.py \
   --fires tobarra_20240802,cardoso_2025,hellin_2024 \
   --max-frames 10 \
-  --output-root outputs/observatorio_v3
+  --output-root outputs/observatorio_v4
 
-python scripts/finalize_observatorio_v3.py
+python scripts/finalize_observatorio_v4.py
 ```
 
 Por incendio, leer en este orden:

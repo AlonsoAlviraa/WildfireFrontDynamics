@@ -36,7 +36,8 @@
 | v22–v24 | — | filter / clean12 hybrid | no leap (see EXPERIMENT_TRACKER) |
 | **v25+** | — | Features / Temporal / Transfer only | `docs/ML_LOOP_RAILS.md` |
 
-**Active queue:** `scripts/experiment_queue_features.json`  
+**Active queue (mutable):** `scripts/experiment_queue.json`  
+**Historical features queue:** `scripts/archive/experiment_queue_features.json`  
 **Docs:** `docs/ML_FEATURE_METHODOLOGY.md`, `docs/ML_TRANSFER_PROTOCOL.md`
 
 ---
