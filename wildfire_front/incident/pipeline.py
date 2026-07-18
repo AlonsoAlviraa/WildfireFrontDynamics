@@ -39,6 +39,7 @@ DECISION_CARD_MD_FILENAME = "fire_decision_card.md"
 TIFF_EXTENSIONS = {".tif", ".tiff"}
 LOCK_FILENAME = ".incident_watch.lock"
 
+
 def acquire_work_dir_lock(work_dir: Path) -> Path:
     """Exclusive lock file so two watchers do not race the same work_dir."""
     work_dir.mkdir(parents=True, exist_ok=True)

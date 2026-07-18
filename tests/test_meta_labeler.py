@@ -199,9 +199,7 @@ class TestSaveLoad(unittest.TestCase):
             path = root / "meta.joblib"
             ml.save(path)
             with self.assertRaises(PermissionError):
-                WildfireMetaLabeler.load(
-                    path, allowlisted_roots=[root / "not_here"]
-                )
+                WildfireMetaLabeler.load(path, allowlisted_roots=[root / "not_here"])
 
     def test_pickle_renamed_as_joblib_still_needs_allowlist(self):
         """Renaming pickle → .joblib must not bypass the path allowlist."""
@@ -218,14 +216,10 @@ class TestSaveLoad(unittest.TestCase):
                 pickle.dump(ml, f)
 
             with self.assertRaises(PermissionError):
-                WildfireMetaLabeler.load(
-                    fake_joblib, allowlisted_roots=[root / "not_here"]
-                )
+                WildfireMetaLabeler.load(fake_joblib, allowlisted_roots=[root / "not_here"])
 
             # Under allowlist, load is permitted (joblib can open pickle payloads)
-            loaded = WildfireMetaLabeler.load(
-                fake_joblib, allowlisted_roots=[root]
-            )
+            loaded = WildfireMetaLabeler.load(fake_joblib, allowlisted_roots=[root])
             self.assertTrue(loaded.is_trained)
 
     def test_pickle_outside_allowlist_refused(self):
@@ -242,9 +236,7 @@ class TestSaveLoad(unittest.TestCase):
                 pickle.dump(ml, f)
 
             with self.assertRaises(PermissionError):
-                WildfireMetaLabeler.load(
-                    pkl_path, allowlisted_roots=[Path(tmp) / "not_here"]
-                )
+                WildfireMetaLabeler.load(pkl_path, allowlisted_roots=[Path(tmp) / "not_here"])
 
     def test_pickle_under_allowlist_loads_with_warning(self):
         ml = WildfireMetaLabeler(n_estimators=3, random_state=2)
@@ -280,9 +272,7 @@ class TestSaveLoad(unittest.TestCase):
                 pickle.dump(ml, f)
 
             with self.assertRaises(PermissionError):
-                WildfireMetaLabeler.load(
-                    pkl_path, allowlisted_roots=[root], allow_pickle=False
-                )
+                WildfireMetaLabeler.load(pkl_path, allowlisted_roots=[root], allow_pickle=False)
 
             # joblib under allowlist still works with allow_pickle=False
             joblib_path = root / "ok.joblib"

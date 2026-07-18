@@ -39,6 +39,7 @@ def _reliability_label(card: Mapping[str, Any]) -> str:
         return "UNKNOWN"
     return "FAIL"
 
+
 RADIO_FILENAME = "fire_decision_radio.txt"
 ACTA_FILENAME = "fire_decision_acta.md"
 MANIFEST_FILENAME = "forensic_manifest.json"

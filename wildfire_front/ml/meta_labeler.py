@@ -301,9 +301,7 @@ class WildfireMetaLabeler:
         if joblib is not None:
             # Normalize extension toward .joblib when caller passed .pkl
             out = path
-            if out.suffix.lower() == ".pkl":
-                out = out.with_suffix(".joblib")
-            elif out.suffix == "":
+            if out.suffix.lower() == ".pkl" or out.suffix == "":
                 out = out.with_suffix(".joblib")
             joblib.dump(payload, out)
             self._write_metadata_sidecar(out)
@@ -360,9 +358,7 @@ class WildfireMetaLabeler:
 
         # Prefer sibling .joblib when caller still points at a legacy .pkl name.
         candidates = [path]
-        if path.suffix.lower() == ".pkl":
-            candidates.insert(0, path.with_suffix(".joblib"))
-        elif path.suffix == "":
+        if path.suffix.lower() == ".pkl" or path.suffix == "":
             candidates.insert(0, path.with_suffix(".joblib"))
 
         resolved: Path | None = None
@@ -391,26 +387,22 @@ class WildfireMetaLabeler:
         joblib = _try_import_joblib()
 
         # Prefer joblib for .joblib and for non-.pkl suffixes when available.
-        if suffix == ".joblib" or (joblib is not None and suffix != ".pkl"):
-            if joblib is not None:
-                try:
-                    return joblib.load(path)
-                except Exception:
-                    # Fall through to pickle only for true .pkl or when joblib fails
-                    if suffix == ".joblib":
-                        raise
+        if joblib is not None and (suffix == ".joblib" or suffix != ".pkl"):
+            try:
+                return joblib.load(path)
+            except Exception:
+                # Fall through to pickle only for true .pkl or when joblib fails
+                if suffix == ".joblib":
+                    raise
 
         if suffix == ".joblib" and joblib is None:
             raise ImportError(
-                "joblib is required to load .joblib Meta-Labeler artifacts "
-                "(install scikit-learn)."
+                "joblib is required to load .joblib Meta-Labeler artifacts (install scikit-learn)."
             )
 
         # Legacy / pickle path (still only after allowlist gate in load())
         if not allow_pickle:
-            raise PermissionError(
-                f"Pickle load disabled (allow_pickle=False) for path: {path}"
-            )
+            raise PermissionError(f"Pickle load disabled (allow_pickle=False) for path: {path}")
         warnings.warn(
             f"Loading Meta-Labeler via pickle from {path}. Pickle and joblib are "
             f"unsafe for untrusted files (arbitrary code execution). Prefer "
@@ -430,9 +422,7 @@ class WildfireMetaLabeler:
             return payload
 
         if not isinstance(payload, dict):
-            raise ValueError(
-                f"Unrecognized Meta-Labeler artifact type: {type(payload)!r}"
-            )
+            raise ValueError(f"Unrecognized Meta-Labeler artifact type: {type(payload)!r}")
 
         n_estimators = int(payload.get("n_estimators", 100))
         max_depth = payload.get("max_depth", 10)

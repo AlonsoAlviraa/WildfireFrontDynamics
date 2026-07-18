@@ -73,7 +73,7 @@ def _as_path(
         # Prefer base; if missing, try each allow root (repo-relative packs).
         candidates: list[Path] = []
         for root in [base_r, *roots]:
-            cand = (root / p)
+            cand = root / p
             if cand not in candidates:
                 candidates.append(cand)
         resolved = None
@@ -95,7 +95,7 @@ def _as_path(
         if resolved is None:
             raise PathNotAllowedError(f"path not under allowlist: {value}")
 
-    if not any(_is_under(resolved, root) for root in roots):
+    if resolved is None or not any(_is_under(resolved, root) for root in roots):
         raise PathNotAllowedError(
             f"path not under allowlist (base/REPO_ROOT): {value} → {resolved}"
         )
@@ -288,13 +288,9 @@ def decide_from_request(
             _opt_bool_strict(req["determinism_ok"]) if "determinism_ok" in req else None
         )
         abstention_enforced = (
-            _opt_bool_strict(req["abstention_enforced"])
-            if "abstention_enforced" in req
-            else None
+            _opt_bool_strict(req["abstention_enforced"]) if "abstention_enforced" in req else None
         )
-        provenance_ok = (
-            _opt_bool_strict(req["provenance_ok"]) if "provenance_ok" in req else None
-        )
+        provenance_ok = _opt_bool_strict(req["provenance_ok"]) if "provenance_ok" in req else None
         reliability_gate = load_reliability_gate_mapping(
             req.get("reliability_gate"),
             base=base,

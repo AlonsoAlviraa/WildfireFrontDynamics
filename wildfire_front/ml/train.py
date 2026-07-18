@@ -326,15 +326,17 @@ def calculate_local_spread_loss_vectorized(
         slope_grid = last_ts[0][burning_mask]  # (N,) — NORMALIZED [0,1]
         # ch16 is (raw-50)/51 after normalize; restore physical FFMC for the API.
         if last_ts.shape[0] > 16:
-            ffmc_grid = last_ts[16][burning_mask] * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+            ffmc_arg: torch.Tensor | float = (
+                last_ts[16][burning_mask] * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+            )
         else:
-            ffmc_grid = 90.0
+            ffmc_arg = 90.0
         probs_det = torch.sigmoid(burning_logits).detach()  # (N, 8)
         physics_term = physics_loss_cell_vectorized(
             probs_det,
             wind_grid,
             slope_grid,
-            ffmc=ffmc_grid,
+            ffmc=ffmc_arg,
             lambda_physics=lambda_physics,
         )
 

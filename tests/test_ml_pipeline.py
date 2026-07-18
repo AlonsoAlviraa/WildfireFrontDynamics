@@ -488,7 +488,6 @@ class MLPipelineTests(unittest.TestCase):
     @unittest.skipIf(not HAS_SKLEARN, "scikit-learn is not installed")
     def test_meta_labeler_save_load_roundtrip(self) -> None:
         """save/load must preserve trained state and predictions (incl. single-class)."""
-        import os
         import tempfile
 
         import numpy as np

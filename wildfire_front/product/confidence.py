@@ -310,7 +310,7 @@ def _gate_flags_from_report(
     Only explicit ``system_reliability.checks`` keys count. Top-level
     ``ok`` is advisory metadata and must NOT grant R1–R4 PASS by itself.
     """
-    empty = {
+    empty: dict[str, bool | None] = {
         "gates_ok": None,
         "determinism_ok": None,
         "abstention_enforced": None,
@@ -417,9 +417,7 @@ def build_decision_card(
     d_ok = from_report["determinism_ok"] if determinism_ok is None else determinism_ok
     p_ok = from_report["provenance_ok"] if provenance_ok is None else provenance_ok
     a_ok = (
-        from_report["abstention_enforced"]
-        if abstention_enforced is None
-        else abstention_enforced
+        from_report["abstention_enforced"] if abstention_enforced is None else abstention_enforced
     )
     abstention_heuristic_ok = _derive_abstention_enforced(decision, conf, sources, policy)
 
@@ -438,9 +436,7 @@ def build_decision_card(
     ):
         decision = Decision.ABSTAIN
         dec_reasons = list(dec_reasons) + ["field_ops_fail_closed_reliability_unverified"]
-        abstention_heuristic_ok = _derive_abstention_enforced(
-            decision, conf, sources, policy
-        )
+        abstention_heuristic_ok = _derive_abstention_enforced(decision, conf, sources, policy)
 
     metrics: dict[str, Any] = {
         "ml": sources[0].get("metrics"),

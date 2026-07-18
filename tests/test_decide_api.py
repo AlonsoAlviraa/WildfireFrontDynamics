@@ -137,9 +137,7 @@ def test_http_api_path_traversal_400(tmp_path: Path):
     httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
     base = f"http://127.0.0.1:{port}"
     try:
-        body = json.dumps(
-            {"event_id": "evil", "work_dir": "../../../etc/passwd"}
-        ).encode("utf-8")
+        body = json.dumps({"event_id": "evil", "work_dir": "../../../etc/passwd"}).encode("utf-8")
         req = urllib.request.Request(
             f"{base}/v1/decide",
             data=body,

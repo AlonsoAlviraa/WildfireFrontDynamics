@@ -50,9 +50,7 @@ def _is_protected_output(path: Path, project_root: Path = PROJECT_ROOT) -> bool:
     if rel.parts[0] in _PROTECTED_ROOT_PARTS:
         return True
     name = resolved.name.lower()
-    if "scorecard" in name or name.endswith("_verdict.json"):
-        return True
-    return False
+    return "scorecard" in name or name.endswith("_verdict.json")
 
 
 def _has_test_npz(data_dir: Path) -> bool:
@@ -89,7 +87,9 @@ def _make_smoke_test_dir(root: Path, n_test: int = 24) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Cross-protocol NDWS checkpoint evaluation")
     parser.add_argument("--data-dir", type=str, default=str(PROJECT_ROOT / "_cross_eval_npz"))
-    parser.add_argument("--output", type=str, default=str(PROJECT_ROOT / "cross_protocol_report.json"))
+    parser.add_argument(
+        "--output", type=str, default=str(PROJECT_ROOT / "cross_protocol_report.json")
+    )
     parser.add_argument(
         "--smoke",
         "--smoke-test",
