@@ -9,7 +9,7 @@ path.
 | `evaluate_current_model.py` | Legacy A3C + deleted `kaggle_output` paths |
 | `compare_base_vs_finetuned.py` | Legacy A3C fine-tune comparison |
 | `analyze_training_curves.py` | v10/v11 dump analysis |
-| `analyze_leakage_and_shap.py` | Synthetic silent fallback; not production SHAP |
+| `analyze_leakage_and_shap.py` | Forensic SHAP/leakage helper; hard-fails without data unless `--smoke` (tags `synthetic:true`; never writes product docs/scorecards) |
 | `eval_kaggle_v27_verdict.py` / `eval_kaggle_v27b_verdict.py` | Closed G1 temporal experiments |
 | `finalize_observatorio_v2.py` / `v3.py` | Superseded by v4+ |
 | `_count_artifacts.py` / `_fix_la_estrella_acom2_masks.py` | One-off data repairs |

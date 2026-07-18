@@ -7,23 +7,94 @@ This script answers critical questions:
     3. Which input channels have the most predictive power (SHAP)?
     4. What is the IoU of a naive "copy input" baseline?
 
-Usage:
-    python scripts/analyze_leakage_and_shap.py [--data-dir /tmp/ndws_npz]
+Usage (real data)::
 
-Output:
-    docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md
+    python scripts/archive/analyze_leakage_and_shap.py --data-dir /tmp/ndws_npz
+
+Usage (explicit smoke / synthetic demo)::
+
+    python scripts/archive/analyze_leakage_and_shap.py --smoke \\
+        --output leakage_analysis_smoke.json
+
+Without real data and without --smoke the script exits non-zero and does
+**not** silently invent synthetic metrics or overwrite product scorecards.
+
+Archived (PR-4): not part of the product path. Kept for forensic reproducibility.
 """
 
+from __future__ import annotations
+
 import argparse
+import json
 import sys
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 
-# Add repo root to path
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# scripts/archive/<this file> → repo root is parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
+
+_PROTECTED_ROOT_PARTS = frozenset({"docs", "models", "data"})
+_DEFAULT_SMOKE_SEED = 42
+
+
+def _is_protected_output(path: Path, project_root: Path = REPO_ROOT) -> bool:
+    """True if writing here would overwrite product/docs/production scorecards."""
+    resolved = path.resolve()
+    root = project_root.resolve()
+    try:
+        rel = resolved.relative_to(root)
+    except ValueError:
+        return False
+    if not rel.parts:
+        return False
+    if rel.parts[0] in _PROTECTED_ROOT_PARTS:
+        return True
+    name = resolved.name.lower()
+    if "scorecard" in name or name.endswith("_verdict.json"):
+        return True
+    return False
+
+
+def _split_has_npz(data_dir: Path, split_name: str) -> bool:
+    split_dir = data_dir / split_name
+    if not split_dir.is_dir():
+        return False
+    return any(split_dir.glob("*.npz"))
+
+
+def _has_real_npz(data_dir: Path) -> bool:
+    """Need at least a train split with NPZ patches."""
+    return _split_has_npz(data_dir, "train")
+
+
+def _make_synthetic_npz(data_dir: Path, seed: int) -> None:
+    """Deterministic synthetic NPZ layout for --smoke demos."""
+    rng = np.random.default_rng(seed)
+    for split, n in [("train", 50), ("val", 20), ("test", 20)]:
+        d = data_dir / split
+        d.mkdir(parents=True, exist_ok=True)
+        for i in range(n):
+            cf = np.zeros((64, 64), dtype=np.float32)
+            tf = np.zeros((64, 64), dtype=np.float32)
+
+            cy, cx = int(rng.integers(10, 54)), int(rng.integers(10, 54))
+            r = int(rng.integers(5, 15))
+            cf[max(0, cy - r) : cy + r, max(0, cx - r) : cx + r] = 1.0
+
+            change = int(rng.choice([-1, 0, 1], p=[0.2, 0.3, 0.5]))
+            new_r = max(1, r + change * int(rng.integers(0, 5)))
+            tf[max(0, cy - new_r) : cy + new_r, max(0, cx - new_r) : cx + new_r] = 1.0
+
+            seq = rng.standard_normal((1, 17, 64, 64), dtype=np.float32) * 0.5
+            seq[0, 2] += cf * 0.3
+
+            np.savez_compressed(
+                d / f"patch_{i:06d}.npz", sequence=seq, current_fire=cf, target_fire=tf
+            )
 
 
 def load_split(data_dir, split_name, max_samples=500):
@@ -335,12 +406,18 @@ def analyze_fire_dynamics(samples):
     }
 
 
-def generate_report(leakage, copy, channels, dynamics, output_path):
+def generate_report(leakage, copy, channels, dynamics, output_path, *, synthetic: bool = False):
     """Generate a comprehensive markdown report."""
+    synth_banner = (
+        "\n> **SYNTHETIC / SMOKE RUN** — metrics are not production scorecards.\n"
+        if synthetic
+        else ""
+    )
     report = f"""# Leakage + Correlation + Bottleneck Analysis
-
+{synth_banner}
 **Fecha:** {Path(output_path).name}
 **Proposito:** Verificar que no hay data leakage y encontrar cuellos de botella
+**synthetic:** {str(synthetic).lower()}
 
 ## 1. Data Leakage
 
@@ -438,15 +515,58 @@ esta desbalanceado hacia no-cambio, lo que explica por que el modelo tiende a co
 4. **Para v16/v17:** Probar sin PrevFireMask como input (forzar aprendizaje meteorologico)
 """
 
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     Path(output_path).write_text(report, encoding="utf-8")
     print(f"\n  Report saved to {output_path}")
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def build_json_report(leakage, copy, channels, dynamics, *, synthetic: bool, smoke: bool, seed: int | None):
+    """Structured JSON report with explicit synthetic tag (H6)."""
+    ranked = [
+        {"channel": name, "abs_corr": float(corr)} for name, corr in channels["ranked_channels"]
+    ]
+    payload = {
+        "synthetic": synthetic,
+        "smoke": smoke,
+        "leakage": leakage,
+        "copy_baseline": copy["summary"],
+        "channels": ranked,
+        "dynamics": dynamics,
+    }
+    if synthetic and seed is not None:
+        payload["synthetic_seed"] = int(seed)
+    return payload
+
+
+def write_json_report(payload: dict, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    print(f"\n  JSON report saved to {output_path} (synthetic={payload.get('synthetic')})")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Leakage + correlation analysis (hard-fails without real data unless --smoke)"
+    )
     parser.add_argument("--data-dir", default="/tmp/ndws_npz", help="NPZ data directory")
     parser.add_argument(
-        "--output", default="docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md", help="Output report path"
+        "--output",
+        default=None,
+        help=(
+            "Output report path. Real mode default: docs/LEAKAGE_AND_CORRELATION_ANALYSIS.md. "
+            "Smoke default: leakage_analysis_smoke.json (never docs/ product paths)."
+        ),
+    )
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Allow synthetic NPZ when real data is missing; tag output synthetic:true",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=_DEFAULT_SMOKE_SEED,
+        help=f"RNG seed for synthetic smoke data (default {_DEFAULT_SMOKE_SEED})",
     )
     args = parser.parse_args()
 
@@ -454,43 +574,47 @@ def main():
     print("LEAKAGE + CORRELATION + SHAP ANALYSIS")
     print("=" * 70)
 
-    # Try to find data locally (from kaggle_outputs download)
     data_dir = Path(args.data_dir)
-    if not data_dir.exists():
-        # Check if we have kaggle_outputs_v14 with data
-        alt = REPO_ROOT / "kaggle_outputs_v14"
-        if alt.exists():
-            print(f"  Data dir not found at {data_dir}, using synthetic data for demo")
-        # Generate synthetic data for analysis
-        import tempfile
+    used_synthetic = False
+    seed_used: int | None = None
+    need_synthetic = not _has_real_npz(data_dir)
 
-        data_dir = Path(tempfile.mkdtemp(prefix="leakage_"))
-        for split, n in [("train", 50), ("val", 20), ("test", 20)]:
-            d = data_dir / split
-            d.mkdir(parents=True, exist_ok=True)
-            for i in range(n):
-                # Simulate realistic fire spread
-                cf = np.zeros((64, 64), dtype=np.float32)
-                tf = np.zeros((64, 64), dtype=np.float32)
+    if need_synthetic and not args.smoke:
+        print(
+            "ERROR: Real NPZ training data not found "
+            f"(expected *.npz under {data_dir / 'train'}).\n"
+            "  Refusing silent synthetic analysis — product metrics would be fake.\n"
+            "  Fix: pass --data-dir pointing at a real NDWS NPZ layout, or use --smoke "
+            "for an explicitly tagged synthetic demo.",
+            file=sys.stderr,
+        )
+        return 1
 
-                # Random fire location
-                cy, cx = np.random.randint(10, 54, 2)
-                r = np.random.randint(5, 15)
-                cf[max(0, cy - r) : cy + r, max(0, cx - r) : cx + r] = 1.0
+    # Resolve output: smoke/synthetic never defaults into docs/
+    if args.output:
+        output_path = Path(args.output)
+        if not output_path.is_absolute():
+            output_path = REPO_ROOT / output_path
+    elif need_synthetic or args.smoke:
+        output_path = REPO_ROOT / "leakage_analysis_smoke.json"
+    else:
+        output_path = REPO_ROOT / "docs" / "LEAKAGE_AND_CORRELATION_ANALYSIS.md"
 
-                # Fire grows/shrinks/stays
-                change = np.random.choice([-1, 0, 1], p=[0.2, 0.3, 0.5])
-                new_r = max(1, r + change * np.random.randint(0, 5))
-                tf[max(0, cy - new_r) : cy + new_r, max(0, cx - new_r) : cx + new_r] = 1.0
+    if need_synthetic and _is_protected_output(output_path):
+        print(
+            "ERROR: Refusing to write synthetic/smoke results to product or docs path:\n"
+            f"  {output_path.resolve()}\n"
+            "  Use a non-product output path (e.g. ./leakage_analysis_smoke.json).",
+            file=sys.stderr,
+        )
+        return 1
 
-                # Random channels
-                seq = np.random.randn(1, 17, 64, 64).astype(np.float32) * 0.5
-                # Make temperature channel correlate with fire
-                seq[0, 2] += cf * 0.3
-
-                np.savez_compressed(
-                    d / f"patch_{i:06d}.npz", sequence=seq, current_fire=cf, target_fire=tf
-                )
+    if need_synthetic:
+        print(f"[smoke] building synthetic NPZ (seed={args.seed})")
+        data_dir = Path(tempfile.mkdtemp(prefix="leakage_smoke_"))
+        _make_synthetic_npz(data_dir, seed=args.seed)
+        used_synthetic = True
+        seed_used = int(args.seed)
 
     # Load data
     print("\nLoading data...")
@@ -499,7 +623,10 @@ def main():
     test = load_split(data_dir, "test", max_samples=100)
 
     if not train:
-        print("  [ERROR] No training data found. Run with --data-dir pointing to NPZ data.")
+        print(
+            "ERROR: No training samples loaded. Pass --data-dir with real NPZ, or --smoke.",
+            file=sys.stderr,
+        )
         return 1
 
     # Run analyses
@@ -508,8 +635,44 @@ def main():
     channels = analyze_channel_importance(train)
     dynamics = analyze_fire_dynamics(train)
 
-    # Generate report
-    generate_report(leakage, copy, channels, dynamics, REPO_ROOT / args.output)
+    payload = build_json_report(
+        leakage,
+        copy,
+        channels,
+        dynamics,
+        synthetic=used_synthetic,
+        smoke=bool(args.smoke),
+        seed=seed_used,
+    )
+
+    # Prefer JSON when requested/smoke; keep MD for legacy real-mode path.
+    if output_path.suffix.lower() == ".json" or used_synthetic:
+        json_path = (
+            output_path
+            if output_path.suffix.lower() == ".json"
+            else output_path.with_suffix(".json")
+        )
+        if used_synthetic and _is_protected_output(json_path):
+            print(
+                "ERROR: Refusing to write synthetic JSON to product or docs path:\n"
+                f"  {json_path.resolve()}",
+                file=sys.stderr,
+            )
+            return 1
+        write_json_report(payload, json_path)
+        if output_path.suffix.lower() in {".md", ".markdown"} and not used_synthetic:
+            generate_report(
+                leakage, copy, channels, dynamics, output_path, synthetic=used_synthetic
+            )
+    else:
+        generate_report(leakage, copy, channels, dynamics, output_path, synthetic=used_synthetic)
+        # Always emit a sidecar JSON with the synthetic tag for machine consumers.
+        sidecar = output_path.with_suffix(".json")
+        if not (used_synthetic and _is_protected_output(sidecar)):
+            write_json_report(payload, sidecar)
+
+    if used_synthetic:
+        print("[synthetic=true] metrics are from smoke NPZ — not production scorecards")
 
     print("\n" + "=" * 70)
     print("ANALYSIS COMPLETE")
@@ -518,4 +681,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
