@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import numpy as np
+
+from wildfire_front.coreg import rasterize_main
 from wildfire_front.front_dynamics import (
     estimate_coreg_translation,
     perimeter_m,
@@ -60,6 +63,17 @@ def test_coreg_detects_translation() -> None:
     # Should recover ~-20 m on current to align (or +20 depending sign convention)
     assert abs(coreg["dx_m"]) >= 10.0
     assert coreg["peak_iou"] > 0.1
+
+
+def test_rasterize_soft_fill_adds_mass() -> None:
+    """H1 regression: bbox soft-fill must add occupancy vs vertex stamps alone."""
+    obs = _obs(0.0, 12.0)
+    origin = (-40.0, -40.0)
+    g_soft = rasterize_main(obs, origin, 2.0, (50, 50), soft_fill=0.3)
+    g_hard = rasterize_main(obs, origin, 2.0, (50, 50), soft_fill=0.0)
+    assert g_soft.dtype == np.float32
+    assert (g_soft > 0).sum() > (g_hard > 0).sum()
+    assert (g_soft == 0.3).any()
 
 
 def test_engine_fuses_without_crash_on_shrink() -> None:

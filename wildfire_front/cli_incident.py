@@ -1,7 +1,8 @@
 """Incident CLI argparse helpers (extracted from cli god-file).
 
 Argument groups and config mapping for ``wildfire-front incident *``.
-Re-exported from ``wildfire_front.cli`` so ``python -m wildfire_front`` is unchanged.
+Wired into ``wildfire_front.cli.build_parser`` / ``main`` so
+``python -m wildfire_front`` is unchanged.
 """
 
 from __future__ import annotations

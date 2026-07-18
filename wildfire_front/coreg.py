@@ -132,6 +132,8 @@ def estimate_coreg_translation(
         return {"dx_m": 0.0, "dy_m": 0.0, "peak_iou": 0.0, "applied": 0.0, "iou0": 0.0}
 
     def _iou_at(dx: int, dy: int) -> float:
+        # Binary occupancy is intentional: soft fill (0.3) adds mass for
+        # correlation extent, not a weighted IoU contribution.
         shifted = np.roll(np.roll(b, dy, axis=0), dx, axis=1)
         if dy > 0:
             shifted[:dy, :] = 0
