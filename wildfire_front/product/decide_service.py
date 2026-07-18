@@ -213,32 +213,104 @@ def resolve_sources(
     }
 
 
+def _opt_bool_strict(value: Any) -> bool | None:
+    """Accept only real JSON/Python booleans; never ``bool("false")``."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    # Reject strings / ints / other types as unknown (not affirmative)
+    return None
+
+
+def load_reliability_gate_mapping(
+    value: Mapping[str, Any] | str | Path | None,
+    *,
+    base: Path | None = None,
+    allow_inline: bool = True,
+) -> Mapping[str, Any] | None:
+    """Load a reliability gate report; string paths must pass allowlist.
+
+    Inline mappings are allowed only when ``allow_inline`` is True
+    (trusted CLI / in-process). HTTP must pass a path under base/REPO_ROOT.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, Mapping):
+        if not allow_inline:
+            return None
+        return dict(value)
+    path = _as_path(value, base=base)
+    if path is None or not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def decide_from_request(
     request: Mapping[str, Any] | None = None,
     *,
     base: Path | None = None,
     git_commit: str | None = None,
+    trust_client_reliability: bool | None = None,
 ) -> dict[str, Any]:
     """Build Decision Card payload + latency_ms from a request dict.
 
     Empty / missing sources → ABSTAIN (honest default).
-    ``work_dir`` / ``open_pack`` must resolve under ``base`` or REPO_ROOT.
-    Optional reliability kwargs: gates_ok, determinism_ok, reliability_gate.
+    ``work_dir`` / ``open_pack`` / ``reliability_gate`` paths must resolve
+    under ``base`` or REPO_ROOT.
+
+    Unauthenticated HTTP (``channel=http_api``) cannot self-assert reliability
+    flags or inline gate reports. Only allowlisted gate *files* are accepted.
+    Trusted CLI / in-process callers may pass explicit kwargs or inline maps.
+    Set ``trust_client_reliability=True`` only for trusted local callers.
     """
     t0 = time.perf_counter()
     req = dict(request or {})
     event_id = str(req.get("event_id") or "decision")
     require_ops = bool(req.get("require_ops_for_go", False))
     policy_id = req.get("policy") or req.get("policy_id")
+    channel = str(req.get("channel") or "decide_service")
     sources = resolve_sources(req, base=base)
 
-    def _opt_bool(key: str) -> bool | None:
-        if key not in req:
-            return None
-        v = req.get(key)
-        if v is None:
-            return None
-        return bool(v)
+    # HTTP is untrusted by default; CLI/service trusted unless overridden.
+    if trust_client_reliability is None:
+        trusted = channel != "http_api"
+    else:
+        trusted = bool(trust_client_reliability)
+
+    if trusted:
+        gates_ok = _opt_bool_strict(req["gates_ok"]) if "gates_ok" in req else None
+        determinism_ok = (
+            _opt_bool_strict(req["determinism_ok"]) if "determinism_ok" in req else None
+        )
+        abstention_enforced = (
+            _opt_bool_strict(req["abstention_enforced"])
+            if "abstention_enforced" in req
+            else None
+        )
+        provenance_ok = (
+            _opt_bool_strict(req["provenance_ok"]) if "provenance_ok" in req else None
+        )
+        reliability_gate = load_reliability_gate_mapping(
+            req.get("reliability_gate"),
+            base=base,
+            allow_inline=True,
+        )
+    else:
+        # Ignore client-asserted gate booleans and inline reports (Issue 4).
+        gates_ok = None
+        determinism_ok = None
+        abstention_enforced = None
+        provenance_ok = None
+        reliability_gate = load_reliability_gate_mapping(
+            req.get("reliability_gate"),
+            base=base,
+            allow_inline=False,
+        )
 
     card: DecisionCard = build_decision_card(
         event_id,
@@ -248,15 +320,16 @@ def decide_from_request(
         require_ops_for_go=require_ops,
         git_commit=git_commit,
         policy_id=str(policy_id) if policy_id else None,
-        gates_ok=_opt_bool("gates_ok"),
-        determinism_ok=_opt_bool("determinism_ok"),
-        abstention_enforced=_opt_bool("abstention_enforced"),
-        provenance_ok=_opt_bool("provenance_ok"),
-        reliability_gate=req.get("reliability_gate"),
+        gates_ok=gates_ok,
+        determinism_ok=determinism_ok,
+        abstention_enforced=abstention_enforced,
+        provenance_ok=provenance_ok,
+        reliability_gate=reliability_gate,
         extra_metrics={
-            "channel": req.get("channel") or "decide_service",
+            "channel": channel,
             "api_version": API_VERSION,
             "policy_id": policy_id or "default",
+            "reliability_trusted_client": trusted,
         },
     )
     latency_ms = round((time.perf_counter() - t0) * 1000.0, 3)

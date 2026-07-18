@@ -95,11 +95,14 @@ def test_default_card_does_not_claim_reliability_pass():
     assert sys_rel.get("residual_silent_go_risk_bound") != 1e-6
     assert sys_rel.get("status") in ("unknown", "fail")
     checks = sys_rel.get("checks") or {}
-    # Gates / determinism not measured by default
-    assert checks.get("R2_gates") is not True
-    assert checks.get("R1_determinism") is not True
-    # Old bug: abstention_enforced was always True via conf >= 0.0
-    assert "conf >= 0.0" not in str(sys_rel)
+    # No R1–R4 check is auto-claimed True without measurement
+    assert checks.get("R1_determinism") is None
+    assert checks.get("R2_gates") is None
+    assert checks.get("R3_abstention_enforced") is None
+    assert checks.get("R4_provenance") is None
+    # Heuristic lives outside checks
+    assert "abstention_heuristic_ok" in card.audit
+    assert card.audit.get("provenance_hashes_attached") is True
 
 
 def test_unmeasured_gates_report_unknown_not_pass():
@@ -131,6 +134,24 @@ def test_explicit_gates_can_pass():
     assert sys_rel["status"] == "pass"
 
 
+def test_ok_only_gate_report_does_not_pass():
+    """Bare {\"ok\": true} must not grant R1–R4 PASS."""
+    card = build_decision_card(
+        "ok_only",
+        ml_metrics={"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+        reliability_gate={"ok": True},
+    )
+    assert card.system_reliability_pass is False
+    sys_rel = card.audit["system_reliability"]
+    assert sys_rel["status"] == "unknown"
+    assert sys_rel["residual_silent_go_risk_bound"] == 1.0
+    checks = sys_rel["checks"]
+    assert checks["R1_determinism"] is None
+    assert checks["R2_gates"] is None
+    assert checks["R3_abstention_enforced"] is None
+    assert checks["R4_provenance"] is None
+
+
 def test_field_ops_fail_closed_without_gates():
     """field_ops must not GO when system reliability is unverified."""
     strong = {
@@ -145,11 +166,11 @@ def test_field_ops_fail_closed_without_gates():
         "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
     }
     default = build_decision_card("go_default", policy_id="default", **strong)
+    # Fixture must produce GO on default — otherwise fail-closed branch is untested
+    assert default.decision == Decision.GO, "fixture must yield GO under default policy"
     field = build_decision_card("go_field", policy_id="field_ops", **strong)
-    # Default may GO; field_ops without gates fails closed to ABSTAIN
-    if default.decision == Decision.GO:
-        assert field.decision == Decision.ABSTAIN
-        assert any("fail_closed" in r for r in field.reasons)
+    assert field.decision == Decision.ABSTAIN
+    assert any("fail_closed" in r for r in field.reasons)
     field_ok = build_decision_card(
         "go_field_ok",
         policy_id="field_ops",
@@ -159,9 +180,8 @@ def test_field_ops_fail_closed_without_gates():
         provenance_ok=True,
         **strong,
     )
-    if default.decision == Decision.GO:
-        assert field_ok.decision == Decision.GO
-        assert field_ok.system_reliability_pass is True
+    assert field_ok.decision == Decision.GO
+    assert field_ok.system_reliability_pass is True
 
 
 def test_reliability_gate_report_injection(tmp_path):

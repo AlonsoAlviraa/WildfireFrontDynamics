@@ -305,30 +305,35 @@ def _load_reliability_gate_report(
 def _gate_flags_from_report(
     report: Mapping[str, Any] | None,
 ) -> dict[str, bool | None]:
-    """Extract R1–R4 flags from a reliability gate report if present."""
+    """Extract R1–R4 flags from a reliability gate report if present.
+
+    Only explicit ``system_reliability.checks`` keys count. Top-level
+    ``ok`` is advisory metadata and must NOT grant R1–R4 PASS by itself.
+    """
+    empty = {
+        "gates_ok": None,
+        "determinism_ok": None,
+        "abstention_enforced": None,
+        "provenance_ok": None,
+    }
     if not report:
-        return {
-            "gates_ok": None,
-            "determinism_ok": None,
-            "abstention_enforced": None,
-            "provenance_ok": None,
-        }
+        return empty
     sys_rel = report.get("system_reliability")
     checks: Mapping[str, Any] = {}
     if isinstance(sys_rel, Mapping):
         raw = sys_rel.get("checks")
         if isinstance(raw, Mapping):
             checks = raw
-    # report["ok"] is the gate script overall verdict when checks missing
-    ok = report.get("ok")
+
     def _c(key: str) -> bool | None:
-        if key in checks:
-            v = checks[key]
-            if v is None:
-                return None
-            return bool(v)
-        if isinstance(ok, bool):
-            return ok
+        if key not in checks:
+            return None
+        v = checks[key]
+        if v is None:
+            return None
+        if isinstance(v, bool):
+            return v
+        # Non-bool check values are untrusted / unmeasured
         return None
 
     return {
@@ -406,20 +411,17 @@ def build_decision_card(
     )
 
     # Merge optional external gate report; explicit kwargs win when not None.
+    # R3/R4 stay None unless report/kwargs supply them (do not auto-claim verified).
     from_report = _gate_flags_from_report(_load_reliability_gate_report(reliability_gate))
     g_ok = from_report["gates_ok"] if gates_ok is None else gates_ok
     d_ok = from_report["determinism_ok"] if determinism_ok is None else determinism_ok
     p_ok = from_report["provenance_ok"] if provenance_ok is None else provenance_ok
-    if abstention_enforced is None:
-        a_ok = from_report["abstention_enforced"]
-        if a_ok is None:
-            a_ok = _derive_abstention_enforced(decision, conf, sources, policy)
-    else:
-        a_ok = abstention_enforced
-    # Provenance hashes are always written below → default True when unmeasured
-    # only if we attach them (we always do). Still do not invent gates/determinism.
-    if p_ok is None:
-        p_ok = True
+    a_ok = (
+        from_report["abstention_enforced"]
+        if abstention_enforced is None
+        else abstention_enforced
+    )
+    abstention_heuristic_ok = _derive_abstention_enforced(decision, conf, sources, policy)
 
     sys_rep = system_reliability_report(
         gates_ok=g_ok,
@@ -436,15 +438,9 @@ def build_decision_card(
     ):
         decision = Decision.ABSTAIN
         dec_reasons = list(dec_reasons) + ["field_ops_fail_closed_reliability_unverified"]
-        # Re-derive R3 after forced abstention
-        if abstention_enforced is None and from_report["abstention_enforced"] is None:
-            a_ok = _derive_abstention_enforced(decision, conf, sources, policy)
-            sys_rep = system_reliability_report(
-                gates_ok=g_ok,
-                determinism_ok=d_ok,
-                abstention_enforced=a_ok,
-                provenance_ok=p_ok,
-            )
+        abstention_heuristic_ok = _derive_abstention_enforced(
+            decision, conf, sources, policy
+        )
 
     metrics: dict[str, Any] = {
         "ml": sources[0].get("metrics"),
@@ -495,6 +491,9 @@ def build_decision_card(
             "allow_ml_only_hold": policy.allow_ml_only_hold,
             "allow_open_only_hold": policy.allow_open_only_hold,
         },
+        # Heuristic only — not a gate-verified R3/R4 claim
+        "abstention_heuristic_ok": abstention_heuristic_ok,
+        "provenance_hashes_attached": True,
     }
 
     disclaimers = list(DEFAULT_DISCLAIMERS)

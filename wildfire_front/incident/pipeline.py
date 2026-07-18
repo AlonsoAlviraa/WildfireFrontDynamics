@@ -521,6 +521,11 @@ def publish_decision_card(
     ops_m = ops_metrics_for_decision(ops, n_frames=n_frames)
     ml_m = _load_ml_metrics_optional() if include_ml_metrics else None
     open_m = _load_open_metrics(open_pack_dir)
+    # Optional server-side gate report (repo docs/). Not client-asserted.
+    # field_ops GO requires verified R1–R4; without this report, fail-closed ABSTAIN.
+    _repo = Path(__file__).resolve().parents[2]
+    _gate_path = _repo / "docs" / "RELIABILITY_GATE_REPORT.json"
+    reliability_gate = _gate_path if _gate_path.is_file() else None
     card = build_decision_card(
         event_id,
         ml_metrics=ml_m,
@@ -529,10 +534,12 @@ def publish_decision_card(
         require_ops_for_go=require_ops_for_go,
         git_commit=git_commit,
         policy_id=decision_policy or "field_ops",
+        reliability_gate=reliability_gate,
         extra_metrics={
             "product": "incident_runtime_v1",
             "outbox": str(outbox.resolve()),
             "n_frames": n_frames,
+            "reliability_gate_path": str(reliability_gate) if reliability_gate else None,
         },
     )
     payload = card.to_dict()

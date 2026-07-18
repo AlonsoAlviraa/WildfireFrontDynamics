@@ -19,6 +19,26 @@ FORENSIC_SCHEMA = "forensic_bundle_v1"
 REPLAY_SOURCES_SCHEMA = "forensic_replay_sources_v1"
 RADIO_MAX_CHARS = 280
 
+
+def _reliability_label(card: Mapping[str, Any]) -> str:
+    """Tri-state reliability for acta (pass | unknown | fail)."""
+    audit = card.get("audit")
+    sys_rel: Mapping[str, Any] = {}
+    if isinstance(audit, Mapping):
+        raw = audit.get("system_reliability")
+        if isinstance(raw, Mapping):
+            sys_rel = raw
+    status = str(sys_rel.get("status") or "").lower()
+    if status in ("pass", "unknown", "fail"):
+        return status.upper()
+    if card.get("system_reliability_pass"):
+        return "PASS"
+    if sys_rel.get("system_reliability_pass") is False and any(
+        v is None for v in (sys_rel.get("checks") or {}).values()
+    ):
+        return "UNKNOWN"
+    return "FAIL"
+
 RADIO_FILENAME = "fire_decision_radio.txt"
 ACTA_FILENAME = "fire_decision_acta.md"
 MANIFEST_FILENAME = "forensic_manifest.json"
@@ -92,7 +112,7 @@ def render_acta_md(
         "|-------|-------|",
         f"| **Decisión** | **{dec}** |",
         f"| Confianza (fenómeno) | {conf_s} ({label}) |",
-        f"| System reliability | {'PASS' if card.get('system_reliability_pass') else 'FAIL'} |",
+        f"| System reliability | {_reliability_label(card)} |",
         f"| Evento | `{event}` |",
     ]
     if operator:

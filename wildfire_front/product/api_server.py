@@ -70,6 +70,15 @@ OPENAPI: dict[str, Any] = {
                                         "type": "string",
                                         "description": "default|field_ops|research_open|demo",
                                     },
+                                    "reliability_gate": {
+                                        "type": "string",
+                                        "description": (
+                                            "Allowlisted path to reliability gate JSON "
+                                            "(under base/REPO_ROOT). Inline reports and "
+                                            "client-asserted gates_ok flags are ignored "
+                                            "on this unauthenticated HTTP channel."
+                                        ),
+                                    },
                                 },
                             }
                         }
@@ -77,7 +86,12 @@ OPENAPI: dict[str, Any] = {
                 },
                 "responses": {
                     "200": {"description": "Decision Card JSON + latency_ms"},
-                    "400": {"description": "Invalid JSON or path not allowed"},
+                    "400": {
+                        "description": (
+                            "Invalid JSON, or path_not_allowed "
+                            "(work_dir/open_pack/reliability_gate outside allowlist)"
+                        )
+                    },
                     "413": {"description": "Request body too large"},
                 },
             }
@@ -223,9 +237,10 @@ class DecideHandler(BaseHTTPRequestHandler):
             self._send(status, body, ctype)
             return
 
-        req.setdefault("channel", "http_api")
+        # Force untrusted HTTP channel (clients cannot spoof trust via body).
+        req["channel"] = "http_api"
         try:
-            payload = decide_from_request(req, base=base)
+            payload = decide_from_request(req, base=base, trust_client_reliability=False)
         except PathNotAllowedError as exc:
             status, body, ctype = _json_bytes(
                 {"error": "path_not_allowed", "detail": str(exc)}, status=400

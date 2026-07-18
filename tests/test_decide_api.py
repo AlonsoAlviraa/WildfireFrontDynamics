@@ -162,44 +162,144 @@ def test_http_api_body_too_large(tmp_path: Path):
     httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
     base = f"http://127.0.0.1:{port}"
     try:
-        # Advertise oversized Content-Length without sending full body
-        req = urllib.request.Request(
-            f"{base}/v1/decide",
-            data=b"{}",
-            headers={
-                "Content-Type": "application/json",
-                "Content-Length": str(MAX_BODY_BYTES + 10),
-            },
-            method="POST",
-        )
-        # urllib may recompute Content-Length from data; force via custom handler
-        class _LenOverride(urllib.request.Request):
-            pass
-
-        # Use raw connection-style: set header after body so server sees big length
-        # BaseHTTPRequestHandler trusts Content-Length header first.
-        try:
-            urllib.request.urlopen(req, timeout=5)
-            # If urllib rewrote Content-Length to 2, re-try with a fat body
-        except urllib.error.HTTPError as exc:
-            if exc.code == 413:
-                detail = json.loads(exc.read().decode("utf-8"))
-                assert detail.get("error") == "body_too_large"
-                return
         fat = b"{" + b'"x":"' + (b"a" * (MAX_BODY_BYTES + 100)) + b'"}'
-        req2 = urllib.request.Request(
+        assert len(fat) > MAX_BODY_BYTES
+        req = urllib.request.Request(
             f"{base}/v1/decide",
             data=fat,
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         try:
-            urllib.request.urlopen(req2, timeout=5)
+            urllib.request.urlopen(req, timeout=5)
             assert False, "expected HTTPError 413"
         except urllib.error.HTTPError as exc:
             assert exc.code == 413
             detail = json.loads(exc.read().decode("utf-8"))
             assert detail.get("error") == "body_too_large"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_string_false_gate_flags_not_true():
+    """_opt_bool must not treat string 'false' as True."""
+    payload = decide_from_request(
+        {
+            "event_id": "str_bool",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 5.0,
+                "n_frames_staged": 12,
+                "speed_vs_ref_ratio": 0.9,
+            },
+            "ml_metrics": {"test_iou": 0.89, "improvement_vs_copy_iou": 0.25},
+            "gates_ok": "false",
+            "determinism_ok": "false",
+            "abstention_enforced": "true",
+            "provenance_ok": "0",
+            "channel": "decide_service",
+        }
+    )
+    assert payload["system_reliability_pass"] is False
+    checks = (payload.get("audit") or {}).get("system_reliability", {}).get("checks") or {}
+    # Strings ignored → unmeasured, not True
+    assert checks.get("R1_determinism") is not True
+    assert checks.get("R2_gates") is not True
+
+
+def test_reliability_gate_path_outside_allowlist_rejected(tmp_path: Path):
+    """reliability_gate absolute path outside base/REPO_ROOT raises."""
+    sandbox = tmp_path / "sandbox"
+    sandbox.mkdir()
+    # Drive-root path is outside sandbox and (typically) REPO_ROOT.
+    evil = Path(tmp_path.anchor) / "wfd_gate_not_allowed.json"
+    with pytest.raises(PathNotAllowedError):
+        decide_from_request(
+            {
+                "event_id": "gate_escape",
+                "reliability_gate": str(evil),
+                "channel": "decide_service",
+            },
+            base=sandbox,
+        )
+
+
+def test_http_ignores_client_asserted_gates(tmp_path: Path):
+    """HTTP cannot self-assert gates to defeat field_ops fail-closed."""
+    httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        body = json.dumps(
+            {
+                "event_id": "http_self_cert",
+                "policy_id": "field_ops",
+                "ops_metrics": {
+                    "quality_grade": "A",
+                    "primary_ros_m_min": 6.0,
+                    "n_frames_staged": 20,
+                    "speed_vs_ref_ratio": 0.9,
+                    "area_ha_max": 50,
+                },
+                "open_metrics": {"max_area_ha": 2000, "n_timeline_steps": 5},
+                "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+                "gates_ok": True,
+                "determinism_ok": True,
+                "abstention_enforced": True,
+                "provenance_ok": True,
+                "reliability_gate": {"ok": True},
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            card = json.loads(resp.read().decode("utf-8"))
+        assert card.get("system_reliability_pass") is False
+        assert card["decision"] == "ABSTAIN"
+        assert any("fail_closed" in r for r in (card.get("reasons") or []))
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_http_reliability_gate_allowlisted_file_ok(tmp_path: Path):
+    """HTTP may load reliability from an allowlisted path with full checks."""
+    report = {
+        "ok": True,
+        "system_reliability": {
+            "checks": {
+                "R1_determinism": True,
+                "R2_gates": True,
+                "R3_abstention_enforced": True,
+                "R4_provenance": True,
+            }
+        },
+    }
+    gate_path = tmp_path / "RELIABILITY_GATE_REPORT.json"
+    gate_path.write_text(json.dumps(report), encoding="utf-8")
+    httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        body = json.dumps(
+            {
+                "event_id": "http_gate_file",
+                "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+                "reliability_gate": "RELIABILITY_GATE_REPORT.json",
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            card = json.loads(resp.read().decode("utf-8"))
+        assert card.get("system_reliability_pass") is True
     finally:
         httpd.shutdown()
         httpd.server_close()
