@@ -65,6 +65,12 @@ markers = [
     "requires_weights: needs local .pt checkpoints under models/ (gitignored; see CONTRIBUTING)",
 ]
 
+# Coverage gate: start modest (~74% observed); raise gradually. CI also passes
+# --cov-fail-under=60 explicitly so the gate is visible in the workflow.
+[tool.coverage.report]
+fail_under = 60
+omit = ["*/tests/*"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

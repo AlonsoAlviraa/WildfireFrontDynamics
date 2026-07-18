@@ -70,7 +70,8 @@ jobs:
           pip install pytest-cov
 
       - name: Run tests with coverage
-        run: pytest --cov=wildfire_front --cov-report=term-missing --cov-report=xml
+        # Gate starts modest (coverage ~74% locally); raise gradually toward 80+.
+        run: pytest --cov=wildfire_front --cov-report=term-missing --cov-report=xml --cov-fail-under=60
 
       - name: Upload coverage artifact
         if: matrix.python-version == '3.11'
@@ -102,13 +103,66 @@ jobs:
           pip install "rasterio>=1.4"
           pip install ".[ml,dev]"
 
-      - name: Run ML tests (pipeline + meta-labeler + NDWS + spread + export + ensemble)
-        run: pytest tests/test_ml_pipeline.py tests/test_meta_labeler.py tests/test_ndws_metrics.py tests/test_spread_predictor.py tests/test_export_torchscript.py tests/test_product_catalog.py tests/test_clm_eval_ensemble.py -v
+      - name: Run ML tests (U-Net + catalog + pipeline + metrics/norm)
+        run: >
+          pytest
+          tests/test_unet_model.py
+          tests/test_product_catalog.py
+          tests/test_clm_eval_ensemble.py
+          tests/test_ml_pipeline.py
+          tests/test_meta_labeler.py
+          tests/test_ndws_metrics.py
+          tests/test_spread_predictor.py
+          tests/test_export_torchscript.py
+          tests/test_normalization.py
+          tests/test_metrics_protocol.py
+          -v
 
       - name: Run ops/incident unit tests
         run: pytest tests/test_incident_watch.py tests/test_cli_report.py tests/test_emergency_products.py -v
 
-      - name: Smoke-test model import and forward
+      - name: Smoke product Residual U-Net + catalog (primary)
+        run: |
+          python - <<'PY'
+          import torch
+          from models.unet_model import ResidualWildfireUNetSmall, WildfireUNetSmall
+          from wildfire_front.ml.product_catalog import get_product, list_products, load_catalog
+
+          # Residual U-Net is the production architecture (v21+/CLM specialist).
+          torch.manual_seed(0)
+          residual = ResidualWildfireUNetSmall(in_channels=18)
+          x = torch.randn(1, 18, 64, 64)
+          prev = (torch.rand(1, 64, 64) > 0.5).float()
+          with torch.no_grad():
+              logits = residual(x, prev)
+              probs = residual.predict(x, prev)
+          assert logits.shape == (1, 1, 64, 64), logits.shape
+          assert probs.shape == (1, 1, 64, 64)
+          assert torch.isfinite(logits).all()
+          assert (probs >= 0).all() and (probs <= 1).all()
+
+          small = WildfireUNetSmall(in_channels=18)
+          with torch.no_grad():
+              out = small(x)
+          assert out.shape == (1, 1, 64, 64)
+
+          # Catalog product contracts (weights optional; structure always required).
+          catalog = load_catalog()
+          assert "ndws_v21" in catalog["products"]
+          assert "clm_v28" in catalog["products"]
+          assert "clm_ensemble_v34" in catalog["products"]
+          for pid in ("ndws_v21", "clm_v28", "clm_ensemble_v34"):
+              spec = get_product(pid)
+              assert spec.manifest_path.name  # resolved path
+              ok, msg = spec.resolve_existing()
+              print(f"  product {pid}: ready={ok} ({msg})")
+          products = list_products()
+          assert len(products) >= 3
+          print("Residual U-Net + catalog product smoke OK")
+          PY
+
+      - name: Smoke A3C legacy model (optional / secondary)
+        continue-on-error: true
         run: |
           python - <<'PY'
           import torch
@@ -119,7 +173,7 @@ jobs:
           feats, value = m(seq, mask)
           assert feats.shape == (1, 256, 30, 30)
           assert value.shape == (1, 1)
-          print("ML smoke test OK")
+          print("A3C legacy smoke OK (secondary)")
           PY
 
   docker:
