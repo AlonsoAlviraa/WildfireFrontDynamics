@@ -16,13 +16,10 @@ from torch.utils.data import DataLoader
 from models.model import A3C_PerCellModel_LSTM
 
 from .dataset import WildfireDataset
+from .normalization import CH_FFMC, CH_SLOPE, CH_WIND, denormalize_channel_value
 from .physics import (
     _FFMC_DIVIDE_BY,
     _FFMC_SUBTRACT,
-    _SLOPE_DIVIDE_BY,
-    _SLOPE_SUBTRACT,
-    _WIND_DIVIDE_BY,
-    _WIND_SUBTRACT,
     physics_loss_cell,
     physics_loss_cell_vectorized,
 )
@@ -41,18 +38,18 @@ DEFAULT_LAMBDA_PHYSICS = 0.1  # Weight for physics-informed loss (Rothermel ROS)
 
 
 def _denorm_wind(wind_norm: float) -> float:
-    """Map normalized ch4 wind back to m/s."""
-    return wind_norm * _WIND_DIVIDE_BY + _WIND_SUBTRACT
+    """Map normalized ch4 wind back to m/s (SoT: normalization._CHANNEL_STATS)."""
+    return denormalize_channel_value(CH_WIND, wind_norm)
 
 
 def _denorm_slope(slope_norm: float) -> float:
     """Map normalized ch0 slope back to radians."""
-    return slope_norm * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT
+    return denormalize_channel_value(CH_SLOPE, slope_norm)
 
 
 def _denorm_ffmc(ffmc_norm: float) -> float:
     """Map normalized ch16 FFMC back to physical [0, 101]."""
-    return ffmc_norm * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+    return denormalize_channel_value(CH_FFMC, ffmc_norm)
 
 
 def focal_loss_with_logits(
@@ -320,14 +317,14 @@ def calculate_local_spread_loss_vectorized(
 
     # 8. Physics loss (optional) — FULLY VECTORIZED (v9)
     #    Replaces the slow per-cell Python loop with a single batched op.
-    #    The function des-normalizes wind/slope internally; we denorm FFMC here
-    #    so it receives physical [0, 101]. Clamped to [0, lambda_physics].
+    #    Vectorized denorms wind/slope internally; FFMC must be physical [0,101]
+    #    (API asymmetry — see physics_loss_cell_vectorized docstring).
     physics_term = torch.tensor(0.0, device=features.device)
     if sequence is not None and lambda_physics > 0:
         last_ts = sequence[0, -1]  # (C, H, W)
         wind_grid = last_ts[4][burning_mask]  # (N,) — NORMALIZED [0,1]
         slope_grid = last_ts[0][burning_mask]  # (N,) — NORMALIZED [0,1]
-        # FFMC channel is (raw-50)/51 after normalize; restore physical units.
+        # ch16 is (raw-50)/51 after normalize; restore physical FFMC for the API.
         if last_ts.shape[0] > 16:
             ffmc_grid = last_ts[16][burning_mask] * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
         else:

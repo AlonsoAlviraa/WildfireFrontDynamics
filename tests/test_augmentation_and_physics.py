@@ -9,9 +9,12 @@ Validates:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
+import pytest
 import torch
+import torch.nn as nn
 
 from wildfire_front.ml.dataset import NpzWildfireDataset
 from wildfire_front.ml.physics import (
@@ -240,12 +243,48 @@ class TestFFMCSingleNormalization:
         correct = (85.0 - 50.0) / 51.0
         assert not np.allclose(out[16], correct, atol=0.01)
 
+    def test_build_17_channels_ffmc_raw_then_single_norm(self) -> None:
+        """Fixture-free: WildfireDataset._build_17_channels writes raw FFMC then normalizes."""
+        from wildfire_front.ml.dataset import WildfireDataset
+
+        h, w = 4, 4
+        ds = object.__new__(WildfireDataset)
+        ds.height = h
+        ds.width = w
+        ds.dem_slope = np.zeros((h, w), dtype=np.float32)
+        ds.dem_aspect = np.zeros((h, w), dtype=np.float32)
+        ds.ndvi = np.full((h, w), 0.6, dtype=np.float32)
+        ds.fsm = np.zeros((4, h, w), dtype=np.float32)
+        ds.fsm[0] = 1.0
+        ds.weather_data = {
+            "temp": 25.0,
+            "humidity": 40.0,
+            "wind_speed": 15.0,
+            "wind_dir": 90.0,
+            "precip": 0.0,
+            "pressure": 1013.0,
+            "cloud": 10.0,
+            "visibility": 10.0,
+            "dew_point": 12.0,
+            "ffmc": 85.0,
+        }
+        ds._read_thermal_band = lambda _path: None  # type: ignore[method-assign]
+
+        out = ds._build_17_channels(Path("dummy.tif"))
+        expected = (85.0 - 50.0) / 51.0
+        assert out.shape == (17, h, w)
+        assert np.allclose(out[16], expected, atol=1e-5), (
+            f"ch16 mean={float(out[16].mean()):.4f}, expected {expected:.4f}"
+        )
+        # Must not look like double-norm (~-0.96)
+        assert float(out[16].mean()) > 0.0
+
     def test_dataset_writes_raw_ffmc_then_normalizes(self) -> None:
         """End-to-end: WildfireDataset channel 16 ≈ (85-50)/51 for default weather."""
         images_dir = Path("data/candidates/semireal_controlled_001/images")
         masks_dir = Path("data/candidates/semireal_controlled_001/masks")
         if not images_dir.is_dir() or not masks_dir.is_dir():
-            return  # fixture optional in clean CI clones
+            pytest.skip("semireal_controlled_001 fixture not present")
 
         from wildfire_front.ml.dataset import WildfireDataset
 
@@ -275,10 +314,39 @@ class TestFFMCSingleNormalization:
         )
 
 
+class _StubSpreadModel:
+    """Minimal LocalSpreadModel stand-in for call-site denorm tests."""
+
+    def __init__(self) -> None:
+        # policy_head: (N, 256*9) → (N, 8); identity-ish zeros → logits 0
+        self.policy_head = nn.Linear(256 * 9, 8, bias=True)
+        nn.init.zeros_(self.policy_head.weight)
+        nn.init.zeros_(self.policy_head.bias)
+
+    def get_burning_cells(self, current_fire: torch.Tensor) -> list[tuple[int, int]]:
+        fire = current_fire[0] if current_fire.dim() == 3 else current_fire
+        idx = torch.nonzero(fire > 0.5, as_tuple=False)
+        return [(int(r), int(c)) for r, c in idx.tolist()]
+
+    def predict_8_neighbors(self, features: torch.Tensor, i: int, j: int) -> torch.Tensor:
+        return torch.zeros(1, 8, device=features.device)
+
+    def get_8_neighbor_coords(
+        self, i: int, j: int, height: int, width: int
+    ) -> list[tuple[int, int] | None]:
+        offsets = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
+        out: list[tuple[int, int] | None] = []
+        for di, dj in offsets:
+            ni, nj = i + di, j + dj
+            out.append((ni, nj) if 0 <= ni < height and 0 <= nj < width else None)
+        return out
+
+
 class TestPhysicsDenormParity:
     """C3: legacy denorm helpers match vectorized wind/slope denorm + FFMC restore."""
 
     def test_denorm_helpers_recover_physical_units(self) -> None:
+        from wildfire_front.ml.normalization import denormalize_channel_value
         from wildfire_front.ml.train import _denorm_ffmc, _denorm_slope, _denorm_wind
 
         wind_raw, slope_raw, ffmc_raw = 15.0, 0.3, 85.0
@@ -289,6 +357,10 @@ class TestPhysicsDenormParity:
         assert abs(_denorm_wind(wind_norm) - wind_raw) < 1e-4
         assert abs(_denorm_slope(slope_norm) - slope_raw) < 1e-4
         assert abs(_denorm_ffmc(ffmc_norm) - ffmc_raw) < 1e-4
+        # SoT: helpers match normalization.denormalize_channel_value
+        assert abs(denormalize_channel_value(4, wind_norm) - wind_raw) < 1e-4
+        assert abs(denormalize_channel_value(0, slope_norm) - slope_raw) < 1e-4
+        assert abs(denormalize_channel_value(16, ffmc_norm) - ffmc_raw) < 1e-4
 
     def test_legacy_denorm_matches_vectorized_channel_restore(self) -> None:
         """Same normalized sequence channels → same physical inputs on both paths."""
@@ -321,8 +393,12 @@ class TestPhysicsDenormParity:
         assert abs(f_leg - f_vec) < 1e-6
         assert abs(f_leg - 85.0) < 1e-4
 
-    def test_legacy_and_vectorized_physics_agree_when_spread_impossible(self) -> None:
-        """With denormed inputs, both paths penalize impossible calm/zero-wind spread."""
+    def test_both_paths_penalize_impossible_spread(self) -> None:
+        """Calm/wet denormed inputs → both physics APIs return a positive penalty.
+
+        Loss formulas still differ (legacy excess vs vectorized ratio-1 + clamp);
+        this only checks both fire under impossible-spread conditions.
+        """
         from wildfire_front.ml.physics import physics_loss_cell_vectorized
         from wildfire_front.ml.train import _denorm_ffmc, _denorm_slope, _denorm_wind
 
@@ -345,8 +421,106 @@ class TestPhysicsDenormParity:
             ffmc=torch.tensor([_denorm_ffmc(ffmc_norm)]),
             lambda_physics=lam,
         )
-        # Both must produce a positive penalty under calm / wet fuel
         assert float(legacy.item()) > 0.0
         assert float(vec.item()) > 0.0
-        # Vectorized is clamped to lambda; legacy is not — both finite and positive
         assert float(vec.item()) <= lam + 1e-6
+
+    def test_legacy_call_site_passes_physical_units_to_physics(self, monkeypatch: Any) -> None:
+        """Integration: calculate_local_spread_loss denorms sequence channels before physics."""
+        from wildfire_front.ml import train as train_mod
+
+        captured: dict[str, float] = {}
+
+        def _spy(
+            probs: torch.Tensor,
+            wind_speed: float,
+            slope_rad: float,
+            ffmc: float = 90.0,
+            dt_min: float = 10.0,
+            lambda_physics: float = 0.1,
+        ) -> torch.Tensor:
+            captured["wind"] = float(wind_speed)
+            captured["slope"] = float(slope_rad)
+            captured["ffmc"] = float(ffmc)
+            return torch.tensor(0.0, device=probs.device)
+
+        monkeypatch.setattr(train_mod, "physics_loss_cell", _spy)
+
+        wind_raw, slope_raw, ffmc_raw = 15.0, 0.3, 85.0
+        h, w = 8, 8
+        bi, bj = 3, 3
+        sequence = torch.zeros(1, 3, 17, h, w)
+        sequence[0, -1, 4, :, :] = wind_raw / 20.0
+        sequence[0, -1, 0, :, :] = slope_raw / 1.5708
+        sequence[0, -1, 16, :, :] = (ffmc_raw - 50.0) / 51.0
+        current = torch.zeros(1, h, w)
+        current[0, bi, bj] = 1.0
+        target = torch.zeros(1, h, w)
+        target[0, bi, bj + 1] = 1.0
+        features = torch.zeros(1, 256, h, w)
+
+        loss = train_mod.calculate_local_spread_loss(
+            _StubSpreadModel(),  # type: ignore[arg-type]
+            features,
+            current,
+            target,
+            sequence=sequence,
+            lambda_physics=0.1,
+        )
+        assert loss is not None
+        assert abs(captured["wind"] - wind_raw) < 1e-4
+        assert abs(captured["slope"] - slope_raw) < 1e-4
+        assert abs(captured["ffmc"] - ffmc_raw) < 1e-4
+        # Guard: must not pass normalized ~0.686 as FFMC
+        assert captured["ffmc"] > 10.0
+
+    def test_vectorized_call_site_passes_physical_ffmc(self, monkeypatch: Any) -> None:
+        """Integration: vectorized path denorms FFMC before physics (wind/slope stay norm)."""
+        from wildfire_front.ml import train as train_mod
+
+        captured: dict[str, Any] = {}
+
+        def _spy(
+            probs: torch.Tensor,
+            wind_norm: torch.Tensor,
+            slope_norm: torch.Tensor,
+            ffmc: torch.Tensor | float = 90.0,
+            dt_min: float = 10.0,
+            lambda_physics: float = 0.1,
+        ) -> torch.Tensor:
+            captured["wind_norm"] = float(wind_norm.mean().item())
+            captured["slope_norm"] = float(slope_norm.mean().item())
+            if isinstance(ffmc, torch.Tensor):
+                captured["ffmc"] = float(ffmc.mean().item())
+            else:
+                captured["ffmc"] = float(ffmc)
+            return torch.tensor(0.0, device=probs.device)
+
+        monkeypatch.setattr(train_mod, "physics_loss_cell_vectorized", _spy)
+
+        wind_raw, slope_raw, ffmc_raw = 15.0, 0.3, 85.0
+        h, w = 8, 8
+        bi, bj = 3, 3
+        sequence = torch.zeros(1, 3, 17, h, w)
+        sequence[0, -1, 4, :, :] = wind_raw / 20.0
+        sequence[0, -1, 0, :, :] = slope_raw / 1.5708
+        sequence[0, -1, 16, :, :] = (ffmc_raw - 50.0) / 51.0
+        current = torch.zeros(1, h, w)
+        current[0, bi, bj] = 1.0
+        target = torch.zeros(1, h, w)
+        target[0, bi, bj + 1] = 1.0
+        features = torch.zeros(1, 256, h, w)
+
+        loss = train_mod.calculate_local_spread_loss_vectorized(
+            _StubSpreadModel(),  # type: ignore[arg-type]
+            features,
+            current,
+            target,
+            sequence=sequence,
+            lambda_physics=0.1,
+        )
+        assert loss is not None
+        assert abs(captured["wind_norm"] - wind_raw / 20.0) < 1e-4
+        assert abs(captured["slope_norm"] - slope_raw / 1.5708) < 1e-4
+        assert abs(captured["ffmc"] - ffmc_raw) < 1e-3
+        assert captured["ffmc"] > 10.0

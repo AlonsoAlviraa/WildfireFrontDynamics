@@ -373,6 +373,20 @@ class TestGradientFlow:
         )
         assert abs(loss_default.item() - loss_explicit5.item()) < 1e-6
 
+    def test_train_loop_passes_config_pos_weight_to_weighted_loss(self):
+        """H2 call-site contract: train loop wires config.pos_weight into apply_weighted_loss."""
+        import inspect
+
+        import wildfire_front.ml.unet_train as unet_train
+
+        src = inspect.getsource(unet_train)
+        assert "apply_weighted_loss(" in src
+        assert "pos_weight=config.pos_weight" in src
+        # Guard against reintroducing a hard-coded tensor(5.0) in apply_weighted_loss body
+        apply_src = inspect.getsource(unet_train.apply_weighted_loss)
+        assert "torch.tensor(5.0" not in apply_src
+        assert "pos_weight" in apply_src
+
 
 class TestNpzDataset:
     """Test the NpzWildfireDataset with 64×64 patches."""

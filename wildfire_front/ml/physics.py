@@ -26,6 +26,8 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
+from .normalization import _CHANNEL_STATS, CH_FFMC, CH_SLOPE, CH_WIND
+
 # --------------------------------------------------------------------------- #
 # Constants
 # --------------------------------------------------------------------------- #
@@ -404,14 +406,11 @@ def physics_loss_cell(
 # --------------------------------------------------------------------------- #
 # VECTORIZED physics loss — v9 (replaces slow per-cell Python loop)
 # --------------------------------------------------------------------------- #
-# Normalization constants from wildfire_front/ml/normalization.py
+# Single SoT: affine (sub, div) from normalization._CHANNEL_STATS.
 # raw = normalized * divide_by + subtract
-_WIND_DIVIDE_BY = 20.0  # channel 4: wind_speed (m/s)
-_WIND_SUBTRACT = 0.0
-_SLOPE_DIVIDE_BY = 1.5708  # channel 0: slope (radians)
-_SLOPE_SUBTRACT = 0.0
-_FFMC_DIVIDE_BY = 51.0  # channel 16: (ffmc - 50) / 51
-_FFMC_SUBTRACT = 50.0
+_SLOPE_SUBTRACT, _SLOPE_DIVIDE_BY = _CHANNEL_STATS[CH_SLOPE]
+_WIND_SUBTRACT, _WIND_DIVIDE_BY = _CHANNEL_STATS[CH_WIND]
+_FFMC_SUBTRACT, _FFMC_DIVIDE_BY = _CHANNEL_STATS[CH_FFMC]
 
 
 def physics_loss_cell_vectorized(
@@ -426,17 +425,26 @@ def physics_loss_cell_vectorized(
 
     Replaces the slow per-cell Python loop in ``calculate_local_spread_loss``.
 
-    IMPORTANT: This function des-normalizes wind and slope internally.
-    Input channels from the model's ``sequence`` tensor are NORMALIZED
-    (raw/20 for wind, raw/1.5708 for slope). We convert back to physical
-    units before computing Rothermel ROS.
+    **Unit contract (asymmetric — read carefully):**
+
+    * ``wind_norm`` / ``slope_norm``: **normalized** sequence channels
+      (``raw/20`` wind, ``raw/1.5708`` slope). Denormalized **inside** this
+      function before Rothermel.
+    * ``ffmc``: **physical** Fine Fuel Moisture Code in **[0, 101]**.
+      This arg is **not** denormalized here. Callers that read ch16 after
+      ``normalize_channels`` must restore first:
+      ``ffmc_phys = ffmc_norm * 51 + 50`` (see ``train.calculate_local_spread_loss*``).
+
+    **Footgun:** Passing normalized ch16 (~0.7 for FFMC 85) as ``ffmc`` is
+    treated as near-zero FFMC → moisture ≈ 147% and absurd ROS penalties.
+    Prefer physical defaults (e.g. 90.0) or explicit denorm at the call site.
 
     Args:
         predicted_probs: (N, 8) tensor — probabilities for each neighbor
                          of each burning cell (detached, no gradient).
         wind_norm: (N,) tensor — wind speed channel values (NORMALIZED [0,1]).
         slope_norm: (N,) tensor — slope channel values (NORMALIZED [0,1]).
-        ffmc: (N,) tensor or scalar — FFMC values in [0, 101].
+        ffmc: (N,) tensor or scalar — **physical** FFMC in [0, 101], not ch16 norm.
         dt_min: Time step in minutes.
         lambda_physics: Loss weight.
 
@@ -444,7 +452,7 @@ def physics_loss_cell_vectorized(
         Scalar loss tensor (CLAMPED to [0, lambda_physics] so physics
         never dominates the focal BCE term).
     """
-    # --- Des-normalize to physical units ---
+    # --- Des-normalize wind/slope to physical units (ffmc already physical) ---
     wind_ms = wind_norm.float() * _WIND_DIVIDE_BY + _WIND_SUBTRACT  # m/s
     slope_rad = slope_norm.float() * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT  # radians
     slope_deg = torch.rad2deg(slope_rad)

@@ -73,6 +73,25 @@ _CHANNEL_STATS: list[tuple[float, float]] = [
     (50.0, 51.0),  # (ffmc - 50) / 51 → ~[0, 1]
 ]
 
+# Channel indices used by physics denorm (single SoT with _CHANNEL_STATS).
+CH_SLOPE = 0
+CH_WIND = 4
+CH_FFMC = 16
+
+
+def denormalize_channel_value(channel_idx: int, normalized: float) -> float:
+    """Invert ``normalize_channels`` for a scalar: ``raw = norm * div + sub``.
+
+    Args:
+        channel_idx: Index into ``_CHANNEL_STATS`` (0-16).
+        normalized: Value after channel-wise affine normalize.
+
+    Returns:
+        Approximate physical/raw unit for that channel.
+    """
+    sub, div = _CHANNEL_STATS[channel_idx]
+    return float(normalized) * div + sub
+
 
 def normalize_channels(channels: np.ndarray) -> np.ndarray:
     """Normalize a (17, H, W) array channel-by-channel to ~[0, 1].
