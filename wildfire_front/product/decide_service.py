@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -17,25 +17,96 @@ from .confidence import DecisionCard, build_decision_card
 REPO_ROOT = Path(__file__).resolve().parents[2]
 API_VERSION = "decide_api_v1"
 PRODUCT_ID = "fire_decision_card"
+# Max JSON body size for POST /v1/decide (and shared service callers that care).
+MAX_BODY_BYTES = 1_048_576  # 1 MiB
 
 
-def _as_path(value: str | Path | None, *, base: Path | None = None) -> Path | None:
+class PathNotAllowedError(ValueError):
+    """Raised when work_dir/open_pack resolves outside the allowlist."""
+
+
+def _is_under(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _allow_roots(base: Path | None = None) -> list[Path]:
+    roots: list[Path] = []
+    for r in (base, REPO_ROOT):
+        if r is None:
+            continue
+        try:
+            rr = Path(r).resolve()
+        except OSError:
+            continue
+        if rr not in roots:
+            roots.append(rr)
+    return roots or [REPO_ROOT.resolve()]
+
+
+def _as_path(
+    value: str | Path | None,
+    *,
+    base: Path | None = None,
+    allow_roots: Sequence[Path] | None = None,
+) -> Path | None:
+    """Resolve a path and reject anything outside base/REPO_ROOT allowlist.
+
+    Relative paths try ``base`` first, then REPO_ROOT (when different).
+    Absolute paths must still fall under an allowed root after resolve.
+    """
     if value is None or value == "":
         return None
     p = Path(value)
-    if not p.is_absolute() and base is not None:
-        cand = (base / p).resolve()
-        if cand.exists():
-            return cand
-        # also try repo root
-        cand2 = (REPO_ROOT / p).resolve()
-        if cand2.exists():
-            return cand2
-    return p
+    roots = [Path(r).resolve() for r in (allow_roots or _allow_roots(base))]
+    base_r = Path(base).resolve() if base is not None else REPO_ROOT.resolve()
+
+    if p.is_absolute():
+        try:
+            resolved = p.resolve()
+        except OSError as exc:
+            raise PathNotAllowedError(f"path not resolvable: {value}") from exc
+    else:
+        # Prefer base; if missing, try each allow root (repo-relative packs).
+        candidates: list[Path] = []
+        for root in [base_r, *roots]:
+            cand = (root / p)
+            if cand not in candidates:
+                candidates.append(cand)
+        resolved = None
+        first_in_allow: Path | None = None
+        for cand in candidates:
+            try:
+                cr = cand.resolve()
+            except OSError:
+                continue
+            if not any(_is_under(cr, root) for root in roots):
+                continue
+            if first_in_allow is None:
+                first_in_allow = cr
+            if cr.exists():
+                resolved = cr
+                break
+        if resolved is None:
+            resolved = first_in_allow
+        if resolved is None:
+            raise PathNotAllowedError(f"path not under allowlist: {value}")
+
+    if not any(_is_under(resolved, root) for root in roots):
+        raise PathNotAllowedError(
+            f"path not under allowlist (base/REPO_ROOT): {value} → {resolved}"
+        )
+    return resolved
 
 
 def load_ml_metrics_v34(*, base: Path | None = None) -> dict[str, Any] | None:
-    man = _as_path("models/clm_ensemble/manifest.json", base=base or REPO_ROOT)
+    try:
+        man = _as_path("models/clm_ensemble/manifest.json", base=base or REPO_ROOT)
+    except PathNotAllowedError:
+        man = None
     if man is None or not man.is_file():
         man = REPO_ROOT / "models" / "clm_ensemble" / "manifest.json"
     if not man.is_file():
@@ -151,6 +222,8 @@ def decide_from_request(
     """Build Decision Card payload + latency_ms from a request dict.
 
     Empty / missing sources → ABSTAIN (honest default).
+    ``work_dir`` / ``open_pack`` must resolve under ``base`` or REPO_ROOT.
+    Optional reliability kwargs: gates_ok, determinism_ok, reliability_gate.
     """
     t0 = time.perf_counter()
     req = dict(request or {})
@@ -158,6 +231,15 @@ def decide_from_request(
     require_ops = bool(req.get("require_ops_for_go", False))
     policy_id = req.get("policy") or req.get("policy_id")
     sources = resolve_sources(req, base=base)
+
+    def _opt_bool(key: str) -> bool | None:
+        if key not in req:
+            return None
+        v = req.get(key)
+        if v is None:
+            return None
+        return bool(v)
+
     card: DecisionCard = build_decision_card(
         event_id,
         ml_metrics=sources["ml_metrics"],
@@ -166,6 +248,11 @@ def decide_from_request(
         require_ops_for_go=require_ops,
         git_commit=git_commit,
         policy_id=str(policy_id) if policy_id else None,
+        gates_ok=_opt_bool("gates_ok"),
+        determinism_ok=_opt_bool("determinism_ok"),
+        abstention_enforced=_opt_bool("abstention_enforced"),
+        provenance_ok=_opt_bool("provenance_ok"),
+        reliability_gate=req.get("reliability_gate"),
         extra_metrics={
             "channel": req.get("channel") or "decide_service",
             "api_version": API_VERSION,

@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 
@@ -223,37 +224,141 @@ def decide(
     return Decision.ABSTAIN, reasons + ["below_action_threshold"]
 
 
+def _tri_state(value: bool | None) -> bool | None:
+    """Normalize gate flags: only True/False/None are meaningful."""
+    if value is None:
+        return None
+    return bool(value)
+
+
 def system_reliability_report(
     *,
-    gates_ok: bool,
-    determinism_ok: bool,
-    abstention_enforced: bool,
-    provenance_ok: bool,
+    gates_ok: bool | None = None,
+    determinism_ok: bool | None = None,
+    abstention_enforced: bool | None = None,
+    provenance_ok: bool | None = None,
 ) -> dict[str, Any]:
-    """R1–R4 system reliability (NOT fire prediction accuracy)."""
-    checks = {
-        "R1_determinism": determinism_ok,
-        "R2_gates": gates_ok,
-        "R3_abstention_enforced": abstention_enforced,
-        "R4_provenance": provenance_ok,
+    """R1–R4 system reliability (NOT fire prediction accuracy).
+
+    Each check may be True / False / None (not measured).
+    PASS and residual risk 1e-6 are claimed only when every check is
+    explicitly True — never by default.
+    """
+    checks: dict[str, bool | None] = {
+        "R1_determinism": _tri_state(determinism_ok),
+        "R2_gates": _tri_state(gates_ok),
+        "R3_abstention_enforced": _tri_state(abstention_enforced),
+        "R4_provenance": _tri_state(provenance_ok),
     }
-    passed = all(checks.values())
+    values = list(checks.values())
+    any_unknown = any(v is None for v in values)
+    any_fail = any(v is False for v in values)
+    # Fail-closed: unmeasured checks are not a pass.
+    passed = (not any_unknown) and (not any_fail) and all(v is True for v in values)
     # Design target: silent GO without gates should be impossible under test.
-    # We express that as residual risk bound 1e-6 when all checks pass.
+    # Residual 1e-6 only when all checks are explicitly verified True.
     residual_silent_go_risk = 1e-6 if passed else 1.0
-    return {
-        "system_reliability_pass": passed,
-        "checks": checks,
-        "residual_silent_go_risk_bound": residual_silent_go_risk,
-        "five_nines_claim": (
+    if passed:
+        claim = (
             "PASS: residual risk of silent GO without gates under automated "
             "enforcement bound at 1e-6 (design+tests). "
             "DOES NOT mean 99.9999% fire-spread prediction accuracy."
         )
-        if passed
-        else "FAIL: system reliability checks incomplete",
+        status = "pass"
+    elif any_unknown and not any_fail:
+        claim = (
+            "UNKNOWN: system reliability checks not measured for this card. "
+            "Does NOT claim residual 1e-6 or five-nines gate enforcement."
+        )
+        status = "unknown"
+    else:
+        claim = "FAIL: system reliability checks incomplete or failed"
+        status = "fail"
+    return {
+        "system_reliability_pass": passed,
+        "status": status,
+        "checks": checks,
+        "residual_silent_go_risk_bound": residual_silent_go_risk,
+        "five_nines_claim": claim,
         "fire_prediction_accuracy_claim": "NOT_CLAIMED",
     }
+
+
+def _load_reliability_gate_report(
+    source: Mapping[str, Any] | Path | str | None,
+) -> dict[str, Any] | None:
+    """Load a reliability_gate.py JSON report (mapping or path)."""
+    if source is None:
+        return None
+    if isinstance(source, Mapping):
+        return dict(source)
+    path = Path(source)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _gate_flags_from_report(
+    report: Mapping[str, Any] | None,
+) -> dict[str, bool | None]:
+    """Extract R1–R4 flags from a reliability gate report if present."""
+    if not report:
+        return {
+            "gates_ok": None,
+            "determinism_ok": None,
+            "abstention_enforced": None,
+            "provenance_ok": None,
+        }
+    sys_rel = report.get("system_reliability")
+    checks: Mapping[str, Any] = {}
+    if isinstance(sys_rel, Mapping):
+        raw = sys_rel.get("checks")
+        if isinstance(raw, Mapping):
+            checks = raw
+    # report["ok"] is the gate script overall verdict when checks missing
+    ok = report.get("ok")
+    def _c(key: str) -> bool | None:
+        if key in checks:
+            v = checks[key]
+            if v is None:
+                return None
+            return bool(v)
+        if isinstance(ok, bool):
+            return ok
+        return None
+
+    return {
+        "determinism_ok": _c("R1_determinism"),
+        "gates_ok": _c("R2_gates"),
+        "abstention_enforced": _c("R3_abstention_enforced"),
+        "provenance_ok": _c("R4_provenance"),
+    }
+
+
+def _derive_abstention_enforced(
+    decision: Decision,
+    confidence_pred: float,
+    sources: Sequence[Mapping[str, Any]],
+    policy: Any,
+) -> bool:
+    """Honest R3: abstention applied when conf/policy requires it.
+
+    Not ``conf >= 0.0`` (always true). When policy requires ABSTAIN,
+    the decision must be ABSTAIN. Otherwise the engine ran decide()
+    so abstention rules were applied for this card.
+    """
+    min_src = int(getattr(policy, "min_available_sources", 1) or 1)
+    abstain_below = float(getattr(policy, "abstain_below", 0.20))
+    available = [s for s in sources if s.get("available")]
+    must_abstain = confidence_pred < abstain_below or len(available) < min_src
+    if must_abstain:
+        return decision == Decision.ABSTAIN
+    # Policy path ran; GO/HOLD only when sources satisfied thresholds.
+    return True
 
 
 def build_decision_card(
@@ -267,7 +372,19 @@ def build_decision_card(
     git_commit: str | None = None,
     policy: Any | None = None,
     policy_id: str | None = None,
+    gates_ok: bool | None = None,
+    determinism_ok: bool | None = None,
+    abstention_enforced: bool | None = None,
+    provenance_ok: bool | None = None,
+    reliability_gate: Mapping[str, Any] | Path | str | None = None,
 ) -> DecisionCard:
+    """Build a Fire Decision Card.
+
+    System reliability flags default to unknown/not measured. Pass explicit
+    gate results or a ``reliability_gate`` report (from reliability_gate.py)
+    to claim PASS / residual 1e-6. field_ops fails closed: GO → ABSTAIN when
+    reliability is not fully verified.
+    """
     from .policy import DecisionPolicy, get_policy
 
     if policy is None:
@@ -288,14 +405,46 @@ def build_decision_card(
         policy=policy,
     )
 
-    # System reliability: if we reached a card, provenance is attached;
-    # determinism/gates verified by reliability_gate.py externally.
+    # Merge optional external gate report; explicit kwargs win when not None.
+    from_report = _gate_flags_from_report(_load_reliability_gate_report(reliability_gate))
+    g_ok = from_report["gates_ok"] if gates_ok is None else gates_ok
+    d_ok = from_report["determinism_ok"] if determinism_ok is None else determinism_ok
+    p_ok = from_report["provenance_ok"] if provenance_ok is None else provenance_ok
+    if abstention_enforced is None:
+        a_ok = from_report["abstention_enforced"]
+        if a_ok is None:
+            a_ok = _derive_abstention_enforced(decision, conf, sources, policy)
+    else:
+        a_ok = abstention_enforced
+    # Provenance hashes are always written below → default True when unmeasured
+    # only if we attach them (we always do). Still do not invent gates/determinism.
+    if p_ok is None:
+        p_ok = True
+
     sys_rep = system_reliability_report(
-        gates_ok=True,
-        determinism_ok=True,
-        abstention_enforced=decision == Decision.ABSTAIN or conf >= 0.0,
-        provenance_ok=True,
+        gates_ok=g_ok,
+        determinism_ok=d_ok,
+        abstention_enforced=a_ok,
+        provenance_ok=p_ok,
     )
+
+    # field_ops fail-closed: do not emit GO without verified system reliability.
+    if (
+        str(getattr(policy, "id", "") or "") == "field_ops"
+        and decision == Decision.GO
+        and not bool(sys_rep["system_reliability_pass"])
+    ):
+        decision = Decision.ABSTAIN
+        dec_reasons = list(dec_reasons) + ["field_ops_fail_closed_reliability_unverified"]
+        # Re-derive R3 after forced abstention
+        if abstention_enforced is None and from_report["abstention_enforced"] is None:
+            a_ok = _derive_abstention_enforced(decision, conf, sources, policy)
+            sys_rep = system_reliability_report(
+                gates_ok=g_ok,
+                determinism_ok=d_ok,
+                abstention_enforced=a_ok,
+                provenance_ok=p_ok,
+            )
 
     metrics: dict[str, Any] = {
         "ml": sources[0].get("metrics"),
@@ -348,6 +497,14 @@ def build_decision_card(
         },
     }
 
+    disclaimers = list(DEFAULT_DISCLAIMERS)
+    if not bool(sys_rep["system_reliability_pass"]):
+        disclaimers.append(
+            "System reliability gates not verified for this card "
+            "(no residual 1e-6 claim; status="
+            f"{sys_rep.get('status', 'unknown')})."
+        )
+
     return DecisionCard(
         event_id=event_id,
         decision=decision,
@@ -357,7 +514,7 @@ def build_decision_card(
         sources=[dict(s) for s in sources],
         metrics=metrics,
         reasons=fuse_reasons + dec_reasons,
-        disclaimers=list(DEFAULT_DISCLAIMERS),
+        disclaimers=disclaimers,
         audit={**audit, "system_reliability": sys_rep},
         built_at_utc=datetime.now(UTC).isoformat(),
     )

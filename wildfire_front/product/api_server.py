@@ -17,7 +17,14 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from .decide_service import API_VERSION, PRODUCT_ID, REPO_ROOT, decide_from_request
+from .decide_service import (
+    API_VERSION,
+    MAX_BODY_BYTES,
+    PRODUCT_ID,
+    REPO_ROOT,
+    PathNotAllowedError,
+    decide_from_request,
+)
 from .forensics import render_acta_md, render_radio_bridge, replay_decision
 from .policy import list_policies, load_policy_catalog
 
@@ -70,7 +77,8 @@ OPENAPI: dict[str, Any] = {
                 },
                 "responses": {
                     "200": {"description": "Decision Card JSON + latency_ms"},
-                    "400": {"description": "Invalid JSON"},
+                    "400": {"description": "Invalid JSON or path not allowed"},
+                    "413": {"description": "Request body too large"},
                 },
             }
         },
@@ -160,7 +168,28 @@ class DecideHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path.rstrip("/") or "/"
         length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_BODY_BYTES:
+            status, body, ctype = _json_bytes(
+                {
+                    "error": "body_too_large",
+                    "detail": f"Content-Length {length} exceeds max {MAX_BODY_BYTES}",
+                    "max_body_bytes": MAX_BODY_BYTES,
+                },
+                status=413,
+            )
+            self._send(status, body, ctype)
+            return
         raw = self.rfile.read(length) if length > 0 else b"{}"
+        if len(raw) > MAX_BODY_BYTES:
+            status, body, ctype = _json_bytes(
+                {
+                    "error": "body_too_large",
+                    "max_body_bytes": MAX_BODY_BYTES,
+                },
+                status=413,
+            )
+            self._send(status, body, ctype)
+            return
         try:
             req = json.loads(raw.decode("utf-8") or "{}")
             if req is None:
@@ -177,7 +206,14 @@ class DecideHandler(BaseHTTPRequestHandler):
         base = Path(getattr(self.server, "base_dir", REPO_ROOT))
 
         if path == "/v1/replay":
-            result = replay_decision(req, base=base)
+            try:
+                result = replay_decision(req, base=base)
+            except PathNotAllowedError as exc:
+                status, body, ctype = _json_bytes(
+                    {"error": "path_not_allowed", "detail": str(exc)}, status=400
+                )
+                self._send(status, body, ctype)
+                return
             status, body, ctype = _json_bytes(result)
             self._send(status, body, ctype)
             return
@@ -188,7 +224,14 @@ class DecideHandler(BaseHTTPRequestHandler):
             return
 
         req.setdefault("channel", "http_api")
-        payload = decide_from_request(req, base=base)
+        try:
+            payload = decide_from_request(req, base=base)
+        except PathNotAllowedError as exc:
+            status, body, ctype = _json_bytes(
+                {"error": "path_not_allowed", "detail": str(exc)}, status=400
+            )
+            self._send(status, body, ctype)
+            return
         if req.get("include_radio", True):
             payload["radio_bridge"] = render_radio_bridge(payload)
         if req.get("include_acta"):
