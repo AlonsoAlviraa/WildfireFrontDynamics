@@ -39,10 +39,6 @@ DECISION_CARD_MD_FILENAME = "fire_decision_card.md"
 TIFF_EXTENSIONS = {".tif", ".tiff"}
 LOCK_FILENAME = ".incident_watch.lock"
 
-# Repo root (…/WildfireFrontDynamics) for optional ML catalog metrics
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
 def acquire_work_dir_lock(work_dir: Path) -> Path:
     """Exclusive lock file so two watchers do not race the same work_dir."""
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -400,34 +396,17 @@ def build_emergency_briefing_md(
 
 
 def _load_ml_metrics_optional() -> dict[str, Any] | None:
-    """Holdout metrics from champion ensemble (transparency only, not field ROS)."""
-    man = _REPO_ROOT / "models" / "clm_ensemble" / "manifest.json"
-    if not man.is_file():
-        return None
-    try:
-        data = json.loads(man.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    metrics = data.get("metrics")
-    return dict(metrics) if isinstance(metrics, dict) else None
+    """Holdout metrics from champion ensemble — thin wrap of decide_service."""
+    from ..product.decide_service import load_ml_metrics_v34
+
+    return load_ml_metrics_v34()
 
 
 def _load_open_metrics(open_pack_dir: Path | None) -> dict[str, Any] | None:
-    if open_pack_dir is None:
-        return None
-    scp = Path(open_pack_dir) / "scorecard_pista_b.json"
-    if not scp.is_file():
-        return None
-    try:
-        sc = json.loads(scp.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return {
-        "max_area_ha": sc.get("max_area_ha"),
-        "n_timeline_steps": sc.get("n_timeline_steps"),
-        "activation": sc.get("activation"),
-        "O2_cems_delineation": sc.get("O2_cems_delineation"),
-    }
+    """Open CEMS pack metrics — thin wrap of decide_service."""
+    from ..product.decide_service import load_open_metrics_from_pack
+
+    return load_open_metrics_from_pack(open_pack_dir)
 
 
 def ops_metrics_for_decision(ops: dict[str, Any], *, n_frames: int = 0) -> dict[str, Any]:
