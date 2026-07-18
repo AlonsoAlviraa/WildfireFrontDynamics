@@ -16,7 +16,16 @@ from torch.utils.data import DataLoader
 from models.model import A3C_PerCellModel_LSTM
 
 from .dataset import WildfireDataset
-from .physics import physics_loss_cell, physics_loss_cell_vectorized
+from .physics import (
+    _FFMC_DIVIDE_BY,
+    _FFMC_SUBTRACT,
+    _SLOPE_DIVIDE_BY,
+    _SLOPE_SUBTRACT,
+    _WIND_DIVIDE_BY,
+    _WIND_SUBTRACT,
+    physics_loss_cell,
+    physics_loss_cell_vectorized,
+)
 from .types import LocalSpreadModel
 from .weights import load_pretrained_weights
 
@@ -29,6 +38,21 @@ from .weights import load_pretrained_weights
 DEFAULT_POS_WEIGHT = 3.0
 DEFAULT_FOCAL_GAMMA = 2.0  # 0.0 disables focal, standard range 1.0-5.0
 DEFAULT_LAMBDA_PHYSICS = 0.1  # Weight for physics-informed loss (Rothermel ROS)
+
+
+def _denorm_wind(wind_norm: float) -> float:
+    """Map normalized ch4 wind back to m/s."""
+    return wind_norm * _WIND_DIVIDE_BY + _WIND_SUBTRACT
+
+
+def _denorm_slope(slope_norm: float) -> float:
+    """Map normalized ch0 slope back to radians."""
+    return slope_norm * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT
+
+
+def _denorm_ffmc(ffmc_norm: float) -> float:
+    """Map normalized ch16 FFMC back to physical [0, 101]."""
+    return ffmc_norm * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
 
 
 def focal_loss_with_logits(
@@ -139,9 +163,14 @@ def calculate_local_spread_loss(
         bonus_sum -= spread_bonus * soft_iou
 
         if use_physics:
-            ws = float(wind_grid[i, j].cpu().item())
-            sr = float(slope_grid[i, j].cpu().item())
-            ffmc = float(ffmc_grid[i, j].cpu().item()) if ffmc_grid is not None else 90.0
+            # Sequence channels are NORMALIZED; physics_loss_cell expects physical units
+            # (m/s, radians, FFMC 0-101) — same denorm as the vectorized path (C3).
+            ws = _denorm_wind(float(wind_grid[i, j].cpu().item()))
+            sr = _denorm_slope(float(slope_grid[i, j].cpu().item()))
+            if ffmc_grid is not None:
+                ffmc = _denorm_ffmc(float(ffmc_grid[i, j].cpu().item()))
+            else:
+                ffmc = 90.0
             probs_for_physics = torch.sigmoid(logits).detach()
             physics_sum += physics_loss_cell(
                 probs_for_physics, ws, sr, ffmc=ffmc, lambda_physics=lambda_physics
@@ -291,14 +320,18 @@ def calculate_local_spread_loss_vectorized(
 
     # 8. Physics loss (optional) — FULLY VECTORIZED (v9)
     #    Replaces the slow per-cell Python loop with a single batched op.
-    #    The function des-normalizes wind/slope internally and clamps the
-    #    result to [0, lambda_physics] so it NEVER dominates the focal BCE.
+    #    The function des-normalizes wind/slope internally; we denorm FFMC here
+    #    so it receives physical [0, 101]. Clamped to [0, lambda_physics].
     physics_term = torch.tensor(0.0, device=features.device)
     if sequence is not None and lambda_physics > 0:
         last_ts = sequence[0, -1]  # (C, H, W)
         wind_grid = last_ts[4][burning_mask]  # (N,) — NORMALIZED [0,1]
         slope_grid = last_ts[0][burning_mask]  # (N,) — NORMALIZED [0,1]
-        ffmc_grid = last_ts[16][burning_mask] if last_ts.shape[0] > 16 else 90.0
+        # FFMC channel is (raw-50)/51 after normalize; restore physical units.
+        if last_ts.shape[0] > 16:
+            ffmc_grid = last_ts[16][burning_mask] * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+        else:
+            ffmc_grid = 90.0
         probs_det = torch.sigmoid(burning_logits).detach()  # (N, 8)
         physics_term = physics_loss_cell_vectorized(
             probs_det,

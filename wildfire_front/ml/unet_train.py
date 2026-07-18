@@ -113,10 +113,18 @@ def apply_weighted_loss(
     logits: torch.Tensor,
     targets: torch.Tensor,
     weights: torch.Tensor,
+    pos_weight: float = 5.0,
 ) -> torch.Tensor:
-    """Element-wise loss with spatial weights, reduced to scalar mean."""
+    """Element-wise loss with spatial weights, reduced to scalar mean.
+
+    ``pos_weight`` comes from config (not hard-coded) so experiments that vary
+    positive-class weighting (e.g. changed_weighted) are isolated (H2).
+    ``loss_fn`` is kept for call-site API stability; this path applies
+    BCE-with-logits so spatial weights multiply a per-pixel map.
+    """
+    _ = loss_fn
     logits = torch.clamp(logits, -10.0, 10.0)
-    pw = torch.tensor(5.0, device=logits.device, dtype=logits.dtype)
+    pw = torch.tensor(pos_weight, device=logits.device, dtype=logits.dtype)
     bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none", pos_weight=pw)
     return (bce * weights).mean()
 
@@ -592,7 +600,12 @@ def run_training(config: UNetTrainConfig) -> dict:
                 weights = change_pixel_weights(
                     target_fire, current_fire, change_weight=config.change_loss_weight
                 )
-                loss = apply_weighted_loss(loss_fn, logits, target, weights) / config.grad_accum
+                loss = (
+                    apply_weighted_loss(
+                        loss_fn, logits, target, weights, pos_weight=config.pos_weight
+                    )
+                    / config.grad_accum
+                )
             else:
                 loss = loss_fn(logits, target) / config.grad_accum
 

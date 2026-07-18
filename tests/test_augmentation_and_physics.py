@@ -209,3 +209,144 @@ class TestPhysicsLoss:
         probs = torch.rand(8)
         loss = physics_loss_cell(probs, wind_speed=5.0, slope_rad=0.1, ffmc=85.0)
         assert isinstance(loss, torch.Tensor)
+
+
+# ─────────────────────────────────────────────────────────────
+# PR-3: ML data correctness (FFMC single-norm, physics denorm)
+# ─────────────────────────────────────────────────────────────
+
+
+class TestFFMCSingleNormalization:
+    """C2: channel 16 must be raw FFMC then (x-50)/51 — not pre-divided by 101."""
+
+    def test_ch16_after_normalize_ffmc_85(self) -> None:
+        from wildfire_front.ml.normalization import normalize_channels
+
+        channels = np.zeros((17, 4, 4), dtype=np.float32)
+        channels[16] = 85.0  # raw FFMC as WildfireDataset now writes
+        out = normalize_channels(channels)
+        expected = (85.0 - 50.0) / 51.0
+        assert np.allclose(out[16], expected, atol=1e-5), (
+            f"ch16 after normalize for FFMC=85 should be ~{expected:.4f}, got {out[16].mean():.4f}"
+        )
+
+    def test_pre_divide_by_101_would_be_wrong(self) -> None:
+        """Guard: double-norm path (old bug) must not match the correct value."""
+        from wildfire_front.ml.normalization import normalize_channels
+
+        channels = np.zeros((17, 2, 2), dtype=np.float32)
+        channels[16] = 85.0 / 101.0  # old double-norm bug
+        out = normalize_channels(channels)
+        correct = (85.0 - 50.0) / 51.0
+        assert not np.allclose(out[16], correct, atol=0.01)
+
+    def test_dataset_writes_raw_ffmc_then_normalizes(self) -> None:
+        """End-to-end: WildfireDataset channel 16 ≈ (85-50)/51 for default weather."""
+        images_dir = Path("data/candidates/semireal_controlled_001/images")
+        masks_dir = Path("data/candidates/semireal_controlled_001/masks")
+        if not images_dir.is_dir() or not masks_dir.is_dir():
+            return  # fixture optional in clean CI clones
+
+        from wildfire_front.ml.dataset import WildfireDataset
+
+        ds = WildfireDataset(
+            images_dir=images_dir,
+            masks_dir=masks_dir,
+            sequence_length=3,
+            patch_size=30,
+            weather_data={
+                "temp": 25.0,
+                "humidity": 40.0,
+                "wind_speed": 15.0,
+                "wind_dir": 90.0,
+                "precip": 0.0,
+                "pressure": 1013.0,
+                "cloud": 10.0,
+                "visibility": 10.0,
+                "dew_point": 12.0,
+                "ffmc": 85.0,
+            },
+        )
+        sequence, _cur, _tgt = ds[0]
+        expected = (85.0 - 50.0) / 51.0
+        ch16 = sequence[:, 16, :, :]
+        assert torch.allclose(ch16, torch.full_like(ch16, expected), atol=1e-4), (
+            f"dataset ch16 mean={ch16.mean().item():.4f}, expected {expected:.4f}"
+        )
+
+
+class TestPhysicsDenormParity:
+    """C3: legacy denorm helpers match vectorized wind/slope denorm + FFMC restore."""
+
+    def test_denorm_helpers_recover_physical_units(self) -> None:
+        from wildfire_front.ml.train import _denorm_ffmc, _denorm_slope, _denorm_wind
+
+        wind_raw, slope_raw, ffmc_raw = 15.0, 0.3, 85.0
+        wind_norm = wind_raw / 20.0
+        slope_norm = slope_raw / 1.5708
+        ffmc_norm = (ffmc_raw - 50.0) / 51.0
+
+        assert abs(_denorm_wind(wind_norm) - wind_raw) < 1e-4
+        assert abs(_denorm_slope(slope_norm) - slope_raw) < 1e-4
+        assert abs(_denorm_ffmc(ffmc_norm) - ffmc_raw) < 1e-4
+
+    def test_legacy_denorm_matches_vectorized_channel_restore(self) -> None:
+        """Same normalized sequence channels → same physical inputs on both paths."""
+        from wildfire_front.ml.physics import (
+            _FFMC_DIVIDE_BY,
+            _FFMC_SUBTRACT,
+            _SLOPE_DIVIDE_BY,
+            _SLOPE_SUBTRACT,
+            _WIND_DIVIDE_BY,
+            _WIND_SUBTRACT,
+        )
+        from wildfire_front.ml.train import _denorm_ffmc, _denorm_slope, _denorm_wind
+
+        wind_norm = 0.5
+        slope_norm = 0.2
+        ffmc_norm = (85.0 - 50.0) / 51.0
+
+        # Legacy helpers (train.calculate_local_spread_loss)
+        w_leg = _denorm_wind(wind_norm)
+        s_leg = _denorm_slope(slope_norm)
+        f_leg = _denorm_ffmc(ffmc_norm)
+
+        # Vectorized path: physics denorms wind/slope; train denorms FFMC before call
+        w_vec = wind_norm * _WIND_DIVIDE_BY + _WIND_SUBTRACT
+        s_vec = slope_norm * _SLOPE_DIVIDE_BY + _SLOPE_SUBTRACT
+        f_vec = ffmc_norm * _FFMC_DIVIDE_BY + _FFMC_SUBTRACT
+
+        assert abs(w_leg - w_vec) < 1e-6
+        assert abs(s_leg - s_vec) < 1e-6
+        assert abs(f_leg - f_vec) < 1e-6
+        assert abs(f_leg - 85.0) < 1e-4
+
+    def test_legacy_and_vectorized_physics_agree_when_spread_impossible(self) -> None:
+        """With denormed inputs, both paths penalize impossible calm/zero-wind spread."""
+        from wildfire_front.ml.physics import physics_loss_cell_vectorized
+        from wildfire_front.ml.train import _denorm_ffmc, _denorm_slope, _denorm_wind
+
+        probs = torch.ones(8) * 0.99
+        wind_norm, slope_norm = 0.0, 0.0
+        ffmc_norm = (70.0 - 50.0) / 51.0
+        lam = 0.1
+
+        legacy = physics_loss_cell(
+            probs,
+            _denorm_wind(wind_norm),
+            _denorm_slope(slope_norm),
+            ffmc=_denorm_ffmc(ffmc_norm),
+            lambda_physics=lam,
+        )
+        vec = physics_loss_cell_vectorized(
+            probs.unsqueeze(0),
+            torch.tensor([wind_norm]),
+            torch.tensor([slope_norm]),
+            ffmc=torch.tensor([_denorm_ffmc(ffmc_norm)]),
+            lambda_physics=lam,
+        )
+        # Both must produce a positive penalty under calm / wet fuel
+        assert float(legacy.item()) > 0.0
+        assert float(vec.item()) > 0.0
+        # Vectorized is clamped to lambda; legacy is not — both finite and positive
+        assert float(vec.item()) <= lam + 1e-6

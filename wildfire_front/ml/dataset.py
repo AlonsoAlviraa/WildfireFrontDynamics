@@ -94,6 +94,10 @@ class WildfireDataset(Dataset):
         # Tobarra LWIR frames have variable pixel dimensions (drone footprints
         # shift between captures), so we crop everything to the smallest
         # height/width across the sequence.
+        #
+        # H3 note: this is a top-left crop, not a CRS reproject/align.
+        # Multi-frame GeoTIFF datasets require reprojected, pixel-aligned
+        # inputs; unaligned drone footprints yield spatially incoherent sequences.
         raw_shapes: list[tuple[int, int]] = []
         for _img_path, mask_path, _ in self.samples:
             with rasterio.open(mask_path) as src:
@@ -191,9 +195,10 @@ class WildfireDataset(Dataset):
         Channels 0-10 and 12-15 remain DEM/weather/FSM as defined by
         ``config.json``.
 
-        Channel 16: FFMC (Fine Fuel Moisture Code). If a ``weather_data["ffmc"]``
-        value is provided it is normalized to [0, 1] as ``ffmc / 101``. Otherwise
-        a neutral default of 85/101 ≈ 0.84 is used.
+        Channel 16: FFMC (Fine Fuel Moisture Code) in raw physical units
+        ``[0, 101]``.  ``normalize_channels_inplace`` then maps it with
+        ``(ffmc - 50) / 51``.  Do **not** pre-divide by 101 — that caused
+        double-normalization (C2).
         """
 
         channels = np.zeros((17, self.height, self.width), dtype=np.float32)
@@ -223,9 +228,9 @@ class WildfireDataset(Dataset):
         # 12-15: FSM
         channels[12:16] = self.fsm
 
-        # 16: FFMC (Fine Fuel Moisture Code), normalized to [0, 1]
+        # 16: FFMC raw 0-101 (single normalize pass via normalize_channels_inplace)
         ffmc_raw = self.weather_data.get("ffmc", 85.0)
-        channels[16] = np.clip(ffmc_raw / 101.0, 0.0, 1.0)
+        channels[16] = np.clip(float(ffmc_raw), 0.0, 101.0)
 
         # --- CRITICAL FIX: Normalize ALL channels to ~[0,1] ---
         # Prevents NaN loss from raw magnitudes (pressure=1013 vs slope=0.3).

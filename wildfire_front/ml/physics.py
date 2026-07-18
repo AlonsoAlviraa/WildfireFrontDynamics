@@ -410,6 +410,8 @@ _WIND_DIVIDE_BY = 20.0  # channel 4: wind_speed (m/s)
 _WIND_SUBTRACT = 0.0
 _SLOPE_DIVIDE_BY = 1.5708  # channel 0: slope (radians)
 _SLOPE_SUBTRACT = 0.0
+_FFMC_DIVIDE_BY = 51.0  # channel 16: (ffmc - 50) / 51
+_FFMC_SUBTRACT = 50.0
 
 
 def physics_loss_cell_vectorized(

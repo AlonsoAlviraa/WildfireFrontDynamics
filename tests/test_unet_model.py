@@ -346,6 +346,33 @@ class TestGradientFlow:
             optimizer.step()
             assert torch.isfinite(loss), "Loss became non-finite during training"
 
+    def test_apply_weighted_loss_uses_passed_pos_weight(self):
+        """H2: apply_weighted_loss must honor pos_weight, not hard-coded 5.0."""
+        from wildfire_front.ml.unet_train import apply_weighted_loss
+
+        # All-positive targets with negative logits → FN-heavy; pos_weight scales loss up.
+        logits = torch.full((1, 1, 4, 4), -2.0)
+        targets = torch.ones(1, 1, 4, 4)
+        weights = torch.ones_like(targets)
+
+        def _unused_loss_fn(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+            return a.sum() * 0.0
+
+        loss_pw1 = apply_weighted_loss(_unused_loss_fn, logits, targets, weights, pos_weight=1.0)
+        loss_pw10 = apply_weighted_loss(_unused_loss_fn, logits, targets, weights, pos_weight=10.0)
+        assert torch.isfinite(loss_pw1) and torch.isfinite(loss_pw10)
+        assert loss_pw10.item() > loss_pw1.item() * 5.0, (
+            f"pos_weight=10 should greatly exceed pos_weight=1 "
+            f"({loss_pw10.item():.4f} vs {loss_pw1.item():.4f})"
+        )
+
+        # Same call with default vs explicit 5.0 must match (default remains 5.0).
+        loss_default = apply_weighted_loss(_unused_loss_fn, logits, targets, weights)
+        loss_explicit5 = apply_weighted_loss(
+            _unused_loss_fn, logits, targets, weights, pos_weight=5.0
+        )
+        assert abs(loss_default.item() - loss_explicit5.item()) < 1e-6
+
 
 class TestNpzDataset:
     """Test the NpzWildfireDataset with 64×64 patches."""
