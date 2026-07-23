@@ -22,7 +22,7 @@ _UTC: 2026-07-21T10:57:40.724454+00:00_ · git `29fb877` · hash `a3e8ac658fae�
 | temps | [0.7, 0.7, 1.3] |
 | mix | [0.28, 0.32, 0.4] |
 
-**ML-first honesty:** holdout IoU is research quality (not live certainty); live confidence uses ensemble disagreement + calibrator (Card may HOLD/ABSTAIN); fusion live weight OFF until U1 selective@80% beats random on VAL.
+**ML-first honesty:** catalog holdout TEST IoU **0.8963** is research quality only (not live certainty, not ROS, not Tobarra/REDIAM O2). Live confidence uses ensemble disagreement + **VAL-fit** calibrator (Card may HOLD/ABSTAIN). Fusion live weight OFF until **U1 on TEST** with frozen calibrator (`u1_test_honest`); VAL-only U1 is lab/optimistic and must not promote fusion.
 
 ## Ops (Tobarra representativo)
 

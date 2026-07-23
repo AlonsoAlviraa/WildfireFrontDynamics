@@ -21,20 +21,31 @@ def test_u1_pass_synthetic():
         action="scorecard",
         offline=True,
         synthetic_mode="pass",
+        frozen_calibrator=True,
+        identity_calibrator=False,
+        calibrator_fit_split="val",
+        u1_eval_split="val",
     )
     assert doc["schema"] == "ml_scorecard_v1"
     assert validate_ml_scorecard(doc) == []
     assert doc["gates"]["U1a_selective_ge_full_minus_eps"] is True
     assert doc["gates"]["U1_selective_beats_random"] is True
     assert doc["gates"]["u1_val_passed"] is True
+    assert doc["gates"]["u1_val_lab_pass"] is True
     assert doc["gates"]["ml_product_go"] is False
-    assert doc["allow_ml_live_in_fusion_recommended"] is True
+    # Honest rule: VAL-only lab pass must NOT recommend fusion
+    assert doc["allow_ml_live_in_fusion_recommended"] is False
+    assert doc["gates"]["u1_test_honest"] is False
+    assert "u1_not_eval_on_test" in doc["gates"]["reasons"]
     assert doc["tuning"]["uncertainty_calibration_split"] == "val"
     # Dual-product honesty: no ROS in primary
     assert "primary_ros_m_min" not in doc["primary"]
     assert "ros_m_min" not in doc["primary"]
     # U1c reported
     assert doc["uncertainty"].get("ece_patch_conf") is not None
+    # Catalog TEST IoU not unlabeled as this eval's model_iou
+    assert doc["primary"]["model_iou_source"] == "eval_split_mean"
+    assert "catalog_holdout_test_reference" in doc["provenance"]
 
 
 def test_u1_fail_synthetic():
@@ -68,7 +79,10 @@ def test_catalog_mode_fusion_off_default():
     assert doc["gates"]["U1_selective_beats_random"] is False
     assert doc["gates"]["U1a_selective_ge_full_minus_eps"] is False
     assert doc["allow_ml_live_in_fusion_recommended"] is False
-    assert doc["primary"].get("model_iou") is not None
+    # Catalog 0.8963 must NOT sit in primary.model_iou (even tagged)
+    assert "model_iou" not in doc["primary"]
+    cat = doc["provenance"]["catalog_holdout_test_reference"]
+    assert cat["test_iou"] == pytest.approx(0.8963)
 
 
 def test_ml_scorecard_cli_offline(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
@@ -87,10 +101,45 @@ def test_ml_scorecard_cli_offline(tmp_path: Path, capsys: pytest.CaptureFixture[
     assert rc == 0
     doc = json.loads(out.read_text(encoding="utf-8"))
     assert doc["gates"]["U1_selective_beats_random"] is True
+    # Default offline = VAL split without frozen cal → not fusion recommended
+    assert doc["allow_ml_live_in_fusion_recommended"] is False
     printed = json.loads(capsys.readouterr().out)
-    assert printed["u1_verdict"] == "U1_PASS"
+    assert printed["u1_verdict"] in (
+        "U1_VAL_LAB_PASS",
+        "U1_PASS_NOT_PROMOTE",
+        "U1_FAIL",
+    )
+    # Offline default has identity cal → may be U1_FAIL on recommended path flags
+    # but U1a/U1b still compute; verdict must never be product GO
     assert printed["ml_product_go"] is False
     assert "verdict" not in printed or printed.get("verdict") != "GO"
+
+
+def test_ml_scorecard_cli_test_frozen_honest(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+    from scripts.ml_scorecard import main
+
+    out = tmp_path / "sc.json"
+    rc = main(
+        [
+            "--offline-fixture",
+            "--synthetic-mode",
+            "pass",
+            "--split",
+            "test",
+            "--frozen-calibrator",
+            "--calibrator-fit-split",
+            "val",
+            "--output",
+            str(out),
+        ]
+    )
+    assert rc == 0
+    doc = json.loads(out.read_text(encoding="utf-8"))
+    assert doc["gates"]["u1_test_honest"] is True
+    assert doc["allow_ml_live_in_fusion_recommended"] is True
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["u1_verdict"] == "U1_TEST_HONEST_PASS"
+    assert printed["ml_product_go"] is False
 
 
 def test_ml_prediction_outbox_to_decide(tmp_path: Path):

@@ -32,8 +32,9 @@ def main() -> int:
 
     haus = _load(ROOT / "outputs" / "observatorio" / "hausdorff_multi_if.json")
     inv = _load(ROOT / "docs" / "IF_INVENTORY_S1.json")
-    v26 = _load(ROOT / "docs" / "V26_PHYSICS15_VERDICT.json")
-    v27 = _load(ROOT / "docs" / "V27_TEMPORAL_VERDICT.json")
+    # Closed G1 temporal verdicts live under docs/archive/ (cleanup pass 2)
+    v26 = _load(ROOT / "docs" / "archive" / "V26_PHYSICS15_VERDICT.json")
+    v27 = _load(ROOT / "docs" / "archive" / "V27_TEMPORAL_VERDICT.json")
 
     o1 = (anchors.get("O1_multi_anchor") or {}).get("verdict", "UNKNOWN")
     o5 = (anchors.get("O5_second_grade_A") or {}).get("verdict", "UNKNOWN")

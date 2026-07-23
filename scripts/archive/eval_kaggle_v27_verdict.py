@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download v27 outputs if COMPLETE and write docs/V27_TEMPORAL_VERDICT.json."""
+"""Download v27 outputs if COMPLETE and write docs/archive/V27_TEMPORAL_VERDICT.json."""
 
 from __future__ import annotations
 
@@ -9,10 +9,11 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# scripts/archive/<this file> → repo root is parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 KERNEL = "alonsoalviraaaa/wildfire-front-training-v27-temporal-t2"
 OUT_DIR = ROOT / "kaggle_outputs_v27"
-VERDICT_PATH = ROOT / "docs" / "V27_TEMPORAL_VERDICT.json"
+VERDICT_PATH = ROOT / "docs" / "archive" / "V27_TEMPORAL_VERDICT.json"
 
 V21_IOU = 0.2256
 V21_DELTA = 0.0756

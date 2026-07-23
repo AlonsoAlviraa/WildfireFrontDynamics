@@ -15,6 +15,11 @@ path.
 | `_count_artifacts.py` / `_fix_la_estrella_acom2_masks.py` | One-off data repairs |
 | `run_overnight_monitor.py` | Overnight mega kernel (failed / obsolete) |
 | `experiment_queue*.json` | Historical queues (terminal / forensic); **do not write here** |
+| `smoke_test_finetune.py` | Legacy A3C fine-tune smoke (not product U-Net/CLM) |
+| `smoke_test_physics_loss.py` | v9 physics-loss regression smoke (historical) |
+| `reeval_cross_protocol.py` | v14/v19/v20 cross-protocol re-eval (pre-v21 product) |
+| `_probe_cems_candidates.py` | One-off CEMS zip probe; product uses `open_if/cems_watch` + gold e2e |
+| `inspect_zips.ps1` / `parse_dropbox.ps1` / `move_transfers.ps1` / `extract_and_organize.ps1` | 2026-07 Dropbox intake one-offs (root clutter) |
 
 **Live experiment queue** (mutable): `scripts/experiment_queue.json`  
 (`run_experiment_loop.py` / `run_production_loop.py` read and write that path only.)

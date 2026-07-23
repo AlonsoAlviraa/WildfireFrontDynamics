@@ -429,17 +429,17 @@ card.metrics["open_cems"] = open_s.get("metrics") or {}
 
 ##### 3.3.6 Uncertainty signal validation gate U1 (before fusion default-on — Issue 13)
 
-On **VAL** (never test for enabling fusion):
+**Fit** calibrator on **VAL** only. **Lab U1** may be reported on VAL (optimistic if same-split as fit → `u1_val_optimistic`). **Promote / fusion recommendation** requires U1 on holdout **TEST** with the **frozen** VAL-fit calibrator (`u1_test_honest`). Never fit or retune on TEST.
 
 | ID | Criterion |
 |----|-----------|
 | U1a | Patch selective IoU @ 80% coverage ≥ full-coverage mean IoU − ε (ε=0.01) |
 | U1b | Ranking beats random: selective@80% of calibrated conf ≥ selective@80% of **shuffled conf** + δ (δ=0.01) **or** Spearman(conf, patch IoU) > 0 with bootstrap CI excluding 0 |
-| U1c | `ece_patch_conf` on VAL reported (no threshold kill alone) |
+| U1c | `ece_patch_conf` reported on the eval split (no threshold kill alone) |
 
-If U1 fails: keep diagnostics + scorecard; **`allow_ml_live_in_fusion` stays false**; ML-only abstain via raw threshold on diagnostics still allowed for research. Kill disagreement feature only if U1b fails after reasonable feature variants on VAL.
+If U1 fails on TEST: keep diagnostics + scorecard; **`allow_ml_live_in_fusion_recommended` stays false**; ML-only abstain via raw threshold on diagnostics still allowed for research. Kill disagreement feature only if U1b fails after reasonable feature variants (debug on VAL, re-check on TEST).
 
-Phase 2 (PR3–PR4) must record U1 result before PR5 enables fusion in any non-test policy file.
+Phase 2 (PR3–PR4) must record **honest TEST U1** before any deliberate policy flip (`scripts/promote_ml_live_fusion.py`; `research_open` only; never auto `field_ops`).
 
 #### 3.4 API shape
 
@@ -1069,4 +1069,65 @@ U1 recorded at PR4; fusion policy flip is a separate deliberate change after U1.
 
 ---
 
-*End of design — ML Focus Product v1 (revision 3).*
+## Promote protocol (honesty — mandatory)
+
+### Goal
+
+Kill optimistic **VAL-on-VAL** U1 bias for fusion promote. Fit calibrator on VAL; **evaluate U1 on holdout TEST** with that **frozen** artifact; only then may `allow_ml_live_in_fusion_recommended` be true.
+
+### Operator path
+
+```powershell
+$env:PYTHONPATH = "."
+# 1) Fit Head A on VAL only (if not already):
+python scripts/fit_ml_uncertainty_calibration.py
+
+# 2) Honest U1 on TEST (never refit):
+python scripts/eval_ml_uncertainty_u1.py --split test `
+  --calibrator models/clm_ensemble/uncertainty_calibration_v1.json
+
+# 3) Draft promote record (does NOT flip policy by default):
+python scripts/promote_ml_live_fusion.py `
+  --scorecard outputs/ml_eval/scorecards/ml_scorecard_u1_test.json
+
+# 4) Optional: enable research_open only (never field_ops):
+python scripts/promote_ml_live_fusion.py --scorecard ... --apply-policy
+```
+
+### Gate meanings
+
+| Field | Meaning |
+|-------|---------|
+| `gates.u1_val_lab_pass` | U1a∧U1b on VAL (lab / diagnostics) |
+| `gates.u1_val_optimistic` | U1 pass on **same split as fit** (classic optimistic) |
+| `gates.u1_test_honest` | U1a∧U1b on **TEST** with frozen VAL-fit calibrator |
+| `allow_ml_live_in_fusion_recommended` | **true only if** `u1_test_honest` |
+| `ml_product_go` | **always false** from scorecard/eval CLIs; human promote only |
+
+### Scorecard honesty
+
+- `primary.model_iou` = mean IoU of the **eval split** when patches are scored; tagged with `model_iou_split` / `model_iou_source`.
+- Catalog TEST **0.8963** lives under `provenance.catalog_holdout_test_reference` only — never blended unlabeled with U1 VAL mean IoU in pitch surfaces.
+- Fixed honesty notes: not ROS, not Tobarra tactical, not REDIAM O2 as ML IoU.
+
+### Artifacts: local-only vs git
+
+| Local-only (often gitignored / runtime) | In git (code / fixtures) |
+|------------------------------------------|---------------------------|
+| `models/**/*.pt` weights | `scripts/eval_ml_uncertainty_u1.py`, `promote_ml_live_fusion.py`, `ml_scorecard.py` |
+| `models/clm_ensemble/uncertainty_calibration_v1.json` (operator product cal; prefer not to commit secrets/large dumps) | `tests/fixtures/ml/uncertainty_calibrator_v1.json` (CI load only) |
+| `artifacts/clm_ndws_patches/**` holdout NPZ | `wildfire_front/ml/u1_eval.py`, `scorecard_schema.py` |
+| `outputs/ml_eval/scorecards/*` | `config/decision_policies.json` (flip only via promote `--apply-policy`) |
+| Promoted snapshots written under `docs/ML_PRODUCT_SCORECARD.json` / `docs/ML_U1_PROMOTE_RECORD.json` when eligible | Design + START_HERE honesty bullets |
+
+**CI rule:** never auto-load product calibrator from `tests/fixtures` on the predict path. Fixture is offline unit tests only.
+
+### Policy flip rules
+
+- Default all profiles: `allow_ml_live_in_fusion: false`.
+- Promote script with `--apply-policy` may set **`research_open` only**.
+- **`field_ops` never** set true by promote automation.
+
+---
+
+*End of design — ML Focus Product v1 (revision 3 + promote protocol).*

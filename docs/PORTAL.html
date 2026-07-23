@@ -123,9 +123,9 @@ pre.cmd {
       <div class="sub">IoU holdout · Δ vs copy <b>0.2545</b></div>
       <div class="sub">Producto: clm_ensemble_v34 (no es ROS de dron)</div>
       <ul class="sub" style="margin-top:.6rem;padding-left:1.1rem">
-        <li><b>Holdout IoU</b> = research quality (~0.8963) — not live fire certainty.</li>
-        <li><b>Live confidence</b> = ensemble disagreement + calibrator; Card can HOLD/ABSTAIN.</li>
-        <li><b>Fusion live weight OFF</b> until U1 selective@80% beats random on VAL.</li>
+        <li><b>Holdout IoU</b> = catalog TEST research quality (~0.8963) — not live certainty, not ROS, not Tobarra/REDIAM O2.</li>
+        <li><b>Live confidence</b> = ensemble disagreement + VAL-fit calibrator; Card can HOLD/ABSTAIN.</li>
+        <li><b>Fusion live weight OFF</b> until U1 on <b>TEST</b> with frozen calibrator (VAL-only U1 is lab, not promote).</li>
       </ul>
     </div>
     <div class="card">

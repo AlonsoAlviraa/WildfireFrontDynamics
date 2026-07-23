@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Build ml_scorecard_v1 JSON with U1 selective@80% gate.
+"""Build ml_scorecard_v1 JSON with U1 selective@80% gate (honest promote rules).
 
 Modes:
-  * default / catalog: primary metrics from clm_ensemble_v34 manifest; U1 unknown
-  * --offline-fixture: synthetic patch IoUs/confidences for CI (U1 pass or fail)
-  * (future) full holdout run — not required for offline CI
+  * default / catalog: catalog TEST metrics under provenance only; U1 unknown
+  * --offline-fixture: synthetic patch IoUs/confidences for CI
+  * --calibrator + --eval-dir: operator path (prefer scripts/eval_ml_uncertainty_u1.py)
+
+Honesty:
+  * ``allow_ml_live_in_fusion_recommended`` is true **only** if U1 passes on
+    **TEST** with a **frozen** VAL-fit calibrator (not VAL-only lab pass).
+  * ``ml_product_go`` is **always false** from this CLI (human promote only).
+  * primary.model_iou is mean IoU of the **eval split** when patches provided;
+    catalog 0.8963 lives under ``provenance.catalog_holdout_test_reference``.
 
 Outputs:
   outputs/ml_eval/scorecards/ml_scorecard_latest.json
-
-Production fusion remains OFF until a human promotes a U1-pass scorecard.
 """
 
 from __future__ import annotations
@@ -33,35 +38,32 @@ U1_MARGIN = 0.01
 U1A_EPS = 0.01
 
 
-def _catalog_primary(product_id: str = DEFAULT_PRODUCT) -> dict[str, Any]:
-    """Primary metrics placeholders from catalog/manifest (no holdout run)."""
+def _catalog_reference(product_id: str = DEFAULT_PRODUCT) -> dict[str, Any]:
+    """Load published catalog/manifest metrics for provenance only."""
+    from wildfire_front.ml.u1_eval import catalog_holdout_test_reference
+
+    ref = catalog_holdout_test_reference()
     man = ROOT / "models" / "clm_ensemble" / "manifest.json"
-    metrics: dict[str, Any] = {}
     if man.is_file():
         try:
             data = json.loads(man.read_text(encoding="utf-8"))
             metrics = dict(data.get("metrics") or {})
             product_id = str(data.get("id") or data.get("version") or product_id)
+            if "test_iou" in metrics or "model_iou" in metrics:
+                ref["test_iou"] = float(
+                    metrics.get("model_iou") or metrics.get("test_iou") or ref["test_iou"]
+                )
+            if "copy_baseline_iou" in metrics:
+                ref["copy_baseline_iou"] = float(metrics["copy_baseline_iou"])
+            if "improvement_vs_copy_iou" in metrics:
+                ref["improvement_vs_copy_iou"] = float(metrics["improvement_vs_copy_iou"])
+            if "model_iou_growth" in metrics:
+                ref["model_iou_growth"] = float(metrics["model_iou_growth"])
+            ref["product_id"] = product_id
         except (OSError, json.JSONDecodeError):
             pass
-    primary: dict[str, Any] = {}
-    if "test_iou" in metrics or "model_iou" in metrics:
-        primary["model_iou"] = float(metrics.get("model_iou") or metrics.get("test_iou") or 0.0)
-    if "copy_baseline_iou" in metrics:
-        primary["copy_baseline_iou"] = float(metrics["copy_baseline_iou"])
-    if "improvement_vs_copy_iou" in metrics:
-        primary["improvement_vs_copy_iou"] = float(metrics["improvement_vs_copy_iou"])
-    if "model_iou_growth" in metrics:
-        primary["model_iou_growth"] = float(metrics["model_iou_growth"])
-    if not primary:
-        # Hardcoded published v34 floors (docs/design) when manifest absent offline
-        primary = {
-            "model_iou": 0.8963,
-            "copy_baseline_iou": 0.6418,
-            "improvement_vs_copy_iou": 0.2545,
-            "model_iou_growth": 0.9071,
-        }
-    return {"product_id": product_id, "primary": primary, "metrics_raw": metrics}
+    ref["product_id"] = product_id
+    return ref
 
 
 def synthetic_patches(
@@ -152,13 +154,39 @@ def build_scorecard(
     labels: Sequence[int] | None = None,
     offline: bool = False,
     synthetic_mode: str | None = None,
+    calibrator_path: str | None = None,
+    calibrator_fit_split: str = "val",
+    frozen_calibrator: bool = False,
+    identity_calibrator: bool = False,
+    eval_dir: str | None = None,
+    require_frozen_calibrator: bool = False,
+    u1_eval_split: str | None = None,
+    promote_draft: bool = False,
 ) -> dict[str, Any]:
+    """Build ml_scorecard_v1 with honest fusion recommendation gates.
+
+    ``ml_product_go`` is always False here (even with promote_draft — that only
+    annotates provenance for a human promote checklist).
+    """
     from wildfire_front.ml.reliability_metrics import ece_patch_conf, overconfidence_gap
     from wildfire_front.ml.scorecard_schema import validate_ml_scorecard
+    from wildfire_front.ml.u1_eval import (
+        FIXED_HONESTY_NOTES,
+        catalog_holdout_test_reference,
+        compute_fusion_recommendation,
+        primary_from_eval_ious,
+    )
 
-    cat = _catalog_primary(product_id)
-    product_id = cat["product_id"]
-    primary = cat["primary"]
+    catalog_ref = _catalog_reference(product_id)
+    product_id = str(catalog_ref.get("product_id") or product_id)
+    eval_split = str(u1_eval_split or split)
+
+    # Catalog numbers live ONLY under provenance.catalog_holdout_test_reference.
+    # Catalog-only mode (no patch eval): do not put 0.8963 in primary.model_iou
+    # even with tags — consumers that only read primary would still be misled.
+    primary: dict[str, Any] = {
+        "n_patches": 0,
+    }
 
     unc: dict[str, Any] = {
         "n_patches": 0,
@@ -174,6 +202,15 @@ def build_scorecard(
     if synthetic_mode is not None:
         ious, confidences, labels = synthetic_patches(mode=synthetic_mode)
         offline = True
+        # Offline synthetic does not load a real calibrator unless caller set flags.
+        if not frozen_calibrator and not identity_calibrator:
+            # Lab synthetic: treat as non-frozen unless caller marks frozen.
+            frozen_calibrator = False
+            identity_calibrator = True
+
+    if require_frozen_calibrator and (identity_calibrator or not frozen_calibrator):
+        # Promote path hard rail — scorecard still builds but U1 honest stays false.
+        pass
 
     if ious is not None and confidences is not None:
         ious_l = [float(x) for x in ious]
@@ -185,13 +222,13 @@ def build_scorecard(
         u1a_detail = compute_u1a(ious_l, conf_l)
         u1b_pass = bool(u1_detail.get("beats_random"))
         u1a_pass = bool(u1a_detail.get("u1a_pass"))
-        # U1c: ECE reported (not a kill gate alone)
         ece_val = float(ece_patch_conf(conf_l, y_l, n_bins=10))
-        # Combined U1 for fusion recommendation: U1a ∧ U1b
         u1_pass = bool(u1a_pass and u1b_pass)
         unc = {
             "ece_patch_conf": ece_val,
-            "selective_iou_at_80pct_coverage": float(u1_detail.get("selective_iou") or float("nan")),
+            "selective_iou_at_80pct_coverage": float(
+                u1_detail.get("selective_iou") or float("nan")
+            ),
             "selective_iou_random_baseline_80": float(
                 u1_detail.get("shuffle_selective_iou_mean")
                 or u1_detail.get("random_selective_iou_mean")
@@ -206,12 +243,9 @@ def build_scorecard(
             "coverage": U1_COVERAGE,
             "abstain_rate": float(np.mean([c < 0.35 for c in conf_l])) if conf_l else 0.0,
         }
-        if "model_iou" not in primary or offline:
-            primary = dict(primary)
-            primary["model_iou"] = float(np.mean(ious_l)) if ious_l else primary.get("model_iou", 0.0)
-            primary["n_patches"] = len(ious_l)
+        # primary.model_iou = mean of **this eval split only** (never catalog 0.8963)
+        primary = primary_from_eval_ious(ious_l, eval_split=eval_split)
 
-    # Default: no patch run → U1 not passed; fusion stays recommended OFF
     if ious is None and synthetic_mode is None:
         u1_pass = False
         u1a_pass = False
@@ -219,20 +253,49 @@ def build_scorecard(
         u1_detail = {"beats_random": False, "reason": "no_patch_data"}
         u1a_detail = {"u1a_pass": False, "reason": "no_patch_data"}
 
-    allow_fusion_rec = bool(u1_pass)
-    reasons: list[str] = []
+    # Offline synthetic with frozen flag: caller can pass frozen_calibrator=True
+    # to simulate TEST honest path in CI.
+    if require_frozen_calibrator and (identity_calibrator or not frozen_calibrator):
+        # Force honest gate false via identity/frozen flags in recommendation.
+        identity_calibrator = True
+        frozen_calibrator = False
+
+    rec = compute_fusion_recommendation(
+        eval_split=eval_split,
+        calibrator_fit_split=calibrator_fit_split or "val",
+        u1_pass=u1_pass,
+        frozen_calibrator=bool(frozen_calibrator),
+        identity_calibrator=bool(identity_calibrator),
+    )
+    allow_fusion_rec = bool(rec["allow_ml_live_in_fusion_recommended"])
+
+    reasons: list[str] = list(rec.get("reasons") or [])
     if not u1a_pass:
-        reasons.append("U1a_fail_or_missing")
+        if "U1a_fail_or_missing" not in reasons:
+            reasons.append("U1a_fail_or_missing")
     if not u1b_pass:
-        reasons.append("U1b_fail_or_missing")
+        if "U1b_fail_or_missing" not in reasons:
+            reasons.append("U1b_fail_or_missing")
     if ious is None and synthetic_mode is None:
         reasons = ["U1_fail_or_missing_patch_data"]
+    if allow_fusion_rec:
+        reasons = []
+
+    # ml_product_go ALWAYS false from scorecard builder (human promote only).
+    ml_product_go = False
+    if promote_draft:
+        # Draft flag only annotates provenance — does not enable policy or GO.
+        pass
+
     gates = {
         "U1a_selective_ge_full_minus_eps": u1a_pass,
-        "U1_selective_beats_random": u1b_pass,  # U1b
+        "U1_selective_beats_random": u1b_pass,  # U1b alias
         "U1b_selective_beats_random": u1b_pass,
-        "u1_val_passed": u1_pass,  # U1a ∧ U1b
-        "ml_product_go": False,  # never auto-GO; human promote
+        "u1_val_passed": bool(u1_pass and eval_split == "val"),  # lab
+        "u1_val_lab_pass": bool(rec.get("u1_val_lab_pass")),
+        "u1_val_optimistic": bool(rec.get("u1_val_optimistic")),
+        "u1_test_honest": bool(rec.get("u1_test_honest")),
+        "ml_product_go": ml_product_go,
         "allow_ml_live_in_fusion_recommended": allow_fusion_rec,
         "reasons": reasons,
     }
@@ -243,6 +306,8 @@ def build_scorecard(
         "protocol": DEFAULT_PROTOCOL,
         "split": split,
         "action": action,
+        "calibrator_fit_split": str(calibrator_fit_split or "val"),
+        "u1_eval_split": eval_split,
         "tuning": {
             "mix_split": "val",
             "temperature_split": "val",
@@ -255,6 +320,17 @@ def build_scorecard(
         "provenance": {
             "offline": offline,
             "synthetic_mode": synthetic_mode,
+            "calibrator_path": calibrator_path,
+            "calibrator_fit_split": str(calibrator_fit_split or "val"),
+            "u1_eval_split": eval_split,
+            "eval_dir": eval_dir,
+            "frozen_calibrator": bool(frozen_calibrator) and not bool(identity_calibrator),
+            "identity_calibrator": bool(identity_calibrator),
+            "require_frozen_calibrator": bool(require_frozen_calibrator),
+            "promote_draft": bool(promote_draft),
+            "catalog_holdout_test_reference": catalog_ref
+            if catalog_ref
+            else catalog_holdout_test_reference(),
             "u1_detail": {
                 k: (float(v) if isinstance(v, (float, np.floating)) else v)
                 for k, v in (u1_detail or {}).items()
@@ -282,12 +358,15 @@ def build_scorecard(
                     "reason",
                 )
             },
+            "honesty_notes": list(FIXED_HONESTY_NOTES),
             "note": (
-                "Production fusion weight OFF until human promotes U1 pass. "
-                "CLI u1_verdict is not ml_product_go (always false until human promote). "
-                "Holdout IoU is research quality, not live fire certainty. "
-                "No ROS fields in this scorecard (dual-product honesty)."
+                "Production fusion weight OFF until human promote after u1_test_honest. "
+                "CLI u1_verdict is not ml_product_go (always false until promote script). "
+                "primary.model_iou is eval-split mean when patches provided; "
+                "catalog 0.8963 is provenance.catalog_holdout_test_reference only. "
+                "No ROS fields (dual-product honesty). Not Tobarra / not REDIAM O2."
             ),
+            "recommendation_rule": rec.get("recommendation_rule"),
         },
     }
 
@@ -315,7 +394,7 @@ def _json_safe(obj: Any) -> Any:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Build ml_scorecard_v1 + U1 gate")
+    p = argparse.ArgumentParser(description="Build ml_scorecard_v1 + U1 gate (honest)")
     p.add_argument("--product", default=DEFAULT_PRODUCT)
     p.add_argument("--output", type=Path, default=DEFAULT_OUT)
     p.add_argument(
@@ -335,12 +414,81 @@ def main(argv: list[str] | None = None) -> int:
         default="scorecard",
         choices=["scorecard", "report", "gate"],
     )
+    p.add_argument(
+        "--calibrator",
+        type=Path,
+        default=None,
+        help="Path to frozen Head A calibrator JSON (metadata only in offline mode)",
+    )
+    p.add_argument(
+        "--eval-dir",
+        type=Path,
+        default=None,
+        help="Holdout NPZ dir (use scripts/eval_ml_uncertainty_u1.py for real run)",
+    )
+    p.add_argument(
+        "--require-frozen-calibrator",
+        action="store_true",
+        help="Promote path: refuse identity; recommended only with frozen cal on TEST",
+    )
+    p.add_argument(
+        "--frozen-calibrator",
+        action="store_true",
+        help="Mark scorecard as using a frozen (non-identity) calibrator",
+    )
+    p.add_argument(
+        "--calibrator-fit-split",
+        default="val",
+        choices=["val", "test", "unknown"],
+        help="Split the calibrator was fit on (must be val for honest gate)",
+    )
+    p.add_argument(
+        "--promote-draft",
+        action="store_true",
+        help="Annotate provenance for draft promote note (does NOT set ml_product_go)",
+    )
     args = p.parse_args(argv)
 
-    # VAL scorecard is allowed; test only report/scorecard/gate (rails)
     if args.split == "test" and args.action not in ("report", "scorecard", "gate"):
         print("test split only allows report/scorecard/gate", file=sys.stderr)
         return 2
+
+    # Path rails when eval-dir provided
+    if args.eval_dir is not None:
+        from wildfire_front.ml.u1_eval import assert_eval_split_path
+
+        try:
+            assert_eval_split_path(Path(args.eval_dir), str(args.split))
+        except ValueError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 2
+
+    cal_path = str(args.calibrator) if args.calibrator else None
+    frozen = bool(args.frozen_calibrator)
+    identity = not frozen
+    if args.calibrator and Path(args.calibrator).is_file():
+        try:
+            from wildfire_front.ml.uncertainty import load_calibrator
+
+            cal = load_calibrator(args.calibrator)
+            frozen = not cal.is_identity
+            identity = bool(cal.is_identity)
+            if args.calibrator_fit_split == "val":
+                fit_split = str(getattr(cal, "fit_split", "val") or "val")
+            else:
+                fit_split = str(args.calibrator_fit_split)
+        except Exception:
+            fit_split = str(args.calibrator_fit_split)
+    else:
+        fit_split = str(args.calibrator_fit_split)
+
+    if args.require_frozen_calibrator and (identity or not frozen):
+        if not args.offline_fixture:
+            print(
+                "ERROR: --require-frozen-calibrator but no non-identity calibrator loaded",
+                file=sys.stderr,
+            )
+            return 2
 
     if args.offline_fixture:
         doc = build_scorecard(
@@ -349,6 +497,36 @@ def main(argv: list[str] | None = None) -> int:
             action=args.action,
             offline=True,
             synthetic_mode=args.synthetic_mode,
+            calibrator_path=cal_path,
+            calibrator_fit_split=fit_split,
+            frozen_calibrator=frozen and not identity,
+            identity_calibrator=identity,
+            eval_dir=str(args.eval_dir) if args.eval_dir else None,
+            require_frozen_calibrator=bool(args.require_frozen_calibrator),
+            u1_eval_split=str(args.split),
+            promote_draft=bool(args.promote_draft),
+        )
+    elif args.eval_dir is not None:
+        # Real eval is the dedicated script; ml_scorecard without patches is not enough.
+        print(
+            "NOTE: for real holdout U1 with weights, use "
+            "scripts/eval_ml_uncertainty_u1.py (this CLI writes catalog/offline only "
+            "unless --offline-fixture).",
+            file=sys.stderr,
+        )
+        doc = build_scorecard(
+            product_id=args.product,
+            split=args.split,
+            action=args.action,
+            offline=False,
+            calibrator_path=cal_path,
+            calibrator_fit_split=fit_split,
+            frozen_calibrator=frozen and not identity,
+            identity_calibrator=identity,
+            eval_dir=str(args.eval_dir),
+            require_frozen_calibrator=bool(args.require_frozen_calibrator),
+            u1_eval_split=str(args.split),
+            promote_draft=bool(args.promote_draft),
         )
     else:
         doc = build_scorecard(
@@ -356,19 +534,36 @@ def main(argv: list[str] | None = None) -> int:
             split=args.split,
             action=args.action,
             offline=False,
+            calibrator_path=cal_path,
+            calibrator_fit_split=fit_split,
+            frozen_calibrator=frozen and not identity,
+            identity_calibrator=identity,
+            require_frozen_calibrator=bool(args.require_frozen_calibrator),
+            u1_eval_split=str(args.split),
+            promote_draft=bool(args.promote_draft),
         )
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(doc, indent=2, allow_nan=False), encoding="utf-8")
 
-    u1_combined = bool(doc.get("gates", {}).get("u1_val_passed"))
-    u1a = bool(doc.get("gates", {}).get("U1a_selective_ge_full_minus_eps"))
-    u1b = bool(doc.get("gates", {}).get("U1_selective_beats_random"))
+    gates = doc.get("gates") or {}
+    u1_lab = bool(gates.get("u1_val_lab_pass") or gates.get("u1_val_passed"))
+    u1_honest = bool(gates.get("u1_test_honest"))
+    u1a = bool(gates.get("U1a_selective_ge_full_minus_eps"))
+    u1b = bool(gates.get("U1_selective_beats_random"))
     fusion_rec = bool(doc.get("allow_ml_live_in_fusion_recommended"))
     schema_ok = bool((doc.get("schema_validation") or {}).get("pass"))
-    # Not product/fusion GO — only U1 gate status (ml_product_go stays false).
-    u1_verdict = "U1_PASS" if (u1_combined and schema_ok) else "U1_FAIL"
+    # Verdict: honest TEST pass preferred; lab pass labeled separately.
+    if u1_honest and schema_ok:
+        u1_verdict = "U1_TEST_HONEST_PASS"
+    elif u1_lab and schema_ok:
+        u1_verdict = "U1_VAL_LAB_PASS"
+    elif (u1a and u1b) and schema_ok:
+        u1_verdict = "U1_PASS_NOT_PROMOTE"
+    else:
+        u1_verdict = "U1_FAIL"
+
     print(
         json.dumps(
             {
@@ -376,14 +571,18 @@ def main(argv: list[str] | None = None) -> int:
                 "u1_verdict": u1_verdict,
                 "U1a_selective_ge_full_minus_eps": u1a,
                 "U1_selective_beats_random": u1b,
-                "u1_val_passed": u1_combined,
+                "u1_val_passed": bool(gates.get("u1_val_passed")),
+                "u1_val_lab_pass": u1_lab,
+                "u1_val_optimistic": bool(gates.get("u1_val_optimistic")),
+                "u1_test_honest": u1_honest,
                 "ml_product_go": False,
                 "allow_ml_live_in_fusion_recommended": fusion_rec,
                 "schema_ok": schema_ok,
+                "split": args.split,
                 "note": (
                     "u1_verdict is not product GO. "
-                    "Fusion live weight remains OFF until human promotes U1 pass "
-                    "(ml_product_go always false from this CLI)."
+                    "allow_ml_live_in_fusion_recommended requires u1_test_honest. "
+                    "ml_product_go always false from this CLI; use promote_ml_live_fusion.py."
                 ),
             },
             indent=2,

@@ -23,6 +23,9 @@ PRIMARY_ALLOWED_KEYS = frozenset(
         "model_iou_changed",
         "n_patches",
         "threshold",
+        # Honesty tags: which split/source produced model_iou (never mix catalog silently)
+        "model_iou_split",
+        "model_iou_source",
     }
 )
 UNCERTAINTY_ALLOWED_KEYS = frozenset(

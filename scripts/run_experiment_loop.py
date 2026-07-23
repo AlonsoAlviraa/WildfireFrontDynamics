@@ -217,9 +217,20 @@ def list_queue(queue: list[dict]):
 
 
 def run_smoke_test() -> bool:
-    """Run the local smoke test. Returns True on success."""
+    """Run the local smoke test. Returns True on success.
+
+    Historical v14 kernel smoke lives under ``kaggle_job/archive/`` (archived).
+    Prefer product smoke via ``scripts/smoke_production_products.py`` / ``make smoke``.
+    """
     print("\n[step] Running local smoke test...")
-    script = REPO_ROOT / "kaggle_job" / "smoke_test_v14.py"
+    script = REPO_ROOT / "kaggle_job" / "archive" / "smoke_test_v14.py"
+    if not script.is_file():
+        print(
+            f"[SKIP] Archived v14 smoke not found at {script}\n"
+            "  Product smoke: python scripts/smoke_production_products.py "
+            "--products clm_v28,clm_ensemble_v34 --max-patches 12"
+        )
+        return False
     result = subprocess.run(
         [sys.executable, str(script)],
         capture_output=True,

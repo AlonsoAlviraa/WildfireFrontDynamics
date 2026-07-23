@@ -27,8 +27,9 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "docs" / "analysis_plots"
+# scripts/archive/<this file> → repo root is parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+OUTPUT_DIR = PROJECT_ROOT / "docs" / "archive" / "analysis_plots"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 V10_HISTORY = PROJECT_ROOT / "kaggle_outputs_v10" / "training_history.json"

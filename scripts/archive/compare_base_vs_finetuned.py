@@ -18,7 +18,8 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-ROOT = Path(__file__).resolve().parent.parent
+# scripts/archive/<this file> → repo root is parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from models.model import A3C_PerCellModel_LSTM  # noqa: E402

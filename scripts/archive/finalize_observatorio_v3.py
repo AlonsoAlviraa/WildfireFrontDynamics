@@ -8,7 +8,8 @@ import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# scripts/archive/<this file> → repo root is parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "outputs" / "observatorio_v3"
 DST = ROOT / "outputs" / "observatorio"
 

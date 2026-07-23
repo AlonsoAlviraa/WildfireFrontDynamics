@@ -42,9 +42,10 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 ## ML-first (honest bullets)
 
-1. **Holdout IoU research quality** (v34 ~**0.8963**) — protocol-clean next-day mask metric; **not** live fire certainty and **not** ops ROS.
-2. **Live confidence** comes from ensemble disagreement + VAL-fit Head A calibrator; the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths).
-3. **Fusion live weight stays OFF** until **U1** selective@80% beats random on VAL (`allow_ml_live_in_fusion_recommended`); production dual-product fuse does not promote ML into field fusion silently.
+1. **Holdout IoU research quality** (v34 catalog TEST ~**0.8963**) — protocol-clean next-day **mask** metric only; **not** live fire certainty, **not** ops ROS, **not** Tobarra tactical speed, **not** REDIAM O2 perimeter truth.
+2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths).
+3. **Fusion live weight stays OFF** until **U1 on holdout TEST** with that **frozen** calibrator (`gates.u1_test_honest` → `allow_ml_live_in_fusion_recommended`). VAL-only U1 is a **lab** diagnostic (optimistic if same-split as fit) and **does not** promote fusion. `field_ops` never auto-enables ML live fusion.
+4. Dual product: ML mask product ≠ ops `front_dynamics_v1`. Promote checklist: `scripts/promote_ml_live_fusion.py` (never flips policy without `--apply-policy`, and only `research_open`).
 
 ## Documentos clave
 

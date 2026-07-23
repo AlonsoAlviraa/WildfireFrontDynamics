@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download v27b T=3 outputs and write docs/V27B_TEMPORAL_VERDICT.json; KILL G1 if fail."""
+"""Download v27b T=3 outputs and write docs/archive/V27B_TEMPORAL_VERDICT.json; KILL G1 if fail."""
 
 from __future__ import annotations
 
@@ -8,11 +8,12 @@ import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# scripts/archive/<this file> → repo root is parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 KERNEL = "alonsoalviraaaa/wildfire-front-training-v27b-temporal-t3"
 OUT_DIR = ROOT / "kaggle_outputs_v27b"
-VERDICT = ROOT / "docs" / "V27B_TEMPORAL_VERDICT.json"
-KILL = ROOT / "docs" / "G1_KILL_FEATURES_TEMPORAL.json"
+VERDICT = ROOT / "docs" / "archive" / "V27B_TEMPORAL_VERDICT.json"
+KILL = ROOT / "docs" / "archive" / "G1_KILL_FEATURES_TEMPORAL.json"
 
 V21_IOU, V21_DELTA = 0.2256, 0.0756
 G1_IOU, G1_DELTA = 0.25, 0.09

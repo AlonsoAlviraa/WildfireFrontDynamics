@@ -156,3 +156,50 @@ class TestSpreadPredictor:
         assert np.allclose(base.prob, alt.prob, atol=1e-5)
         # Binary may differ when threshold differs
         assert alt.binary.shape == base.binary.shape
+
+    def test_single_model_predict_with_uncertainty(
+        self, manifest_path: Path, weights_path: Path
+    ):
+        from wildfire_front.ml.spread_predictor import SpreadPredictor
+        from wildfire_front.ml.uncertainty import LogisticCalibrator
+
+        predictor = SpreadPredictor.from_manifest(manifest_path, weights_path=weights_path)
+        rng = np.random.default_rng(3)
+        seq = rng.standard_normal((1, 17, 64, 64), dtype=np.float32) * 0.1
+        fire = np.zeros((64, 64), dtype=np.float32)
+        fire[12:28, 12:28] = 1.0
+        pred = predictor.predict(seq, fire)
+        cal = LogisticCalibrator(
+            weights=np.array([-2.5, -3.0, 4.0, 0.2], dtype=np.float64)
+        )
+        unc = predictor.predict_with_uncertainty(
+            seq, fire, calibrator=cal, product_id="single_test"
+        )
+        assert np.allclose(pred, unc.prob, atol=1e-5)
+        assert unc.diagnostics["n_members"] == 1.0
+        assert unc.diagnostics["member_disagreement"] == 0.0
+        assert "mean_entropy" in unc.diagnostics
+        assert "mean_margin" in unc.diagnostics
+        assert np.isfinite(unc.confidence)
+        live = unc.to_ml_live_metrics()
+        assert live["schema"] == "ml_live_metrics_v1"
+        assert live["n_members"] == 1
+        from wildfire_front.ml.uncertainty import build_ml_prediction_document
+
+        doc = build_ml_prediction_document(unc)
+        blob = json.dumps(doc).lower()
+        for forbidden in (
+            "primary_ros",
+            "ros_m_min",
+            "ros_area_m_min",
+            "vp_tactical",
+            "speed_median_m_min",
+        ):
+            assert forbidden not in blob
+        # Artifact abstain_threshold is honored when abstain_below omitted
+        cal_hi = LogisticCalibrator(
+            weights=np.array([-2.5, -3.0, 4.0, 0.2], dtype=np.float64),
+            abstain_threshold=0.99,
+        )
+        unc_hi = predictor.predict_with_uncertainty(seq, fire, calibrator=cal_hi)
+        assert unc_hi.abstain is True  # conf almost always < 0.99

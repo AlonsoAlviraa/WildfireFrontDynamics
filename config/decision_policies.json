@@ -22,7 +22,7 @@
     },
     "field_ops": {
       "id": "field_ops",
-      "label": "Field / emergency ops (strict — GEACAM-style template)",
+      "label": "Field / emergency ops (strict \u2014 GEACAM-style template)",
       "require_ops_for_go": true,
       "abstain_below": 0.25,
       "go_ops_min": 0.65,
@@ -33,10 +33,10 @@
       "allow_open_only_hold": true,
       "min_available_sources": 1,
       "allow_ml_live_in_fusion": false,
-      "ml_live_max_weight": 0.20,
+      "ml_live_max_weight": 0.2,
       "ml_live_abstain_below": 0.45,
       "ml_live_veto_on_abstain": false,
-      "notes": "Never GO without thermal ops. ML-only → ABSTAIN. Open-only → HOLD monitoring."
+      "notes": "Never GO without thermal ops. ML-only \u2192 ABSTAIN. Open-only \u2192 HOLD monitoring."
     },
     "research_open": {
       "id": "research_open",
@@ -50,11 +50,11 @@
       "allow_ml_only_hold": true,
       "allow_open_only_hold": true,
       "min_available_sources": 1,
-      "allow_ml_live_in_fusion": false,
+      "allow_ml_live_in_fusion": true,
       "ml_live_max_weight": 0.35,
       "ml_live_abstain_below": 0.25,
       "ml_live_veto_on_abstain": false,
-      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order."
+      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order. | allow_ml_live_in_fusion enabled after U1 TEST honest promote (2026-07-23)."
     },
     "demo": {
       "id": "demo",
