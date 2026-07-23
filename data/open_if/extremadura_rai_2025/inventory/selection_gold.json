@@ -1,0 +1,83 @@
+{
+  "schema": "ext_rai_selection_v1",
+  "built_at_utc": "2026-07-23T08:38:25.711061+00:00",
+  "gold": [
+    "2025100393"
+  ],
+  "silver": [
+    "2025060450",
+    "2025060453"
+  ],
+  "events": {
+    "2025100393": {
+      "tier": "gold",
+      "name": "Caminomorisco",
+      "municipio": "Caminomorisco",
+      "id_incen": "2025100393",
+      "objectid": 4681,
+      "fecha_det": "2025-07-29",
+      "fecha_ext": "2025-08-29",
+      "hectareas_attr": 2680.48295290551,
+      "area_geom_ha": 2679.14,
+      "medicion": 5,
+      "crs_native": "EPSG:25829",
+      "bounds_w": -6.336100072701291,
+      "bounds_s": 40.32367597744953,
+      "bounds_e": -6.247758423291054,
+      "bounds_n": 40.37872288334265,
+      "centroid_lon": -6.293799959577903,
+      "centroid_lat": 40.352891962284794,
+      "source": "RAI Junta de Extremadura",
+      "attribution": "Fuente: Registro de Áreas Incendiadas (RAI) — Junta de Extremadura / INFOEX",
+      "shp_path": "data/open_if/extremadura_rai_2025/raw/Caminomorisco/20250729_Caminomorisco.shp"
+    },
+    "2025060450": {
+      "tier": "silver",
+      "name": "Alburquerque",
+      "municipio": "Alburquerque",
+      "id_incen": "2025060450",
+      "objectid": 4689,
+      "fecha_det": "2025-08-14",
+      "fecha_ext": "2025-08-29",
+      "hectareas_attr": 2356.3525982305146,
+      "area_geom_ha": 2356.21,
+      "medicion": 5,
+      "crs_native": "EPSG:25829",
+      "bounds_w": -6.860635668027222,
+      "bounds_s": 39.326600425556705,
+      "bounds_e": -6.792699615344334,
+      "bounds_n": 39.402446079194156,
+      "centroid_lon": -6.829813899746897,
+      "centroid_lat": 39.368205141379384,
+      "source": "RAI Junta de Extremadura",
+      "attribution": "Fuente: Registro de Áreas Incendiadas (RAI) — Junta de Extremadura / INFOEX",
+      "shp_path": "data/open_if/extremadura_rai_2025/raw/Alburquerque/20250814_Alburquerque.shp"
+    },
+    "2025060453": {
+      "tier": "silver",
+      "name": "Burguillos_del_Cerro",
+      "municipio": "Burguillos del Cerro",
+      "id_incen": "2025060453",
+      "objectid": 4695,
+      "fecha_det": "2025-08-14",
+      "fecha_ext": "2025-08-24",
+      "hectareas_attr": 560.9080206616826,
+      "area_geom_ha": 560.77,
+      "medicion": 5,
+      "crs_native": "EPSG:25829",
+      "bounds_w": -6.658253082366894,
+      "bounds_s": 38.37155699772069,
+      "bounds_e": -6.6102499387753015,
+      "bounds_n": 38.4071428056037,
+      "centroid_lon": -6.640330088953872,
+      "centroid_lat": 38.38973235963705,
+      "source": "RAI Junta de Extremadura",
+      "attribution": "Fuente: Registro de Áreas Incendiadas (RAI) — Junta de Extremadura / INFOEX",
+      "shp_path": "data/open_if/extremadura_rai_2025/raw/Burguillos_del_Cerro/20250814_Burguillos del Cerro.shp"
+    }
+  },
+  "rationale": {
+    "gold": "Largest ha + multi-day det/ext window for FIRMS/dNBR",
+    "silver": "Remaining RAI 2025 deliveries"
+  }
+}

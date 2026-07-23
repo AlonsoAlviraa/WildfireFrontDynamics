@@ -1,0 +1,488 @@
+{
+  "schema": "gold_if_e2e_verification_v1",
+  "started_at_utc": "2026-07-21T11:06:12.437553+00:00",
+  "steps": [
+    {
+      "name": "open_emsr578_artifacts",
+      "ok": true,
+      "path": "outputs\\open_if\\emsr578"
+    },
+    {
+      "name": "ops_tobarra_pack",
+      "ok": true,
+      "path": "outputs\\observatorio\\tobarra_20240802"
+    },
+    {
+      "name": "decide_fusion",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "wildfire_front",
+        "decide",
+        "--event-id",
+        "gold_e2e_tobarra_emsr578",
+        "--use-ml-v34",
+        "--open-pack",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\open_if\\emsr578",
+        "--json",
+        "--output",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\gold_e2e\\fire_decision_card.json",
+        "--work-dir",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\gold_e2e\\tobarra_work"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": ".8161038156570772\n    },\n    \"open_cems\": {\n      \"max_area_ha\": 2693.4837707192946,\n      \"n_timeline_steps\": 5,\n      \"activation\": \"EMSR578\",\n      \"O2_cems_delineation\": \"GO\"\n    },\n    \"fused_confidence_pred\": 0.8586666666666667,\n    \"policy_id\": \"default\",\n    \"extra\": {\n      \"channel\": \"cli\",\n      \"api_version\": \"decide_api_v1\",\n      \"policy_id\": \"default\",\n      \"reliability_trusted_client\": false,\n      \"path_include_repo_root\": true\n    }\n  },\n  \"reasons\": [\n    \"ml_clm_ensemble:holdout_quality=1.000:not_fused\",\n    \"ops_thermal_front:conf=0.980:w=0.40\",\n    \"open_cems_perimeter:conf=0.720:w=0.35\",\n    \"policy:default\",\n    \"ops_confidence_ok\"\n  ],\n  \"disclaimers\": [\n    \"Not a tactical dispatch order.\",\n    \"Fire-phenomenon confidence is NOT 99.9999% — that figure only applies to automated gate enforcement under test (no silent GO without sources).\",\n    \"ML IoU is not front ROS; CEMS perimeter is not national cadastre.\",\n    \"ABSTAIN means the product refuses to recommend action.\",\n    \"System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown).\"\n  ],\n  \"audit\": {\n    \"input_hash\": \"917f1bd272a924e9e8e3a72628fd46747328e18e173daae57a16aefbd9549e2b\",\n    \"output_hash\": \"5beb6b1dfc4dbfbbc2b9fa809266cf0c1069439e60308a7d4bcfafd7e214e8b5\",\n    \"git_commit\": null,\n    \"schema\": \"fire_decision_card_v1\",\n    \"policy_id\": \"default\",\n    \"policy_label\": \"Default (historical product thresholds)\",\n    \"policy_snapshot\": {\n      \"require_ops_for_go\": false,\n      \"abstain_below\": 0.2,\n      \"go_ops_min\": 0.55,\n      \"go_ops_open_min\": 0.45,\n      \"hold_open_min\": 0.35,\n      \"hold_ml_only_min\": 0.5,\n      \"allow_ml_only_hold\": true,\n      \"allow_open_only_hold\": true\n    },\n    \"abstention_heuristic_ok\": true,\n    \"provenance_hashes_attached\": true,\n    \"system_reliability\": {\n      \"system_reliability_pass\": false,\n      \"status\": \"unknown\",\n      \"checks\": {\n        \"R1_determinism\": null,\n        \"R2_gates\": null,\n        \"R3_abstention_enforced\": null,\n        \"R4_provenance\": null\n      },\n      \"residual_silent_go_risk_bound\": 1.0,\n      \"five_nines_claim\": \"UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.\",\n      \"fire_prediction_accuracy_claim\": \"NOT_CLAIMED\"\n    }\n  },\n  \"built_at_utc\": \"2026-07-21T11:06:12.768872+00:00\",\n  \"latency_ms\": 10.06,\n  \"api_version\": \"decide_api_v1\",\n  \"product\": \"fire_decision_card\",\n  \"policy_id\": \"default\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "decide_empty_abstain",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "wildfire_front",
+        "decide",
+        "--json",
+        "--output",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\outputs\\gold_e2e\\fire_decision_card_empty.json"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "     \"available\": false,\n      \"weight\": 0.0,\n      \"confidence\": 0.0\n    },\n    {\n      \"id\": \"open_cems\",\n      \"available\": false,\n      \"weight\": 0.0,\n      \"confidence\": 0.0\n    }\n  ],\n  \"metrics\": {\n    \"ml\": null,\n    \"ops\": null,\n    \"open_cems\": null,\n    \"fused_confidence_pred\": 0.0,\n    \"policy_id\": \"default\",\n    \"extra\": {\n      \"channel\": \"cli\",\n      \"api_version\": \"decide_api_v1\",\n      \"policy_id\": \"default\",\n      \"reliability_trusted_client\": false,\n      \"path_include_repo_root\": true\n    }\n  },\n  \"reasons\": [\n    \"missing:ml\",\n    \"missing:ops\",\n    \"missing:open_cems\",\n    \"no_sources\",\n    \"policy:default\",\n    \"no_available_sources\"\n  ],\n  \"disclaimers\": [\n    \"Not a tactical dispatch order.\",\n    \"Fire-phenomenon confidence is NOT 99.9999% — that figure only applies to automated gate enforcement under test (no silent GO without sources).\",\n    \"ML IoU is not front ROS; CEMS perimeter is not national cadastre.\",\n    \"ABSTAIN means the product refuses to recommend action.\",\n    \"System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown).\"\n  ],\n  \"audit\": {\n    \"input_hash\": \"5974a6e5087cd661a348bf6c009da1a4c31fe4d98490a70ce18a664e32d47f2a\",\n    \"output_hash\": \"25909b30230a78a82a756a4b3ceae6b80964d1525ec79ac4e8a67535ecfc9f8f\",\n    \"git_commit\": null,\n    \"schema\": \"fire_decision_card_v1\",\n    \"policy_id\": \"default\",\n    \"policy_label\": \"Default (historical product thresholds)\",\n    \"policy_snapshot\": {\n      \"require_ops_for_go\": false,\n      \"abstain_below\": 0.2,\n      \"go_ops_min\": 0.55,\n      \"go_ops_open_min\": 0.45,\n      \"hold_open_min\": 0.35,\n      \"hold_ml_only_min\": 0.5,\n      \"allow_ml_only_hold\": true,\n      \"allow_open_only_hold\": true\n    },\n    \"abstention_heuristic_ok\": true,\n    \"provenance_hashes_attached\": true,\n    \"system_reliability\": {\n      \"system_reliability_pass\": false,\n      \"status\": \"unknown\",\n      \"checks\": {\n        \"R1_determinism\": null,\n        \"R2_gates\": null,\n        \"R3_abstention_enforced\": null,\n        \"R4_provenance\": null\n      },\n      \"residual_silent_go_risk_bound\": 1.0,\n      \"five_nines_claim\": \"UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.\",\n      \"fire_prediction_accuracy_claim\": \"NOT_CLAIMED\"\n    }\n  },\n  \"built_at_utc\": \"2026-07-21T11:06:13.084384+00:00\",\n  \"latency_ms\": 0.337,\n  \"api_version\": \"decide_api_v1\",\n  \"product\": \"fire_decision_card\",\n  \"policy_id\": \"default\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "smoke_incident_runtime",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/smoke_incident_runtime.py"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"synthetic\": {\n    \"mode\": \"synthetic\",\n    \"ok\": true,\n    \"status\": \"updated\",\n    \"n_staged\": 3,\n    \"quality_grade\": \"B\",\n    \"primary_ros_m_min\": 11.283791670955129,\n    \"latency_s\": 0.1094,\n    \"work_dir\": \"C:\\\\Users\\\\Mariano\\\\AppData\\\\Local\\\\Temp\\\\incident_smoke_qxdfcdmb\\\\work\",\n    \"error\": null\n  }\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "smoke_ml_v34",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "scripts/smoke_production_products.py",
+        "--products",
+        "clm_ensemble_v34",
+        "--clm-max",
+        "8"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "status\": \"ok (3 members)\",\n      \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\manifest.json\",\n      \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v28_clm_ft.pt\",\n      \"members\": [\n        \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v28_clm_ft.pt\",\n        \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_v30_ema.pt\",\n        \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_ensemble\\\\weights_multi_if.pt\"\n      ],\n      \"ensemble_mode\": \"mean_prob\",\n      \"use_when\": \"Best CLM next-day mask; weighted soft-vote + per-member temperature (VAL-calibrated).\",\n      \"not_for\": \"Drone ROS; never tune mix/temps on LOFO-CARDOSO/test (identical to holdout test).\"\n    },\n    {\n      \"id\": \"clm_v28\",\n      \"label\": \"CLM Spain specialist (single-model emergency ML)\",\n      \"domain\": \"CLM_Spain_holdout\",\n      \"product_type\": \"single\",\n      \"ready\": true,\n      \"status\": \"ok\",\n      \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\manifest.json\",\n      \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\clm_specialist\\\\weights_v28_clm_ft.pt\",\n      \"members\": null,\n      \"ensemble_mode\": null,\n      \"use_when\": \"Spain-like legacy17 patches; single-checkpoint transfer.\",\n      \"not_for\": \"Drone ROS (use front_dynamics); NDWS paper protocol without re-export.\"\n    },\n    {\n      \"id\": \"ndws_v21\",\n      \"label\": \"NDWS global next-day spread (research baseline)\",\n      \"domain\": \"NDWS_global\",\n      \"product_type\": \"single\",\n      \"ready\": true,\n      \"status\": \"ok\",\n      \"manifest\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\manifest.json\",\n      \"weights\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\models\\\\production\\\\weights_v21_best.pt\",\n      \"members\": null,\n      \"ensemble_mode\": null,\n      \"use_when\": \"Research / NDWS-like patches only. Not the emergency primary.\",\n      \"not_for\": \"Spain emergency ROS, tactical dispatch, sole decision support.\"\n    }\n  ]\n}\n{\n  \"ok\": true,\n  \"evals\": [\n    {\n      \"product\": \"clm_ensemble_v34\",\n      \"n\": 8,\n      \"mean_iou\": 0.8585999205662622,\n      \"mean_delta\": 0.015170334862110182,\n      \"pass\": true,\n      \"n_members\": 3\n    }\n  ],\n  \"comparison\": null\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "reliability_gate",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\scripts\\reliability_gate.py"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"failures\": [],\n  \"out\": \"C:\\\\Users\\\\Mariano\\\\Documents\\\\ALONSOO\\\\WildfireFrontDynamics\\\\outputs\\\\reliability_gate_report.json\",\n  \"five_nines\": {\n    \"system_reliability_pass\": true,\n    \"status\": \"pass\",\n    \"checks\": {\n      \"R1_determinism\": true,\n      \"R2_gates\": true,\n      \"R3_abstention_enforced\": true,\n      \"R4_provenance\": true\n    },\n    \"residual_silent_go_risk_bound\": 1e-06,\n    \"five_nines_claim\": \"PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.\",\n    \"fire_prediction_accuracy_claim\": \"NOT_CLAIMED\"\n  },\n  \"note\": \"docs sample is suite-only; not a field unlock key\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "pytest_product_core",
+      "cmd": [
+        "C:\\Users\\Mariano\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "-m",
+        "pytest",
+        "tests/test_decide_cli.py",
+        "tests/test_decide_api.py",
+        "tests/test_confidence_product.py",
+        "tests/test_product_catalog.py",
+        "tests/test_front_dynamics.py",
+        "tests/test_open_if_pack.py",
+        "-q",
+        "--tb=no"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "................................................                         [100%]\n",
+      "stderr_tail": ""
+    }
+  ],
+  "ok": true,
+  "scoring": {
+    "contract_layers": [
+      "ops_lwir_geotiff_seq_ge3",
+      "ops_masks_ge3",
+      "ops_anchor_confirmed_vp_ha",
+      "ops_pack_grade_or_metrics",
+      "open_cems_multi_temporal_ge2",
+      "open_scorecard_o2_cems",
+      "open_dnbr_optional",
+      "open_firms_optional",
+      "ml_product_v34_weights",
+      "decide_card_fusion"
+    ],
+    "ops_candidates": [
+      {
+        "fire_id": "tobarra_20240802",
+        "track": "ops",
+        "n_lwir": 35,
+        "n_masks": 35,
+        "anchor_status": "confirmed",
+        "vp_m_min": 7.0,
+        "area_ha": 39.0,
+        "grade": "A",
+        "pack_exists": true,
+        "layers": {
+          "ops_lwir_geotiff_seq_ge3": true,
+          "ops_masks_ge3": true,
+          "ops_anchor_confirmed_vp_ha": true,
+          "ops_pack_grade_or_metrics": true
+        },
+        "score": 4,
+        "max_score": 4
+      },
+      {
+        "fire_id": "cardoso_2025",
+        "track": "ops",
+        "n_lwir": 85,
+        "n_masks": 79,
+        "anchor_status": "pending_external",
+        "vp_m_min": null,
+        "area_ha": null,
+        "grade": "B",
+        "pack_exists": true,
+        "layers": {
+          "ops_lwir_geotiff_seq_ge3": true,
+          "ops_masks_ge3": true,
+          "ops_anchor_confirmed_vp_ha": false,
+          "ops_pack_grade_or_metrics": true
+        },
+        "score": 3,
+        "max_score": 4
+      },
+      {
+        "fire_id": "la_estrella_acom1_2024",
+        "track": "ops",
+        "n_lwir": 199,
+        "n_masks": 181,
+        "anchor_status": "pending_external",
+        "vp_m_min": null,
+        "area_ha": null,
+        "grade": "B",
+        "pack_exists": true,
+        "layers": {
+          "ops_lwir_geotiff_seq_ge3": true,
+          "ops_masks_ge3": true,
+          "ops_anchor_confirmed_vp_ha": false,
+          "ops_pack_grade_or_metrics": true
+        },
+        "score": 3,
+        "max_score": 4
+      },
+      {
+        "fire_id": "hellin_2024",
+        "track": "ops",
+        "n_lwir": 36,
+        "n_masks": 16,
+        "anchor_status": "pending_external",
+        "vp_m_min": null,
+        "area_ha": null,
+        "grade": "B",
+        "pack_exists": true,
+        "layers": {
+          "ops_lwir_geotiff_seq_ge3": true,
+          "ops_masks_ge3": true,
+          "ops_anchor_confirmed_vp_ha": false,
+          "ops_pack_grade_or_metrics": true
+        },
+        "score": 3,
+        "max_score": 4
+      },
+      {
+        "fire_id": "retuerta_2025",
+        "track": "ops",
+        "n_lwir": 10,
+        "n_masks": 8,
+        "anchor_status": "pending_external",
+        "vp_m_min": null,
+        "area_ha": null,
+        "grade": "B",
+        "pack_exists": true,
+        "layers": {
+          "ops_lwir_geotiff_seq_ge3": true,
+          "ops_masks_ge3": true,
+          "ops_anchor_confirmed_vp_ha": false,
+          "ops_pack_grade_or_metrics": true
+        },
+        "score": 3,
+        "max_score": 4
+      }
+    ],
+    "open_candidates": [
+      {
+        "activation": "EMSR578",
+        "track": "open",
+        "pack_dir": "outputs\\open_if\\emsr578",
+        "n_vectors": 7,
+        "max_area_ha": 2693.4837707192946,
+        "n_timeline_steps": 5,
+        "O2_cems": "GO",
+        "dnbr": "GO",
+        "layers": {
+          "open_cems_multi_temporal_ge2": true,
+          "open_scorecard_o2_cems": true,
+          "open_dnbr_optional": true,
+          "open_firms_optional": true
+        },
+        "score": 4,
+        "max_score": 4
+      },
+      {
+        "activation": "EMSR581",
+        "track": "open",
+        "pack_dir": "outputs\\open_if\\emsr581",
+        "n_vectors": 4,
+        "max_area_ha": 2209.794940004186,
+        "n_timeline_steps": 4,
+        "O2_cems": "GO",
+        "dnbr": null,
+        "layers": {
+          "open_cems_multi_temporal_ge2": true,
+          "open_scorecard_o2_cems": true,
+          "open_dnbr_optional": false,
+          "open_firms_optional": false
+        },
+        "score": 2,
+        "max_score": 4
+      },
+      {
+        "activation": "EMSR583",
+        "track": "open",
+        "pack_dir": "outputs\\open_if\\emsr583",
+        "n_vectors": 5,
+        "max_area_ha": 1790.5688508544401,
+        "n_timeline_steps": 5,
+        "O2_cems": "GO",
+        "dnbr": null,
+        "layers": {
+          "open_cems_multi_temporal_ge2": true,
+          "open_scorecard_o2_cems": true,
+          "open_dnbr_optional": false,
+          "open_firms_optional": false
+        },
+        "score": 2,
+        "max_score": 4
+      },
+      {
+        "activation": "EMSR632",
+        "track": "open",
+        "pack_dir": "outputs\\open_if\\emsr632",
+        "n_vectors": 4,
+        "max_area_ha": 5319.506429634212,
+        "n_timeline_steps": 4,
+        "O2_cems": "GO",
+        "dnbr": null,
+        "layers": {
+          "open_cems_multi_temporal_ge2": true,
+          "open_scorecard_o2_cems": true,
+          "open_dnbr_optional": false,
+          "open_firms_optional": false
+        },
+        "score": 2,
+        "max_score": 4
+      }
+    ],
+    "external_web_candidates": [
+      {
+        "id": "FLAME3_NADIR_Hanna_Hammock",
+        "source": "https://ieee-dataport.org/open-access/flame-3-radiometric-thermal-uav-imagery-wildfire-management",
+        "why": "UAV radiometric thermal NADIR georeferenced + masks (prescribed burn US)",
+        "usable_for": [
+          "ops_thermal_research"
+        ],
+        "missing_for_wfd_gold": [
+          "no Spain/CLM INFOCAM anchor",
+          "no CEMS multi-day same event",
+          "schema != Heligrafics GeoTIFF contract without adapter"
+        ],
+        "verdict": "RESEARCH_ONLY_NOT_GOLD"
+      },
+      {
+        "id": "NIROPS_US_multi_day_IR_perimeters",
+        "source": "https://data.mendeley.com/datasets/95rj5d379g",
+        "why": "12k+ multi-day IR-interpreted perimeters (NIFC) — excellent O2-proxy timeline",
+        "usable_for": [
+          "open_perimeter_progression",
+          "hausdorff_proxy"
+        ],
+        "missing_for_wfd_gold": [
+          "no LWIR radiometric frames for front_dynamics",
+          "US domain not CLM ML transfer",
+          "not national Spanish cadastre"
+        ],
+        "verdict": "OPEN_PROXY_US_ONLY"
+      },
+      {
+        "id": "CALFIRE_historic_perimeters",
+        "source": "https://data.cnra.ca.gov/dataset/california-fire-perimeters-all",
+        "why": "Official state perimeters (closest to O2 official, but California)",
+        "usable_for": [
+          "o2_official_concept_demo"
+        ],
+        "missing_for_wfd_gold": [
+          "no LWIR",
+          "not Spain"
+        ],
+        "verdict": "OUT_OF_DOMAIN"
+      },
+      {
+        "id": "EMSR896_Aragon_2026",
+        "source": "https://mapping.emergency.copernicus.eu/activations/EMSR896/",
+        "why": "Live Spanish CEMS wildfire activation (Jul 2026)",
+        "usable_for": [
+          "open_if_if_vectors_ready"
+        ],
+        "missing_for_wfd_gold": [
+          "may be incomplete products",
+          "no LWIR/anchor"
+        ],
+        "verdict": "PROBE_ON_DEMAND"
+      },
+      {
+        "id": "EMSR578_Catalonia_2022",
+        "source": "https://mapping.emergency.copernicus.eu/activations/EMSR578",
+        "why": "Already in-repo: FEP+DEL+MONIT×2+GRA, dNBR STAC GO, FIRMS overlay",
+        "usable_for": [
+          "open_if_gold"
+        ],
+        "missing_for_wfd_gold": [
+          "no LWIR Heligrafics for same fire"
+        ],
+        "verdict": "OPEN_GOLD_IN_REPO"
+      },
+      {
+        "id": "Tobarra_AB_20240802",
+        "source": "local artifacts + INFOCAM anchor",
+        "why": "Only fire with confirmed Vp/ha + full LWIR sequence + grade A pack",
+        "usable_for": [
+          "ops_gold",
+          "ml_holdout",
+          "o1_single_anchor"
+        ],
+        "missing_for_wfd_gold": [
+          "no CEMS same event",
+          "O2 national BLOCKED"
+        ],
+        "verdict": "OPS_GOLD_IN_REPO"
+      }
+    ],
+    "ops_champion": {
+      "fire_id": "tobarra_20240802",
+      "track": "ops",
+      "n_lwir": 35,
+      "n_masks": 35,
+      "anchor_status": "confirmed",
+      "vp_m_min": 7.0,
+      "area_ha": 39.0,
+      "grade": "A",
+      "pack_exists": true,
+      "layers": {
+        "ops_lwir_geotiff_seq_ge3": true,
+        "ops_masks_ge3": true,
+        "ops_anchor_confirmed_vp_ha": true,
+        "ops_pack_grade_or_metrics": true
+      },
+      "score": 4,
+      "max_score": 4
+    },
+    "open_champion": {
+      "activation": "EMSR578",
+      "track": "open",
+      "pack_dir": "outputs\\open_if\\emsr578",
+      "n_vectors": 7,
+      "max_area_ha": 2693.4837707192946,
+      "n_timeline_steps": 5,
+      "O2_cems": "GO",
+      "dnbr": "GO",
+      "layers": {
+        "open_cems_multi_temporal_ge2": true,
+        "open_scorecard_o2_cems": true,
+        "open_dnbr_optional": true,
+        "open_firms_optional": true
+      },
+      "score": 4,
+      "max_score": 4
+    },
+    "gold_stack": {
+      "id": "gold_dual_tobarra_plus_emsr578",
+      "ops": "tobarra_20240802",
+      "open": "EMSR578",
+      "ml": "clm_ensemble_v34",
+      "rationale": "No single public IF has LWIR+INFOCAM+CEMS together. Product design fuses heterogeneous sources at Decision Card; this is the maximal honest gold stack."
+    },
+    "honest_gap": {
+      "single_fire_with_all_layers": false,
+      "o2_national_official": "BLOCKED",
+      "o1_second_anchor": "OPEN"
+    }
+  },
+  "decision_card": {
+    "decision": "GO",
+    "confidence_pred": 0.8586666666666667,
+    "system_reliability_pass": false,
+    "latency_ms": 10.06,
+    "reasons": [
+      "ml_clm_ensemble:holdout_quality=1.000:not_fused",
+      "ops_thermal_front:conf=0.980:w=0.40",
+      "open_cems_perimeter:conf=0.720:w=0.35",
+      "policy:default",
+      "ops_confidence_ok"
+    ],
+    "sources": [
+      {
+        "id": "ml_clm_ensemble",
+        "available": true,
+        "confidence": 1.0
+      },
+      {
+        "id": "ops_thermal_front",
+        "available": true,
+        "confidence": 0.98
+      },
+      {
+        "id": "open_cems_perimeter",
+        "available": true,
+        "confidence": 0.72
+      }
+    ]
+  },
+  "abstain_card": {
+    "decision": "ABSTAIN",
+    "reasons": [
+      "missing:ml",
+      "missing:ops",
+      "missing:open_cems",
+      "no_sources",
+      "policy:default",
+      "no_available_sources"
+    ]
+  },
+  "ml_status": "GO",
+  "layers_pass": {
+    "ops_lwir": true,
+    "ops_masks": true,
+    "ops_anchor": true,
+    "ops_pack": true,
+    "open_multi": true,
+    "open_o2": true,
+    "open_dnbr": true,
+    "open_firms": true,
+    "decide_ok": true
+  },
+  "n_layers_pass": 9,
+  "n_layers_total": 9,
+  "verdict": "GO_GOLD_STACK",
+  "finished_at_utc": "2026-07-21T11:06:25.260815+00:00"
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "rediam_and_inventory_stats_v1",
+  "built_at_utc": "2026-07-22T08:36:27.811010+00:00",
+  "attribution": "Fuente: REDIAM \u2014 Junta de Andaluc\u00eda. Uso libre con menci\u00f3n de autores y propietarios.",
+  "n_events": 189,
+  "ha_sum_best": 31627.1,
+  "by_year": {
+    "2022": 58,
+    "2023": 40,
+    "2024": 38,
+    "2025": 53
+  },
+  "by_provincia": {
+    "Huelva": 46,
+    "Sevilla": 33,
+    "C\u00f3rdoba": 27,
+    "M\u00e1laga": 19,
+    "C\u00e1diz": 19,
+    "Ja\u00e9n": 17,
+    "Granada": 16,
+    "Almer\u00eda": 12
+  },
+  "n_gold": 1,
+  "n_silver": 2,
+  "qa_counts": {
+    "ok": 180,
+    "ok;qa_area_mismatch": 3,
+    "repaired": 6
+  },
+  "cache": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\data\\open_if\\rediam_andalucia\\wfs_cache",
+  "catalog_csv": "data\\open_if\\rediam_andalucia\\inventory\\event_catalog.csv",
+  "selection_json": "data\\open_if\\rediam_andalucia\\inventory\\selection_gold.json"
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "rediam_and_selection_v1",
+  "built_at_utc": "2026-07-22T08:36:27.802902+00:00",
+  "attribution": "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios.",
+  "track": "Pista_B_plus_open_o2_and",
+  "gold": [
+    {
+      "codigo": "2024040053",
+      "year": 2024,
+      "fecha_inc": "2024-06-06",
+      "municipio": "NIJAR",
+      "provincia": "Almería",
+      "ha_best": 2143.95,
+      "score_total": 50,
+      "score_reasons": "ha>=1000(+30);year>=2023(+15);attrs_loc(+5);bbox_and_ok",
+      "centroid_lon": -2.2401332036807955,
+      "centroid_lat": 36.933016524641,
+      "bbox_wgs84": "[-2.2723212173713465, 36.88051530183942, -2.2113899909939727, 36.983685264155156]",
+      "source_path": "data\\open_if\\rediam_andalucia\\wfs_cache\\2024\\perim_incendios_2024.geojson",
+      "feature_index": 2,
+      "firms_n": "",
+      "hypothesis": "Selected for industrial open E2E: 2143.95 ha, NIJAR/Almería, fecha 2024-06-06. Official REDIAM perimeter (O2). No Vp/ROS invented."
+    }
+  ],
+  "silver": [
+    {
+      "codigo": "2024140035",
+      "year": 2024,
+      "fecha_inc": "2024-07-12",
+      "municipio": "OBEJO",
+      "provincia": "Córdoba",
+      "ha_best": 2093.06,
+      "score_total": 50,
+      "score_reasons": "ha>=1000(+30);year>=2023(+15);attrs_loc(+5);bbox_and_ok",
+      "centroid_lon": -4.746340636408272,
+      "centroid_lat": 38.04462786839396,
+      "bbox_wgs84": "[-4.787802202566868, 38.01689647532039, -4.7038951455854265, 38.06985393504842]",
+      "source_path": "data\\open_if\\rediam_andalucia\\wfs_cache\\2024\\perim_incendios_2024.geojson",
+      "feature_index": 7,
+      "firms_n": "",
+      "hypothesis": "Selected for industrial open E2E: 2093.06 ha, OBEJO/Córdoba, fecha 2024-07-12. Official REDIAM perimeter (O2). No Vp/ROS invented."
+    },
+    {
+      "codigo": "IIFF2025040059",
+      "year": 2025,
+      "fecha_inc": "2025-08-28",
+      "municipio": "LUBRIN",
+      "provincia": "Almería",
+      "ha_best": 783.3,
+      "score_total": 40,
+      "score_reasons": "ha>=500(+20);year>=2023(+15);attrs_loc(+5);bbox_and_ok",
+      "centroid_lon": -2.0423442235075093,
+      "centroid_lat": 37.193623433419354,
+      "bbox_wgs84": "[-2.0642478949999252, 37.17637764890878, -2.0202656389998745, 37.21122071690912]",
+      "source_path": "data\\open_if\\rediam_andalucia\\wfs_cache\\2025\\perim_incendios_2025.geojson",
+      "feature_index": 46,
+      "firms_n": "",
+      "hypothesis": "Selected for industrial open E2E: 783.3 ha, LUBRIN/Almería, fecha 2025-08-28. Official REDIAM perimeter (O2). No Vp/ROS invented."
+    }
+  ],
+  "n_catalog": 189,
+  "n_eligible": 187,
+  "selection_error": null,
+  "notes": [
+    "Gold = full E2E pack + acta",
+    "Silver = pack + scorecard (dNBR optional)",
+    "Bronze = catalog only",
+    "FIRMS hull is never official burned area",
+    "No tactical Vp without ASEMA anchor",
+    "Gold/silver require hard filters; no junk fallback"
+  ]
+}

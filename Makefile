@@ -5,7 +5,7 @@ PYTHON := python
 PKG    := wildfire_front
 TESTS  := tests
 
-.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial
+.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -42,13 +42,12 @@ clean:  ## Remove build artifacts and caches
 batch-fires:  ## Process all real wildfire sequences through the ingest pipeline
 	set PYTHONPATH=. && $(PYTHON) scripts/batch_process_fires.py
 
-smoke:  ## Quick smoke test of the ML pipeline
-	$(PYTHON) scripts/smoke_test_finetune.py
+smoke: smoke-ml  ## Product ML smoke (alias for smoke-ml; not legacy A3C)
 
 smoke-ops:  ## Incident runtime synthetic smoke
 	set PYTHONPATH=. && $(PYTHON) scripts/smoke_incident_runtime.py
 
-smoke-ml:  ## CLM v28 + ensemble v34 holdout smoke
+smoke-ml:  ## CLM v28 + ensemble v34 holdout smoke (product path)
 	set PYTHONPATH=. && $(PYTHON) scripts/smoke_production_products.py --products clm_v28,clm_ensemble_v34 --max-patches 12
 
 demo:  ## One-command dual product demo (ops + ML)
@@ -63,3 +62,12 @@ reliability:  ## Reliability / abstention gate (system five-nines bound)
 	set PYTHONPATH=. && $(PYTHON) scripts/reliability_gate.py
 
 product-gate: reliability metrics-hub  ## Paid-value product gates
+
+and-industrial-e2e:  ## Andalucía REDIAM industrial open E2E (fetch+inventory+pack+verify; no live WFS in verify by default)
+	set PYTHONPATH=. && $(PYTHON) scripts/fetch_rediam_perimeters.py --years 2022,2023,2024,2025
+	set PYTHONPATH=. && $(PYTHON) scripts/inventory_rediam_and.py --no-firms
+	set PYTHONPATH=. && $(PYTHON) scripts/build_and_if_pack.py --selection data/open_if/rediam_andalucia/inventory/selection_gold.json --tier all --skip-dnbr
+	set PYTHONPATH=. && $(PYTHON) scripts/verify_and_industrial_e2e.py
+
+demo-multi-ccaa:  ## Build multi-CCAA demo hub (Tobarra OPS + Níjar AND + Caminomorisco EXT)
+	$(PYTHON) scripts/build_demo_multi_ccaa.py

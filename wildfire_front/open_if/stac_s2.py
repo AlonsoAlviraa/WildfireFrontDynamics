@@ -221,4 +221,7 @@ KNOWN_EVENT_DATES: dict[str, str] = {
     "EMSR583": "2022-07-20",
     "EMSR632": "2023-08-15",
     "EMSR629": "2023-07-20",
+    # Open IF packs (activation string may be event_id / pack name)
+    "GUADALAJARA_LA_MIERLA_20260717": "2026-07-16",
+    "LA_MIERLA_20260717": "2026-07-16",
 }

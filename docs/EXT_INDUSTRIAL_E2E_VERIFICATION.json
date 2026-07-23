@@ -1,0 +1,71 @@
+{
+  "schema": "ext_industrial_e2e_v1",
+  "verdict": "GO_EXT_INDUSTRIAL_E2E",
+  "ok": true,
+  "started_utc": "2026-07-23T08:40:06.648305+00:00",
+  "finished_utc": "2026-07-23T08:40:12.760449+00:00",
+  "layers": {
+    "rai_perimeter_present": true,
+    "inventory_catalog": true,
+    "gold_selection": true,
+    "pack_manifest": true,
+    "metrics_o2": true,
+    "scorecard_go_or_partial": true,
+    "map_html": true,
+    "provenance_attribution": true,
+    "pytest_or_skip": true,
+    "honest_gates": true
+  },
+  "layers_pass": "10/10",
+  "selection": {
+    "gold": [
+      "2025100393"
+    ],
+    "silver": [
+      "2025060450",
+      "2025060453"
+    ],
+    "n_events": 3
+  },
+  "packs": [
+    {
+      "dir": "ext_2025060450_20250814",
+      "verdict": "PARTIAL",
+      "ha": 2356.21,
+      "honest": true
+    },
+    {
+      "dir": "ext_2025060453_20250814",
+      "verdict": "PARTIAL",
+      "ha": 560.77,
+      "honest": true
+    },
+    {
+      "dir": "ext_2025100393_20250729",
+      "verdict": "PARTIAL",
+      "ha": 2679.14,
+      "honest": true
+    }
+  ],
+  "steps": [
+    {
+      "name": "inventory_catalog",
+      "ok": true
+    },
+    {
+      "name": "gold_selection",
+      "ok": true
+    },
+    {
+      "name": "pytest",
+      "ok": true,
+      "tail": "..                                                                       [100%]\n"
+    }
+  ],
+  "honest": {
+    "no_invented_vp": true,
+    "firms_hull_not_burned_area": true,
+    "attribution": "RAI — Junta de Extremadura / INFOEX",
+    "decision": "HOLD without ops anchor"
+  }
+}

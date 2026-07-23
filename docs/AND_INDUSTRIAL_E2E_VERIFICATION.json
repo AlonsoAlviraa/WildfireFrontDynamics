@@ -1,0 +1,201 @@
+{
+  "schema": "and_industrial_e2e_verification_v1",
+  "started_at_utc": "2026-07-22T08:44:29.447959+00:00",
+  "track": "Pista_B_plus_AND_REDIAM",
+  "attribution_required": "Fuente: REDIAM \u2014 Junta de Andaluc\u00eda",
+  "layers_contract": [
+    "rediam_perimeter_present",
+    "inventory_catalog",
+    "gold_selection",
+    "pack_manifest",
+    "metrics_o2",
+    "scorecard_go_or_partial",
+    "map_html",
+    "provenance_attribution",
+    "pytest_and_smoke",
+    "honest_gates"
+  ],
+  "steps": [
+    {
+      "name": "inventory_catalog",
+      "ok": true,
+      "catalog": "data\\open_if\\rediam_andalucia\\inventory\\event_catalog.csv",
+      "selection": "data\\open_if\\rediam_andalucia\\inventory\\selection_gold.json"
+    },
+    {
+      "name": "wfs_cache",
+      "ok": true,
+      "years": [
+        "2022",
+        "2023",
+        "2024",
+        "2025"
+      ]
+    },
+    {
+      "name": "live_wfs_smoke",
+      "ok": false,
+      "skipped": true
+    },
+    {
+      "name": "and_packs",
+      "ok": true,
+      "n": 3,
+      "pack_ids": [
+        "and_2024040053_20240606",
+        "and_2024140035_20240712",
+        "and_iiff2025040059_20250828"
+      ]
+    },
+    {
+      "name": "honest_gates",
+      "ok": true
+    },
+    {
+      "name": "pytest_and_smoke",
+      "ok": false,
+      "skipped": true
+    }
+  ],
+  "ok": true,
+  "verdict": "GO_AND_INDUSTRIAL_E2E",
+  "selection": {
+    "n_gold": 1,
+    "n_silver": 2,
+    "n_catalog": 189,
+    "gold_codigos": [
+      "2024040053"
+    ]
+  },
+  "wfs_cache_years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "live_wfs": {
+    "attempted": false
+  },
+  "packs": [
+    {
+      "pack_id": "and_2024040053_20240606",
+      "path": "outputs\\open_if\\and_2024040053_20240606",
+      "layers": {
+        "rediam_perimeter_present": true,
+        "pack_manifest": true,
+        "metrics_o2": true,
+        "scorecard_go_or_partial": true,
+        "map_html": true,
+        "provenance_attribution": true,
+        "brief": true,
+        "dnbr_status": true
+      },
+      "honest": {
+        "vp_not_invented_ok": true,
+        "firms_hull_not_official": true,
+        "decision_not_false_go": true
+      },
+      "verdict": "GO_OPEN_AND_O2",
+      "area_rediam_ha": 2169.34,
+      "n_firms": 85,
+      "dnbr_status": "GO",
+      "score": 8,
+      "max_score": 8,
+      "ok": true
+    },
+    {
+      "pack_id": "and_2024140035_20240712",
+      "path": "outputs\\open_if\\and_2024140035_20240712",
+      "layers": {
+        "rediam_perimeter_present": true,
+        "pack_manifest": true,
+        "metrics_o2": true,
+        "scorecard_go_or_partial": true,
+        "map_html": true,
+        "provenance_attribution": true,
+        "brief": true,
+        "dnbr_status": true
+      },
+      "honest": {
+        "vp_not_invented_ok": true,
+        "firms_hull_not_official": true,
+        "decision_not_false_go": true
+      },
+      "verdict": "PARTIAL",
+      "area_rediam_ha": 2095.86,
+      "n_firms": 0,
+      "dnbr_status": "SKIP",
+      "score": 8,
+      "max_score": 8,
+      "ok": true
+    },
+    {
+      "pack_id": "and_iiff2025040059_20250828",
+      "path": "outputs\\open_if\\and_iiff2025040059_20250828",
+      "layers": {
+        "rediam_perimeter_present": true,
+        "pack_manifest": true,
+        "metrics_o2": true,
+        "scorecard_go_or_partial": true,
+        "map_html": true,
+        "provenance_attribution": true,
+        "brief": true,
+        "dnbr_status": true
+      },
+      "honest": {
+        "vp_not_invented_ok": true,
+        "firms_hull_not_official": true,
+        "decision_not_false_go": true
+      },
+      "verdict": "PARTIAL",
+      "area_rediam_ha": 909.99,
+      "n_firms": 0,
+      "dnbr_status": "SKIP",
+      "score": 8,
+      "max_score": 8,
+      "ok": true
+    }
+  ],
+  "n_packs": 3,
+  "layer_status": {
+    "rediam_perimeter_present": true,
+    "inventory_catalog": true,
+    "gold_selection": true,
+    "pack_manifest": true,
+    "metrics_o2": true,
+    "scorecard_go_or_partial": true,
+    "map_html": true,
+    "provenance_attribution": true,
+    "pytest_and_smoke": true,
+    "honest_gates": true
+  },
+  "layers_pass": 10,
+  "layers_total": 10,
+  "finished_at_utc": "2026-07-22T08:44:29.449964+00:00",
+  "gold_pack": {
+    "pack_id": "and_2024040053_20240606",
+    "path": "outputs\\open_if\\and_2024040053_20240606",
+    "layers": {
+      "rediam_perimeter_present": true,
+      "pack_manifest": true,
+      "metrics_o2": true,
+      "scorecard_go_or_partial": true,
+      "map_html": true,
+      "provenance_attribution": true,
+      "brief": true,
+      "dnbr_status": true
+    },
+    "honest": {
+      "vp_not_invented_ok": true,
+      "firms_hull_not_official": true,
+      "decision_not_false_go": true
+    },
+    "verdict": "GO_OPEN_AND_O2",
+    "area_rediam_ha": 2169.34,
+    "n_firms": 85,
+    "dnbr_status": "GO",
+    "score": 8,
+    "max_score": 8,
+    "ok": true
+  }
+}

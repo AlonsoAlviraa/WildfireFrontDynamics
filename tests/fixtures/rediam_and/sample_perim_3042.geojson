@@ -1,0 +1,128 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "CODIGO": "TEST2024070001",
+        "FECHA_INC": "20240715",
+        "Municipio": "Andujar",
+        "Provincia": "Jaen",
+        "SUP_ARBOLA": 200.0,
+        "SUP_MATORR": 250.0,
+        "SUP_PASTIZ": 50.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              381118.0,
+              4213882.0
+            ],
+            [
+              381118.0,
+              4216118.0
+            ],
+            [
+              378882.0,
+              4216118.0
+            ],
+            [
+              378882.0,
+              4213882.0
+            ],
+            [
+              381118.0,
+              4213882.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CODIGO": "TEST2024070002",
+        "FECHA_INC": "20240801",
+        "Municipio": "Montoro",
+        "Provincia": "Cordoba",
+        "SUP_ARBOLA": 30.0,
+        "SUP_MATORR": 40.0,
+        "SUP_PASTIZ": 10.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              385447.0,
+              4216553.0
+            ],
+            [
+              385447.0,
+              4217447.0
+            ],
+            [
+              384553.0,
+              4217447.0
+            ],
+            [
+              384553.0,
+              4216553.0
+            ],
+            [
+              385447.0,
+              4216553.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "CODIGO": "TEST2023080003",
+        "FECHA_INC": "20230820",
+        "Municipio": "Alajar",
+        "Provincia": "Huelva",
+        "SUP_ARBOLA": 500.0,
+        "SUP_MATORR": 500.0,
+        "SUP_PASTIZ": 200.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              373732.0,
+              4210268.0
+            ],
+            [
+              373732.0,
+              4213732.0
+            ],
+            [
+              370268.0,
+              4213732.0
+            ],
+            [
+              370268.0,
+              4210268.0
+            ],
+            [
+              373732.0,
+              4210268.0
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "source": "synthetic_fixture",
+    "crs_native": "EPSG:3042",
+    "attribution": "Fuente: REDIAM \u2014 Junta de Andaluc\u00eda (fixture for CI; not live data)",
+    "note": "Synthetic polygons for offline tests only"
+  }
+}

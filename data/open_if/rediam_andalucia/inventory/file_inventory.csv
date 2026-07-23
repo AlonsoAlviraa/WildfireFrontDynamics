@@ -1,0 +1,5 @@
+year,path,is_smoke,ok,n_features,bytes,sha256,cached,fetched_at_utc
+2022,data/open_if/rediam_andalucia/wfs_cache/2022/perim_incendios_2022.geojson,False,True,58,1598990,,True,
+2023,data/open_if/rediam_andalucia/wfs_cache/2023/perim_incendios_2023.geojson,False,True,40,81522326,,True,
+2024,data/open_if/rediam_andalucia/wfs_cache/2024/perim_incendios_2024.geojson,False,True,38,6497311,,True,
+2025,data/open_if/rediam_andalucia/wfs_cache/2025/perim_incendios_2025.geojson,False,True,53,636760,,True,

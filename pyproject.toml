@@ -63,6 +63,7 @@ pythonpath = ["."]
 addopts = "-q"
 markers = [
     "requires_weights: needs local .pt checkpoints under models/ (gitignored; see CONTRIBUTING)",
+    "slow: high-volume property / Monte Carlo grids (nightly; excluded from default CI with -m 'not slow')",
 ]
 
 # Coverage gate: start modest (~74% observed); raise gradually. CI also passes
@@ -96,7 +97,6 @@ ignore = [
 "scripts/process_one_fire.py" = ["E402"]  # sys.path manipulation before imports
 "scripts/generate_semireal_candidate.py" = ["E402"]
 "scripts/run_data_validation_sprint.py" = ["E402"]
-"scripts/smoke_test_finetune.py" = ["E402"]
 "scripts/verify_data_validation_milestone.py" = ["E402"]
 "scripts/audit_dataset_candidate.py" = ["E402"]
 "scripts/generate_geotiff_fixture.py" = ["E402"]

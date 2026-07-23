@@ -1,0 +1,101 @@
+{
+  "event_id": "guadalajara_la_mierla_20260717",
+  "name": "La Mierla / Sierra Norte de Guadalajara",
+  "ccaa": "Castilla-La Mancha",
+  "province": "Guadalajara",
+  "status": "pending_external",
+  "priority_wfd": "highest_of_july_2026_spain_megafires",
+  "scraped_at_utc": "2026-07-21T10:40:00+00:00",
+  "timeline": {
+    "start_local": "2026-07-16T13:55:00+02:00",
+    "start_source": "press citing COR/Infocam detection",
+    "active_as_of_utc": "2026-07-21"
+  },
+  "metrics_open_sources": {
+    "ha_reported": [
+      {"value": 26000, "as_of": "2026-07-20", "source": "elpais.com, euronews", "confidence": "provisional_press"},
+      {"value": 29000, "as_of": "2026-07-21", "source": "europapress.es / local press via X", "confidence": "provisional_press"}
+    ],
+    "perimeter_km_reported": [
+      {"value": 120, "as_of": "2026-07-20", "source": "elpais.com", "confidence": "provisional_press"}
+    ],
+    "evacuated_people_reported": [
+      {"value": 1200, "as_of": "2026-07-20", "source": "elpais.com", "confidence": "provisional_press"}
+    ],
+    "evacuated_municipalities_reported": [
+      {"value": 33, "as_of": "2026-07-20", "source": "elpais citing Infocam X", "confidence": "provisional_press"},
+      {"value": 34, "as_of": "2026-07-21", "source": "guardiacivil X", "confidence": "official_social"}
+    ],
+    "confined_municipalities_reported": [
+      {"value": 14, "as_of": "2026-07-21", "source": "guardiacivil X", "confidence": "official_social"}
+    ],
+    "civil_protection_level": [
+      {"value": 2, "as_of": "2026-07-21", "source": "Plan_INFOCAM / Guardia Civil X", "confidence": "official_social"}
+    ],
+    "pma": "Tamajón",
+    "cost_eur_reported": 50000000,
+    "cost_source": "García-Page via elpais.com 2026-07-20"
+  },
+  "firms_nrt": {
+    "path_geojson": "outputs/firms/guadalajara_la_mierla_20260717/firms_hotspots_wgs84.geojson",
+    "path_csv": "outputs/firms/guadalajara_la_mierla_20260717/firms_viirs_nrt_24h_filtered.csv",
+    "path_summary": "outputs/firms/guadalajara_la_mierla_20260717/firms_summary.json",
+    "n_hotspots": 595,
+    "acq_dates": ["2026-07-20", "2026-07-21"],
+    "bbox_filter": {"lat_min": 40.7, "lat_max": 41.4, "lon_min": -3.4, "lon_max": -2.7},
+    "extent_observed": {
+      "lat_min": 40.98004,
+      "lat_max": 41.2335,
+      "lon_min": -3.18936,
+      "lon_max": -2.91188
+    },
+    "frp_mw": {"mean": 22.52, "max": 429.14, "sum": 13401.7}
+  },
+  "sources": [
+    {
+      "type": "press",
+      "title": "El País 2026-07-20",
+      "url": "https://elpais.com/espana/2026-07-20/las-llamas-no-dan-tregua-en-la-mierla-32-pueblos-evacuados-y-26000-hectareas-afectadas.html"
+    },
+    {
+      "type": "press",
+      "title": "Euronews 2026-07-20",
+      "url": "https://es.euronews.com/my-europe/2026/07/20/el-incendio-de-la-mierla-arrasa-ya-26000-hectareas-y-obliga-a-evacuar-a-1200-personas"
+    },
+    {
+      "type": "press",
+      "title": "Europa Press 2026-07-21 ~29k ha",
+      "url": "https://www.europapress.es/castilla-lamancha/noticia-sucesos-incendio-mierla-guadalajara-frena-avance-soria-afecta-ya-29000-hectareas-20260721105632.html"
+    },
+    {
+      "type": "x_official",
+      "handle": "@guardiacivil",
+      "post_id": "2079482729423315183",
+      "note": "34 municipios evacuados, 14 confinados; Orés nivel 1 realojo"
+    },
+    {
+      "type": "x_official",
+      "handle": "@Plan_INFOCAM",
+      "post_id": "2079512599058592198",
+      "note": "Nivel 2 vs 3 explicación PMA"
+    },
+    {
+      "type": "satellite",
+      "name": "NASA FIRMS NOAA-20 VIIRS C2 Europe 24h",
+      "url": "https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-20-viirs-c2/csv/J1_VIIRS_C2_Europe_24h.csv"
+    }
+  ],
+  "wfd_tracks": {
+    "open_firms_overlay": "ready",
+    "open_dnbr_stac": "pending_clear_sky",
+    "cems_emsr": "watch_portal",
+    "lwir_incident_ros": "blocked_no_thermal_drop",
+    "anchor_o1_confirmed": "blocked_pending_infocam"
+  },
+  "disclaimers": [
+    "Press ha/evacuations are provisional — not official EGIF/INFOCAM anchors.",
+    "FIRMS is ~375 m hotspot points, not a fire-front perimeter and not drone ROS.",
+    "Do not set status=confirmed without official Vp/ha.",
+    "Do not use political investigation claims in emergency products."
+  ]
+}
