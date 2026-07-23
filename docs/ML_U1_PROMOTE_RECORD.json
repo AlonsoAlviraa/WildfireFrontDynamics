@@ -1,0 +1,103 @@
+{
+  "schema": "ml_u1_promote_record_v1",
+  "created_utc": "2026-07-23T18:01:12.297211+00:00",
+  "product_id": "clm_ensemble_v34",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "scorecard_path": "outputs/ml_eval/scorecards/ml_scorecard_u1_test.json",
+  "u1_eval_split": "test",
+  "calibrator_fit_split": "val",
+  "gates_snapshot": {
+    "u1_test_honest": true,
+    "u1_val_lab_pass": false,
+    "u1_val_optimistic": false,
+    "U1a": true,
+    "U1b": true,
+    "allow_ml_live_in_fusion_recommended": true,
+    "ml_product_go": false
+  },
+  "primary_eval": {
+    "model_iou": 0.8568865373678947,
+    "n_patches": 200,
+    "model_iou_split": "test",
+    "model_iou_source": "eval_split_mean"
+  },
+  "uncertainty": {
+    "ece_patch_conf": 0.15280955026564416,
+    "selective_iou_at_80pct_coverage": 0.903428533834858,
+    "selective_iou_random_baseline_80": 0.8566711211273182,
+    "beats_random_selective": true,
+    "delta_vs_random": 0.04675741270753975,
+    "overconfidence_gap": -0.15280955026564413,
+    "mean_confidence": 0.7821904497343559,
+    "n_patches": 200,
+    "tau_iou": 0.5,
+    "coverage": 0.8,
+    "abstain_rate": 0.0
+  },
+  "nested_cv": {
+    "k": 5,
+    "mean_ece": 0.05810209704264652,
+    "nested_val_ece_mean": 0.05810209704264652,
+    "nested_val_ece_std": 0.035882015652798485,
+    "nested_logistic_ece_mean": 0.05810209704264652,
+    "mean_u1a": 1.0,
+    "mean_u1b": 1.0,
+    "recommended_l2": 0.05,
+    "second_stage": "platt",
+    "second_stage_in_nested_scoring": false,
+    "seed": 42,
+    "n_patches": 390,
+    "mode": "kfold",
+    "honesty": "nested_val_ece_mean is logistic-only ECE on outer folds (outer never used for that fold's logistic fit; second_stage not fit on outer). Platt/temperature is fit only post-nested on a VAL outer holdout for the final calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+  },
+  "human_checklist": [
+    "Scorecard schema_validation.pass == true",
+    "gates.u1_test_honest == true (U1 on TEST with frozen VAL-fit calibrator)",
+    "allow_ml_live_in_fusion_recommended == true",
+    "Scorecard is real holdout eval (not offline/synthetic) unless --allow-lab-synthetic",
+    "primary.model_iou is eval TEST mean (not unlabeled catalog 0.8963)",
+    "calibrator_fit_split == val; never fit on TEST",
+    "Dual product: not ROS, not Tobarra ops claim, not REDIAM O2 as ML IoU",
+    "field_ops.allow_ml_live_in_fusion remains false",
+    "research_open live fusion is experimental (lab claim surface, not tactical)",
+    "Human owner reviewed fail_cases / ECE / selective curves / nested_cv if present"
+  ],
+  "checklist_status": "policy_applied_research_open_pending_signoff",
+  "allow_lab_synthetic": false,
+  "policy": {
+    "apply_policy_requested": true,
+    "policy_applied": true,
+    "profile_if_applied": "research_open",
+    "field_ops_always_false": true,
+    "research_open_experimental": true,
+    "note": "Only research_open.allow_ml_live_in_fusion may be set true (experimental lab fusion). field_ops stays false forever from this script."
+  },
+  "honesty_notes": [
+    "Dual product: ML mask/confidence \u2260 ops ROS (front_dynamics_v1).",
+    "Not a rate-of-spread (ROS) product; never invent tactical Vp from ML IoU.",
+    "Not Tobarra ops ROS; not REDIAM O2 perimeter truth for next-day IoU.",
+    "Catalog TEST IoU 0.8963 is holdout research quality under provenance only.",
+    "Calibrator fit is VAL-only; honest fusion gate is U1 on TEST with frozen cal.",
+    "ml_product_go never auto-flips; promote is a separate human-gated script.",
+    "allow_ml_live_in_fusion_recommended requires u1_test_honest, not VAL-only lab pass.",
+    "research_open.allow_ml_live_in_fusion is experimental lab fusion only \u2014 not field_ops, not tactical dispatch, not ROS. Dual-product honesty applies."
+  ],
+  "artifacts_local_only": [
+    "models/**/*.pt (gitignored weights)",
+    "models/clm_ensemble/uncertainty_calibration_v1.json (operator artifact; often gitignored)",
+    "artifacts/clm_ndws_patches/** (holdout NPZ)",
+    "outputs/ml_eval/scorecards/* (runtime scorecards)"
+  ],
+  "artifacts_in_git": [
+    "scripts/eval_ml_uncertainty_u1.py",
+    "scripts/promote_ml_live_fusion.py",
+    "scripts/ml_scorecard.py",
+    "scripts/fit_ml_uncertainty_calibration.py",
+    "wildfire_front/ml/u1_eval.py",
+    "wildfire_front/ml/nested_cv.py",
+    "docs/ML_PRODUCT_SCORECARD.json (lab claim surface after eligible promote)",
+    "docs/ML_U1_PROMOTE_RECORD.json",
+    "tests/fixtures/ml/uncertainty_calibrator_v1.json (CI only)",
+    "config/decision_policies.json (policy flip only with --apply-policy)"
+  ]
+}

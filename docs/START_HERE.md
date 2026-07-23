@@ -46,12 +46,14 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths).
 3. **Fusion live weight stays OFF** until **U1 on holdout TEST** with that **frozen** calibrator (`gates.u1_test_honest` → `allow_ml_live_in_fusion_recommended`). VAL-only U1 is a **lab** diagnostic (optimistic if same-split as fit) and **does not** promote fusion. `field_ops` never auto-enables ML live fusion.
 4. Dual product: ML mask product ≠ ops `front_dynamics_v1`. Promote checklist: `scripts/promote_ml_live_fusion.py` (never flips policy without `--apply-policy`, and only `research_open`).
+5. **Lab claim surface** (not tactical): `docs/ML_PRODUCT_SCORECARD.json` after honest TEST promote — research quality only; no ROS / no field_ops.
 
 ## Documentos clave
 
 | Doc | Para qué |
 |------|----------|
 | `docs/PORTAL.html` | **Ver todo** |
+| `docs/ML_PRODUCT_SCORECARD.json` | **Lab claim surface** (ML product; not tactical) |
 | `docs/START_HERE.md` | Este resumen |
 | `docs/ONEPAGER_COMERCIAL_ES.md` | Venta |
 | **`docs/funding/README.md`** | **Sin empresa → partners y ayudas UE/ES (playbook)** |

@@ -54,7 +54,7 @@
       "ml_live_max_weight": 0.35,
       "ml_live_abstain_below": 0.25,
       "ml_live_veto_on_abstain": false,
-      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order. | allow_ml_live_in_fusion enabled after U1 TEST honest promote (2026-07-23)."
+      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order. | allow_ml_live_in_fusion enabled after U1 TEST honest promote (2026-07-23). | EXPERIMENTAL research_open live fusion only \u2014 not field_ops, not tactical."
     },
     "demo": {
       "id": "demo",

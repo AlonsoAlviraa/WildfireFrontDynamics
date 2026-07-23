@@ -131,7 +131,12 @@ def logistic_sigmoid(z: float) -> float:
 
 @dataclass
 class LogisticCalibrator:
-    """Head A: P(IoU >= tau | x) from diagnostics features. method=logistic only."""
+    """Head A: P(IoU >= tau | x) from diagnostics features. method=logistic only.
+
+    Optional post-hoc calibration (VAL outer only / nested):
+    * ``temperature``: p = sigmoid(logit / T)  (T=1 → no-op)
+    * ``platt_a``, ``platt_b``: p = sigmoid(a * logit + b) when platt enabled
+    """
 
     weights: np.ndarray  # shape (n_features + 1,) bias last
     feature_names: tuple[str, ...] = HEAD_A_FEATURE_NAMES
@@ -142,15 +147,41 @@ class LogisticCalibrator:
     abstain_threshold: float = DEFAULT_ABSTAIN_THRESHOLD
     # Research-only: allow ad-hoc linear heuristic when weights wrong/empty.
     allow_identity_heuristic: bool = False
+    temperature: float = 1.0
+    platt_a: float | None = None
+    platt_b: float | None = None
 
     def __post_init__(self) -> None:
         if self.method != "logistic":
             raise ValueError(f"only method='logistic' supported in v1, got {self.method!r}")
         self.weights = np.asarray(self.weights, dtype=np.float64).ravel()
+        self.temperature = float(self.temperature) if self.temperature is not None else 1.0
+        if self.temperature <= 0:
+            raise ValueError(f"temperature must be > 0, got {self.temperature}")
 
     @property
     def is_identity(self) -> bool:
         return self.weights.size == 0
+
+    @property
+    def has_platt(self) -> bool:
+        return self.platt_a is not None and self.platt_b is not None
+
+    def logit_from_features(self, x: np.ndarray) -> float:
+        """Raw logistic logit from feature vector (no temperature/Platt)."""
+        x = np.asarray(x, dtype=np.float64).ravel()
+        if self.weights.size != x.size + 1:
+            raise ValueError(
+                f"calibrator weight length {self.weights.size} != n_features+1={x.size + 1}"
+            )
+        return float(np.dot(self.weights[:-1], x) + self.weights[-1])
+
+    def _apply_posthoc(self, z: float) -> float:
+        if self.has_platt:
+            z = float(self.platt_a) * z + float(self.platt_b)
+        elif abs(self.temperature - 1.0) > 1e-12:
+            z = z / self.temperature
+        return float(logistic_sigmoid(z))
 
     def predict_proba(self, diag: dict[str, float]) -> float:
         x = features_from_diagnostics(diag)
@@ -186,11 +217,52 @@ class LogisticCalibrator:
                 "refusing silent heuristic (set allow_identity_heuristic=True for research only)"
             )
         z = float(np.dot(self.weights[:-1], x) + self.weights[-1])
-        return float(logistic_sigmoid(z))
+        return self._apply_posthoc(z)
+
+    def with_temperature(self, temperature: float) -> "LogisticCalibrator":
+        """Copy with temperature scaling (clears Platt)."""
+        return LogisticCalibrator(
+            weights=self.weights.copy(),
+            feature_names=self.feature_names,
+            method=self.method,
+            calibrator_id=self.calibrator_id,
+            tau_iou=self.tau_iou,
+            fit_split=self.fit_split,
+            abstain_threshold=self.abstain_threshold,
+            allow_identity_heuristic=self.allow_identity_heuristic,
+            temperature=float(temperature),
+            platt_a=None,
+            platt_b=None,
+        )
+
+    def with_platt(self, a: float, b: float) -> "LogisticCalibrator":
+        """Copy with Platt scaling on logit (temperature ignored when Platt set)."""
+        return LogisticCalibrator(
+            weights=self.weights.copy(),
+            feature_names=self.feature_names,
+            method=self.method,
+            calibrator_id=self.calibrator_id,
+            tau_iou=self.tau_iou,
+            fit_split=self.fit_split,
+            abstain_threshold=self.abstain_threshold,
+            allow_identity_heuristic=self.allow_identity_heuristic,
+            temperature=1.0,
+            platt_a=float(a),
+            platt_b=float(b),
+        )
 
     def to_dict(self) -> dict[str, Any]:
         coef = self.weights[:-1].tolist() if self.weights.size else []
         intercept = float(self.weights[-1]) if self.weights.size else 0.0
+        params: dict[str, Any] = {
+            "coef": coef,
+            "intercept": intercept,
+        }
+        if abs(self.temperature - 1.0) > 1e-12:
+            params["temperature"] = float(self.temperature)
+        if self.has_platt:
+            params["platt_a"] = float(self.platt_a)  # type: ignore[arg-type]
+            params["platt_b"] = float(self.platt_b)  # type: ignore[arg-type]
         return {
             "schema": CALIBRATION_SCHEMA,
             "method": "logistic",
@@ -206,10 +278,10 @@ class LogisticCalibrator:
                 "tau": self.tau_iou,
                 "mask_threshold": 0.5,
             },
-            "params": {
-                "coef": coef,
-                "intercept": intercept,
-            },
+            "params": params,
+            "temperature": float(self.temperature),
+            "platt_a": float(self.platt_a) if self.platt_a is not None else None,
+            "platt_b": float(self.platt_b) if self.platt_b is not None else None,
             "abstain_threshold": float(self.abstain_threshold),
         }
 
@@ -224,8 +296,8 @@ class LogisticCalibrator:
         else:
             feature_names = HEAD_A_FEATURE_NAMES
         weights_raw = data.get("weights")
+        params = data.get("params") if isinstance(data.get("params"), dict) else {}
         if weights_raw is None or (isinstance(weights_raw, (list, tuple)) and len(weights_raw) == 0):
-            params = data.get("params") if isinstance(data.get("params"), dict) else {}
             coef = params.get("coef") if params else None
             intercept = params.get("intercept") if params else None
             if coef is not None:
@@ -235,6 +307,15 @@ class LogisticCalibrator:
         tau = data.get("tau_iou")
         if tau is None and isinstance(data.get("label"), dict):
             tau = data["label"].get("tau")
+        temp = data.get("temperature")
+        if temp is None and params:
+            temp = params.get("temperature")
+        platt_a = data.get("platt_a")
+        platt_b = data.get("platt_b")
+        if platt_a is None and params:
+            platt_a = params.get("platt_a")
+        if platt_b is None and params:
+            platt_b = params.get("platt_b")
         return cls(
             weights=np.asarray(weights_raw or [], dtype=np.float64),
             feature_names=feature_names,
@@ -247,6 +328,9 @@ class LogisticCalibrator:
                 else DEFAULT_ABSTAIN_THRESHOLD
             ),
             allow_identity_heuristic=bool(data.get("allow_identity_heuristic", False)),
+            temperature=float(temp if temp is not None else 1.0),
+            platt_a=float(platt_a) if platt_a is not None else None,
+            platt_b=float(platt_b) if platt_b is not None else None,
         )
 
     @classmethod
@@ -317,20 +401,116 @@ def build_ml_prediction_document(
     return doc
 
 
+def predict_proba_rows(
+    cal: LogisticCalibrator,
+    feature_rows: Sequence[np.ndarray],
+) -> list[float]:
+    """Batch confidences from feature rows (3-D Head A vectors)."""
+    out: list[float] = []
+    for row in feature_rows:
+        x = np.asarray(row, dtype=np.float64).ravel()
+        if cal.is_identity:
+            out.append(0.5)
+            continue
+        if cal.weights.size != x.size + 1:
+            raise ValueError(
+                f"calibrator weight length {cal.weights.size} != n_features+1={x.size + 1}"
+            )
+        z = float(np.dot(cal.weights[:-1], x) + cal.weights[-1])
+        out.append(cal._apply_posthoc(z))
+    return out
+
+
+def fit_temperature_on_logits(
+    logits: Sequence[float],
+    labels: Sequence[int | float | bool],
+    *,
+    n_iter: int = 80,
+    lr: float = 0.2,
+    t_init: float = 1.0,
+    t_min: float = 0.05,
+    t_max: float = 20.0,
+) -> float:
+    """Fit temperature T: p = sigmoid(logit / T) by NLL on outer labels (VAL only)."""
+    z = np.asarray(logits, dtype=np.float64).ravel()
+    y = np.asarray(labels, dtype=np.float64).ravel()
+    if z.size == 0 or z.size != y.size:
+        return 1.0
+    y = (y >= 0.5).astype(np.float64)
+    # Optimize log_T for positivity
+    log_t = float(np.log(max(t_init, t_min)))
+    for _ in range(int(n_iter)):
+        t = float(np.exp(log_t))
+        t = float(np.clip(t, t_min, t_max))
+        zt = z / t
+        p = np.where(
+            zt >= 0,
+            1.0 / (1.0 + np.exp(-zt)),
+            np.exp(zt) / (1.0 + np.exp(zt)),
+        )
+        p = np.clip(p, 1e-6, 1.0 - 1e-6)
+        # dNLL/dT via chain: dlogit/dT = -z/T^2
+        # dNLL/dp * dp/dlogit * dlogit/dT
+        d_nll_dz = p - y
+        d_z_dt = -z / (t * t)
+        grad_t = float(np.mean(d_nll_dz * d_z_dt))
+        # update in log space
+        grad_log_t = grad_t * t
+        log_t -= lr * grad_log_t
+    t_final = float(np.clip(np.exp(log_t), t_min, t_max))
+    return t_final
+
+
+def fit_platt_on_logits(
+    logits: Sequence[float],
+    labels: Sequence[int | float | bool],
+    *,
+    n_iter: int = 200,
+    lr: float = 0.3,
+    l2: float = 1e-3,
+) -> tuple[float, float]:
+    """Fit Platt a,b: p = sigmoid(a * logit + b) by L2-logistic on outer labels."""
+    z = np.asarray(logits, dtype=np.float64).ravel()
+    y = np.asarray(labels, dtype=np.float64).ravel()
+    if z.size == 0 or z.size != y.size:
+        return 1.0, 0.0
+    y = (y >= 0.5).astype(np.float64)
+    a, b = 1.0, 0.0
+    n = float(z.size)
+    for _ in range(int(n_iter)):
+        s = a * z + b
+        p = np.where(
+            s >= 0,
+            1.0 / (1.0 + np.exp(-s)),
+            np.exp(s) / (1.0 + np.exp(s)),
+        )
+        err = p - y
+        grad_a = float((err * z).sum() / n) + l2 * a
+        grad_b = float(err.mean())
+        a -= lr * grad_a
+        b -= lr * grad_b
+    return float(a), float(b)
+
+
 def fit_logistic_calibrator(
     feature_rows: Sequence[np.ndarray],
     labels: Sequence[int | float | bool],
     *,
     split_context: Any = None,
     l2: float = 1e-2,
-    n_iter: int = 200,
+    n_iter: int = 800,
     lr: float = 0.5,
     tau_iou: float = 0.5,
+    class_weight: bool = True,
 ) -> LogisticCalibrator:
-    """Simple L2-regularized logistic regression (no sklearn required).
+    """L2-regularized logistic regression (no sklearn required).
 
     Requires VAL ``SplitContext`` with action fit_uncertainty / calibrate.
     Labels should be 1{IoU >= tau}; values are thresholded at 0.5.
+
+    Improvements vs early v1:
+    * more iterations (default 800)
+    * optional balanced class weights when labels are imbalanced
     """
     from wildfire_front.ml.protocol_rails import (
         ProtocolRailError,
@@ -358,15 +538,33 @@ def fit_logistic_calibrator(
         return LogisticCalibrator.identity()
     y = (y >= 0.5).astype(np.float64)
     n, d = X.shape
+    # Per-sample weights: balanced if class_weight and both classes present
+    if class_weight:
+        n_pos = float(y.sum())
+        n_neg = float(n - n_pos)
+        if n_pos > 0 and n_neg > 0:
+            # sklearn-style balanced: n / (2 * n_c)
+            w_pos = n / (2.0 * n_pos)
+            w_neg = n / (2.0 * n_neg)
+            sw = np.where(y >= 0.5, w_pos, w_neg).astype(np.float64)
+        else:
+            sw = np.ones(n, dtype=np.float64)
+    else:
+        sw = np.ones(n, dtype=np.float64)
+    sw_sum = float(sw.sum()) if sw.sum() > 0 else float(n)
+
     # weights: d features + bias
     w = np.zeros(d + 1, dtype=np.float64)
-    for _ in range(n_iter):
+    # mild adaptive LR decay for stability at high n_iter
+    base_lr = float(lr)
+    for it in range(int(n_iter)):
+        step_lr = base_lr * (0.5 + 0.5 * (1.0 - it / max(int(n_iter), 1)))
         z = X @ w[:-1] + w[-1]
         # stable sigmoid
         p = np.where(z >= 0, 1.0 / (1.0 + np.exp(-z)), np.exp(z) / (1.0 + np.exp(z)))
-        err = p - y
-        grad_w = (X.T @ err) / n + l2 * w[:-1]
-        grad_b = float(err.mean())
-        w[:-1] -= lr * grad_w
-        w[-1] -= lr * grad_b
+        err = (p - y) * sw
+        grad_w = (X.T @ err) / sw_sum + l2 * w[:-1]
+        grad_b = float(err.sum() / sw_sum)
+        w[:-1] -= step_lr * grad_w
+        w[-1] -= step_lr * grad_b
     return LogisticCalibrator(weights=w, tau_iou=tau_iou, fit_split=str(split_context.split))

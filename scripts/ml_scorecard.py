@@ -162,6 +162,7 @@ def build_scorecard(
     require_frozen_calibrator: bool = False,
     u1_eval_split: str | None = None,
     promote_draft: bool = False,
+    nested_cv: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build ml_scorecard_v1 with honest fusion recommendation gates.
 
@@ -369,6 +370,20 @@ def build_scorecard(
             "recommendation_rule": rec.get("recommendation_rule"),
         },
     }
+    # Nested CV provenance (VAL-only honest-within-VAL); never a TEST fit.
+    nested_block = nested_cv
+    if nested_block is None and calibrator_path and Path(calibrator_path).is_file():
+        try:
+            cal_doc = json.loads(Path(calibrator_path).read_text(encoding="utf-8"))
+            if isinstance(cal_doc, dict):
+                nested_block = cal_doc.get("nested_cv") or (
+                    (cal_doc.get("metrics_on_val") or {}).get("nested_cv")
+                )
+        except (OSError, json.JSONDecodeError):
+            nested_block = None
+    if nested_block is not None:
+        doc["provenance"]["nested_cv"] = nested_block
+        doc["nested_cv"] = nested_block
 
     fails = validate_ml_scorecard(doc)
     doc["schema_validation"] = {"pass": len(fails) == 0, "fails": fails}

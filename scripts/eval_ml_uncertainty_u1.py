@@ -210,6 +210,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     cal_fit_split = str(getattr(cal, "fit_split", "val") or "val")
+    nested_cv = None
+    try:
+        cal_raw = json.loads(cal_path.read_text(encoding="utf-8"))
+        if isinstance(cal_raw, dict):
+            nested_cv = cal_raw.get("nested_cv") or (
+                (cal_raw.get("metrics_on_val") or {}).get("nested_cv")
+            )
+    except (OSError, json.JSONDecodeError):
+        nested_cv = None
+
     doc = build_scorecard(
         product_id=args.product,
         split=split,
@@ -225,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
         eval_dir=str(eval_dir.resolve()),
         require_frozen_calibrator=not bool(args.allow_identity),
         u1_eval_split=split,
+        nested_cv=nested_cv if isinstance(nested_cv, dict) else None,
     )
 
     out = Path(args.output)

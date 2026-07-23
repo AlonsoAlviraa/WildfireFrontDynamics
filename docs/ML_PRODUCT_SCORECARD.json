@@ -1,0 +1,146 @@
+{
+  "schema": "ml_scorecard_v1",
+  "product_id": "clm_ensemble_v34",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "split": "test",
+  "action": "scorecard",
+  "calibrator_fit_split": "val",
+  "u1_eval_split": "test",
+  "tuning": {
+    "mix_split": "val",
+    "temperature_split": "val",
+    "uncertainty_calibration_split": "val"
+  },
+  "primary": {
+    "model_iou": 0.8568865373678947,
+    "n_patches": 200,
+    "model_iou_split": "test",
+    "model_iou_source": "eval_split_mean"
+  },
+  "uncertainty": {
+    "ece_patch_conf": 0.15280955026564416,
+    "selective_iou_at_80pct_coverage": 0.903428533834858,
+    "selective_iou_random_baseline_80": 0.8566711211273182,
+    "beats_random_selective": true,
+    "delta_vs_random": 0.04675741270753975,
+    "overconfidence_gap": -0.15280955026564413,
+    "mean_confidence": 0.7821904497343559,
+    "n_patches": 200,
+    "tau_iou": 0.5,
+    "coverage": 0.8,
+    "abstain_rate": 0.0
+  },
+  "gates": {
+    "U1a_selective_ge_full_minus_eps": true,
+    "U1_selective_beats_random": true,
+    "U1b_selective_beats_random": true,
+    "u1_val_passed": false,
+    "u1_val_lab_pass": false,
+    "u1_val_optimistic": false,
+    "u1_test_honest": true,
+    "ml_product_go": false,
+    "allow_ml_live_in_fusion_recommended": true,
+    "reasons": [],
+    "promote_draft": true,
+    "promote_eligible": true
+  },
+  "allow_ml_live_in_fusion_recommended": true,
+  "provenance": {
+    "offline": false,
+    "synthetic_mode": null,
+    "calibrator_path": "models\\clm_ensemble\\uncertainty_calibration_v1.json",
+    "calibrator_fit_split": "val",
+    "u1_eval_split": "test",
+    "eval_dir": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\artifacts\\clm_ndws_patches\\holdout_v1\\test",
+    "frozen_calibrator": true,
+    "identity_calibrator": false,
+    "require_frozen_calibrator": true,
+    "promote_draft": true,
+    "catalog_holdout_test_reference": {
+      "test_iou": 0.8963,
+      "copy_baseline_iou": 0.6418,
+      "improvement_vs_copy_iou": 0.2545,
+      "model_iou_growth": 0.9071,
+      "product_id": "clm_ensemble_v34",
+      "protocol": "clm_holdout_test_seed42_v1",
+      "note": "Published CLM holdout TEST metrics from manifest. Do not treat as U1 eval mean IoU or live fire certainty."
+    },
+    "u1_detail": {
+      "selective_iou": 0.903428533834858,
+      "shuffle_selective_iou_mean": 0.8566711211273182,
+      "beats_random": true,
+      "margin": 0.01,
+      "null_kind": "shuffle_conf",
+      "delta_vs_random": 0.04675741270753975
+    },
+    "u1a_detail": {
+      "u1a_pass": true,
+      "selective_iou": 0.903428533834858,
+      "full_coverage_mean_iou": 0.8568865373678947,
+      "eps": 0.01,
+      "delta_vs_full": 0.04654199646696333
+    },
+    "honesty_notes": [
+      "Dual product: ML mask/confidence \u2260 ops ROS (front_dynamics_v1).",
+      "Not a rate-of-spread (ROS) product; never invent tactical Vp from ML IoU.",
+      "Not Tobarra ops ROS; not REDIAM O2 perimeter truth for next-day IoU.",
+      "Catalog TEST IoU 0.8963 is holdout research quality under provenance only.",
+      "Calibrator fit is VAL-only; honest fusion gate is U1 on TEST with frozen cal.",
+      "ml_product_go never auto-flips; promote is a separate human-gated script.",
+      "allow_ml_live_in_fusion_recommended requires u1_test_honest, not VAL-only lab pass.",
+      "research_open.allow_ml_live_in_fusion is experimental lab fusion only \u2014 not field_ops, not tactical dispatch, not ROS. Dual-product honesty applies."
+    ],
+    "note": "Production fusion weight OFF until human promote after u1_test_honest. CLI u1_verdict is not ml_product_go (always false until promote script). primary.model_iou is eval-split mean when patches provided; catalog 0.8963 is provenance.catalog_holdout_test_reference only. No ROS fields (dual-product honesty). Not Tobarra / not REDIAM O2.",
+    "recommendation_rule": "recommended true only if U1 pass on TEST with frozen VAL-fit calibrator",
+    "nested_cv": {
+      "k": 5,
+      "mean_ece": 0.05810209704264652,
+      "nested_val_ece_mean": 0.05810209704264652,
+      "nested_val_ece_std": 0.035882015652798485,
+      "nested_logistic_ece_mean": 0.05810209704264652,
+      "mean_u1a": 1.0,
+      "mean_u1b": 1.0,
+      "recommended_l2": 0.05,
+      "second_stage": "platt",
+      "second_stage_in_nested_scoring": false,
+      "seed": 42,
+      "n_patches": 390,
+      "mode": "kfold",
+      "honesty": "nested_val_ece_mean is logistic-only ECE on outer folds (outer never used for that fold's logistic fit; second_stage not fit on outer). Platt/temperature is fit only post-nested on a VAL outer holdout for the final calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+    },
+    "promote_record": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/docs/ML_U1_PROMOTE_RECORD.json",
+    "lab_claim_surface": true,
+    "not_tactical": true,
+    "not_ros": true,
+    "research_open_live_fusion": "experimental"
+  },
+  "nested_cv": {
+    "k": 5,
+    "mean_ece": 0.05810209704264652,
+    "nested_val_ece_mean": 0.05810209704264652,
+    "nested_val_ece_std": 0.035882015652798485,
+    "nested_logistic_ece_mean": 0.05810209704264652,
+    "mean_u1a": 1.0,
+    "mean_u1b": 1.0,
+    "recommended_l2": 0.05,
+    "second_stage": "platt",
+    "second_stage_in_nested_scoring": false,
+    "seed": 42,
+    "n_patches": 390,
+    "mode": "kfold",
+    "honesty": "nested_val_ece_mean is logistic-only ECE on outer folds (outer never used for that fold's logistic fit; second_stage not fit on outer). Platt/temperature is fit only post-nested on a VAL outer holdout for the final calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+  },
+  "schema_validation": {
+    "pass": true,
+    "fails": []
+  },
+  "claim_surface": {
+    "kind": "lab_ml_product_scorecard",
+    "not_tactical": true,
+    "not_field_ops": true,
+    "not_ros": true,
+    "research_open_live_fusion": "experimental",
+    "primary_is_test_eval_mean": true,
+    "catalog_reference_separate": true
+  }
+}
