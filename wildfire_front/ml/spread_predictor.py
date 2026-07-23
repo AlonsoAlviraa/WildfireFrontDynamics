@@ -370,6 +370,100 @@ class EnsembleSpreadPredictor:
         thr = self.manifest.threshold if threshold is None else threshold
         return (self.predict(sequence, current_fire) >= thr).astype(np.float32)
 
+    @torch.no_grad()
+    def predict_with_uncertainty(
+        self,
+        sequence: np.ndarray | torch.Tensor,
+        current_fire: np.ndarray | torch.Tensor,
+        *,
+        threshold: float | None = None,
+        calibrator: Any | None = None,
+        abstain_below: float = 0.35,
+        product_id: str | None = None,
+        protocol: str | None = None,
+    ):
+        """Soft-vote prediction + ensemble diagnostics + Head A confidence.
+
+        Temperatures applied once per member (same as ``predict``). Does not
+        double-apply temperature on the mixed growth map.
+
+        Parity with ``predict``: honors ``ensemble_mode`` (mean_prob / mean_abs),
+        decodes ``prev_bin`` with ``manifest.threshold`` always; caller
+        ``threshold`` applies only to the binary mask.
+        """
+        from wildfire_front.ml.uncertainty import (
+            LogisticCalibrator,
+            SpreadPrediction,
+            ensemble_diagnostics,
+        )
+
+        seq_t = self._as_sequence_tensor(sequence)
+        fire_t = self._as_fire_tensor(current_fire)
+        x = prepare_input(seq_t, fire_t)
+        # Decode always uses manifest threshold (parity with predict).
+        thr_decode = float(self.manifest.threshold)
+        thr_binary = thr_decode if threshold is None else float(threshold)
+
+        growth_list: list[torch.Tensor] = []
+        abs_list: list[torch.Tensor] = []
+        temps = list(self.manifest.member_temperatures) if self.manifest.member_temperatures else []
+        if temps and len(temps) != len(self.models):
+            temps = []
+        for mi, model in enumerate(self.models):
+            logits = model_forward(model, x, fire_t, self.manifest.architecture)
+            t = float(temps[mi]) if temps else 1.0
+            growth = torch.sigmoid(logits / t) if abs(t - 1.0) > 1e-9 else torch.sigmoid(logits)
+            growth_list.append(growth)
+            if self.manifest.target_mode == "delta":
+                prev_bin = (fire_t >= thr_decode).float().unsqueeze(1)
+                abs_list.append(torch.clamp(prev_bin + growth, 0.0, 1.0))
+            else:
+                abs_list.append(growth)
+
+        def _mix(stacked: torch.Tensor) -> torch.Tensor:
+            if self.mix_weights is None:
+                return stacked.mean(dim=0)
+            w = torch.tensor(self.mix_weights, device=stacked.device, dtype=stacked.dtype).view(
+                -1, *([1] * (stacked.dim() - 1))
+            )
+            return (stacked * w).sum(dim=0)
+
+        mean_g = _mix(torch.stack(growth_list, dim=0))
+        if self.ensemble_mode == "mean_abs":
+            probs = _mix(torch.stack(abs_list, dim=0))
+        else:
+            if self.manifest.target_mode == "delta":
+                prev_bin = (fire_t >= thr_decode).float().unsqueeze(1)
+                probs = torch.clamp(prev_bin + mean_g, 0.0, 1.0)
+            else:
+                probs = mean_g
+
+        prob_np = probs[0, 0].detach().cpu().numpy()
+        growth_np = mean_g[0, 0].detach().cpu().numpy()
+        # Head A diagnostics on absolute fire probs (not growth-only).
+        members_abs_np = [a[0, 0].detach().cpu().numpy() for a in abs_list]
+        diag = ensemble_diagnostics(members_abs_np, mix_weights=self.mix_weights)
+        diag["mean_growth"] = float(growth_np.mean())
+        cal = calibrator if calibrator is not None else LogisticCalibrator.identity()
+        if not isinstance(cal, LogisticCalibrator):
+            cal = LogisticCalibrator.identity()
+        conf = float(cal.predict_proba(diag))
+        # Identity / unfitted calibrator must not look actionable on product path.
+        abstain = conf < float(abstain_below) or bool(getattr(cal, "is_identity", False))
+        pid = product_id or self.manifest.version or "clm_ensemble"
+        return SpreadPrediction(
+            prob=prob_np,
+            growth_prob=growth_np,
+            binary=(prob_np >= thr_binary).astype(np.float32),
+            confidence=conf,
+            confidence_map=None,
+            abstain=abstain,
+            diagnostics=diag,
+            product_id=str(pid),
+            protocol=protocol,
+            calibrator_id=getattr(cal, "calibrator_id", None),
+        )
+
     @property
     def n_members(self) -> int:
         return len(self.models)

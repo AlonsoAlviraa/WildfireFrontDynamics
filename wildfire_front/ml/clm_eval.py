@@ -264,13 +264,22 @@ def score_mix_from_cache(
     cache: dict[str, Any],
     member_weights: Sequence[float] | None = None,
     *,
+    split_context: "SplitContext",
     threshold: float = 0.5,
     temperatures: Sequence[float] | None = None,
 ) -> dict[str, Any]:
     """Soft-vote growth probs from cache and score NDWS metrics.
 
     Optional per-member ``temperatures`` apply logit/T rescaling before the mix.
+
+    ``split_context`` is **required** (protocol rails): tune_mix / temperatures
+    only on VAL; test/lofo may report only.
     """
+    from wildfire_front.ml.protocol_rails import SplitContext, assert_split_context
+
+    if not isinstance(split_context, SplitContext):
+        raise TypeError("split_context must be a SplitContext instance")
+    assert_split_context(split_context)
     n_m = int(cache["n_members"])
     mix = _normalize_member_weights(n_m, member_weights)
     if mix is None:
@@ -324,13 +333,27 @@ def sweep_mix_threshold_from_cache(
     cache: dict[str, Any],
     mixes: Sequence[Sequence[float]],
     thresholds: Sequence[float] = (0.4, 0.45, 0.5, 0.55, 0.6),
+    *,
+    split_context: "SplitContext",
 ) -> dict[str, Any]:
-    """Exhaustive mix × threshold sweep on a growth cache; returns best by Δ then IoU."""
+    """Exhaustive mix × threshold sweep on a growth cache; returns best by Δ then IoU.
+
+    ``split_context`` is **required** (no silent VAL default on a test cache).
+    Typical selection: ``SplitContext(split="val", action="tune_mix")``.
+    """
+    from wildfire_front.ml.protocol_rails import SplitContext, assert_split_context
+
+    if not isinstance(split_context, SplitContext):
+        raise TypeError("split_context must be a SplitContext instance")
+    assert_split_context(split_context)
+    ctx = split_context
     best: dict[str, Any] | None = None
     rows: list[dict[str, Any]] = []
     for mix in mixes:
         for thr in thresholds:
-            m = score_mix_from_cache(cache, mix, threshold=float(thr))
+            m = score_mix_from_cache(
+                cache, mix, split_context=ctx, threshold=float(thr)
+            )
             row = {
                 "mix": list(m["member_weights"]),
                 "threshold": float(thr),

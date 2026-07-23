@@ -224,17 +224,39 @@ def load_open_metrics_from_pack(
     }
 
 
+def load_ml_live_metrics(
+    value: Mapping[str, Any] | str | Path | None,
+    *,
+    base: Path | None = None,
+    include_repo_root: bool = True,
+) -> dict[str, Any] | None:
+    """Load ml_live_metrics_v1 from inline mapping or allowlisted JSON path."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, Mapping):
+        return dict(value)
+    path = _as_path(value, base=base, include_repo_root=include_repo_root)
+    if path is None or not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def resolve_sources(
     request: Mapping[str, Any],
     *,
     base: Path | None = None,
     include_repo_root: bool = True,
 ) -> dict[str, Any | None]:
-    """Resolve ml/ops/open metrics from request paths or inline dicts."""
+    """Resolve ml/ops/open/ml_live metrics from request paths or inline dicts."""
     base = base or Path.cwd()
     ml_m = request.get("ml_metrics")
     ops_m = request.get("ops_metrics")
     open_m = request.get("open_metrics")
+    ml_live_m = request.get("ml_live_metrics")
     if ml_m is None and request.get("use_ml_v34"):
         # Catalog ML is always repo-local research metadata (not sandboxed).
         ml_m = load_ml_metrics_v34(base=base if include_repo_root else REPO_ROOT)
@@ -250,10 +272,21 @@ def resolve_sources(
             base=base,
             include_repo_root=include_repo_root,
         )
+    if ml_live_m is None:
+        # CLI/HTTP: --ml-prediction path or ml_prediction / ml_live_path keys.
+        for key in ("ml_prediction", "ml_live_path", "ml_live_metrics_path"):
+            if request.get(key):
+                ml_live_m = load_ml_live_metrics(
+                    request.get(key),
+                    base=base,
+                    include_repo_root=include_repo_root,
+                )
+                break
     return {
         "ml_metrics": dict(ml_m) if isinstance(ml_m, Mapping) else None,
         "ops_metrics": dict(ops_m) if isinstance(ops_m, Mapping) else None,
         "open_metrics": dict(open_m) if isinstance(open_m, Mapping) else None,
+        "ml_live_metrics": dict(ml_live_m) if isinstance(ml_live_m, Mapping) else None,
     }
 
 
@@ -390,9 +423,22 @@ def decide_from_request(
             reject_docs=reject_docs_gate,
         )
 
+    # HTTP / untrusted: live is display-only (no client conf fusion / ML-only HOLD).
+    # Trusted CLI/in-process may pass ml_live_trusted=True (default).
+    if channel == "http_api" or trust_client_reliability is False:
+        ml_live_trusted = False
+    else:
+        raw_trust = req.get("ml_live_trusted")
+        if isinstance(raw_trust, bool):
+            ml_live_trusted = raw_trust
+        else:
+            ml_live_trusted = True
+    allow_ml_live_in_fusion = bool(req.get("allow_ml_live_in_fusion", False))
+
     card: DecisionCard = build_decision_card(
         event_id,
         ml_metrics=sources["ml_metrics"],
+        ml_live_metrics=sources.get("ml_live_metrics"),
         ops_metrics=sources["ops_metrics"],
         open_metrics=sources["open_metrics"],
         require_ops_for_go=require_ops,
@@ -403,12 +449,16 @@ def decide_from_request(
         abstention_enforced=abstention_enforced,
         provenance_ok=provenance_ok,
         reliability_gate=reliability_gate,
+        allow_ml_live_in_fusion=allow_ml_live_in_fusion,
+        ml_live_trusted=ml_live_trusted,
         extra_metrics={
             "channel": channel,
             "api_version": API_VERSION,
             "policy_id": policy_id or "default",
             "reliability_trusted_client": accept_client_bools,
             "path_include_repo_root": include_repo_root,
+            "ml_live_trusted": ml_live_trusted,
+            "allow_ml_live_in_fusion": allow_ml_live_in_fusion,
         },
     )
     latency_ms = round((time.perf_counter() - t0) * 1000.0, 3)

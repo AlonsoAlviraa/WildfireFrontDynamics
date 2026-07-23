@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from wildfire_front.ml.clm_eval import _apply_temperature_to_prob, score_mix_from_cache
+from wildfire_front.ml.protocol_rails import SplitContext
 from wildfire_front.ml.spread_predictor import SpreadModelManifest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +43,10 @@ def test_score_mix_from_cache_accepts_temperatures():
         "prev": prev,
         "target": tgt,
     }
-    m = score_mix_from_cache(cache, [0.5, 0.5], threshold=0.5, temperatures=[0.7, 1.3])
+    ctx = SplitContext(split="val", action="report")
+    m = score_mix_from_cache(
+        cache, [0.5, 0.5], split_context=ctx, threshold=0.5, temperatures=[0.7, 1.3]
+    )
     assert m["temperatures"] == [0.7, 1.3]
     assert "model_iou" in m
     assert m["n_patches"] == 1

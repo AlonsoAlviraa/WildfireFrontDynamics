@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from wildfire_front.product.confidence import Decision, build_decision_card
 from wildfire_front.product.decide_service import decide_from_request
 from wildfire_front.product.policy import get_policy, list_policies
@@ -89,3 +91,25 @@ def test_policy_in_audit_and_service():
 def test_get_policy_unknown_falls_back():
     pol = get_policy("does_not_exist_xyz")
     assert pol.id == "default" or "unknown" in (pol.notes or "").lower()
+
+
+def test_policy_catalog_ml_live_fields():
+    """Bug 12: live ML policy fields loaded from catalog with design defaults."""
+    default = get_policy("default")
+    field = get_policy("field_ops")
+    research = get_policy("research_open")
+
+    assert default.allow_ml_live_in_fusion is False
+    assert default.ml_live_max_weight == pytest.approx(0.25)
+    assert default.ml_live_abstain_below == pytest.approx(0.35)
+    assert default.ml_live_veto_on_abstain is False
+
+    assert field.allow_ml_live_in_fusion is False
+    assert field.ml_live_max_weight == pytest.approx(0.20)
+    assert field.ml_live_abstain_below == pytest.approx(0.45)
+    assert field.ml_live_veto_on_abstain is False
+
+    assert research.allow_ml_live_in_fusion is False
+    assert research.ml_live_max_weight == pytest.approx(0.35)
+    assert research.ml_live_abstain_below == pytest.approx(0.25)
+    assert research.ml_live_veto_on_abstain is False

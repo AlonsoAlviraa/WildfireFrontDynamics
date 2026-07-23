@@ -382,7 +382,32 @@ def build_parser() -> argparse.ArgumentParser:
     decide.add_argument(
         "--use-ml-v34",
         action="store_true",
-        help="Include clm_ensemble_v34 manifest metrics",
+        help="Include clm_ensemble_v34 manifest metrics (holdout research quality)",
+    )
+    decide.add_argument(
+        "--ml-prediction",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Path to ml_live_metrics_v1 JSON (live patch reliability for Decision Card)",
+    )
+    decide.add_argument(
+        "--ml-live-metrics",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        dest="ml_live_metrics",
+        help="Alias of --ml-prediction",
+    )
+    decide.add_argument(
+        "--allow-ml-live-in-fusion",
+        action="store_true",
+        help="Allow live ML weight in multi-source fusion (default off until U1)",
+    )
+    decide.add_argument(
+        "--ml-live-untrusted",
+        action="store_true",
+        help="Treat live metrics as display-only (actionable=false, weight=0)",
     )
     decide.add_argument(
         "--require-ops-for-go",
@@ -585,6 +610,9 @@ def main(argv: Sequence[str] | None = None) -> None:
                         )
                 return
 
+            ml_pred = getattr(args, "ml_prediction", None) or getattr(
+                args, "ml_live_metrics", None
+            )
             payload = decide_from_request(
                 {
                     "event_id": args.event_id,
@@ -593,6 +621,11 @@ def main(argv: Sequence[str] | None = None) -> None:
                     "open_pack": str(args.open_pack) if getattr(args, "open_pack", None) else None,
                     "require_ops_for_go": bool(getattr(args, "require_ops_for_go", False)),
                     "policy_id": getattr(args, "policy", None),
+                    "ml_prediction": str(ml_pred) if ml_pred is not None else None,
+                    "allow_ml_live_in_fusion": bool(
+                        getattr(args, "allow_ml_live_in_fusion", False)
+                    ),
+                    "ml_live_trusted": not bool(getattr(args, "ml_live_untrusted", False)),
                     "channel": "cli",
                 },
                 base=Path.cwd(),

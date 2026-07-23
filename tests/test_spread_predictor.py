@@ -85,3 +85,74 @@ class TestSpreadPredictor:
         assert pred.shape == (64, 64)
         assert np.isfinite(pred).all()
         assert pred.min() >= 0.0 and pred.max() <= 1.0
+
+    def test_predict_uncertainty_parity_mean_prob(
+        self, manifest_path: Path, weights_path: Path, tmp_path: Path
+    ):
+        from models.unet_model import ResidualWildfireUNetSmall
+        from wildfire_front.ml.spread_predictor import (
+            EnsembleSpreadPredictor,
+            SpreadModelManifest,
+        )
+
+        w2 = tmp_path / "weights2.pt"
+        torch.save(ResidualWildfireUNetSmall(in_channels=18).state_dict(), w2)
+        manifest = SpreadModelManifest.from_json(manifest_path)
+        ens = EnsembleSpreadPredictor(manifest, [weights_path, w2], ensemble_mode="mean_prob")
+        rng = np.random.default_rng(0)
+        seq = rng.standard_normal((1, 17, 64, 64), dtype=np.float32) * 0.1
+        fire = np.zeros((64, 64), dtype=np.float32)
+        fire[15:30, 15:30] = 1.0
+        pred = ens.predict(seq, fire)
+        unc = ens.predict_with_uncertainty(seq, fire)
+        assert np.allclose(pred, unc.prob, atol=1e-5)
+        assert unc.binary.shape == pred.shape
+        # Head A diagnostics present on abs domain
+        assert "mean_entropy" in unc.diagnostics
+        assert "mean_margin" in unc.diagnostics
+        assert unc.diagnostics["n_members"] == 2.0
+
+    def test_predict_uncertainty_parity_mean_abs(
+        self, manifest_path: Path, weights_path: Path, tmp_path: Path
+    ):
+        from models.unet_model import ResidualWildfireUNetSmall
+        from wildfire_front.ml.spread_predictor import (
+            EnsembleSpreadPredictor,
+            SpreadModelManifest,
+        )
+
+        w2 = tmp_path / "weights2b.pt"
+        torch.save(ResidualWildfireUNetSmall(in_channels=18).state_dict(), w2)
+        manifest = SpreadModelManifest.from_json(manifest_path)
+        ens = EnsembleSpreadPredictor(manifest, [weights_path, w2], ensemble_mode="mean_abs")
+        rng = np.random.default_rng(1)
+        seq = rng.standard_normal((1, 17, 64, 64), dtype=np.float32) * 0.1
+        fire = np.zeros((64, 64), dtype=np.float32)
+        fire[20:40, 20:40] = 1.0
+        pred = ens.predict(seq, fire)
+        unc = ens.predict_with_uncertainty(seq, fire)
+        assert np.allclose(pred, unc.prob, atol=1e-5)
+
+    def test_uncertainty_threshold_only_affects_binary(
+        self, manifest_path: Path, weights_path: Path, tmp_path: Path
+    ):
+        from models.unet_model import ResidualWildfireUNetSmall
+        from wildfire_front.ml.spread_predictor import (
+            EnsembleSpreadPredictor,
+            SpreadModelManifest,
+        )
+
+        w2 = tmp_path / "weights2c.pt"
+        torch.save(ResidualWildfireUNetSmall(in_channels=18).state_dict(), w2)
+        manifest = SpreadModelManifest.from_json(manifest_path)
+        ens = EnsembleSpreadPredictor(manifest, [weights_path, w2], ensemble_mode="mean_prob")
+        rng = np.random.default_rng(2)
+        seq = rng.standard_normal((1, 17, 64, 64), dtype=np.float32) * 0.1
+        fire = np.zeros((64, 64), dtype=np.float32)
+        fire[10:50, 10:50] = 1.0
+        base = ens.predict_with_uncertainty(seq, fire)
+        # Non-manifest threshold must not change absolute prob (decode uses manifest thr)
+        alt = ens.predict_with_uncertainty(seq, fire, threshold=0.9)
+        assert np.allclose(base.prob, alt.prob, atol=1e-5)
+        # Binary may differ when threshold differs
+        assert alt.binary.shape == base.binary.shape

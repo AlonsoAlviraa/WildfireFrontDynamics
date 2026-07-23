@@ -70,20 +70,29 @@ def content_hash(obj: Any) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+# Design §3.3.1 / §3.3.5 — live source id; temporary alias for migration.
+ML_LIVE_SOURCE_ID = "ml_live_reliability"
+ML_LIVE_SOURCE_ALIASES = frozenset({ML_LIVE_SOURCE_ID, "ml_live"})
+ML_LIVE_SCHEMA = "ml_live_metrics_v1"
+
+
 def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     """Score static catalog / holdout ML metrics as research metadata.
 
     Catalog IoU is **not** live fire-spread confidence. Weight is 0 so fusion
     does not treat holdout quality as a phenomenon signal on field incidents.
     ``confidence`` / ``holdout_quality`` remain available for research display
-    and ml-only HOLD policies.
+    and ml-only HOLD policies when the live channel is absent.
+    ``actionable`` is always False — holdout is never an action signal.
     """
     if not metrics:
         return {
-            "id": "ml",
+            "id": "ml_clm_ensemble",
             "available": False,
             "weight": 0.0,
             "confidence": 0.0,
+            "actionable": False,
+            "abstained": False,
             "role": "holdout_quality",
             "source_type": "research_metadata",
         }
@@ -100,6 +109,9 @@ def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
         "weight": 0.0,
         "confidence": conf,
         "holdout_quality": conf,
+        # Research metadata only — ML-only legacy path keys off available + role.
+        "actionable": False,
+        "abstained": False,
         "role": "holdout_quality",
         "source_type": "research_metadata",
         "metrics": {
@@ -109,6 +121,132 @@ def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
             "holdout_quality": conf,
         },
     }
+
+
+_LIVE_DIAG_KEYS = ("mean_entropy", "member_disagreement", "mean_margin")
+
+
+def _has_live_diagnostics(metrics: Mapping[str, Any]) -> bool:
+    return all(metrics.get(k) is not None for k in _LIVE_DIAG_KEYS)
+
+
+def score_ml_live_source(
+    metrics: Mapping[str, Any] | None,
+    *,
+    allow_ml_live_in_fusion: bool = False,
+    ml_live_max_weight: float = 0.25,
+    ml_live_abstain_below: float = 0.35,
+    trusted: bool = True,
+) -> dict[str, Any]:
+    """Score live ML uncertainty metrics (ml_live_metrics_v1).
+
+    Flags are orthogonal (design §3.3.3 A):
+    - ``available``: payload present, schema exact, parseable (incl. untrusted audit)
+    - ``abstained``: model/threshold says refuse
+    - ``actionable``: available, trusted, and not abstained (drives live_ok)
+    - ``weight``: fusion weight only if allow_ml_live_in_fusion, actionable, **and**
+      diagnostic keys present (soft: missing diags → weight 0, still may be actionable)
+
+    Untrusted (``trusted=False``): display-only — available for audit, actionable=false,
+    weight=0. Channel is still present so holdout cannot drive ML-only HOLD.
+
+    When metrics are provided but schema is invalid, the source is still emitted with
+    ``available=False`` so callers can treat the channel as requested (no holdout fallthrough).
+    """
+    base = {
+        "id": ML_LIVE_SOURCE_ID,
+        "role": "live_ml",
+        "source_type": "live_prediction",
+        "channel_requested": True,
+    }
+    if not metrics:
+        return {
+            **base,
+            "available": False,
+            "weight": 0.0,
+            "confidence": 0.0,
+            "actionable": False,
+            "abstained": False,
+            "invalid_schema": False,
+        }
+    schema = str(metrics.get("schema") or "")
+    # Strict schema: exact match only (do not invent / accept confidence-only blobs).
+    if schema != ML_LIVE_SCHEMA:
+        return {
+            **base,
+            "available": False,
+            "weight": 0.0,
+            "confidence": 0.0,
+            "actionable": False,
+            "abstained": False,
+            "invalid_schema": True,
+            "trusted": bool(trusted),
+        }
+    conf = _clip01(float(metrics.get("confidence") or 0.0))
+    payload_abstain = bool(metrics.get("abstain"))
+    abstained = payload_abstain or conf < float(ml_live_abstain_below)
+    has_diags = _has_live_diagnostics(metrics)
+    metrics_block = {
+        "schema": ML_LIVE_SCHEMA,
+        "confidence": conf,
+        "abstain": payload_abstain,
+        "mean_entropy": metrics.get("mean_entropy"),
+        "member_disagreement": metrics.get("member_disagreement"),
+        "mean_margin": metrics.get("mean_margin"),
+        "calibrator_id": metrics.get("calibrator_id"),
+        "product_id": metrics.get("product_id"),
+        "n_members": metrics.get("n_members"),
+        "diagnostics_complete": has_diags,
+    }
+    if not trusted:
+        # Issue 17 / audit #10: display-only — keep payload for audit.
+        return {
+            **base,
+            "available": True,
+            "weight": 0.0,
+            "confidence": conf,
+            "actionable": False,
+            "abstained": bool(abstained),
+            "trusted": False,
+            "invalid_schema": False,
+            "metrics": metrics_block,
+        }
+    actionable = not abstained
+    # Soft diags: fusion weight requires complete diagnostics; ML-only may still use conf.
+    if abstained or not allow_ml_live_in_fusion or not has_diags:
+        weight = 0.0
+    else:
+        weight = min(float(ml_live_max_weight), conf)
+    return {
+        **base,
+        "available": True,
+        "weight": float(weight),
+        "confidence": conf,
+        "actionable": bool(actionable),
+        "abstained": bool(abstained),
+        "trusted": True,
+        "invalid_schema": False,
+        "metrics": metrics_block,
+    }
+
+
+def _source_by_id(sources: Sequence[Mapping[str, Any]], source_id: str) -> Mapping[str, Any] | None:
+    for s in sources:
+        if s.get("id") == source_id:
+            return s
+    return None
+
+
+def _find_live_source(sources: Sequence[Mapping[str, Any]]) -> Mapping[str, Any] | None:
+    """Prefer design id; accept temporary alias ``ml_live``."""
+    for sid in (ML_LIVE_SOURCE_ID, "ml_live"):
+        found = _source_by_id(sources, sid)
+        if found is not None:
+            return found
+    for s in sources:
+        if s.get("id") in ML_LIVE_SOURCE_ALIASES:
+            return s
+    return None
 
 
 def score_ops_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -219,7 +357,17 @@ def decide(
 
     ops_ok = any(s.get("id") == "ops_thermal_front" and s.get("available") for s in sources)
     open_ok = any(s.get("id") == "open_cems_perimeter" and s.get("available") for s in sources)
-    ml_ok = any(s.get("id") == "ml_clm_ensemble" and s.get("available") for s in sources)
+    # Live ML: channel requested (id in sources list) vs available vs actionable (orthogonal).
+    live = _find_live_source(sources)
+    holdout = _source_by_id(sources, "ml_clm_ensemble")
+    # Source present in list means channel was requested (even if schema invalid).
+    live_channel_present = live is not None
+    live_available = bool(live.get("available")) if live_channel_present else False
+    # live_ok = actionable only (NOT weight>0). Untrusted: available but not actionable.
+    live_ok = bool(live.get("actionable")) if live_available else False
+    holdout_ok = bool(holdout and holdout.get("available"))
+    # If live channel was requested, never fall back to holdout for ml_ok (even bad schema).
+    ml_ok = live_ok if live_channel_present else holdout_ok
 
     if confidence_pred < float(pol.abstain_below):
         return Decision.ABSTAIN, reasons + [f"confidence_pred<{pol.abstain_below}"]
@@ -438,6 +586,7 @@ def build_decision_card(
     event_id: str,
     *,
     ml_metrics: Mapping[str, Any] | None = None,
+    ml_live_metrics: Mapping[str, Any] | None = None,
     ops_metrics: Mapping[str, Any] | None = None,
     open_metrics: Mapping[str, Any] | None = None,
     extra_metrics: Mapping[str, Any] | None = None,
@@ -450,6 +599,8 @@ def build_decision_card(
     abstention_enforced: bool | None = None,
     provenance_ok: bool | None = None,
     reliability_gate: Mapping[str, Any] | Path | str | None = None,
+    allow_ml_live_in_fusion: bool = False,
+    ml_live_trusted: bool = True,
 ) -> DecisionCard:
     """Build a Fire Decision Card.
 
@@ -465,28 +616,83 @@ def build_decision_card(
     elif not isinstance(policy, DecisionPolicy):
         policy = get_policy(policy_id or "default")
 
-    sources = [
+    # Thread live policy fields; kwargs can enable fusion (OR with policy).
+    allow_fusion = bool(allow_ml_live_in_fusion) or bool(
+        getattr(policy, "allow_ml_live_in_fusion", False)
+    )
+    ml_live_max_weight = float(getattr(policy, "ml_live_max_weight", 0.25))
+    ml_live_abstain_below = float(getattr(policy, "ml_live_abstain_below", 0.35))
+    ml_live_veto = bool(getattr(policy, "ml_live_veto_on_abstain", False))
+
+    # Pack sources by id only — list order is non-semantic (Issue 16)
+    sources: list[dict[str, Any]] = [
         score_ml_source(ml_metrics),
         score_ops_source(ops_metrics),
         score_open_cems_source(open_metrics),
     ]
+    if ml_live_metrics is not None:
+        sources.append(
+            score_ml_live_source(
+                ml_live_metrics,
+                allow_ml_live_in_fusion=allow_fusion,
+                ml_live_max_weight=ml_live_max_weight,
+                ml_live_abstain_below=ml_live_abstain_below,
+                trusted=ml_live_trusted,
+            )
+        )
     conf, fuse_reasons = fuse_confidence(sources)
-    # ML-only cards: surface holdout quality for research/monitoring display
-    # without claiming live phenomenon confidence from multi-source fusion.
-    if (
-        conf <= 0.0
-        and sources[0].get("available")
-        and not sources[1].get("available")
-        and not sources[2].get("available")
-    ):
-        conf = float(sources[0].get("holdout_quality") or sources[0].get("confidence") or 0.0)
-        fuse_reasons = list(fuse_reasons) + ["ml_holdout_quality_display"]
+
+    # ML-only display: pack by id (never sources[i])
+    ml_holdout = _source_by_id(sources, "ml_clm_ensemble")
+    ml_live = _find_live_source(sources)
+    ops_s = _source_by_id(sources, "ops_thermal_front") or _source_by_id(sources, "ops")
+    open_s = _source_by_id(sources, "open_cems_perimeter") or _source_by_id(sources, "open")
+    ops_av = bool(ops_s and ops_s.get("available"))
+    open_av = bool(open_s and open_s.get("available"))
+
+    # §3.3.4 / §3.3.5: if live channel requested → live conf when actionable else 0;
+    # never fall through to holdout (even when schema invalid / available=False).
+    if conf <= 0.0 and not ops_av and not open_av:
+        if ml_live is not None:
+            if ml_live.get("available") and ml_live.get("actionable"):
+                conf = float(ml_live.get("confidence") or 0.0)
+                fuse_reasons = list(fuse_reasons) + ["ml_live_confidence_display"]
+            else:
+                conf = 0.0
+                if ml_live.get("invalid_schema"):
+                    reason = "ml_live_invalid_schema_conf_zero"
+                elif ml_live.get("trusted") is False:
+                    reason = "ml_live_untrusted_conf_zero"
+                elif ml_live.get("abstained"):
+                    reason = "ml_live_abstained_conf_zero"
+                elif not ml_live.get("available"):
+                    reason = "ml_live_unavailable_conf_zero"
+                else:
+                    reason = "ml_live_not_actionable_conf_zero"
+                fuse_reasons = list(fuse_reasons) + [reason]
+        elif ml_holdout and ml_holdout.get("available"):
+            conf = float(
+                ml_holdout.get("holdout_quality") or ml_holdout.get("confidence") or 0.0
+            )
+            fuse_reasons = list(fuse_reasons) + ["ml_holdout_quality_display"]
     decision, dec_reasons = decide(
         conf,
         sources,
         require_ops_for_go=require_ops_for_go,
         policy=policy,
     )
+
+    # Optional multi-source veto: live abstained + ops/open → GO becomes HOLD (§3.3.3 C).
+    if (
+        ml_live_veto
+        and ml_live is not None
+        and bool(ml_live.get("available"))
+        and bool(ml_live.get("abstained"))
+        and (ops_av or open_av)
+        and decision == Decision.GO
+    ):
+        decision = Decision.HOLD
+        dec_reasons = list(dec_reasons) + ["ml_live:veto_hold"]
 
     # Merge optional external gate report; explicit kwargs win when not None.
     # R3/R4 stay None unless report/kwargs supply them (do not auto-claim verified).
@@ -518,11 +724,15 @@ def build_decision_card(
         abstention_heuristic_ok = _derive_abstention_enforced(decision, conf, sources, policy)
 
     metrics: dict[str, Any] = {
-        "ml": sources[0].get("metrics"),
-        "ops": sources[1].get("metrics"),
-        "open_cems": sources[2].get("metrics"),
+        "ml": (ml_holdout or {}).get("metrics") if ml_holdout else None,
+        "ml_live": (ml_live or {}).get("metrics") if ml_live else None,
+        "ops": (ops_s or {}).get("metrics") if ops_s else None,
+        "open_cems": (open_s or {}).get("metrics") if open_s else None,
         "fused_confidence_pred": conf,
         "policy_id": policy.id,
+        "live_ok": bool(ml_live and ml_live.get("actionable")),
+        "live_available": bool(ml_live and ml_live.get("available")),
+        "allow_ml_live_in_fusion": bool(allow_fusion),
     }
     if extra_metrics:
         metrics["extra"] = dict(extra_metrics)
@@ -534,6 +744,7 @@ def build_decision_card(
         "sources": sources,
         "metrics": {
             "ml": metrics["ml"],
+            "ml_live": metrics["ml_live"],
             "ops": metrics["ops"],
             "open_cems": metrics["open_cems"],
             "fused_confidence_pred": conf,
@@ -546,9 +757,12 @@ def build_decision_card(
         "input_hash": content_hash(
             {
                 "ml": ml_metrics,
+                "ml_live": ml_live_metrics,
                 "ops": ops_metrics,
                 "open": open_metrics,
                 "policy_id": policy.id,
+                "allow_ml_live_in_fusion": allow_fusion,
+                "ml_live_trusted": bool(ml_live_trusted),
             }
         ),
         "output_hash": content_hash(hash_payload),
@@ -565,6 +779,10 @@ def build_decision_card(
             "hold_ml_only_min": policy.hold_ml_only_min,
             "allow_ml_only_hold": policy.allow_ml_only_hold,
             "allow_open_only_hold": policy.allow_open_only_hold,
+            "allow_ml_live_in_fusion": bool(getattr(policy, "allow_ml_live_in_fusion", False)),
+            "ml_live_max_weight": float(getattr(policy, "ml_live_max_weight", 0.25)),
+            "ml_live_abstain_below": float(getattr(policy, "ml_live_abstain_below", 0.35)),
+            "ml_live_veto_on_abstain": bool(getattr(policy, "ml_live_veto_on_abstain", False)),
         },
         # Heuristic only — not a gate-verified R3/R4 claim
         "abstention_heuristic_ok": abstention_heuristic_ok,

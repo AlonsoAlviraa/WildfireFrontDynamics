@@ -28,6 +28,11 @@ class DecisionPolicy:
     allow_ml_only_hold: bool = True
     allow_open_only_hold: bool = True
     min_available_sources: int = 1
+    # Live ML reliability (ML-focus §3.3.2); defaults preserve pre-focus when live absent.
+    allow_ml_live_in_fusion: bool = False
+    ml_live_max_weight: float = 0.25
+    ml_live_abstain_below: float = 0.35
+    ml_live_veto_on_abstain: bool = False
     notes: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,6 +52,10 @@ LEGACY_DEFAULT = DecisionPolicy(
     allow_ml_only_hold=True,
     allow_open_only_hold=True,
     min_available_sources=1,
+    allow_ml_live_in_fusion=False,
+    ml_live_max_weight=0.25,
+    ml_live_abstain_below=0.35,
+    ml_live_veto_on_abstain=False,
     notes="Built-in fallback if catalog missing.",
 )
 

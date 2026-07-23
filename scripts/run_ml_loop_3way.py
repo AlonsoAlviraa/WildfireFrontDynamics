@@ -38,7 +38,14 @@ from wildfire_front.ml.clm_eval import (  # noqa: E402
     score_mix_from_cache,
     sweep_mix_threshold_from_cache,
 )
+from wildfire_front.ml.protocol_rails import SplitContext  # noqa: E402
 from wildfire_front.ml.unet_train import UNetTrainConfig, run_training  # noqa: E402
+
+# Protocol rails: LOFO/test only report; mix/temp selection only on VAL
+_CTX_REPORT_LOFO = SplitContext(split="lofo", action="report")
+_CTX_REPORT_TEST = SplitContext(split="test", action="report")
+_CTX_TUNE_VAL = SplitContext(split="val", action="tune_mix")
+_CTX_TEMP_VAL = SplitContext(split="val", action="tune_temperature")
 
 TRACKS = ("multi_if", "source_mix", "multi_obj")
 HOLDOUT = ROOT / "artifacts" / "clm_ndws_patches" / "holdout_v1"
@@ -413,7 +420,9 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         # diagnostic: mix only at thr=0.5 (fast + comparable to history)
         best = None
         for mix in grid:
-            m = score_mix_from_cache(cache, mix, threshold=0.5)
+            m = score_mix_from_cache(
+                cache, mix, split_context=_CTX_REPORT_LOFO, threshold=0.5
+            )
             row = {
                 "mix": list(m["member_weights"]),
                 "threshold": 0.5,
@@ -437,7 +446,9 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
     # Honest holdout mix+threshold: tune on holdout VAL (LA) only.
     val_dir = HOLDOUT / "val"
     val_cache = collect_member_growth_cache(use, val_dir, max_patches=400)
-    val_sweep = sweep_mix_threshold_from_cache(val_cache, grid, thresholds)
+    val_sweep = sweep_mix_threshold_from_cache(
+        val_cache, grid, thresholds, split_context=_CTX_TUNE_VAL
+    )
     best_val = val_sweep["best"]
     mix = best_val["mix"] if best_val else [1.0 / n] * n
     thr_val = float(best_val["threshold"]) if best_val else 0.5
@@ -463,7 +474,12 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         transfer_mix = [x / s for x in transfer_mix]
         # threshold for transfer: still only from VAL (no test thr leakage)
         thr_transfer = thr_val
-        ht = score_mix_from_cache(test_cache, transfer_mix, threshold=thr_transfer)
+        ht = score_mix_from_cache(
+            test_cache,
+            transfer_mix,
+            split_context=_CTX_REPORT_TEST,
+            threshold=thr_transfer,
+        )
         hold_transfer = {
             k: ht[k]
             for k in (
@@ -477,12 +493,18 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         }
         hold_transfer_thr = thr_transfer
 
-    hold = score_mix_from_cache(test_cache, mix, threshold=thr_val)
-    equal = score_mix_from_cache(test_cache, None, threshold=0.5)
+    hold = score_mix_from_cache(
+        test_cache, mix, split_context=_CTX_REPORT_TEST, threshold=thr_val
+    )
+    equal = score_mix_from_cache(
+        test_cache, None, split_context=_CTX_REPORT_TEST, threshold=0.5
+    )
     # also report transfer at thr=0.5 for continuity with v33
     hold_transfer_05 = None
     if transfer_mix is not None:
-        ht05 = score_mix_from_cache(test_cache, transfer_mix, threshold=0.5)
+        ht05 = score_mix_from_cache(
+            test_cache, transfer_mix, split_context=_CTX_REPORT_TEST, threshold=0.5
+        )
         hold_transfer_05 = {
             k: ht05[k]
             for k in (
@@ -514,7 +536,11 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
     for temps in temp_grid:
         for tm in temp_mix_cands:
             m = score_mix_from_cache(
-                val_cache, tm, threshold=0.5, temperatures=temps
+                val_cache,
+                tm,
+                split_context=_CTX_TEMP_VAL,
+                threshold=0.5,
+                temperatures=temps,
             )
             row = {
                 "mix": list(m["member_weights"]),
@@ -542,6 +568,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         ht = score_mix_from_cache(
             test_cache,
             best_temp["mix"],
+            split_context=_CTX_REPORT_TEST,
             threshold=0.5,
             temperatures=best_temp["temperatures"],
         )
