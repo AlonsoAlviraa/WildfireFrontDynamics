@@ -171,6 +171,73 @@ class SpreadPredictor:
         thr = self.manifest.threshold if threshold is None else threshold
         return (self.predict(sequence, current_fire) >= thr).astype(np.float32)
 
+    @torch.no_grad()
+    def predict_with_uncertainty(
+        self,
+        sequence: np.ndarray | torch.Tensor,
+        current_fire: np.ndarray | torch.Tensor,
+        *,
+        threshold: float | None = None,
+        calibrator: Any | None = None,
+        abstain_below: float | None = None,
+        product_id: str | None = None,
+        protocol: str | None = None,
+    ):
+        """Single-member uncertainty surface (symmetric to ensemble).
+
+        Diagnostics: ``member_disagreement=0``, entropy/margin from absolute fire
+        probability of the sole member (n_members=1).
+
+        ``abstain_below`` defaults to the calibrator artifact threshold
+        (``cal.abstain_threshold``), else 0.35.
+        """
+        from wildfire_front.ml.uncertainty import (
+            DEFAULT_ABSTAIN_THRESHOLD,
+            LogisticCalibrator,
+            SpreadPrediction,
+            ensemble_diagnostics,
+        )
+
+        thr_decode = float(self.manifest.threshold)
+        thr_binary = thr_decode if threshold is None else float(threshold)
+        seq_t = self._as_sequence_tensor(sequence)
+        fire_t = self._as_fire_tensor(current_fire)
+        x = prepare_input(seq_t, fire_t)
+        logits = model_forward(self.model, x, fire_t, self.manifest.architecture)
+        growth = torch.sigmoid(logits)
+        if self.manifest.target_mode == "delta":
+            prev_bin = (fire_t >= thr_decode).float().unsqueeze(1)
+            probs = torch.clamp(prev_bin + growth, 0.0, 1.0)
+        else:
+            probs = growth
+        prob_np = probs[0, 0].detach().cpu().numpy()
+        growth_np = growth[0, 0].detach().cpu().numpy()
+        diag = ensemble_diagnostics([prob_np])
+        diag["mean_growth"] = float(growth_np.mean())
+        cal = calibrator if calibrator is not None else LogisticCalibrator.identity()
+        if not isinstance(cal, LogisticCalibrator):
+            cal = LogisticCalibrator.identity()
+        conf = float(cal.predict_proba(diag))
+        thr_ab = (
+            float(abstain_below)
+            if abstain_below is not None
+            else float(getattr(cal, "abstain_threshold", DEFAULT_ABSTAIN_THRESHOLD))
+        )
+        abstain = conf < thr_ab or bool(getattr(cal, "is_identity", False))
+        pid = product_id or self.manifest.version or "single"
+        return SpreadPrediction(
+            prob=prob_np,
+            growth_prob=growth_np,
+            binary=(prob_np >= thr_binary).astype(np.float32),
+            confidence=conf,
+            confidence_map=None,
+            abstain=abstain,
+            diagnostics=diag,
+            product_id=str(pid),
+            protocol=protocol,
+            calibrator_id=getattr(cal, "calibrator_id", None),
+        )
+
     def _as_sequence_tensor(self, sequence: np.ndarray | torch.Tensor) -> torch.Tensor:
         if isinstance(sequence, torch.Tensor):
             seq = sequence.float()
@@ -378,7 +445,7 @@ class EnsembleSpreadPredictor:
         *,
         threshold: float | None = None,
         calibrator: Any | None = None,
-        abstain_below: float = 0.35,
+        abstain_below: float | None = None,
         product_id: str | None = None,
         protocol: str | None = None,
     ):
@@ -390,8 +457,12 @@ class EnsembleSpreadPredictor:
         Parity with ``predict``: honors ``ensemble_mode`` (mean_prob / mean_abs),
         decodes ``prev_bin`` with ``manifest.threshold`` always; caller
         ``threshold`` applies only to the binary mask.
+
+        ``abstain_below`` defaults to the calibrator artifact threshold
+        (``cal.abstain_threshold``), else 0.35.
         """
         from wildfire_front.ml.uncertainty import (
+            DEFAULT_ABSTAIN_THRESHOLD,
             LogisticCalibrator,
             SpreadPrediction,
             ensemble_diagnostics,
@@ -449,7 +520,12 @@ class EnsembleSpreadPredictor:
             cal = LogisticCalibrator.identity()
         conf = float(cal.predict_proba(diag))
         # Identity / unfitted calibrator must not look actionable on product path.
-        abstain = conf < float(abstain_below) or bool(getattr(cal, "is_identity", False))
+        thr_ab = (
+            float(abstain_below)
+            if abstain_below is not None
+            else float(getattr(cal, "abstain_threshold", DEFAULT_ABSTAIN_THRESHOLD))
+        )
+        abstain = conf < thr_ab or bool(getattr(cal, "is_identity", False))
         pid = product_id or self.manifest.version or "clm_ensemble"
         return SpreadPrediction(
             prob=prob_np,

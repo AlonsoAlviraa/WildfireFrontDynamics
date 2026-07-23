@@ -31,6 +31,7 @@ UNCERTAINTY_ALLOWED_KEYS = frozenset(
         "ece_pixel_prob",
         "selective_iou_at_80pct_coverage",
         "selective_iou_at_coverage",
+        "selective_iou_random_baseline_80",
         "spearman_conf_vs_iou",
         "beats_random_selective",
         "overconfidence_gap",
@@ -38,6 +39,8 @@ UNCERTAINTY_ALLOWED_KEYS = frozenset(
         "tau_iou",
         "abstain_rate",
         "coverage",
+        "mean_confidence",
+        "delta_vs_random",
     }
 )
 

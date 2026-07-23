@@ -6,8 +6,10 @@ Head A features (design freeze): mean_entropy, member_disagreement, mean_margin.
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
@@ -17,6 +19,9 @@ HEAD_A_FEATURE_NAMES: tuple[str, ...] = (
     "member_disagreement",
     "mean_margin",
 )
+
+CALIBRATION_SCHEMA = "ml_uncertainty_calibration_v1"
+DEFAULT_ABSTAIN_THRESHOLD = 0.35
 
 
 @dataclass(frozen=True)
@@ -134,6 +139,7 @@ class LogisticCalibrator:
     calibrator_id: str = "uncertainty_calibration_v1"
     tau_iou: float = 0.5
     fit_split: str = "val"
+    abstain_threshold: float = DEFAULT_ABSTAIN_THRESHOLD
     # Research-only: allow ad-hoc linear heuristic when weights wrong/empty.
     allow_identity_heuristic: bool = False
 
@@ -183,13 +189,28 @@ class LogisticCalibrator:
         return float(logistic_sigmoid(z))
 
     def to_dict(self) -> dict[str, Any]:
+        coef = self.weights[:-1].tolist() if self.weights.size else []
+        intercept = float(self.weights[-1]) if self.weights.size else 0.0
         return {
+            "schema": CALIBRATION_SCHEMA,
             "method": "logistic",
             "calibrator_id": self.calibrator_id,
             "weights": self.weights.tolist(),
             "feature_names": list(self.feature_names),
+            "features": list(self.feature_names),
             "tau_iou": self.tau_iou,
             "fit_split": self.fit_split,
+            "head": "patch_reliability",
+            "label": {
+                "type": "patch_iou_ge_tau",
+                "tau": self.tau_iou,
+                "mask_threshold": 0.5,
+            },
+            "params": {
+                "coef": coef,
+                "intercept": intercept,
+            },
+            "abstain_threshold": float(self.abstain_threshold),
         }
 
     @classmethod
@@ -197,17 +218,34 @@ class LogisticCalibrator:
         method = str(data.get("method") or "logistic")
         if method != "logistic":
             raise ValueError(f"only logistic calibrator supported, got {method!r}")
-        names = data.get("feature_names")
+        names = data.get("feature_names") or data.get("features")
         if names is not None:
             feature_names = tuple(str(n) for n in names)
         else:
             feature_names = HEAD_A_FEATURE_NAMES
+        weights_raw = data.get("weights")
+        if weights_raw is None or (isinstance(weights_raw, (list, tuple)) and len(weights_raw) == 0):
+            params = data.get("params") if isinstance(data.get("params"), dict) else {}
+            coef = params.get("coef") if params else None
+            intercept = params.get("intercept") if params else None
+            if coef is not None:
+                weights_raw = list(coef) + [float(intercept if intercept is not None else 0.0)]
+            else:
+                weights_raw = []
+        tau = data.get("tau_iou")
+        if tau is None and isinstance(data.get("label"), dict):
+            tau = data["label"].get("tau")
         return cls(
-            weights=np.asarray(data.get("weights") or [], dtype=np.float64),
+            weights=np.asarray(weights_raw or [], dtype=np.float64),
             feature_names=feature_names,
             calibrator_id=str(data.get("calibrator_id") or "uncertainty_calibration_v1"),
-            tau_iou=float(data.get("tau_iou") or 0.5),
+            tau_iou=float(tau if tau is not None else 0.5),
             fit_split=str(data.get("fit_split") or "val"),
+            abstain_threshold=float(
+                data.get("abstain_threshold")
+                if data.get("abstain_threshold") is not None
+                else DEFAULT_ABSTAIN_THRESHOLD
+            ),
             allow_identity_heuristic=bool(data.get("allow_identity_heuristic", False)),
         )
 
@@ -218,6 +256,65 @@ class LogisticCalibrator:
             weights=np.asarray([], dtype=np.float64),
             allow_identity_heuristic=allow_identity_heuristic,
         )
+
+
+def load_calibrator(path: str | Path) -> LogisticCalibrator:
+    """Load Head A logistic calibrator from JSON (fixture or VAL-fit artifact).
+
+    Accepts both flat ``weights`` (coef + bias) and design ``params.coef/intercept``.
+    Rejects non-logistic methods.
+    """
+    p = Path(path)
+    data = json.loads(p.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"calibrator JSON must be an object: {p}")
+    method = str(data.get("method") or "logistic")
+    if method != "logistic":
+        raise ValueError(f"only method='logistic' supported in v1, got {method!r}")
+    return LogisticCalibrator.from_dict(data)
+
+
+def save_calibrator(
+    calibrator: LogisticCalibrator,
+    path: str | Path,
+    *,
+    extra: dict[str, Any] | None = None,
+) -> Path:
+    """Write calibrator JSON artifact (operator / fixture path)."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    doc = calibrator.to_dict()
+    if extra:
+        doc.update(extra)
+    p.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    return p
+
+
+def build_ml_prediction_document(
+    pred: SpreadPrediction,
+    *,
+    mask_summary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Outbox / predict_spread JSON — live metrics only; no ROS fields."""
+    live = pred.to_ml_live_metrics()
+    doc: dict[str, Any] = {
+        "schema": "ml_prediction_v1",
+        "product_id": pred.product_id,
+        "abstain": bool(pred.abstain),
+        "confidence": float(pred.confidence),
+        "diagnostics": {
+            "mean_entropy": float(pred.diagnostics.get("mean_entropy", 0.0)),
+            "member_disagreement": float(pred.diagnostics.get("member_disagreement", 0.0)),
+            "mean_margin": float(pred.diagnostics.get("mean_margin", 0.0)),
+            "n_members": int(pred.diagnostics.get("n_members", 0)),
+        },
+        "ml_live_metrics": live,
+        "calibrator_id": pred.calibrator_id,
+        "protocol": pred.protocol,
+    }
+    if mask_summary is not None:
+        doc["mask_summary"] = mask_summary
+    return doc
 
 
 def fit_logistic_calibrator(

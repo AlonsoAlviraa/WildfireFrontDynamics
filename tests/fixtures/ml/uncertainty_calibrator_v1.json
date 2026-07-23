@@ -1,0 +1,31 @@
+{
+  "schema": "ml_uncertainty_calibration_v1",
+  "method": "logistic",
+  "calibrator_id": "uncertainty_calibration_v1",
+  "fit_split": "val",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "head": "patch_reliability",
+  "feature_names": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "features": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "label": {
+    "type": "patch_iou_ge_tau",
+    "tau": 0.5,
+    "mask_threshold": 0.5
+  },
+  "tau_iou": 0.5,
+  "weights": [-2.5, -3.0, 4.0, 0.2],
+  "params": {
+    "coef": [-2.5, -3.0, 4.0],
+    "intercept": 0.2
+  },
+  "abstain_threshold": 0.35,
+  "note": "Offline CI fixture only — not a VAL-fit production artifact. Positive margin weight, negative entropy/disagreement."
+}

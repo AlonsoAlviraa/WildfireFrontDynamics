@@ -105,7 +105,7 @@ pre.cmd {
         no un visor más de mapas gratis.
       </p>
       <p class="tag" style="margin-top:.75rem">
-        Actualizado: 2026-07-17 19:36 UTC · git <code>d57ae16</code>
+        Actualizado: 2026-07-21 10:57 UTC · git <code>29fb877</code>
       </p>
     </div>
   </header>
@@ -114,7 +114,7 @@ pre.cmd {
     <div class="card">
       <h2>Decisión ahora</h2>
       <div class="badge">GO</div>
-      <div class="sub">Confianza del fenómeno: <b>0.89</b> · Sistema reliability: <b>True</b></div>
+      <div class="sub">Confianza del fenómeno: <b>0.76</b> · Sistema reliability: <b>False</b></div>
       <p class="sub" style="margin-top:.6rem">Si faltan fuentes → ABSTAIN. No inventamos acción.</p>
     </div>
     <div class="card">
@@ -122,11 +122,16 @@ pre.cmd {
       <div class="big">0.8963</div>
       <div class="sub">IoU holdout · Δ vs copy <b>0.2545</b></div>
       <div class="sub">Producto: clm_ensemble_v34 (no es ROS de dron)</div>
+      <ul class="sub" style="margin-top:.6rem;padding-left:1.1rem">
+        <li><b>Holdout IoU</b> = research quality (~0.8963) — not live fire certainty.</li>
+        <li><b>Live confidence</b> = ensemble disagreement + calibrator; Card can HOLD/ABSTAIN.</li>
+        <li><b>Fusion live weight OFF</b> until U1 selective@80% beats random on VAL.</li>
+      </ul>
     </div>
     <div class="card">
       <h2>Open CEMS (sin NDA)</h2>
-      <div class="big">4</div>
-      <div class="sub">packs públicos · hasta <b>5320 ha</b></div>
+      <div class="big">5</div>
+      <div class="sub">packs públicos · hasta <b>29000 ha</b></div>
       <div class="sub">Perímetros multi-día descargables</div>
     </div>
     <div class="card">
@@ -173,7 +178,7 @@ python scripts\show_all.py</pre>
         <div class="row"><span>ML ensemble CLM v34 (holdout honesto)</span><span class="ok-text">HECHO · IoU 0.8963</span></div>
         <div class="row"><span>Incident runtime + field kit</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>FDC en cada incident update (outbox)</span><span class="ok-text">HECHO · fire_decision_card.json</span></div>
-        <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · 4 packs</span></div>
+        <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · 5 packs</span></div>
         <div class="row"><span>Decision Card CLI + reliability gate</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>Metrics Hub unificado</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>SLA incidente sintético (&lt;10 min)</span><span class="ok-text">HECHO · ver INCIDENT_SLA_LATENCY.json</span></div>
@@ -182,7 +187,7 @@ python scripts\show_all.py</pre>
         <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
         <div class="row"><span>dNBR/STAC post-fuego (EMSR578)</span><span class="ok-text">HECHO · dnbr_preview.tif + STAC S2</span></div>
         <div class="row"><span>App sala de mando (WFD COMMAND)</span><span class="ok-text">HECHO · docs/commander/index.html</span></div>
-        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · 12/16 items DONE</span></div>
+        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · 13/17 items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
       </div>
@@ -194,7 +199,7 @@ python scripts\show_all.py</pre>
       <h2>Packs open (mapas)</h2>
       <table>
         <thead><tr><th>Activación</th><th>Área</th><th>Pasos</th><th>O2 CEMS</th><th>Ver</th></tr></thead>
-        <tbody><tr><td><b>EMSR578</b></td><td class='num'>2693 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr578/map.html'>mapa</a></td></tr><tr><td><b>EMSR581</b></td><td class='num'>2210 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr581/map.html'>mapa</a></td></tr><tr><td><b>EMSR583</b></td><td class='num'>1791 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr583/map.html'>mapa</a></td></tr><tr><td><b>EMSR632</b></td><td class='num'>5320 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr632/map.html'>mapa</a></td></tr></tbody>
+        <tbody><tr><td><b>EMSR578</b></td><td class='num'>2693 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr578/map.html'>mapa</a></td></tr><tr><td><b>EMSR581</b></td><td class='num'>2210 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr581/map.html'>mapa</a></td></tr><tr><td><b>EMSR583</b></td><td class='num'>1791 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr583/map.html'>mapa</a></td></tr><tr><td><b>EMSR632</b></td><td class='num'>5320 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr632/map.html'>mapa</a></td></tr><tr><td><b>guadalajara_la_mierla_20260717</b></td><td class='num'>29000 ha</td><td class='num'>1</td><td><span class='pill ok'>NOT_ACTIVATED_OR_UNKNOWN</span></td><td><a href='../outputs/open_if/la_mierla_20260717/map.html'>mapa</a></td></tr></tbody>
       </table>
       <p class="sub"><a href="../outputs/open_if/index.html">Índice open_if</a></p>
     </div>
@@ -236,10 +241,10 @@ python scripts\show_all.py</pre>
       <ul>
         <li>ML IoU: <b>0.8963</b></li>
         <li>ML Δ: <b>0.2545</b></li>
-        <li>Open packs: <b>4</b></li>
-        <li>Max ha open: <b>5320</b></li>
+        <li>Open packs: <b>5</b></li>
+        <li>Max ha open: <b>29000</b></li>
         <li>Score dual vs CLM-solo: <b>95.0</b> / <b>39.0</b></li>
-        <li>Decision: <b>GO</b> (0.89)</li>
+        <li>Decision: <b>GO</b> (0.76)</li>
       </ul>
     </div>
   </section>

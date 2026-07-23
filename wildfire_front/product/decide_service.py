@@ -224,17 +224,40 @@ def load_open_metrics_from_pack(
     }
 
 
+def _normalize_ml_live_payload(data: Mapping[str, Any]) -> dict[str, Any]:
+    """Accept flat ml_live_metrics_v1 or outbox ml_prediction_v1 wrapper."""
+    if str(data.get("schema") or "") == "ml_live_metrics_v1":
+        return dict(data)
+    nested = data.get("ml_live_metrics")
+    if isinstance(nested, Mapping):
+        return dict(nested)
+    # Tolerate thin wrapper with top-level confidence + diagnostics
+    if "confidence" in data and ("mean_entropy" in data or "diagnostics" in data):
+        out = dict(data)
+        diag = data.get("diagnostics") if isinstance(data.get("diagnostics"), Mapping) else {}
+        for k in ("mean_entropy", "member_disagreement", "mean_margin", "n_members"):
+            if k not in out and k in diag:
+                out[k] = diag[k]
+        out.setdefault("schema", "ml_live_metrics_v1")
+        return out
+    return dict(data)
+
+
 def load_ml_live_metrics(
     value: Mapping[str, Any] | str | Path | None,
     *,
     base: Path | None = None,
     include_repo_root: bool = True,
 ) -> dict[str, Any] | None:
-    """Load ml_live_metrics_v1 from inline mapping or allowlisted JSON path."""
+    """Load ml_live_metrics_v1 from inline mapping or allowlisted JSON path.
+
+    Also accepts incident ``outbox/ml_prediction.json`` wrappers that embed
+    an ``ml_live_metrics`` block (schema ``ml_prediction_v1``).
+    """
     if value is None or value == "":
         return None
     if isinstance(value, Mapping):
-        return dict(value)
+        return _normalize_ml_live_payload(value)
     path = _as_path(value, base=base, include_repo_root=include_repo_root)
     if path is None or not path.is_file():
         return None
@@ -242,7 +265,9 @@ def load_ml_live_metrics(
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
-    return data if isinstance(data, dict) else None
+    if not isinstance(data, dict):
+        return None
+    return _normalize_ml_live_payload(data)
 
 
 def resolve_sources(

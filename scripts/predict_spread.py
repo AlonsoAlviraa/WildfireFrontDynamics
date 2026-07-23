@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Multi-product CLI — NDWS v21 | CLM v28 | CLM ensemble v30.
+"""Multi-product CLI — NDWS v21 | CLM v28 | CLM ensemble v34.
 
 Examples:
   python scripts/predict_spread.py --list-products
-  python scripts/predict_spread.py --product clm_ensemble_v30 \\
+  python scripts/predict_spread.py --product clm_ensemble_v34 \\
       --npz artifacts/clm_ndws_patches/holdout_v1/test --eval --max-patches 50
   python scripts/predict_spread.py --product clm_v28 --npz path/patch.npz --output pred.npz
+  python scripts/predict_spread.py --product clm_ensemble_v34 --npz path/patch.npz \\
+      --with-uncertainty --ml-live-json outbox/ml_prediction.json
 """
 
 from __future__ import annotations
@@ -43,6 +45,35 @@ def _product_choices() -> list[str]:
         return ["ndws_v21", "clm_v28", "clm_ensemble_v34", "clm_ensemble_v30"]
 
 
+def _resolve_calibrator(path: str | None):
+    """Load Head A calibrator for the live product path.
+
+    - Explicit ``--calibrator``: required file (missing → FileNotFoundError).
+    - Default: product artifact under ``models/clm_ensemble/`` only.
+    - Never auto-load ``tests/fixtures/…`` (CI fixture is offline-only).
+    - Missing product artifact → identity (force abstain on product path).
+    """
+    from wildfire_front.ml.uncertainty import LogisticCalibrator, load_calibrator
+
+    if path:
+        p = Path(path)
+        if not p.is_file():
+            raise FileNotFoundError(
+                f"--calibrator path not found: {p} "
+                "(refusing silent identity when path was explicitly set)"
+            )
+        return load_calibrator(p)
+    # Product artifacts only — never tests/fixtures (BUG-1 / no silent fake calibration)
+    candidates = [
+        PROJECT_ROOT / "models" / "clm_ensemble" / "uncertainty_calibration_v1.json",
+        PROJECT_ROOT / "models" / "clm_ensemble" / "uncertainty_calibrator_v1.json",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return load_calibrator(c)
+    return LogisticCalibrator.identity()
+
+
 def main() -> int:
     choices = _product_choices()
     default = load_catalog().get("default_product") if Path(
@@ -78,6 +109,36 @@ def main() -> int:
         "--json",
         action="store_true",
         help="Print eval report only as JSON (no prose)",
+    )
+    parser.add_argument(
+        "--with-uncertainty",
+        action="store_true",
+        help="Emit ml_live_metrics_v1 (+ optional mask summary) via predict_with_uncertainty",
+    )
+    parser.add_argument(
+        "--ml-live-json",
+        type=str,
+        default=None,
+        help="Write ml_prediction_v1 JSON (outbox/ml_prediction.json shape) for Decision Card",
+    )
+    parser.add_argument(
+        "--calibrator",
+        type=str,
+        default=None,
+        help=(
+            "Path to Head A calibrator JSON (must exist if set). "
+            "Default: models/clm_ensemble/uncertainty_calibration_v1.json only; "
+            "if missing, identity calibrator (force abstain). Never auto-loads CI fixtures."
+        ),
+    )
+    parser.add_argument(
+        "--abstain-below",
+        type=float,
+        default=None,
+        help=(
+            "Confidence threshold for abstain (default: calibrator.abstain_threshold "
+            "from artifact, else 0.35)"
+        ),
     )
     args = parser.parse_args()
 
@@ -155,17 +216,61 @@ def main() -> int:
         print(f"No NPZ under {npz_path}", file=sys.stderr)
         return 1
 
+    use_unc = bool(args.with_uncertainty or args.ml_live_json)
+    calibrator = None
+    if use_unc:
+        try:
+            calibrator = _resolve_calibrator(args.calibrator)
+        except FileNotFoundError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        if calibrator is not None and getattr(calibrator, "is_identity", False):
+            if not args.json:
+                print(
+                    "NOTE: no product calibrator under models/clm_ensemble/ — "
+                    "using identity (live confidence forces abstain). "
+                    "Fit with scripts/fit_ml_uncertainty_calibration.py or pass --calibrator.",
+                    flush=True,
+                )
+
     sample_metrics: list[dict] = []
     metrics_rows: list[dict] = []
+    last_live_doc: dict | None = None
+
     for path in paths:
         with np.load(path) as data:
             seq = data["sequence"]
             current_fire = data["current_fire"]
             target_fire = data.get("target_fire", None)
 
-        pred_prob = predictor.predict(seq, current_fire)
         thr = predictor.manifest.threshold
-        pred_bin = (pred_prob >= thr).astype(np.float32)
+        if use_unc and hasattr(predictor, "predict_with_uncertainty"):
+            from wildfire_front.ml.uncertainty import build_ml_prediction_document
+
+            unc_kwargs: dict = {
+                "threshold": thr,
+                "calibrator": calibrator,
+                "product_id": product_id,
+            }
+            # None → predictor uses calibrator.abstain_threshold (artifact default)
+            if args.abstain_below is not None:
+                unc_kwargs["abstain_below"] = float(args.abstain_below)
+            unc = predictor.predict_with_uncertainty(seq, current_fire, **unc_kwargs)
+            pred_prob = unc.prob
+            pred_bin = unc.binary
+            mask_summary = {
+                "mean_prob": float(np.mean(pred_prob)),
+                "fire_frac": float(np.mean(pred_bin)),
+                "shape": list(pred_prob.shape),
+            }
+            last_live_doc = build_ml_prediction_document(unc, mask_summary=mask_summary)
+            if args.with_uncertainty and (args.json or len(paths) == 1):
+                # Print live metrics for single-patch / json mode
+                if not args.ml_live_json or len(paths) == 1:
+                    print(json.dumps(last_live_doc, indent=2))
+        else:
+            pred_prob = predictor.predict(seq, current_fire)
+            pred_bin = (pred_prob >= thr).astype(np.float32)
 
         if args.eval and target_fire is not None:
             sample = evaluate_sample(pred_prob, current_fire, target_fire)
@@ -194,6 +299,13 @@ def main() -> int:
             )
             if not args.json:
                 print(f"Wrote {out}")
+
+    if args.ml_live_json and last_live_doc is not None:
+        live_path = Path(args.ml_live_json)
+        live_path.parent.mkdir(parents=True, exist_ok=True)
+        live_path.write_text(json.dumps(last_live_doc, indent=2), encoding="utf-8")
+        if not args.json:
+            print(f"Wrote {live_path}")
 
     if metrics_rows:
         ious = np.asarray([r["iou"] for r in metrics_rows], dtype=float)

@@ -703,6 +703,7 @@ def publish_decision_card(
     git_commit: str | None = None,
     reliability_gate: Path | str | dict | None = None,
     ml_metrics: dict[str, Any] | None = None,
+    ml_live_metrics: dict[str, Any] | None = None,
     open_metrics: dict[str, Any] | None = None,
     write_this_run_gate: bool = True,
 ) -> dict[str, str]:
@@ -712,12 +713,16 @@ def publish_decision_card(
     Incident path is ops-primary (``require_ops_for_go=True`` by default).
     Default policy ``field_ops`` (stricter organism template).
 
+    Optional live ML: pass ``ml_live_metrics`` or drop ``outbox/ml_prediction.json``
+    (schema ml_prediction_v1 or ml_live_metrics_v1). No ROS fields in ML path.
+
     Reliability: does **not** auto-load checked-in ``docs/RELIABILITY_GATE_REPORT.json``
     (stale PASS would unlock field_ops GO). Generates a this-run gate report
     under ``outbox/reliability_gate_report.json`` when ``write_this_run_gate``
     is True (default). Pass ``reliability_gate`` explicitly to override.
     """
     from ..product.confidence import build_decision_card
+    from ..product.decide_service import load_ml_live_metrics
 
     outbox = Path(outbox)
     outbox.mkdir(parents=True, exist_ok=True)
@@ -729,6 +734,11 @@ def publish_decision_card(
         else (_load_ml_metrics_optional() if include_ml_metrics else None)
     )
     open_m = open_metrics if open_metrics is not None else _load_open_metrics(open_pack_dir)
+    ml_live_m = ml_live_metrics
+    if ml_live_m is None:
+        pred_path = outbox / "ml_prediction.json"
+        if pred_path.is_file():
+            ml_live_m = load_ml_live_metrics(pred_path, include_repo_root=True)
 
     gate: Path | str | dict | None = reliability_gate
     if gate is None and write_this_run_gate:
@@ -749,17 +759,21 @@ def publish_decision_card(
     card = build_decision_card(
         event_id,
         ml_metrics=ml_m,
+        ml_live_metrics=ml_live_m,
         ops_metrics=ops_m,
         open_metrics=open_m,
         require_ops_for_go=require_ops_for_go,
         git_commit=git_commit,
         policy_id=decision_policy or "field_ops",
         reliability_gate=gate,
+        # Incident default: fusion OFF until U1 human promote
+        allow_ml_live_in_fusion=False,
         extra_metrics={
             "product": "incident_runtime_v1",
             "outbox": str(outbox.resolve()),
             "n_frames": n_frames,
             "reliability_gate_path": str(gate) if isinstance(gate, (str, Path)) else None,
+            "ml_prediction_present": ml_live_m is not None,
         },
     )
     payload = card.to_dict()
@@ -769,6 +783,30 @@ def publish_decision_card(
     tmp.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
     tmp.replace(json_path)
     md_path.write_text(render_decision_card_md(payload), encoding="utf-8")
+
+    # Preserve / re-emit live ML prediction for decide --ml-prediction path.
+    if ml_live_m is not None:
+        try:
+            ml_pred_path = outbox / "ml_prediction.json"
+            if not ml_pred_path.is_file():
+                live_doc = {
+                    "schema": "ml_prediction_v1",
+                    "product_id": ml_live_m.get("product_id"),
+                    "abstain": ml_live_m.get("abstain"),
+                    "confidence": ml_live_m.get("confidence"),
+                    "diagnostics": {
+                        "mean_entropy": ml_live_m.get("mean_entropy"),
+                        "member_disagreement": ml_live_m.get("member_disagreement"),
+                        "mean_margin": ml_live_m.get("mean_margin"),
+                        "n_members": ml_live_m.get("n_members"),
+                    },
+                    "ml_live_metrics": ml_live_m,
+                }
+                ml_pred_path.write_text(
+                    json.dumps(live_doc, indent=2, default=str), encoding="utf-8"
+                )
+        except OSError:
+            pass
 
     # M2.9 — forensic acta + radio-bridge + replay sources (paid audit trail)
     forensic_paths: dict[str, str] = {}

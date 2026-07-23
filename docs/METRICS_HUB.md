@@ -1,13 +1,13 @@
 # Metrics Hub — todas las métricas
 
-_UTC: 2026-07-17T19:36:09.936263+00:00_ · git `d57ae16` · hash `d1cae9cf4b99…`
+_UTC: 2026-07-21T10:57:40.724454+00:00_ · git `29fb877` · hash `a3e8ac658fae…`
 
 ## Decision Card (fusión)
 
 - **decision:** `GO`
-- **confidence_pred:** 0.894 (HIGH)
-- **system_reliability_pass:** True
-- **reasons:** ml_clm_ensemble:conf=1.000:w=0.25, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.720:w=0.35, policy:default, ops_confidence_ok
+- **confidence_pred:** 0.7559999999999999 (HIGH)
+- **system_reliability_pass:** False
+- **reasons:** ml_clm_ensemble:holdout_quality=1.000:not_fused, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.500:w=0.35, policy:default, ops_confidence_ok
 
 > Fire prediction is **not** 99.9999% accurate. Five-nines bound = no silent GO without gates under automation.
 
@@ -22,6 +22,8 @@ _UTC: 2026-07-17T19:36:09.936263+00:00_ · git `d57ae16` · hash `d1cae9cf4b99�
 | temps | [0.7, 0.7, 1.3] |
 | mix | [0.28, 0.32, 0.4] |
 
+**ML-first honesty:** holdout IoU is research quality (not live certainty); live confidence uses ensemble disagreement + calibrator (Card may HOLD/ABSTAIN); fusion live weight OFF until U1 selective@80% beats random on VAL.
+
 ## Ops (Tobarra representativo)
 
 | Métrica | Valor |
@@ -34,7 +36,7 @@ _UTC: 2026-07-17T19:36:09.936263+00:00_ · git `d57ae16` · hash `d1cae9cf4b99�
 
 ## Open CEMS packs
 
-n_packs = **4**
+n_packs = **5**
 
 | Pack | max_ha | steps | O2_cems |
 |------|-------:|------:|---------|
@@ -42,6 +44,7 @@ n_packs = **4**
 | EMSR581 | 2209.8 | 4 | GO |
 | EMSR583 | 1790.6 | 5 | GO |
 | EMSR632 | 5319.5 | 4 | GO |
+| guadalajara_la_mierla_20260717 | 29000.0 | 1 | NOT_ACTIVATED_OR_UNKNOWN |
 
 ## Gates industriales
 
@@ -72,5 +75,5 @@ n_packs = **4**
 
 ## Audit
 
-- decision audit: `279265f3faad435f…`
-- hub hash: `d1cae9cf4b99222e25d927cacce18b8bf1466625bc186d768cbd897ff88d8664`
+- decision audit: `2543d49d5593ff8f…`
+- hub hash: `a3e8ac658fae1b2e629082e1e53a6090f0f7cc233001013a0b8db0278b293fa5`
