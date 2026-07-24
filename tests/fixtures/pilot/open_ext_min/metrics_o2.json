@@ -1,0 +1,14 @@
+{
+  "schema": "metrics_o2_ext_rai_v1",
+  "pack_id": "ext_2025100393_20250729",
+  "area_rai_ha": 2679.14,
+  "area_attr_ha": 2680.48295290551,
+  "n_timeline_steps": 1,
+  "area_firms_hull_ha": null,
+  "firms_status": "SKIP",
+  "fecha_det": "2025-07-29",
+  "fecha_ext": "2025-08-29",
+  "disclaimer": "FIRMS convex hull is a thermal-pixel proxy footprint, NOT official burned area.",
+  "vp_tactical": null,
+  "vp_invented": false
+}

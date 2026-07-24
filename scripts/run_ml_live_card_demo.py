@@ -99,6 +99,11 @@ def load_u1_honesty_snapshot(
     if cat_iou is None:
         cat_iou = _U1_FALLBACK["catalog_holdout_iou_provenance"]
 
+    # u1_source: scorecard when primary metrics came from ML_PRODUCT_SCORECARD
+    used_scorecard = bool(sc) and (
+        (isinstance(primary, dict) and primary.get("model_iou") is not None)
+        or (isinstance(unc, dict) and unc.get("ece_patch_conf") is not None)
+    )
     return {
         "mean_iou_eval": float(mean_iou),
         "selective_iou_at_80": float(sel),
@@ -115,6 +120,7 @@ def load_u1_honesty_snapshot(
             )
         ),
         "field_ops_fusion": False,
+        "u1_source": "scorecard" if used_scorecard else "fallback",
         "scorecard_path": str(scorecard_path or SCORECARD_PATH),
         "promote_record_path": str(promote_path or PROMOTE_PATH),
         "note": _U1_FALLBACK["note"],
@@ -354,6 +360,7 @@ def build_card_from_ml_doc(
     event_id: str = "ml_live_card_demo",
     policy_id: str = DEFAULT_POLICY,
     open_metrics: dict[str, Any] | None = None,
+    ops_metrics: dict[str, Any] | None = None,
     ml_metrics: dict[str, Any] | None = None,
     allow_ml_live_in_fusion: bool | None = None,
     ml_live_trusted: bool = True,
@@ -378,10 +385,12 @@ def build_card_from_ml_doc(
         ml_metrics=ml_metrics,
         ml_live_metrics=live,
         open_metrics=open_metrics,
+        ops_metrics=ops_metrics,
         policy_id=policy_id,
         allow_ml_live_in_fusion=fusion,
         ml_live_trusted=ml_live_trusted,
         require_ops_for_go=bool(getattr(policy, "require_ops_for_go", False)),
+        # reliability_gate intentionally omitted (pilot field_ops contrast honesty)
     )
     return card.to_dict()
 
@@ -516,6 +525,8 @@ def run_demo(
     npz: Path | None = None,
     ml_prediction_path: Path | None = None,
     open_pack: Path | None = None,
+    work_dir: Path | None = None,
+    ops_metrics: dict[str, Any] | None = None,
     calibrator: str | None = None,
     max_patches: int = 1,
     include_catalog_ml_metrics: bool = False,
@@ -565,12 +576,21 @@ def run_demo(
         )
         if open_metrics is None and not allow_missing_open_pack:
             pack_p = Path(open_pack)
-            scp = pack_p / "scorecard_pista_b.json"
             raise FileNotFoundError(
                 f"--open-pack did not yield open metrics: path={pack_p} "
-                f"(missing pack dir or scorecard_pista_b.json at {scp}). "
+                "(missing pack dir or unresolved scorecard: "
+                "scorecard_pista_b.json / scorecard_and_industrial.json / "
+                "scorecard_ext_industrial.json / scorecard_*_industrial.json). "
                 "Pass --allow-missing-open-pack to continue as ML-only."
             )
+
+    resolved_ops = ops_metrics
+    if resolved_ops is None and work_dir is not None:
+        from wildfire_front.product.decide_service import load_ops_metrics_from_work_dir
+
+        resolved_ops = load_ops_metrics_from_work_dir(
+            work_dir, base=PROJECT_ROOT, include_repo_root=True
+        )
 
     ml_metrics = None
     if include_catalog_ml_metrics:
@@ -588,6 +608,7 @@ def run_demo(
         event_id=event_id,
         policy_id=policy_id,
         open_metrics=open_metrics,
+        ops_metrics=resolved_ops,
         ml_metrics=ml_metrics,
     )
     note = build_abstain_ece_note(ml_doc, card, u1, policy_id=policy_id)

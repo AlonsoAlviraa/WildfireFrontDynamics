@@ -260,3 +260,45 @@ def test_build_offline_scenarios_schemas():
         blob = json.dumps(doc)
         assert "primary_ros" not in blob
         assert "ros_m_min" not in blob
+
+
+def test_build_card_ops_metrics_pass_through(tmp_path: Path):
+    """T11: ops_metrics pass-through → ops_thermal_front available with ROS."""
+    mod = _load_demo_mod()
+    from wildfire_front.product.decide_service import load_ops_metrics_from_work_dir
+
+    ops_dir = ROOT / "tests" / "fixtures" / "pilot" / "ops_tobarra_min"
+    ops = load_ops_metrics_from_work_dir(ops_dir, base=ROOT, include_repo_root=True)
+    assert ops is not None
+    assert ops.get("primary_ros_m_min") is not None
+
+    ml_doc = mod.load_fixture_ml_prediction("hold", event_id="ops_pass_through")
+    card = mod.build_card_from_ml_doc(
+        ml_doc,
+        event_id="ops_pass_through",
+        policy_id="research_open",
+        ops_metrics=ops,
+    )
+    ops_src = None
+    for s in card.get("sources") or []:
+        if s.get("id") in {"ops_thermal_front", "ops"}:
+            ops_src = s
+            break
+    assert ops_src is not None
+    assert ops_src.get("available") is True
+    assert (ops_src.get("metrics") or {}).get("primary_ros_m_min") is not None
+
+    # Also via run_demo work_dir
+    summary = mod.run_demo(
+        mode="offline",
+        scenario="hold",
+        out_dir=tmp_path / "ops_demo",
+        event_id="ops_demo",
+        work_dir=ops_dir,
+    )
+    assert summary["decision"] in {"HOLD", "GO", "ABSTAIN"}
+    card2 = json.loads(
+        (tmp_path / "ops_demo" / "decision_card.json").read_text(encoding="utf-8")
+    )
+    ids = {s.get("id") for s in card2.get("sources") or []}
+    assert "ops_thermal_front" in ids or "ops" in ids

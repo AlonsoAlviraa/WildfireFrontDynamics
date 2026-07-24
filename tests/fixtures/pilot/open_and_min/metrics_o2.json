@@ -1,0 +1,15 @@
+{
+  "schema": "metrics_o2_and_rediam_v1",
+  "pack_id": "and_2024040053_20240606",
+  "codigo": "2024040053",
+  "fecha_inc": "2024-06-06",
+  "area_rediam_ha": 2169.34,
+  "n_timeline_steps": 1,
+  "n_firms_hotspots": 85,
+  "firms_status": "GO",
+  "area_firms_hull_ha": 7448.79,
+  "honest_notes": [
+    "FIRMS hull is proxy only — not official burned area",
+    "No tactical Vp/ROS without ASEMA"
+  ]
+}

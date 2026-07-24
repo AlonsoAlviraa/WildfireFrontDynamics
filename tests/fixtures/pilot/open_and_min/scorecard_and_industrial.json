@@ -1,0 +1,21 @@
+{
+  "schema": "scorecard_and_industrial_v1",
+  "track": "Pista_B_plus_AND_REDIAM",
+  "pack_id": "and_2024040053_20240606",
+  "gates": {
+    "O2_REDIAM": "PASS",
+    "O2_METHOD_HAUSDORFF": "PASS",
+    "OPEN_FIRMS": "PASS",
+    "OPEN_DNBR": "PASS",
+    "NO_FALSE_DISPATCH": "PASS",
+    "REPRO": "SKIP",
+    "PROVENANCE": "PASS"
+  },
+  "verdict": "GO_OPEN_AND_O2",
+  "decision_open": "HOLD",
+  "decision_note": "Open-only industrial demo. HOLD for field_ops without ASEMA Vp/ha anchor. No tactical dispatch.",
+  "lwir_heligraphics": false,
+  "vp_invented": false,
+  "firms_hull_is_official_burned_area": false,
+  "attribution": "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
+}

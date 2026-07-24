@@ -1,0 +1,15 @@
+{
+  "quality_grade": "B",
+  "speed_median_m_min": 6.7520810792516155,
+  "area_ha_max": 26.5503001953125,
+  "speed_vs_ref_ratio": 0.9645830113216594,
+  "speed_n_observable": 2,
+  "observation_count": 4,
+  "engine": "front_dynamics_v1",
+  "window": "mid",
+  "fire_id": "tobarra_20240802",
+  "structural": {
+    "primary_ros_m_min": 6.7520810792516155,
+    "structural_grade": "B"
+  }
+}

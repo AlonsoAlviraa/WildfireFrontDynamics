@@ -1,0 +1,41 @@
+{
+  "schema": "pilot_sites_catalog_v1",
+  "sites": [
+    {
+      "site_id": "tobarra",
+      "display_name": "Tobarra",
+      "track": "OPS",
+      "event_id": "pilot_tobarra_20240802",
+      "work_dir": "ops_tobarra_min",
+      "open_pack": null,
+      "anchor_key": "tobarra_20240802",
+      "anchors_path": "anchors_tobarra_snippet.json",
+      "ml_scenario": "hold",
+      "ml_prediction": null
+    },
+    {
+      "site_id": "nijar",
+      "display_name": "Níjar",
+      "track": "OPEN_AND",
+      "event_id": "pilot_nijar_and_2024040053",
+      "work_dir": null,
+      "open_pack": "open_and_min",
+      "anchor_key": null,
+      "anchors_path": null,
+      "ml_scenario": "hold",
+      "ml_prediction": null
+    },
+    {
+      "site_id": "caminomorisco",
+      "display_name": "Caminomorisco",
+      "track": "OPEN_EXT",
+      "event_id": "pilot_camino_ext_2025100393",
+      "work_dir": null,
+      "open_pack": "open_ext_min",
+      "anchor_key": null,
+      "anchors_path": null,
+      "ml_scenario": "abstain",
+      "ml_prediction": null
+    }
+  ]
+}

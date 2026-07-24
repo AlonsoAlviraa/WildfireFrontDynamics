@@ -1,0 +1,17 @@
+{
+  "protocol": "infocam_anchors_v1",
+  "notes": "Pilot snippet for pilot honesty card offline CI.",
+  "anchors": {
+    "tobarra_20240802": {
+      "fire_id": "tobarra_20240802",
+      "name": "Tobarra (AB) 2024-08-02",
+      "vp_m_min": 7.0,
+      "area_ha": 39.0,
+      "intensity": "Media-Alta",
+      "behavior": "Contraviento",
+      "source": "INFOCAM 2024 parte operativo",
+      "status": "confirmed",
+      "detection": "2024-08-02T16:42:00"
+    }
+  }
+}

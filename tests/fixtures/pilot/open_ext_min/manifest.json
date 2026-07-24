@@ -1,0 +1,13 @@
+{
+  "schema": "open_if_pack_ext_rai_v1",
+  "pack_id": "ext_2025100393_20250729",
+  "track": "Pista_B_plus_EXT_RAI",
+  "id_incen": "2025100393",
+  "municipio": "Caminomorisco",
+  "fecha_det": "2025-07-29",
+  "fecha_ext": "2025-08-29",
+  "area_rai_ha": 2679.14,
+  "attribution": "Fuente: Registro de Áreas Incendiadas (RAI) — Junta de Extremadura / INFOEX.",
+  "verdict": "PARTIAL",
+  "vp_tactical": null
+}

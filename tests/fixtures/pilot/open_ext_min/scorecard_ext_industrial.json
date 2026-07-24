@@ -1,0 +1,22 @@
+{
+  "schema": "scorecard_ext_industrial_v1",
+  "track": "Pista_B_plus_EXT_RAI",
+  "pack_id": "ext_2025100393_20250729",
+  "gates": {
+    "O2_RAI": "PASS",
+    "O2_METHOD_HAUSDORFF": "SKIP",
+    "OPEN_FIRMS": "SKIP",
+    "OPEN_DNBR": "SKIP",
+    "NO_FALSE_DISPATCH": "PASS",
+    "REPRO": "SKIP",
+    "PROVENANCE": "PASS",
+    "FECHAS_DET_EXT": "PASS"
+  },
+  "verdict": "PARTIAL",
+  "decision_open": "HOLD",
+  "decision_note": "Open industrial demo EXT. HOLD for field_ops without RAI/INFOEX Vp/ha. No tactical dispatch. FIRMS hull ≠ burned area.",
+  "lwir_heligraphics": false,
+  "vp_invented": false,
+  "firms_hull_is_official_burned_area": false,
+  "attribution": "Fuente: Registro de Áreas Incendiadas (RAI) — Junta de Extremadura / INFOEX."
+}

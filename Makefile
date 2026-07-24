@@ -5,7 +5,7 @@ PYTHON := python
 PKG    := wildfire_front
 TESTS  := tests
 
-.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa
+.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa pilot-honesty
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -71,3 +71,6 @@ and-industrial-e2e:  ## Andalucía REDIAM industrial open E2E (fetch+inventory+p
 
 demo-multi-ccaa:  ## Build multi-CCAA demo hub (Tobarra OPS + Níjar AND + Caminomorisco EXT)
 	$(PYTHON) scripts/build_demo_multi_ccaa.py
+
+pilot-honesty:  ## Offline pilot honesty cards + docs report (fixtures; no weights)
+	set PYTHONPATH=. && $(PYTHON) scripts/run_pilot_honesty_card.py --mode offline --fixture-root tests/fixtures/pilot --write-docs-report --generated-at 2026-07-24T00:00:00+00:00
