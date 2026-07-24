@@ -79,9 +79,7 @@ def test_inventory_from_fixture_cache(tmp_path: Path):
         FIXTURE.read_text(encoding="utf-8"), encoding="utf-8"
     )
     out = tmp_path / "inventory"
-    result = inv.build_inventory(
-        cache, out, years=[2024], probe_firms=False, firms_top_n=5
-    )
+    result = inv.build_inventory(cache, out, years=[2024], probe_firms=False, firms_top_n=5)
     assert result["stats"]["n_events"] == 3
     assert (out / "event_catalog.csv").is_file()
     assert (out / "selection_gold.json").is_file()

@@ -137,15 +137,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Export GeoTIFF pairs into .npz training patches for NpzWildfireDataset.",
     )
-    parser.add_argument("--images-dir", type=Path, required=True, help="Dir with input GeoTIFF frames.")
-    parser.add_argument("--masks-dir", type=Path, required=True, help="Dir with binary mask GeoTIFFs.")
-    parser.add_argument("--output-dir", type=Path, required=True, help="Where to write .npz patches.")
+    parser.add_argument(
+        "--images-dir", type=Path, required=True, help="Dir with input GeoTIFF frames."
+    )
+    parser.add_argument(
+        "--masks-dir", type=Path, required=True, help="Dir with binary mask GeoTIFFs."
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, required=True, help="Where to write .npz patches."
+    )
     parser.add_argument("--sequence-length", type=int, default=3)
     parser.add_argument("--patch-size", type=int, default=30)
     parser.add_argument("--dem-path", type=Path, default=None)
     parser.add_argument("--ndvi-path", type=Path, default=None)
     parser.add_argument("--fsm-path", type=Path, default=None)
-    parser.add_argument("--weather", type=str, default=None, help="CSV key=val, e.g. temp=30,humidity=35")
+    parser.add_argument(
+        "--weather", type=str, default=None, help="CSV key=val, e.g. temp=30,humidity=35"
+    )
     parser.add_argument("--max-patches", type=int, default=None)
     parser.add_argument("--fire-name", type=str, default=None)
     args = parser.parse_args()

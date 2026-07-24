@@ -40,7 +40,7 @@ class ProgressiveBurnConfig:
     codigo: str | None = None
     attribution: str = ATTRIBUTION_REDIAM
 
-    def validated(self) -> "ProgressiveBurnConfig":
+    def validated(self) -> ProgressiveBurnConfig:
         validate_n_stages(self.n_stages)
         eng = self.engine.strip().lower()
         if eng not in ("area_fraction", "buffer_rings"):
@@ -123,7 +123,10 @@ def build_stage_sequence(
     src = source_crs or cfg.source_crs
 
     raw = ensure_valid(final_geom)
-    if area_ha(reproject(raw, src, cfg.metric_crs) if src != cfg.metric_crs else raw) < cfg.min_area_ha:
+    if (
+        area_ha(reproject(raw, src, cfg.metric_crs) if src != cfg.metric_crs else raw)
+        < cfg.min_area_ha
+    ):
         # Area in source CRS may be degrees² — always work metric
         pass
 
@@ -142,9 +145,7 @@ def build_stage_sequence(
     times = uniform_times_s(n, cfg.total_duration_s)
 
     if eng == "area_fraction":
-        fracs = fraction_schedule(
-            cfg.schedule, n, custom=cfg.custom_fractions
-        )
+        fracs = fraction_schedule(cfg.schedule, n, custom=cfg.custom_fractions)
         geoms, methods, reasons_list = run_area_fraction_engine(
             final_metric,
             fracs,

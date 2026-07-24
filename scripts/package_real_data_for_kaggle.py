@@ -26,6 +26,7 @@ Usage::
         --tobarra data/real_if/raw_dropbox/20260707_transfer_01 \\
         --output kaggle_data/real_wildfire_data.zip
 """
+
 from __future__ import annotations
 
 import argparse
@@ -143,8 +144,10 @@ def package_to_zip(
             shutil.copy2(src_file, dst_file)
 
         all_records.extend(records)
-        print(f"    {len(records)} files ({sum(1 for r in records if r['type']=='photo')} photos, "
-              f"{sum(1 for r in records if r['type']=='kmz')} kmz)")
+        print(
+            f"    {len(records)} files ({sum(1 for r in records if r['type'] == 'photo')} photos, "
+            f"{sum(1 for r in records if r['type'] == 'kmz')} kmz)"
+        )
 
     # Process Tobarra if provided
     if tobarra_dir and tobarra_dir.exists():
@@ -206,13 +209,11 @@ def package_to_zip(
     final_size = output_zip.stat().st_size
     print(f"  ZIP created: {final_size / 1e6:.1f} MB")
     print("\nUpload to Kaggle with:")
-    print(f"  kaggle datasets version -p {output_zip.parent} -m \"Real wildfire data update\"")
+    print(f'  kaggle datasets version -p {output_zip.parent} -m "Real wildfire data update"')
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Package real wildfire data for Kaggle upload"
-    )
+    parser = argparse.ArgumentParser(description="Package real wildfire data for Kaggle upload")
     parser.add_argument(
         "--source",
         type=Path,

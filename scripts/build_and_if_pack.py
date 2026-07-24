@@ -41,7 +41,7 @@ sys.path.insert(0, str(ROOT))
 
 try:
     from shapely.geometry import MultiPoint, mapping, shape
-    from shapely.ops import transform, unary_union
+    from shapely.ops import transform
 except ImportError:  # pragma: no cover
     print("shapely required: pip install shapely", file=sys.stderr)
     raise
@@ -52,8 +52,7 @@ except ImportError:  # pragma: no cover
     Transformer = None  # type: ignore
 
 ATTRIBUTION = (
-    "Fuente: REDIAM — Junta de Andalucía. "
-    "Uso libre con mención de autores y propietarios."
+    "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
 )
 NATIVE_CRS = "EPSG:3042"
 UA = "WildfireFrontDynamics/1.0 (research; AND open pack)"
@@ -189,7 +188,9 @@ def load_feature_from_selection(sel_item: dict[str, Any]) -> tuple[dict[str, Any
     return feat, meta
 
 
-def load_feature_from_geojson(path: Path, *, codigo: str | None, index: int | None) -> tuple[dict[str, Any], dict[str, Any]]:
+def load_feature_from_geojson(
+    path: Path, *, codigo: str | None, index: int | None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     fc = json.loads(path.read_text(encoding="utf-8"))
     feats = fc.get("features") or []
     if not feats:
@@ -465,7 +466,9 @@ def try_dnbr(pack_dir: Path, *, event_date: str, skip: bool) -> dict[str, Any]:
         return status
 
 
-def render_brief(manifest: dict[str, Any], scorecard: dict[str, Any], metrics: dict[str, Any]) -> str:
+def render_brief(
+    manifest: dict[str, Any], scorecard: dict[str, Any], metrics: dict[str, Any]
+) -> str:
     m = manifest
     sc = scorecard
     lines = [
@@ -523,8 +526,16 @@ def map_html(
     center: tuple[float, float],
 ) -> str:
     rediam_js = json.dumps(rediam_fc, ensure_ascii=False, separators=(",", ":"))
-    firms_js = json.dumps(firms_fc or {"type": "FeatureCollection", "features": []}, ensure_ascii=False, separators=(",", ":"))
-    hull_js = json.dumps(hull_fc or {"type": "FeatureCollection", "features": []}, ensure_ascii=False, separators=(",", ":"))
+    firms_js = json.dumps(
+        firms_fc or {"type": "FeatureCollection", "features": []},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    hull_js = json.dumps(
+        hull_fc or {"type": "FeatureCollection", "features": []},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
     lat, lon = center[1], center[0]
     return f"""<!DOCTYPE html>
 <html><head>
@@ -608,9 +619,7 @@ def build_scorecard(
         "NO_FALSE_DISPATCH": "PASS" if no_false else "FAIL",
         # REPRO not demonstrated at pack-build time → SKIP (verify may promote)
         "REPRO": (
-            "PASS"
-            if repro_status == "PASS"
-            else ("SKIP" if repro_status == "SKIP" else "FAIL")
+            "PASS" if repro_status == "PASS" else ("SKIP" if repro_status == "SKIP" else "FAIL")
         ),
         "PROVENANCE": "PASS" if attribution_ok else "FAIL",
     }
@@ -716,9 +725,7 @@ def build_pack_from_feature(
 
     raw_geom = feat.get("geometry")
     if raw_geom is None:
-        raise ValueError(
-            f"missing/null geometry for codigo={codigo}; cannot build pack"
-        )
+        raise ValueError(f"missing/null geometry for codigo={codigo}; cannot build pack")
     try:
         geom = shape(raw_geom)
     except Exception as exc:
@@ -734,9 +741,7 @@ def build_pack_from_feature(
 
     declared_crs = meta.get("source_crs")
     geom_native = geom  # keep original coords before reproject
-    geom_wgs, src_crs, ha_native = detect_crs_and_to_wgs84(
-        geom, declared_crs=declared_crs
-    )
+    geom_wgs, src_crs, ha_native = detect_crs_and_to_wgs84(geom, declared_crs=declared_crs)
     ha_wgs = area_ha_wgs84(geom_wgs)
     area_rediam_ha = round(ha_wgs if ha_wgs > 0 else ha_native, 2)
 
@@ -1034,15 +1039,20 @@ def build_pack_from_feature(
     )
     (pack_dir / "map.html").write_text(html, encoding="utf-8")
 
-    print(json.dumps({
-        "pack_id": pid,
-        "verdict": scorecard.get("verdict"),
-        "area_rediam_ha": area_rediam_ha,
-        "n_firms": metrics.get("n_firms_hotspots"),
-        "dnbr": dnbr_st,
-        "attribution_ok": attr_ok,
-        "pack_dir": manifest["pack_dir"],
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "pack_id": pid,
+                "verdict": scorecard.get("verdict"),
+                "area_rediam_ha": area_rediam_ha,
+                "n_firms": metrics.get("n_firms_hotspots"),
+                "dnbr": dnbr_st,
+                "attribution_ok": attr_ok,
+                "pack_dir": manifest["pack_dir"],
+            },
+            indent=2,
+        )
+    )
     return {"manifest": manifest, "scorecard": scorecard, "metrics": metrics, "pack_dir": pack_dir}
 
 
@@ -1072,9 +1082,7 @@ def main() -> int:
 
     if args.fixture:
         path = args.fixture if args.fixture.is_absolute() else ROOT / args.fixture
-        feat, meta = load_feature_from_geojson(
-            path, codigo=args.codigo, index=args.feature_index
-        )
+        feat, meta = load_feature_from_geojson(path, codigo=args.codigo, index=args.feature_index)
         built.append(
             build_pack_from_feature(
                 feat,
@@ -1087,10 +1095,12 @@ def main() -> int:
             )
         )
     elif args.feature_geojson:
-        path = args.feature_geojson if args.feature_geojson.is_absolute() else ROOT / args.feature_geojson
-        feat, meta = load_feature_from_geojson(
-            path, codigo=args.codigo, index=args.feature_index
+        path = (
+            args.feature_geojson
+            if args.feature_geojson.is_absolute()
+            else ROOT / args.feature_geojson
         )
+        feat, meta = load_feature_from_geojson(path, codigo=args.codigo, index=args.feature_index)
         built.append(
             build_pack_from_feature(
                 feat,

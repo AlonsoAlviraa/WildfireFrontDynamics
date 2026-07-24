@@ -93,13 +93,11 @@ def assert_split_role(split: str, action: str) -> None:
         raise ProtocolRailError(f"unknown split {split!r}")
     if str(action) not in allowed:
         raise ProtocolRailError(
-            f"action {action!r} not allowed on split {split!r}; "
-            f"allowed={sorted(allowed)}"
+            f"action {action!r} not allowed on split {split!r}; allowed={sorted(allowed)}"
         )
     if str(action) in TUNE_ACTIONS and str(split) in ("test", "lofo"):
         raise ProtocolRailError(
-            f"refusing tune/calibrate action {action!r} on {split!r} "
-            "(VAL-only protocol integrity)"
+            f"refusing tune/calibrate action {action!r} on {split!r} (VAL-only protocol integrity)"
         )
 
 
@@ -119,9 +117,7 @@ def reject_ros_keys_in_primary(primary: dict) -> None:
         if k in ROS_FORBIDDEN_KEYS:
             bad.add(k)
     if bad:
-        raise ProtocolRailError(
-            f"ROS/ops keys forbidden in ML primary scorecard: {sorted(bad)}"
-        )
+        raise ProtocolRailError(f"ROS/ops keys forbidden in ML primary scorecard: {sorted(bad)}")
 
 
 def validate_scorecard_tuning(tuning: dict | None) -> list[str]:

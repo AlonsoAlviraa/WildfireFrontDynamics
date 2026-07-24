@@ -96,12 +96,7 @@ def main() -> int:
     score_dual = sum(dual[k] * weights[k] for k in weights)
     axes_win = sum(1 for k in weights if dual[k] > clm_only[k] + 1e-6)
     venta_go = (
-        e1 >= 80
-        and e2 >= 50
-        and e5 >= 80
-        and e6 >= 90
-        and score_dual > score_clm
-        and axes_win >= 4
+        e1 >= 80 and e2 >= 50 and e5 >= 80 and e6 >= 90 and score_dual > score_clm and axes_win >= 4
     )
 
     comparison = {
@@ -191,16 +186,26 @@ def main() -> int:
 .score{{font-size:1.4rem;padding:1rem;background:#0b1;color:#fff;border-radius:8px}}
 .no{{background:#a30}}</style></head><body>
 <h1>Open IF index (Pista B)</h1>
-<div class="score {'no' if not venta_go else ''}">
-Dual score {score_dual:.1f} vs CLM-only {score_clm:.1f} · VENTA_GO={'YES' if venta_go else 'NO'}
+<div class="score {"no" if not venta_go else ""}">
+Dual score {score_dual:.1f} vs CLM-only {score_clm:.1f} · VENTA_GO={"YES" if venta_go else "NO"}
 </div>
-<ul>{''.join(cards) or '<li>No packs — run build_open_if_pack.py</li>'}</ul>
+<ul>{"".join(cards) or "<li>No packs — run build_open_if_pack.py</li>"}</ul>
 <p><a href="../../docs/COMPARE_CLM_VS_OPEN.md">Comparativa</a> ·
 <a href="../../docs/ONEPAGER_COMERCIAL_ES.md">One-pager</a></p>
 </body></html>
 """
     (OUT / "index.html").write_text(html, encoding="utf-8")
-    print(json.dumps({"n_packs": len(packs), "score_dual": score_dual, "score_clm": score_clm, "VENTA_GO": venta_go}, indent=2))
+    print(
+        json.dumps(
+            {
+                "n_packs": len(packs),
+                "score_dual": score_dual,
+                "score_clm": score_clm,
+                "VENTA_GO": venta_go,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

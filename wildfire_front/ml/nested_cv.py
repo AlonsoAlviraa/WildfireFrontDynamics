@@ -22,7 +22,8 @@ post-hoc**; it does **not** change nested outer scoring (avoids same-outer optim
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -43,7 +44,6 @@ from wildfire_front.ml.uncertainty import (
     fit_temperature_on_logits,
     predict_proba_rows,
 )
-
 
 DEFAULT_L2_GRID: tuple[float, ...] = (1e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1.0)
 DEFAULT_N_FOLDS = 5
@@ -263,9 +263,7 @@ def val_nested_fit_eval(
     grid = tuple(float(x) for x in (l2_grid if l2_grid is not None else DEFAULT_L2_GRID))
     pairs = make_kfold_indices(n, n_folds=n_folds, seed=seed)
     iou_arr = (
-        np.asarray(ious, dtype=np.float64).ravel()
-        if ious is not None and len(ious) == n
-        else None
+        np.asarray(ious, dtype=np.float64).ravel() if ious is not None and len(ious) == n else None
     )
 
     fold_metrics: list[dict[str, Any]] = []
@@ -307,12 +305,10 @@ def val_nested_fit_eval(
         eces.append(ece)
 
         # Collect raw outer logits for optional diagnostic (not used for nested ECE).
-        for row, yi in zip(X_te, y_te):
+        for row, yi in zip(X_te, y_te, strict=False):
             x = np.asarray(row, dtype=np.float64).ravel()
             if cal.weights.size == x.size + 1:
-                pooled_outer_logits.append(
-                    float(np.dot(cal.weights[:-1], x) + cal.weights[-1])
-                )
+                pooled_outer_logits.append(float(np.dot(cal.weights[:-1], x) + cal.weights[-1]))
                 pooled_outer_y.append(float(yi))
 
         fold_doc: dict[str, Any] = {
@@ -520,7 +516,8 @@ def nested_cv_provenance_block(nested: dict[str, Any]) -> dict[str, Any]:
     """Compact scorecard/calibrator provenance fields for nested CV."""
     return {
         "k": nested.get("k") or nested.get("n_folds_requested"),
-        "mean_ece": nested.get("mean_ece") if nested.get("mean_ece") is not None
+        "mean_ece": nested.get("mean_ece")
+        if nested.get("mean_ece") is not None
         else nested.get("nested_val_ece_mean"),
         "nested_val_ece_mean": nested.get("nested_val_ece_mean"),
         "nested_val_ece_std": nested.get("nested_val_ece_std"),
@@ -530,9 +527,7 @@ def nested_cv_provenance_block(nested: dict[str, Any]) -> dict[str, Any]:
         "mean_u1b": nested.get("mean_u1b"),
         "recommended_l2": nested.get("recommended_l2"),
         "second_stage": nested.get("second_stage"),
-        "second_stage_in_nested_scoring": bool(
-            nested.get("second_stage_in_nested_scoring", False)
-        ),
+        "second_stage_in_nested_scoring": bool(nested.get("second_stage_in_nested_scoring", False)),
         "seed": nested.get("seed"),
         "n_patches": nested.get("n_patches"),
         "mode": nested.get("mode", "kfold"),

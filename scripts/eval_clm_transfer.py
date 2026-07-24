@@ -63,7 +63,9 @@ def main() -> int:
     # Prefer frozen holdout_v1; fall back to legacy layout with warning.
     clm_dir = args.holdout_root / args.split
     clm_split_label = args.split
-    protocol = "clm_holdout_test_seed42_v1" if args.split == "test" else f"clm_holdout_{args.split}_v1"
+    protocol = (
+        "clm_holdout_test_seed42_v1" if args.split == "test" else f"clm_holdout_{args.split}_v1"
+    )
     if not clm_dir.is_dir() or not list(clm_dir.glob("*.npz")):
         base = ROOT / "artifacts" / "clm_ndws_patches"
         for sub in (args.split, "test", "val", "train"):
@@ -177,7 +179,9 @@ def main() -> int:
 
     agg = aggregate_ndws_evaluation(sample_metrics)
     model_iou = float(agg.get("model_iou") or agg.get("model_full", {}).get("micro_iou") or 0.0)
-    copy_iou = float(agg.get("copy_baseline_iou") or agg.get("copy_full", {}).get("micro_iou") or 0.0)
+    copy_iou = float(
+        agg.get("copy_baseline_iou") or agg.get("copy_full", {}).get("micro_iou") or 0.0
+    )
     delta = float(agg.get("improvement_vs_copy_iou", model_iou - copy_iou))
     delta_positive = bool(delta is not None and delta > 0)
     g2_ok = bool(report.get("gate_g2_eligible")) and delta_positive

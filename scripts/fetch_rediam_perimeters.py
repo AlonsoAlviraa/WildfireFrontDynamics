@@ -31,10 +31,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 WFS_BASE = (
-    "https://www.juntadeandalucia.es/medioambiente/mapwms/"
-    "REDIAM_perimetros_incendios_forestales"
+    "https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_perimetros_incendios_forestales"
 )
-ATTRIBUTION = "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
+ATTRIBUTION = (
+    "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
+)
 DEFAULT_OUT = ROOT / "data" / "open_if" / "rediam_andalucia" / "wfs_cache"
 UA = "WildfireFrontDynamics/1.0 (research; rediam intake; contact alonso.alvbal@gmail.com)"
 

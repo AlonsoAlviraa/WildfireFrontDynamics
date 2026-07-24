@@ -8,8 +8,9 @@ as fit) and must never promote fusion.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 # Published catalog TEST reference (research quality only — not primary.model_iou
 # for U1 eval runs). Source: models/clm_ensemble/manifest.json / design doc.
@@ -53,9 +54,7 @@ def assert_eval_split_path(data_dir: Path, split: str) -> None:
     """
     split_l = str(split).lower().strip()
     if split_l not in ("val", "test"):
-        raise ValueError(
-            f"U1 eval only supports split val|test, got {split!r}"
-        )
+        raise ValueError(f"U1 eval only supports split val|test, got {split!r}")
     try:
         resolved = data_dir.resolve()
     except OSError:
@@ -110,8 +109,7 @@ def assert_never_fit_on_test(action: str, split: str) -> None:
     }
     if str(split).lower() == "test" and str(action).lower() in tune:
         raise ValueError(
-            f"refusing action {action!r} on split test "
-            "(never fit / calibrate / tune on TEST)"
+            f"refusing action {action!r} on split test (never fit / calibrate / tune on TEST)"
         )
 
 
@@ -141,9 +139,7 @@ def compute_fusion_recommendation(
     u1_val_lab_pass = bool(u1_pass and eval_s == "val")
     frozen_ok = bool(frozen_calibrator) and not bool(identity_calibrator)
     fit_ok = fit_s == "val"
-    u1_test_honest = bool(
-        u1_pass and eval_s == "test" and frozen_ok and fit_ok
-    )
+    u1_test_honest = bool(u1_pass and eval_s == "test" and frozen_ok and fit_ok)
 
     reasons: list[str] = []
     if not u1_pass:
@@ -192,10 +188,7 @@ def patch_metrics_to_uncertainty_block(
 
     ious_l = [float(x) for x in ious]
     conf_l = [float(x) for x in confidences]
-    if labels is None:
-        y_l = [1 if x >= tau_iou else 0 for x in ious_l]
-    else:
-        y_l = [int(x) for x in labels]
+    y_l = [1 if x >= tau_iou else 0 for x in ious_l] if labels is None else [int(x) for x in labels]
     unc: dict[str, Any] = {
         "n_patches": len(ious_l),
         "tau_iou": float(tau_iou),
@@ -209,9 +202,8 @@ def patch_metrics_to_uncertainty_block(
         unc["overconfidence_gap"] = float(overconf)
     if u1b is not None:
         unc["selective_iou_at_80pct_coverage"] = u1b.get("selective_iou")
-        unc["selective_iou_random_baseline_80"] = (
-            u1b.get("shuffle_selective_iou_mean")
-            or u1b.get("random_selective_iou_mean")
+        unc["selective_iou_random_baseline_80"] = u1b.get("shuffle_selective_iou_mean") or u1b.get(
+            "random_selective_iou_mean"
         )
         unc["beats_random_selective"] = bool(u1b.get("beats_random"))
         unc["delta_vs_random"] = u1b.get("delta_vs_random")

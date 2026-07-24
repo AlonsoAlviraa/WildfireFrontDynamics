@@ -173,7 +173,9 @@ def geojson_to_geom(obj: dict[str, Any]) -> BaseGeometry:
     return shape(obj)
 
 
-def densify_ring(coords: list[tuple[float, float]], min_points: int = 8) -> list[tuple[float, float]]:
+def densify_ring(
+    coords: list[tuple[float, float]], min_points: int = 8
+) -> list[tuple[float, float]]:
     """Ensure closed ring has enough distinct vertices for FrontObservation."""
     if not coords:
         return coords
@@ -181,7 +183,7 @@ def densify_ring(coords: list[tuple[float, float]], min_points: int = 8) -> list
     if ring[0] != ring[-1]:
         ring.append(ring[0])
     # Distinct count excluding closing point
-    distinct = []
+    distinct: list[tuple[float, float]] = []
     for p in ring[:-1]:
         if not distinct or p != distinct[-1]:
             distinct.append(p)

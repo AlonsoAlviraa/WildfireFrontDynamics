@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 DNBR_QUEUE_SCHEMA = "open_if_dnbr_queue_v1"
 
@@ -11,13 +12,13 @@ DNBR_QUEUE_SCHEMA = "open_if_dnbr_queue_v1"
 def _cloud(item: Mapping[str, Any]) -> float | None:
     if "eo:cloud_cover" in item:
         try:
-            return float(item["eo:cloud_cover"])  # type: ignore[arg-type]
+            return float(item["eo:cloud_cover"])
         except (TypeError, ValueError):
             return None
     props = item.get("properties") or {}
     if isinstance(props, Mapping) and "eo:cloud_cover" in props:
         try:
-            return float(props["eo:cloud_cover"])  # type: ignore[arg-type]
+            return float(props["eo:cloud_cover"])
         except (TypeError, ValueError):
             return None
     return None
@@ -65,13 +66,17 @@ def evaluate_dnbr_queue(
     pre_clear = [i for i in pre if _is_clear(i, max_cloud)]
     post_clear = [i for i in post if _is_clear(i, max_cloud)]
     n_post_unknown_cloud = sum(1 for i in post if _cloud(i) is None)
-    n_post_cloudy = sum(
-        1 for i in post if _cloud(i) is not None and float(_cloud(i)) > max_cloud  # type: ignore[arg-type]
-    )
+    n_post_cloudy = 0
+    for i in post:
+        c = _cloud(i)
+        if c is not None and c > max_cloud:
+            n_post_cloudy += 1
     n_pre_unknown_cloud = sum(1 for i in pre if _cloud(i) is None)
-    n_pre_cloudy = sum(
-        1 for i in pre if _cloud(i) is not None and float(_cloud(i)) > max_cloud  # type: ignore[arg-type]
-    )
+    n_pre_cloudy = 0
+    for i in pre:
+        c = _cloud(i)
+        if c is not None and c > max_cloud:
+            n_pre_cloudy += 1
 
     # Always apply event_date filter when set (no unfiltered fallback).
     n_post_on_or_before_event = 0
@@ -110,9 +115,7 @@ def evaluate_dnbr_queue(
         if n_post_cloudy:
             reasons.append(f"post_cloudy_above_max={n_post_cloudy}")
         if event_date and n_post_on_or_before_event:
-            reasons.append(
-                f"post_on_or_before_event_date_excluded={n_post_on_or_before_event}"
-            )
+            reasons.append(f"post_on_or_before_event_date_excluded={n_post_on_or_before_event}")
         reasons.append("blocked_clouds_or_no_post_window")
     else:
         # Both pre_clear and post_clear non-empty

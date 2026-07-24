@@ -151,9 +151,7 @@ def run_window(
         "methods": ops.get("primary_methods_used"),
         "n_pairs": (structural or {}).get("n_pairs") or ops.get("speed_n_observable"),
         "area_ha_max": ops.get("area_ha_max"),
-        "pass_ratio_band": (
-            isinstance(ratio, (int, float)) and 0.5 <= float(ratio) <= 2.0
-        )
+        "pass_ratio_band": (isinstance(ratio, (int, float)) and 0.5 <= float(ratio) <= 2.0)
         if ratio is not None
         else (
             isinstance(primary, (int, float)) and 0.5 <= float(primary) / 7.0 <= 2.0
@@ -241,9 +239,7 @@ def main() -> int:
     ok = [r for r in results if r.get("status") == "ok"]
     band = [r for r in ok if r.get("pass_ratio_band") is True]
     abstain = [
-        r
-        for r in ok
-        if r.get("primary_ros_m_min") is None and r.get("pass_ratio_band") is not True
+        r for r in ok if r.get("primary_ros_m_min") is None and r.get("pass_ratio_band") is not True
     ]
     n_win = len(ok)
     n_pass = len(band)

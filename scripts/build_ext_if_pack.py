@@ -68,7 +68,7 @@ def load_shp_feature(shp_path: Path) -> tuple[dict[str, Any], Any, str, float]:
             crs_str = "EPSG:25829"
     crs = CRS.from_user_input(crs_str)
     sr = next(r.iterShapeRecords())
-    props = {k: v for k, v in zip(field_names, sr.record)}
+    props = dict(zip(field_names, sr.record, strict=False))
     g = shape(sr.shape.__geo_interface__)
     if not crs.is_geographic:
         tf = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -108,7 +108,9 @@ def build_scorecard_ext(
             else ("SKIP" if dnbr_status in {"SKIP", "BLOCKED"} else "FAIL")
         ),
         "NO_FALSE_DISPATCH": "PASS" if no_false else "FAIL",
-        "REPRO": "PASS" if repro_status == "PASS" else ("SKIP" if repro_status == "SKIP" else "FAIL"),
+        "REPRO": "PASS"
+        if repro_status == "PASS"
+        else ("SKIP" if repro_status == "SKIP" else "FAIL"),
         "PROVENANCE": "PASS" if attribution_ok else "FAIL",
         "FECHAS_DET_EXT": "PASS",  # always for RAI delivery with fields
     }
@@ -117,9 +119,7 @@ def build_scorecard_ext(
     any_fail = any(g == "FAIL" for g in gates.values())
     if any_hard:
         verdict = "NO_GO"
-    elif any_fail:
-        verdict = "PARTIAL"
-    elif gates["OPEN_FIRMS"] == "SKIP" and gates["OPEN_DNBR"] == "SKIP":
+    elif any_fail or gates["OPEN_FIRMS"] == "SKIP" and gates["OPEN_DNBR"] == "SKIP":
         verdict = "PARTIAL"
     else:
         verdict = "GO_OPEN_EXT_O2"
@@ -221,7 +221,7 @@ def build_one(
     field_names = [f[0] for f in r.fields[1:]]
     sr = next(r.iterShapeRecords())
     g_nat = shape(sr.shape.__geo_interface__)
-    props_n = {k: v for k, v in zip(field_names, sr.record)}
+    props_n = dict(zip(field_names, sr.record, strict=False))
     fc_nat = {
         "type": "FeatureCollection",
         "features": [
@@ -283,7 +283,11 @@ def build_one(
     else:
         _write_json(
             pack_dir / "vectors" / "firms_hotspots.geojson",
-            {"type": "FeatureCollection", "features": [], "properties": {"status": "SKIP", "reasons": ["skip_firms"]}},
+            {
+                "type": "FeatureCollection",
+                "features": [],
+                "properties": {"status": "SKIP", "reasons": ["skip_firms"]},
+            },
         )
 
     metrics = {
@@ -439,10 +443,14 @@ def build_one(
         center=center,
     )
     # retitle banner for EXT
-    html = html.replace("REDIAM AND", "EXT RAI").replace(
-        "Fuente: REDIAM — Junta de Andalucía",
-        "Fuente: RAI — Junta de Extremadura / INFOEX",
-    ).replace("REDIAM perímetro (O2)", "RAI perímetro (O2)")
+    html = (
+        html.replace("REDIAM AND", "EXT RAI")
+        .replace(
+            "Fuente: REDIAM — Junta de Andalucía",
+            "Fuente: RAI — Junta de Extremadura / INFOEX",
+        )
+        .replace("REDIAM perímetro (O2)", "RAI perímetro (O2)")
+    )
     (pack_dir / "map.html").write_text(html, encoding="utf-8")
 
     print(

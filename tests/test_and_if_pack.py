@@ -68,7 +68,9 @@ def test_build_pack_from_fixture_offline(tmp_path: Path):
     assert sc["verdict"] in {"GO_OPEN_AND_O2", "PARTIAL"}
 
     # Perimeter WGS84 lon/lat
-    per = json.loads((pack_dir / "vectors" / "perimeter_rediam.geojson").read_text(encoding="utf-8"))
+    per = json.loads(
+        (pack_dir / "vectors" / "perimeter_rediam.geojson").read_text(encoding="utf-8")
+    )
     coords = per["features"][0]["geometry"]["coordinates"][0][0]
     lon, lat = coords[0], coords[1]
     assert -180 <= lon <= 180
@@ -86,18 +88,24 @@ def test_attribution_ok_requires_written_content():
     mod = _load_pack_mod()
     # Literals alone are what we refuse to inject in pack build — helper still
     # checks whatever strings it is given; empty written props must FAIL.
-    assert mod.attribution_ok_from_written(
-        perimeter_feature_props={},
-        perimeter_fc_props={},
-        provenance_obj={},
-        brief_text="no source cited",
-    ) is False
-    assert mod.attribution_ok_from_written(
-        perimeter_feature_props={"attribution": "Fuente: REDIAM — Junta de Andalucía"},
-        perimeter_fc_props={},
-        provenance_obj={},
-        brief_text="",
-    ) is True
+    assert (
+        mod.attribution_ok_from_written(
+            perimeter_feature_props={},
+            perimeter_fc_props={},
+            provenance_obj={},
+            brief_text="no source cited",
+        )
+        is False
+    )
+    assert (
+        mod.attribution_ok_from_written(
+            perimeter_feature_props={"attribution": "Fuente: REDIAM — Junta de Andalucía"},
+            perimeter_fc_props={},
+            provenance_obj={},
+            brief_text="",
+        )
+        is True
+    )
     # Injecting only mun/prov without REDIAM/Junta fails
     assert mod.attribution_ok_from_text("Níjar", "Almería") is False
     # Must not pass when only unrelated text
@@ -219,9 +227,7 @@ def test_check_pack_honest_fail_closed(tmp_path: Path):
         ),
         encoding="utf-8",
     )
-    (pack / "metrics_o2.json").write_text(
-        json.dumps({"area_rediam_ha": 100}), encoding="utf-8"
-    )
+    (pack / "metrics_o2.json").write_text(json.dumps({"area_rediam_ha": 100}), encoding="utf-8")
     (pack / "scorecard_and_industrial.json").write_text(
         json.dumps(
             {
@@ -231,11 +237,9 @@ def test_check_pack_honest_fail_closed(tmp_path: Path):
                 "decision_open": "GO",
             }
         ),
-        encoding="utf-8"
+        encoding="utf-8",
     )
-    (pack / "provenance.json").write_text(
-        json.dumps({"attribution": "REDIAM"}), encoding="utf-8"
-    )
+    (pack / "provenance.json").write_text(json.dumps({"attribution": "REDIAM"}), encoding="utf-8")
     report = ver._check_pack(pack)
     assert report["honest"]["firms_hull_not_official"] is False
     assert report["honest"]["vp_not_invented_ok"] is False
@@ -308,7 +312,9 @@ def test_firms_hull_disclaimer_in_metrics():
 
     red = box(-4.05, 37.95, -3.85, 38.15)
     metrics, hull_fc = mod.firms_hull_metrics(pts, red)
-    assert "NOT official" in metrics["disclaimer"] or "not official" in metrics["disclaimer"].lower()
+    assert (
+        "NOT official" in metrics["disclaimer"] or "not official" in metrics["disclaimer"].lower()
+    )
     if hull_fc is not None:
         props = hull_fc["features"][0]["properties"]
         assert props.get("not_official_perimeter") is True

@@ -442,9 +442,7 @@ def test_cems_watch_emsr896_note():
     assert "EMSR896" in EMSR896_NOTE
     assert doc["emsr896_is_not_la_mierla"] is True
     assert_emsr896_disclaimer(doc)
-    doc2 = build_cems_watch(
-        note="EMSR896 is Aragon (Ores path). No confirmed EMSR for La Mierla."
-    )
+    doc2 = build_cems_watch(note="EMSR896 is Aragon (Ores path). No confirmed EMSR for La Mierla.")
     assert "EMSR896" in doc2["note"]
     assert_emsr896_disclaimer(doc2)
 
@@ -459,9 +457,7 @@ def test_assert_emsr896_disclaimer_failures():
     with pytest.raises(AssertionError, match="EMSR896"):
         assert_emsr896_disclaimer({"note": "No activation", "emsr896_is_not_la_mierla": True})
     with pytest.raises(AssertionError, match="emsr896_is_not_la_mierla"):
-        assert_emsr896_disclaimer(
-            {"note": "EMSR896 is Aragon", "emsr896_is_not_la_mierla": False}
-        )
+        assert_emsr896_disclaimer({"note": "EMSR896 is Aragon", "emsr896_is_not_la_mierla": False})
 
 
 # ── week package ──────────────────────────────────────────────────────────

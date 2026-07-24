@@ -22,8 +22,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -271,12 +272,10 @@ def build_scorecard(
     allow_fusion_rec = bool(rec["allow_ml_live_in_fusion_recommended"])
 
     reasons: list[str] = list(rec.get("reasons") or [])
-    if not u1a_pass:
-        if "U1a_fail_or_missing" not in reasons:
-            reasons.append("U1a_fail_or_missing")
-    if not u1b_pass:
-        if "U1b_fail_or_missing" not in reasons:
-            reasons.append("U1b_fail_or_missing")
+    if not u1a_pass and "U1a_fail_or_missing" not in reasons:
+        reasons.append("U1a_fail_or_missing")
+    if not u1b_pass and "U1b_fail_or_missing" not in reasons:
+        reasons.append("U1b_fail_or_missing")
     if ious is None and synthetic_mode is None:
         reasons = ["U1_fail_or_missing_patch_data"]
     if allow_fusion_rec:
@@ -497,13 +496,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         fit_split = str(args.calibrator_fit_split)
 
-    if args.require_frozen_calibrator and (identity or not frozen):
-        if not args.offline_fixture:
-            print(
-                "ERROR: --require-frozen-calibrator but no non-identity calibrator loaded",
-                file=sys.stderr,
-            )
-            return 2
+    if args.require_frozen_calibrator and (identity or not frozen) and not args.offline_fixture:
+        print(
+            "ERROR: --require-frozen-calibrator but no non-identity calibrator loaded",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.offline_fixture:
         doc = build_scorecard(

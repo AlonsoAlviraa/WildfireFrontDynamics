@@ -122,8 +122,7 @@ def _run_ft(
             "delta_diff": metrics["improvement_vs_copy_iou"] - V28["improvement_vs_copy_iou"],
             "growth_diff": metrics["model_iou_growth"] - V28["model_iou_growth"],
             "beats_v28_iou": metrics["model_iou"] > V28["model_iou"],
-            "beats_v28_delta": metrics["improvement_vs_copy_iou"]
-            > V28["improvement_vs_copy_iou"],
+            "beats_v28_delta": metrics["improvement_vs_copy_iou"] > V28["improvement_vs_copy_iou"],
         },
         "weights": str(weights),
         "generated_at_utc": datetime.now(UTC).isoformat(),

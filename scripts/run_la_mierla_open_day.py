@@ -312,18 +312,17 @@ def try_dnbr(
         elif _runner_missing_post(reasons):
             status["honest_incomplete"] = True
             _write_json(pack / "dnbr_status.json", status)
-    elif runner_status == "GO":
-        # Keep GO; optionally note queue disagreement without demotion
-        if queue.get("status") == "blocked_clouds":
-            status["queue_disagreement"] = {
-                "dnbr_queue_status": queue.get("status"),
-                "detail_status": queue.get("detail_status"),
-                "note": (
-                    "Enrichment STAC queue lacks post_fire items but dNBR runner "
-                    "found pre+post and returned GO — not demoted."
-                ),
-            }
-            _write_json(pack / "dnbr_status.json", status)
+    elif runner_status == "GO" and queue.get("status") == "blocked_clouds":
+        # Keep GO; note queue disagreement without demotion
+        status["queue_disagreement"] = {
+            "dnbr_queue_status": queue.get("status"),
+            "detail_status": queue.get("detail_status"),
+            "note": (
+                "Enrichment STAC queue lacks post_fire items but dNBR runner "
+                "found pre+post and returned GO — not demoted."
+            ),
+        }
+        _write_json(pack / "dnbr_status.json", status)
 
     _update_scorecard_dnbr(pack, status, queue)
     compare_hull_vs_dnbr(pack, status)
@@ -427,9 +426,7 @@ def coerce_field_ops_hold(card: dict[str, Any]) -> dict[str, Any]:
     card = dict(card)
     card["decision"] = "HOLD"
     card["open_only_hard_rule"] = True
-    card["open_only_hard_rule_note"] = (
-        "field_ops GO forbidden on open-only path; coerced to HOLD"
-    )
+    card["open_only_hard_rule_note"] = "field_ops GO forbidden on open-only path; coerced to HOLD"
     reasons = list(card.get("reasons") or card.get("decision_reasons") or [])
     if "open_only_path_forbids_field_ops_GO" not in reasons:
         reasons.append("open_only_path_forbids_field_ops_GO")

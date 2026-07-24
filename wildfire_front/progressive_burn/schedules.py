@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
-from .schemas import N_STAGES_DEFAULT, N_STAGES_MAX, N_STAGES_MIN
+from .schemas import N_STAGES_MAX, N_STAGES_MIN
 
 
 def validate_n_stages(n_stages: int) -> int:
@@ -60,8 +60,7 @@ def fraction_schedule(
         fracs[-1] = 1.0
     else:
         raise ValueError(
-            f"unknown schedule {name!r}; "
-            "use linear|sqrt|early_fast|late_fast|logistic|custom"
+            f"unknown schedule {name!r}; use linear|sqrt|early_fast|late_fast|logistic|custom"
         )
 
     # Ensure positive first fraction and exact terminal 1.0

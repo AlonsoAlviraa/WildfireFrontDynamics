@@ -85,9 +85,7 @@ def main() -> int:
     out.write_text(text, encoding="utf-8")
     if args.geojson_origin and "geojson_15min" in report:
         gj_path = out.with_name(out.stem + "_polar15.geojson")
-        gj_path.write_text(
-            json.dumps(report["geojson_15min"], indent=2), encoding="utf-8"
-        )
+        gj_path.write_text(json.dumps(report["geojson_15min"], indent=2), encoding="utf-8")
         print(f"Wrote {gj_path}", file=sys.stderr)
     print(f"\nWrote {out}", file=sys.stderr)
     return 0

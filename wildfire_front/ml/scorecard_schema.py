@@ -87,7 +87,11 @@ def validate_ml_scorecard(doc: dict[str, Any]) -> list[str]:
             for k in unc:
                 if k not in UNCERTAINTY_ALLOWED_KEYS:
                     fails.append(f"unknown_uncertainty_key:{k}")
-    fails.extend(validate_scorecard_tuning(doc.get("tuning") if isinstance(doc.get("tuning"), dict) else None))
+    fails.extend(
+        validate_scorecard_tuning(
+            doc.get("tuning") if isinstance(doc.get("tuning"), dict) else None
+        )
+    )
     return fails
 
 

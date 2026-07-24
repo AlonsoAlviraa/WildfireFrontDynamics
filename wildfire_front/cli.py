@@ -389,7 +389,10 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         metavar="PATH",
-        help="Path to ml_live_metrics_v1 JSON (live patch reliability for Decision Card)",
+        help=(
+            "Path to ml_live_metrics_v1 JSON, or ml_prediction_v1 wrapper "
+            "(e.g. outbox/ml_prediction.json with nested ml_live_metrics)"
+        ),
     )
     decide.add_argument(
         "--ml-live-metrics",
@@ -610,9 +613,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                         )
                 return
 
-            ml_pred = getattr(args, "ml_prediction", None) or getattr(
-                args, "ml_live_metrics", None
-            )
+            ml_pred = getattr(args, "ml_prediction", None) or getattr(args, "ml_live_metrics", None)
             payload = decide_from_request(
                 {
                     "event_id": args.event_id,

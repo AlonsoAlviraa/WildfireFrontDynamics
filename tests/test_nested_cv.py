@@ -148,14 +148,15 @@ def test_nested_platt_does_not_fit_second_stage_on_outer():
         l2_grid=(5e-2,),
     )
     # Nested ECE must be identical: second_stage must not touch outer scoring
-    assert m_platt["nested_val_ece_mean"] == pytest.approx(
-        m_none["nested_val_ece_mean"], abs=1e-12
-    )
+    assert m_platt["nested_val_ece_mean"] == pytest.approx(m_none["nested_val_ece_mean"], abs=1e-12)
     assert m_platt["second_stage"] == "platt"
     assert m_platt["second_stage_in_nested_scoring"] is False
     assert all(f.get("second_stage_fit_on_outer") is False for f in m_platt["folds"])
     assert "logistic-only" in m_platt["honesty"].lower() or "logistic" in m_platt["honesty"].lower()
-    assert HONEST_NESTED_ECE_NOTE.split("(")[0] in m_platt["honesty"] or "outer never" in m_platt["honesty"]
+    assert (
+        HONEST_NESTED_ECE_NOTE.split("(")[0] in m_platt["honesty"]
+        or "outer never" in m_platt["honesty"]
+    )
 
 
 def test_nested_with_temperature_second_stage_label_only():
@@ -374,7 +375,7 @@ def test_promote_eligible_real_like_and_lab_synthetic_flag(tmp_path: Path):
 def test_promote_accepts_real_scorecard_shape(tmp_path: Path):
     """Real-ish scorecard: offline false, n_patches>=50, eval_dir with test."""
     from scripts.ml_scorecard import build_scorecard
-    from scripts.promote_ml_live_fusion import validate_promote_eligibility, main
+    from scripts.promote_ml_live_fusion import main, validate_promote_eligibility
 
     # Start from a U1-passing fixture shape, then mark as real holdout provenance
     doc = build_scorecard(

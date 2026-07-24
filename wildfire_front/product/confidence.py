@@ -362,9 +362,13 @@ def decide(
     holdout = _source_by_id(sources, "ml_clm_ensemble")
     # Source present in list means channel was requested (even if schema invalid).
     live_channel_present = live is not None
-    live_available = bool(live.get("available")) if live_channel_present else False
-    # live_ok = actionable only (NOT weight>0). Untrusted: available but not actionable.
-    live_ok = bool(live.get("actionable")) if live_available else False
+    if live is not None:
+        live_available = bool(live.get("available"))
+        # live_ok = actionable only (NOT weight>0). Untrusted: available but not actionable.
+        live_ok = bool(live.get("actionable")) if live_available else False
+    else:
+        live_available = False
+        live_ok = False
     holdout_ok = bool(holdout and holdout.get("available"))
     # If live channel was requested, never fall back to holdout for ml_ok (even bad schema).
     ml_ok = live_ok if live_channel_present else holdout_ok
@@ -671,9 +675,7 @@ def build_decision_card(
                     reason = "ml_live_not_actionable_conf_zero"
                 fuse_reasons = list(fuse_reasons) + [reason]
         elif ml_holdout and ml_holdout.get("available"):
-            conf = float(
-                ml_holdout.get("holdout_quality") or ml_holdout.get("confidence") or 0.0
-            )
+            conf = float(ml_holdout.get("holdout_quality") or ml_holdout.get("confidence") or 0.0)
             fuse_reasons = list(fuse_reasons) + ["ml_holdout_quality_display"]
     decision, dec_reasons = decide(
         conf,

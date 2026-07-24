@@ -33,7 +33,9 @@ def _download(url: str) -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
-def bbox_from_main_front(pack: Path, pad_deg: float = 0.15) -> tuple[float, float, float, float] | None:
+def bbox_from_main_front(
+    pack: Path, pad_deg: float = 0.15
+) -> tuple[float, float, float, float] | None:
     """Return lon_min, lat_min, lon_max, lat_max from main_front (UTM or WGS84)."""
     for name in ("main_front_wgs84.geojson", "main_front.geojson"):
         p = pack / name

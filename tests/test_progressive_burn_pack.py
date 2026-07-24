@@ -7,8 +7,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from shapely.geometry import mapping
-from shapely.geometry import box
+from shapely.geometry import box, mapping
 
 from wildfire_front.progressive_burn.pack_attach import attach_progressive_burn
 from wildfire_front.progressive_burn.pipeline import ProgressiveBurnConfig
@@ -38,9 +37,7 @@ def _mini_pack(tmp_path: Path) -> Path:
             }
         ],
     }
-    (pack / "vectors" / "perimeter_rediam.geojson").write_text(
-        json.dumps(fc), encoding="utf-8"
-    )
+    (pack / "vectors" / "perimeter_rediam.geojson").write_text(json.dumps(fc), encoding="utf-8")
     (pack / "manifest.json").write_text(
         json.dumps(
             {
@@ -94,7 +91,9 @@ def test_pack_attach_fixture(tmp_path):
     assert "sintético" in brief.lower() or "synthetic" in brief.lower()
     assert "REDIAM" in brief
 
-    metrics = json.loads((pack / "progressive" / "metrics_progressive.json").read_text(encoding="utf-8"))
+    metrics = json.loads(
+        (pack / "progressive" / "metrics_progressive.json").read_text(encoding="utf-8")
+    )
     assert metrics["vp_tactical"] is None
     assert metrics["gates"]["PSB_HONESTY"] == "PASS"
     assert metrics["gates"]["PSB_NO_FALSE_DISPATCH"] == "PASS"
@@ -151,8 +150,12 @@ def test_gold_nijar_progressive(tmp_path):
     assert metrics["vp_tactical"] is None
 
     # Terminal feature geometry matches official pack perimeter (KD1 publish)
-    tl = json.loads((dest / "progressive" / "timeline_progressive.geojson").read_text(encoding="utf-8"))
-    official = json.loads((dest / "vectors" / "perimeter_rediam.geojson").read_text(encoding="utf-8"))
+    tl = json.loads(
+        (dest / "progressive" / "timeline_progressive.geojson").read_text(encoding="utf-8")
+    )
+    official = json.loads(
+        (dest / "vectors" / "perimeter_rediam.geojson").read_text(encoding="utf-8")
+    )
     term = tl["features"][-1]["geometry"]
     off = official["features"][0]["geometry"] if "features" in official else official["geometry"]
     assert term == off

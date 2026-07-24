@@ -60,8 +60,7 @@ def collect() -> dict[str, Any]:
                         **{k: sc.get(k) for k in sc},
                         "ros_proxy_n": len((man or {}).get("ros_proxy_rows") or []),
                         "hausdorff_series": [
-                            r.get("hausdorff_m")
-                            for r in ((man or {}).get("ros_proxy_rows") or [])
+                            r.get("hausdorff_m") for r in ((man or {}).get("ros_proxy_rows") or [])
                         ],
                         "growth_ha_h": [
                             r.get("growth_ha_per_hour")
@@ -90,9 +89,7 @@ def collect() -> dict[str, Any]:
         "primary_ros_m_min": 5.71,  # documented historical pack
         "n_frames_staged": 35,
         "area_ha_max": tob.get("area_ha"),
-        "speed_vs_ref_ratio": (5.71 / float(tob["vp_m_min"]))
-        if tob.get("vp_m_min")
-        else None,
+        "speed_vs_ref_ratio": (5.71 / float(tob["vp_m_min"])) if tob.get("vp_m_min") else None,
         "anchor_status": tob.get("status"),
     }
 
@@ -265,19 +262,19 @@ table{{width:100%;border-collapse:collapse}} th,td{{padding:.4rem;border-bottom:
 h1{{margin-top:0}}
 </style></head><body><div class="wrap">
 <h1>Metrics Hub</h1>
-<p class="muted">{hub.get('built_at_utc')} · {hub.get('git_commit')} · hash {str(hub.get('content_hash'))[:16]}…</p>
+<p class="muted">{hub.get("built_at_utc")} · {hub.get("git_commit")} · hash {str(hub.get("content_hash"))[:16]}…</p>
 <div class="card">
   <span class="badge">{dec}</span>
-  <p>confidence_pred = <b>{card.get('confidence_pred')}</b> ({card.get('confidence_pred_label')})
-  · system_reliability = <b>{card.get('system_reliability_pass')}</b></p>
+  <p>confidence_pred = <b>{card.get("confidence_pred")}</b> ({card.get("confidence_pred_label")})
+  · system_reliability = <b>{card.get("system_reliability_pass")}</b></p>
   <p class="muted">99.9999% applies only to silent-GO prevention under tests — NOT fire accuracy.</p>
 </div>
 <div class="card">
   <h2>ML v34</h2>
   <ul>
-    <li>IoU {mm.get('test_iou')}</li>
-    <li>Δ copy {mm.get('improvement_vs_copy_iou')}</li>
-    <li>growth {mm.get('model_iou_growth')}</li>
+    <li>IoU {mm.get("test_iou")}</li>
+    <li>Δ copy {mm.get("improvement_vs_copy_iou")}</li>
+    <li>growth {mm.get("model_iou_growth")}</li>
   </ul>
 </div>
 <div class="card">
@@ -287,11 +284,11 @@ h1{{margin-top:0}}
 </div>
 <div class="card">
   <h2>Commercial</h2>
-  <pre>{json.dumps(hub.get('commercial_compare'), indent=2)}</pre>
+  <pre>{json.dumps(hub.get("commercial_compare"), indent=2)}</pre>
 </div>
 <div class="card">
   <h2>Gates</h2>
-  <pre>{json.dumps(hub.get('gates'), indent=2)}</pre>
+  <pre>{json.dumps(hub.get("gates"), indent=2)}</pre>
 </div>
 </div></body></html>
 """
@@ -301,9 +298,7 @@ def main() -> int:
     hub = collect()
     docs = ROOT / "docs"
     docs.mkdir(exist_ok=True)
-    (docs / "METRICS_HUB.json").write_text(
-        json.dumps(hub, indent=2, default=str), encoding="utf-8"
-    )
+    (docs / "METRICS_HUB.json").write_text(json.dumps(hub, indent=2, default=str), encoding="utf-8")
     (docs / "METRICS_HUB.md").write_text(render_md(hub), encoding="utf-8")
     (docs / "METRICS_DASHBOARD.html").write_text(render_html(hub), encoding="utf-8")
     # also decision card standalone

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Print a line whenever ML_LOOP_3WAY_SCORECARD.json changes."""
+
 from __future__ import annotations
 
 import json

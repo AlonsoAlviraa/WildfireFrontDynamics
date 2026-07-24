@@ -81,12 +81,7 @@ def main() -> int:
         # Do NOT include LOFO folds trained on Cardoso (leakage).
         v28 = ROOT / "models" / "clm_specialist" / "weights_v28_clm_ft.pt"
         cardoso = (
-            ROOT
-            / "outputs"
-            / "ml_eval"
-            / "lofo_v1"
-            / "CARDOSO"
-            / "weights_pretrained_best.pt"
+            ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt"
         )
         weight_paths = [p for p in (v28, cardoso) if p.is_file()]
         if args.include_v28:
@@ -166,9 +161,7 @@ def main() -> int:
         "copy_baseline_iou": metrics["copy_baseline_iou"],
         "improvement_vs_copy_iou": delta,
         "model_iou_growth": growth,
-        "improvement_vs_dilated_copy_iou_growth": metrics[
-            "improvement_vs_dilated_copy_iou_growth"
-        ],
+        "improvement_vs_dilated_copy_iou_growth": metrics["improvement_vs_dilated_copy_iou_growth"],
         "vs_v28": {
             "baseline_iou": V28_BASELINE["model_iou"],
             "baseline_delta": V28_BASELINE["improvement_vs_copy_iou"],
@@ -211,8 +204,10 @@ def main() -> int:
                     "id": "clm_ensemble_v30",
                     "product": "clm_ensemble_v30",
                     "ensemble_mode": args.mode,
-                    "members": [str(w.relative_to(ROOT)) if w.is_relative_to(ROOT) else str(w)
-                                for w in weight_paths],
+                    "members": [
+                        str(w.relative_to(ROOT)) if w.is_relative_to(ROOT) else str(w)
+                        for w in weight_paths
+                    ],
                     "metrics": {
                         "model_iou": iou,
                         "improvement_vs_copy_iou": delta,

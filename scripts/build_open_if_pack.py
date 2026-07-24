@@ -50,9 +50,7 @@ def _utc() -> str:
 
 
 def fetch_activation_vectors(code: str) -> list[str]:
-    html = urllib.request.urlopen(f"{PAGE}/{code}", timeout=60).read().decode(
-        "utf-8", "replace"
-    )
+    html = urllib.request.urlopen(f"{PAGE}/{code}", timeout=60).read().decode("utf-8", "replace")
     s3 = sorted(set(re.findall(r"https://cems-mapping-website[^\s\"'<>]+", html)))
     return [u for u in s3 if u.endswith("_vector.zip") or "vector.zip" in u]
 
@@ -108,6 +106,7 @@ def _area_ha_wgs84(geom: Any) -> float:
         lat = (miny + maxy) / 2.0
         m_per_deg_lat = 111_320.0
         m_per_deg_lon = 111_320.0 * math.cos(math.radians(lat))
+
         # use shapely transform scale
         def _to_m(x, y, z=None):
             return (x * m_per_deg_lon, y * m_per_deg_lat)
@@ -186,7 +185,10 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
             if p.suffix.lower() in {".json", ".geojson"}:
                 with contextlib.suppress(OSError, json.JSONDecodeError):
                     geo_items.append(
-                        {"member": str(p.relative_to(extract_dir)), "geojson": json.loads(p.read_text(encoding="utf-8"))}
+                        {
+                            "member": str(p.relative_to(extract_dir)),
+                            "geojson": json.loads(p.read_text(encoding="utf-8")),
+                        }
                     )
 
         # Prefer observedEventA (fire area polygons). Never AOI/hydro/buildings.
@@ -307,9 +309,7 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
     primary = [
         p
         for p in products
-        if p.get("area_ha")
-        and _is_fire_layer(p)
-        and "AOI01" in (p.get("file") or "")
+        if p.get("area_ha") and _is_fire_layer(p) and "AOI01" in (p.get("file") or "")
     ]
     if not primary:
         primary = [p for p in products if p.get("area_ha") and _is_fire_layer(p)]
@@ -354,9 +354,7 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
                         for line in b.geoms:
                             pts.append(line.interpolate(0.5, normalized=True))
                     if pts:
-                        mean_boundary_m = float(
-                            sum(g0m.distance(pt) for pt in pts) / len(pts)
-                        )
+                        mean_boundary_m = float(sum(g0m.distance(pt) for pt in pts) / len(pts))
         except Exception:
             pass
         ros_rows.append(
@@ -413,9 +411,8 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
         ],
         "gates": {
             "O2_official_national_perimeter": "NO_GO_CEMS_PROXY",
-            "O2_open_cems_delineation": "GO" if any(
-                p.get("kind", "").startswith("delineation") for p in products
-            )
+            "O2_open_cems_delineation": "GO"
+            if any(p.get("kind", "").startswith("delineation") for p in products)
             else "PARTIAL",
             "O1_multi_source_open": "GO_PROXY" if max_area > 0 else "NO_GO",
             "lwir_required": False,
@@ -463,9 +460,7 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
         "status": "GO_OPEN_DATA_PACK",
         "pack_dir": str(pack_dir.relative_to(ROOT)),
     }
-    (pack_dir / "scorecard_pista_b.json").write_text(
-        json.dumps(score, indent=2), encoding="utf-8"
-    )
+    (pack_dir / "scorecard_pista_b.json").write_text(json.dumps(score, indent=2), encoding="utf-8")
 
     # simple leaflet-ish HTML (static, no deps)
     html = _map_html(report, combined)
@@ -491,9 +486,7 @@ def _render_brief(report: dict[str, Any]) -> str:
         "## Timeline de productos vectoriales",
     ]
     for p in report.get("timeline") or []:
-        lines.append(
-            f"- `{p.get('kind')}` · {p.get('area_ha', 0):.1f} ha · {p.get('file')}"
-        )
+        lines.append(f"- `{p.get('kind')}` · {p.get('area_ha', 0):.1f} ha · {p.get('file')}")
     lines.extend(["", "## ROS proxy (perímetros sucesivos)", ""])
     if not report.get("ros_proxy_rows"):
         lines.append("- (un solo producto con área — no hay secuencia multi-perímetro)")
@@ -542,7 +535,7 @@ def _map_html(report: dict[str, Any], fc: dict[str, Any]) -> str:
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>html,body,#map{{height:100%;margin:0}} .banner{{padding:8px;font-family:sans-serif;background:#111;color:#eee}}</style>
 </head><body>
-<div class="banner"><b>{act}</b> · Copernicus EMS vectors · no LWIR · max {report.get('max_area_ha',0):.0f} ha</div>
+<div class="banner"><b>{act}</b> · Copernicus EMS vectors · no LWIR · max {report.get("max_area_ha", 0):.0f} ha</div>
 <div id="map"></div>
 <script>
 const data = {gj};

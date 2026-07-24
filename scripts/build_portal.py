@@ -74,7 +74,7 @@ def main() -> int:
         pack_rows = "<tr><td colspan='5'>Sin packs — ejecuta <code>python scripts/build_open_if_pack.py --activation EMSR578</code></td></tr>"
 
     gate_pills = "".join(
-        f"<span class='pill {'ok' if str(v).upper() in ('GO','GO_ENG','GO_PROXY','TRUE','PASS') else 'warn' if 'PARTIAL' in str(v).upper() or 'FOLLOW' in str(v).upper() else 'bad'}'>{k}: {v}</span>"
+        f"<span class='pill {'ok' if str(v).upper() in ('GO', 'GO_ENG', 'GO_PROXY', 'TRUE', 'PASS') else 'warn' if 'PARTIAL' in str(v).upper() or 'FOLLOW' in str(v).upper() else 'bad'}'>{k}: {v}</span>"
         for k, v in list(gates.items())[:12]
     )
 
@@ -196,7 +196,7 @@ pre.cmd {{
         no un visor más de mapas gratis.
       </p>
       <p class="tag" style="margin-top:.75rem">
-        Actualizado: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M')} UTC · git <code>{_git()}</code>
+        Actualizado: {datetime.now(UTC).strftime("%Y-%m-%d %H:%M")} UTC · git <code>{_git()}</code>
       </p>
     </div>
   </header>
@@ -205,7 +205,7 @@ pre.cmd {{
     <div class="card">
       <h2>Decisión ahora</h2>
       <div class="badge">{dec}</div>
-      <div class="sub">Confianza del fenómeno: <b>{conf_s}</b> · Sistema reliability: <b>{card.get('system_reliability_pass')}</b></div>
+      <div class="sub">Confianza del fenómeno: <b>{conf_s}</b> · Sistema reliability: <b>{card.get("system_reliability_pass")}</b></div>
       <p class="sub" style="margin-top:.6rem">Si faltan fuentes → ABSTAIN. No inventamos acción.</p>
     </div>
     <div class="card">
@@ -273,7 +273,7 @@ python scripts\\show_all.py</pre>
         <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
         <div class="row"><span>dNBR/STAC post-fuego (EMSR578)</span><span class="ok-text">HECHO · dnbr_preview.tif + STAC S2</span></div>
         <div class="row"><span>App sala de mando (WFD COMMAND)</span><span class="ok-text">HECHO · docs/commander/index.html</span></div>
-        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or '—'} items DONE</span></div>
+        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · {done_items}/{n_items or "—"} items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
       </div>
@@ -329,7 +329,7 @@ python scripts\\show_all.py</pre>
         <li>ML Δ: <b>{delta}</b></li>
         <li>Open packs: <b>{n_packs}</b></li>
         <li>Max ha open: <b>{max_ha:.0f}</b></li>
-        <li>Score dual vs CLM-solo: <b>{compare.get('score_dual')}</b> / <b>{compare.get('score_clm_only')}</b></li>
+        <li>Score dual vs CLM-solo: <b>{compare.get("score_dual")}</b> / <b>{compare.get("score_clm_only")}</b></li>
         <li>Decision: <b>{dec}</b> ({conf_s})</li>
       </ul>
     </div>
@@ -426,7 +426,9 @@ python -m wildfire_front serve-decide --port 8765
 ```
 """
     (ROOT / "docs" / "START_HERE.md").write_text(start, encoding="utf-8")
-    print(json.dumps({"ok": True, "portal": str(out), "start_here": "docs/START_HERE.md"}, indent=2))
+    print(
+        json.dumps({"ok": True, "portal": str(out), "start_here": "docs/START_HERE.md"}, indent=2)
+    )
     return 0
 
 

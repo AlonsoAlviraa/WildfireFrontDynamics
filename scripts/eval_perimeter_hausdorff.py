@@ -113,7 +113,9 @@ def largest_ring(rings: list[tuple[tuple[float, float], ...]]) -> tuple[tuple[fl
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="O2 Hausdorff perimeter eval")
-    ap.add_argument("--observed", type=Path, required=True, help="main_front.geojson or fronts.geojson")
+    ap.add_argument(
+        "--observed", type=Path, required=True, help="main_front.geojson or fronts.geojson"
+    )
     ap.add_argument("--reference", type=Path, default=None, help="Official perimeter GeoJSON")
     ap.add_argument(
         "--mode",
@@ -158,7 +160,9 @@ def main() -> int:
             report["metrics_m"] = metrics
             metrics["front_distance_mean"]  # mean as proxy; add p50 via symmetric
             report["verdict"] = (
-                "GO" if metrics["front_distance_p95"] < 100 and metrics["front_distance_mean"] < 50 else "REVIEW"
+                "GO"
+                if metrics["front_distance_p95"] < 100 and metrics["front_distance_mean"] < 50
+                else "REVIEW"
             )
             report["note"] = "Distances in CRS units of GeoJSON (expect meters if projected)."
 
@@ -218,7 +222,11 @@ def main() -> int:
     if out is None:
         out = args.observed.parent / "hausdorff_report.json"
     out.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
-    print(json.dumps({k: report[k] for k in report if k not in ("pair_metrics_m",)}, indent=2, default=str))
+    print(
+        json.dumps(
+            {k: report[k] for k in report if k not in ("pair_metrics_m",)}, indent=2, default=str
+        )
+    )
     print("Wrote", out)
     return 0
 

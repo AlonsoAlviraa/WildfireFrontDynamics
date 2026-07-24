@@ -80,9 +80,7 @@ def main() -> int:
             "mean_delta_across_sources": float(np.mean(deltas)),
             "min_delta": float(np.min(deltas)),
             "all_sources_delta_positive": bool(all(d > 0 for d in deltas)),
-            "industrial_g2_plus": bool(
-                all(d > 0 for d in deltas) and len(deltas) >= 2
-            ),
+            "industrial_g2_plus": bool(all(d > 0 for d in deltas) and len(deltas) >= 2),
         },
         "note": (
             "Tobarra may show ~0 delta if fine-tune saw similar patches; "

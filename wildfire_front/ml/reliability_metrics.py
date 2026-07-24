@@ -6,14 +6,15 @@ Head B (pixel): ECE on probability vs binary fire label (scorecard only)
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
 
 def ece_patch_conf(
-    confidences: Sequence[float],
-    labels: Sequence[int | float | bool],
+    confidences: Sequence[float] | np.ndarray,
+    labels: Sequence[int | float | bool] | np.ndarray,
     *,
     n_bins: int = 15,
 ) -> float:
@@ -29,10 +30,7 @@ def ece_patch_conf(
     n = float(conf.size)
     for i in range(n_bins):
         lo, hi = bins[i], bins[i + 1]
-        if i == n_bins - 1:
-            mask = (conf >= lo) & (conf <= hi)
-        else:
-            mask = (conf >= lo) & (conf < hi)
+        mask = (conf >= lo) & (conf <= hi) if i == n_bins - 1 else (conf >= lo) & (conf < hi)
         if not np.any(mask):
             continue
         acc = float(y[mask].mean())
@@ -62,8 +60,8 @@ def ece_pixel_prob(
 
 
 def selective_iou_at_coverage(
-    ious: Sequence[float],
-    confidences: Sequence[float],
+    ious: Sequence[float] | np.ndarray,
+    confidences: Sequence[float] | np.ndarray,
     *,
     coverage: float = 0.8,
 ) -> dict[str, float]:
@@ -75,10 +73,7 @@ def selective_iou_at_coverage(
     cov = float(coverage)
     if cov <= 0.0:
         return {"selective_iou": float("nan"), "coverage_actual": 0.0, "n_keep": 0}
-    if cov >= 1.0:
-        n_keep = int(iou.size)
-    else:
-        n_keep = max(1, int(np.ceil(cov * iou.size)))
+    n_keep = int(iou.size) if cov >= 1.0 else max(1, int(np.ceil(cov * iou.size)))
     order = np.argsort(-conf)
     keep = order[:n_keep]
     return {
@@ -107,10 +102,7 @@ def random_selective_baseline(
             "n_trials": float(n_trials),
             "coverage": cov,
         }
-    if cov >= 1.0:
-        n_keep = int(iou.size)
-    else:
-        n_keep = max(1, int(np.ceil(cov * iou.size)))
+    n_keep = int(iou.size) if cov >= 1.0 else max(1, int(np.ceil(cov * iou.size)))
     gen = np.random.default_rng(seed)
     scores = []
     for _ in range(n_trials):
@@ -180,9 +172,7 @@ def selective_beats_random(
         r = null["shuffle_selective_iou_mean"]
         null_key = "shuffle_selective_iou_mean"
     else:
-        null = random_selective_baseline(
-            ious, coverage=coverage, n_trials=n_trials, seed=seed
-        )
+        null = random_selective_baseline(ious, coverage=coverage, n_trials=n_trials, seed=seed)
         r = null["random_selective_iou_mean"]
         null_key = "random_selective_iou_mean"
     ok = bool(np.isfinite(s) and np.isfinite(r) and s >= r + margin)

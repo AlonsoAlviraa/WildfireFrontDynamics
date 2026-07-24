@@ -72,7 +72,10 @@ def _download_summary(version: str, slug: str) -> dict | None:
 def _export_artifacts() -> None:
     weights = PROJECT_ROOT / "models" / "production" / "weights_v21_best.pt"
     if not weights.is_file():
-        subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "install_production_weights.py")], check=False)
+        subprocess.run(
+            [sys.executable, str(PROJECT_ROOT / "scripts" / "install_production_weights.py")],
+            check=False,
+        )
     subprocess.run(
         [sys.executable, str(PROJECT_ROOT / "scripts" / "export_production_model.py")],
         check=True,
@@ -90,8 +93,15 @@ def _docker_smoke() -> bool:
         print(build.stderr[-500:] if build.stderr else "docker build failed")
         return False
     run = subprocess.run(
-        ["docker", "run", "--rm", image, "python", "-c",
-         "from wildfire_front.ml.spread_predictor import SpreadPredictor; print('ok')"],
+        [
+            "docker",
+            "run",
+            "--rm",
+            image,
+            "python",
+            "-c",
+            "from wildfire_front.ml.spread_predictor import SpreadPredictor; print('ok')",
+        ],
         capture_output=True,
         text=True,
     )
@@ -141,7 +151,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Production monitoring + deploy loop")
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--export-only", action="store_true")
-    parser.add_argument("--docker", action="store_true", help="Build and smoke-test inference image")
+    parser.add_argument(
+        "--docker", action="store_true", help="Build and smoke-test inference image"
+    )
     parser.add_argument("--interval", type=int, default=120, help="Seconds between polls")
     args = parser.parse_args()
 

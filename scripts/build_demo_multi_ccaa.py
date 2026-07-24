@@ -199,7 +199,9 @@ def collect_sites() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     fecha_and = and_man.get("fecha_inc") if and_ok else None
     year_and = fecha_and if fecha_and else "—"
     vp_and_inv = _flag_true(and_sc.get("vp_invented")) if and_sc_present else False
-    hull_and = _flag_true(and_sc.get("firms_hull_is_official_burned_area")) if and_sc_present else False
+    hull_and = (
+        _flag_true(and_sc.get("firms_hull_is_official_burned_area")) if and_sc_present else False
+    )
 
     sites.append(
         {
@@ -274,9 +276,7 @@ def collect_sites() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     skips["acta_ext"] = "OK" if ACTA_EXT.is_file() else "SKIP"
 
     area_ext = (
-        _safe_float(ext_man.get("area_rai_ha") or ext_man.get("hectareas_attr"))
-        if ext_ok
-        else None
+        _safe_float(ext_man.get("area_rai_ha") or ext_man.get("hectareas_attr")) if ext_ok else None
     )
     # Only use dates from loaded manifest — never invent plan defaults when pack SKIP
     fecha_det = ext_man.get("fecha_det") if ext_ok else None
@@ -291,7 +291,9 @@ def collect_sites() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         year_ext = "—"
 
     vp_ext_inv = _flag_true(ext_sc.get("vp_invented")) if ext_sc_present else False
-    hull_ext = _flag_true(ext_sc.get("firms_hull_is_official_burned_area")) if ext_sc_present else False
+    hull_ext = (
+        _flag_true(ext_sc.get("firms_hull_is_official_burned_area")) if ext_sc_present else False
+    )
 
     if area_ext is not None and fecha_det:
         headline_ext = f"Perímetro RAI ~{area_ext:.0f} ha · det {fecha_det}"
@@ -396,9 +398,7 @@ def _verdict_class(verdict: str) -> str:
 
 def render_html(sites: list[dict[str, Any]], manifest: dict[str, Any]) -> str:
     """Deprecated: use demo_portal_html.render_portal via build()."""
-    raise RuntimeError(
-        "render_html is deprecated; regenerate with demo_portal_html.render_portal"
-    )
+    raise RuntimeError("render_html is deprecated; regenerate with demo_portal_html.render_portal")
 
 
 def _write_guion_12min(sites: list[dict[str, Any]], path: Path) -> None:
@@ -526,7 +526,9 @@ def _enrich_sites_with_metrics(sites: list[dict[str, Any]]) -> None:
     """Attach metrics_o2 from pack dirs when present."""
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("demo_kpi_board", ROOT / "scripts" / "demo_kpi_board.py")
+    spec = importlib.util.spec_from_file_location(
+        "demo_kpi_board", ROOT / "scripts" / "demo_kpi_board.py"
+    )
     if spec is None or spec.loader is None:
         return
     kpi_mod = importlib.util.module_from_spec(spec)
@@ -616,7 +618,10 @@ def _tobarra_point_fc() -> dict[str, Any]:
         "features": [
             {
                 "type": "Feature",
-                "properties": {"name": "Tobarra", "note": "OPS center proxy — not official perimeter"},
+                "properties": {
+                    "name": "Tobarra",
+                    "note": "OPS center proxy — not official perimeter",
+                },
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": [
@@ -656,7 +661,12 @@ def _git_short() -> str | None:
 
 # Patchable for tests (soft-skip-all). kind: live | schema_sample
 DECISION_CARD_CANDIDATES: list[tuple[str, Path, str, str]] = [
-    ("gold_e2e", ROOT / "outputs" / "gold_e2e" / "fire_decision_card.json", "Tobarra gold E2E", "live"),
+    (
+        "gold_e2e",
+        ROOT / "outputs" / "gold_e2e" / "fire_decision_card.json",
+        "Tobarra gold E2E",
+        "live",
+    ),
     (
         "forensic_demo",
         ROOT / "outputs" / "forensic_demo" / "fire_decision_card.json",
@@ -686,10 +696,7 @@ def _load_decision_cards(skips: dict[str, Any]) -> list[dict[str, Any]]:
         skips[f"decision_card_{cid}"] = "OK"
         decision = raw.get("decision") or raw.get("posture") or "—"
         reasons = raw.get("reasons") or []
-        if isinstance(reasons, list):
-            reasons_s = [str(x) for x in reasons[:8]]
-        else:
-            reasons_s = [str(reasons)]
+        reasons_s = [str(x) for x in reasons[:8]] if isinstance(reasons, list) else [str(reasons)]
         disclaimers = list(raw.get("disclaimers") or [])[:6]
         if not any("tactical dispatch" in str(d).lower() for d in disclaimers):
             disclaimers = ["Not a tactical dispatch order."] + disclaimers
@@ -858,7 +865,9 @@ def build() -> dict[str, Any]:
 
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("demo_kpi_board", ROOT / "scripts" / "demo_kpi_board.py")
+    spec = importlib.util.spec_from_file_location(
+        "demo_kpi_board", ROOT / "scripts" / "demo_kpi_board.py"
+    )
     assert spec and spec.loader
     kpi_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(kpi_mod)
@@ -867,7 +876,9 @@ def build() -> dict[str, Any]:
     scoreboard = kpi_mod.scoreboard_rows(sites)
     ha_svg = kpi_mod.svg_ha_bars(sites)
 
-    spec_c = importlib.util.spec_from_file_location("demo_charts", ROOT / "scripts" / "demo_charts.py")
+    spec_c = importlib.util.spec_from_file_location(
+        "demo_charts", ROOT / "scripts" / "demo_charts.py"
+    )
     assert spec_c and spec_c.loader
     charts_mod = importlib.util.module_from_spec(spec_c)
     spec_c.loader.exec_module(charts_mod)

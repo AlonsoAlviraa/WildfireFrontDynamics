@@ -76,9 +76,11 @@ def _resolve_calibrator(path: str | None):
 
 def main() -> int:
     choices = _product_choices()
-    default = load_catalog().get("default_product") if Path(
-        PROJECT_ROOT / "models" / "catalog.json"
-    ).is_file() else "clm_v28"
+    default = (
+        load_catalog().get("default_product")
+        if Path(PROJECT_ROOT / "models" / "catalog.json").is_file()
+        else "clm_v28"
+    )
     if default not in choices:
         default = "clm_v28" if "clm_v28" in choices else choices[0]
 
@@ -102,7 +104,9 @@ def main() -> int:
         help="Override ensemble member weight paths",
     )
     parser.add_argument("--npz", type=str, default=None, help="Input patch NPZ or directory")
-    parser.add_argument("--output", type=str, default=None, help="Write prediction NPZ (single file)")
+    parser.add_argument(
+        "--output", type=str, default=None, help="Write prediction NPZ (single file)"
+    )
     parser.add_argument("--eval", action="store_true", help="Metrics if target_fire present")
     parser.add_argument("--max-patches", type=int, default=0, help="0 = all")
     parser.add_argument(
@@ -164,18 +168,14 @@ def main() -> int:
                 p = Path(rel)
                 member_paths.append(p if p.is_absolute() else (PROJECT_ROOT / p).resolve())
             predictor: SpreadPredictor | EnsembleSpreadPredictor = (
-                EnsembleSpreadPredictor.from_manifest(
-                    manifest_path, member_weights=member_paths
-                )
+                EnsembleSpreadPredictor.from_manifest(manifest_path, member_weights=member_paths)
             )
             product_id = str(mdata.get("id") or mdata.get("version") or "ensemble")
             product_label = product_id
             domain = str(mdata.get("domain") or "ensemble")
         else:
             weights_path = args.weights
-            predictor = SpreadPredictor.from_manifest(
-                manifest_path, weights_path=weights_path
-            )
+            predictor = SpreadPredictor.from_manifest(manifest_path, weights_path=weights_path)
             product_id = str(mdata.get("version") or "custom")
             product_label = product_id
             domain = "custom"
@@ -224,14 +224,13 @@ def main() -> int:
         except FileNotFoundError as exc:
             print(str(exc), file=sys.stderr)
             return 2
-        if calibrator is not None and getattr(calibrator, "is_identity", False):
-            if not args.json:
-                print(
-                    "NOTE: no product calibrator under models/clm_ensemble/ — "
-                    "using identity (live confidence forces abstain). "
-                    "Fit with scripts/fit_ml_uncertainty_calibration.py or pass --calibrator.",
-                    flush=True,
-                )
+        if calibrator is not None and getattr(calibrator, "is_identity", False) and not args.json:
+            print(
+                "NOTE: no product calibrator under models/clm_ensemble/ — "
+                "using identity (live confidence forces abstain). "
+                "Fit with scripts/fit_ml_uncertainty_calibration.py or pass --calibrator.",
+                flush=True,
+            )
 
     sample_metrics: list[dict] = []
     metrics_rows: list[dict] = []
@@ -264,10 +263,13 @@ def main() -> int:
                 "shape": list(pred_prob.shape),
             }
             last_live_doc = build_ml_prediction_document(unc, mask_summary=mask_summary)
-            if args.with_uncertainty and (args.json or len(paths) == 1):
-                # Print live metrics for single-patch / json mode
-                if not args.ml_live_json or len(paths) == 1:
-                    print(json.dumps(last_live_doc, indent=2))
+            # Print live metrics for single-patch / json mode
+            if (
+                args.with_uncertainty
+                and (args.json or len(paths) == 1)
+                and (not args.ml_live_json or len(paths) == 1)
+            ):
+                print(json.dumps(last_live_doc, indent=2))
         else:
             pred_prob = predictor.predict(seq, current_fire)
             pred_bin = (pred_prob >= thr).astype(np.float32)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """One-command sellable dual-product demo (open CEMS + CLM readiness).
 
-  python scripts/demo_sellable_product.py
-  python scripts/demo_sellable_product.py --skip-build   # only index + report
+python scripts/demo_sellable_product.py
+python scripts/demo_sellable_product.py --skip-build   # only index + report
 """
 
 from __future__ import annotations

@@ -158,10 +158,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
+    from scripts.ml_scorecard import build_scorecard
     from wildfire_front.ml.ndws_metrics import evaluate_sample
     from wildfire_front.ml.product_catalog import load_predictor_for_product
     from wildfire_front.ml.spread_predictor import EnsembleSpreadPredictor
-    from scripts.ml_scorecard import build_scorecard
 
     print(
         f"Loading product {args.product} + frozen calibrator {cal_path} …",
@@ -193,9 +193,7 @@ def main(argv: list[str] | None = None) -> int:
             product_id=args.product,
             protocol=DEFAULT_PROTOCOL,
         )
-        sample = evaluate_sample(
-            pred.prob, current_fire, target_fire, threshold=thr
-        )
+        sample = evaluate_sample(pred.prob, current_fire, target_fire, threshold=thr)
         iou = float(sample["model_full"].iou)
         conf = float(pred.confidence)
         y = 1 if iou >= tau else 0
@@ -257,19 +255,14 @@ def main(argv: list[str] | None = None) -> int:
         "mean_iou_eval_split": float(np.mean(ious)),
         "ece_patch_conf": (doc.get("uncertainty") or {}).get("ece_patch_conf"),
         "U1a": gates.get("U1a_selective_ge_full_minus_eps"),
-        "U1b": gates.get("U1b_selective_beats_random")
-        or gates.get("U1_selective_beats_random"),
+        "U1b": gates.get("U1b_selective_beats_random") or gates.get("U1_selective_beats_random"),
         "u1_val_lab_pass": gates.get("u1_val_lab_pass"),
         "u1_val_optimistic": gates.get("u1_val_optimistic"),
         "u1_test_honest": gates.get("u1_test_honest"),
-        "allow_ml_live_in_fusion_recommended": doc.get(
-            "allow_ml_live_in_fusion_recommended"
-        ),
+        "allow_ml_live_in_fusion_recommended": doc.get("allow_ml_live_in_fusion_recommended"),
         "ml_product_go": False,
         "predictor_type": (
-            "ensemble"
-            if isinstance(predictor, EnsembleSpreadPredictor)
-            else "single"
+            "ensemble" if isinstance(predictor, EnsembleSpreadPredictor) else "single"
         ),
         "note": (
             "Never fit on TEST. Fusion recommended only if u1_test_honest. "

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Review & adapt the 3-month plan from live evidence (loop-engineering cycle).
 
-  python scripts/run_plan_cycle.py
-  python scripts/run_plan_cycle.py --execute-m1   # also run hub + reliability + decide
+python scripts/run_plan_cycle.py
+python scripts/run_plan_cycle.py --execute-m1   # also run hub + reliability + decide
 """
 
 from __future__ import annotations
@@ -47,9 +47,7 @@ def assess() -> dict:
     n_packs = 0
     if open_dir.is_dir():
         n_packs = sum(
-            1
-            for d in open_dir.iterdir()
-            if d.is_dir() and (d / "scorecard_pista_b.json").is_file()
+            1 for d in open_dir.iterdir() if d.is_dir() and (d / "scorecard_pista_b.json").is_file()
         )
     hub = _load(ROOT / "docs" / "METRICS_HUB.json") or {}
     card = hub.get("decision_card") or {}
@@ -72,9 +70,7 @@ def assess() -> dict:
             "evidence": "docs/METRICS_HUB.json",
         },
         "M1.4_firms_overlay": {
-            "status": "DONE"
-            if _exists("scripts", "overlay_firms_on_open_pack.py")
-            else "PENDING",
+            "status": "DONE" if _exists("scripts", "overlay_firms_on_open_pack.py") else "PENDING",
             "evidence": "scripts/overlay_firms_on_open_pack.py",
         },
         "M1.5_cems_delta_t": {
@@ -96,9 +92,8 @@ def assess() -> dict:
         },
         "M2.1_fdc_in_incident": {
             "status": "DONE"
-            if "publish_decision_card" in (
-                ROOT / "wildfire_front" / "incident" / "pipeline.py"
-            ).read_text(encoding="utf-8")
+            if "publish_decision_card"
+            in (ROOT / "wildfire_front" / "incident" / "pipeline.py").read_text(encoding="utf-8")
             else "PENDING",
             "evidence": "outbox/fire_decision_card.json on incident update",
         },
@@ -112,9 +107,7 @@ def assess() -> dict:
                 _exists("scripts", "build_open_if_dnbr.py")
                 and _exists("wildfire_front", "open_if", "dnbr.py")
                 and (
-                    (
-                        ROOT / "outputs" / "open_if" / "emsr578" / "dnbr_status.json"
-                    ).is_file()
+                    (ROOT / "outputs" / "open_if" / "emsr578" / "dnbr_status.json").is_file()
                     or _exists("docs", "design", "DNBR_STAC_OPEN_PACK.md")
                 )
             )
@@ -125,11 +118,7 @@ def assess() -> dict:
             "status": "DONE"
             if _exists("docs", "INCIDENT_SLA_LATENCY.json")
             and bool((_load(ROOT / "docs" / "INCIDENT_SLA_LATENCY.json") or {}).get("sla_pass"))
-            else (
-                "IN_PROGRESS"
-                if _exists("scripts", "measure_incident_sla.py")
-                else "PENDING"
-            ),
+            else ("IN_PROGRESS" if _exists("scripts", "measure_incident_sla.py") else "PENDING"),
             "evidence": "docs/INCIDENT_SLA_LATENCY.json",
         },
         "M2.8_decide_api": {
@@ -137,9 +126,7 @@ def assess() -> dict:
             if _exists("wildfire_front", "product", "api_server.py")
             and (
                 not _exists("docs", "DECIDE_API_LATENCY.json")
-                or bool(
-                    (_load(ROOT / "docs" / "DECIDE_API_LATENCY.json") or {}).get("sla_pass")
-                )
+                or bool((_load(ROOT / "docs" / "DECIDE_API_LATENCY.json") or {}).get("sla_pass"))
             )
             else "PENDING",
             "evidence": "POST /v1/decide + docs/DECIDE_API_LATENCY.json",
@@ -147,8 +134,7 @@ def assess() -> dict:
         "M2.9_forensic_acta": {
             "status": "DONE"
             if _exists("wildfire_front", "product", "forensics.py")
-            and "replay-decide"
-            in (ROOT / "wildfire_front" / "cli.py").read_text(encoding="utf-8")
+            and "replay-decide" in (ROOT / "wildfire_front" / "cli.py").read_text(encoding="utf-8")
             else "PENDING",
             "evidence": "forensics.py + export-acta + replay-decide",
         },
@@ -200,9 +186,7 @@ def assess() -> dict:
             "M1.6: 4 packs sufficient for demo; raise to 5 when next CEMS build is free"
         )
     if items["M1.5_cems_delta_t"]["status"] == "AT_RISK":
-        adaptations.append(
-            "M1.5 deferred: keep 24h assumption + document; focus M1.2/M1.4"
-        )
+        adaptations.append("M1.5 deferred: keep 24h assumption + document; focus M1.2/M1.4")
     if not go_q_progress["pilot_or_outreach"]:
         adaptations.append(
             "Mes 2 priority shift: outreach list earlier if product gate stays green"
@@ -281,9 +265,7 @@ def main() -> int:
                 "go_q_partial_ready": status["go_q_partial_ready"],
                 "n_packs": status["live"]["n_open_packs"],
                 "adaptations": status["adaptations_this_cycle"],
-                "items_done": sum(
-                    1 for v in status["items"].values() if v["status"] == "DONE"
-                ),
+                "items_done": sum(1 for v in status["items"].values() if v["status"] == "DONE"),
             },
             indent=2,
         )

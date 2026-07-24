@@ -177,8 +177,7 @@ def score_candidates() -> dict[str, Any]:
                 sc = {}
         n_vec = len(list((p / "vectors").glob("*.geojson"))) if (p / "vectors").is_dir() else 0
         layers = {
-            "open_cems_multi_temporal_ge2": n_vec >= 2
-            or int(sc.get("n_timeline_steps") or 0) >= 2,
+            "open_cems_multi_temporal_ge2": n_vec >= 2 or int(sc.get("n_timeline_steps") or 0) >= 2,
             "open_scorecard_o2_cems": sc.get("O2_cems_delineation") == "GO"
             or sc.get("status") == "GO_OPEN_DATA_PACK",
             "open_dnbr_optional": (p / "dnbr_status.json").is_file(),
@@ -529,9 +528,7 @@ def verify_stack(skip_ml: bool, skip_pytest: bool, skip_cems_probe: bool) -> dic
         "open_o2": open_c["layers"].get("open_scorecard_o2_cems"),
         "open_dnbr": open_c["layers"].get("open_dnbr_optional"),
         "open_firms": open_c["layers"].get("open_firms_optional"),
-        "decide_ok": any(
-            s.get("name") == "decide_fusion" and s.get("ok") for s in report["steps"]
-        ),
+        "decide_ok": any(s.get("name") == "decide_fusion" and s.get("ok") for s in report["steps"]),
     }
     report["layers_pass"] = layers_pass
     report["n_layers_pass"] = sum(1 for v in layers_pass.values() if v)
@@ -606,16 +603,14 @@ def write_md(report: dict[str, Any]) -> None:
         "",
     ]
     for e in sc.get("external_web_candidates") or []:
-        lines.append(
-            f"- **{e.get('id')}** · `{e.get('verdict')}` — {e.get('why')}"
-        )
+        lines.append(f"- **{e.get('id')}** · `{e.get('verdict')}` — {e.get('why')}")
     lines += [
         "",
         "## Cómo re-ejecutar",
         "",
         "```powershell",
         "cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics",
-        "$env:PYTHONPATH = \".\"",
+        '$env:PYTHONPATH = "."',
         "python scripts\\verify_gold_if_e2e.py",
         "```",
         "",
@@ -646,9 +641,7 @@ def main() -> int:
                 "ok": report.get("ok"),
                 "layers": f"{report.get('n_layers_pass')}/{report.get('n_layers_total')}",
                 "ops": (report.get("scoring") or {}).get("ops_champion", {}).get("fire_id"),
-                "open": (report.get("scoring") or {})
-                .get("open_champion", {})
-                .get("activation"),
+                "open": (report.get("scoring") or {}).get("open_champion", {}).get("activation"),
                 "decision": (report.get("decision_card") or {}).get("decision"),
                 "json": str(OUT),
                 "md": str(MD_OUT),

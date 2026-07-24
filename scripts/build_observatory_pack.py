@@ -465,11 +465,7 @@ def process_fire(
     ratio = None
     if isinstance(ops, dict) and ops.get("speed_vs_ref_ratio") is not None:
         ratio = ops.get("speed_vs_ref_ratio")
-    elif (
-        isinstance(speed_median, (int, float))
-        and infocam is not None
-        and float(infocam) > 0
-    ):
+    elif isinstance(speed_median, (int, float)) and infocam is not None and float(infocam) > 0:
         ratio = float(speed_median) / float(infocam)
     entry.update(
         {
@@ -482,7 +478,9 @@ def process_fire(
             "infocam_area_ha": spec.infocam_area_ha,
             "speed_vs_infocam_ratio": ratio,
             "quality_grade": (ops or {}).get("quality_grade") if isinstance(ops, dict) else None,
-            "quality_label_es": (ops or {}).get("quality_label_es") if isinstance(ops, dict) else None,
+            "quality_label_es": (ops or {}).get("quality_label_es")
+            if isinstance(ops, dict)
+            else None,
         }
     )
     return entry
@@ -491,10 +489,7 @@ def process_fire(
 def write_scorecard(results: list[dict[str, object]], path: Path) -> dict[str, object]:
     ok = [r for r in results if r.get("status") in {"ok", "partial"}]
     a1 = len(ok) >= 3
-    a2 = all(
-        not r.get("missing_artifacts")
-        for r in ok
-    ) if ok else False
+    a2 = all(not r.get("missing_artifacts") for r in ok) if ok else False
     tobarra = next((r for r in results if "tobarra" in str(r.get("fire_id", ""))), None)
     a5_notes = "Tobarra not in run"
     a5 = False
@@ -558,8 +553,12 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated fire_ids from catalog (default: 3 fires for A1)",
     )
     p.add_argument("--min-component-pixels", type=int, default=800)
-    p.add_argument("--max-frames", type=int, default=8,
-                   help="Consecutive frames in densest temporal window (speed physics).")
+    p.add_argument(
+        "--max-frames",
+        type=int,
+        default=8,
+        help="Consecutive frames in densest temporal window (speed physics).",
+    )
     p.add_argument(
         "--max-side",
         type=int,

@@ -27,8 +27,8 @@ from wildfire_front.ml.uncertainty import (
     fit_logistic_calibrator,
 )
 from wildfire_front.product.confidence import (
-    Decision,
     ML_LIVE_SOURCE_ID,
+    Decision,
     build_decision_card,
     score_ml_live_source,
 )
@@ -187,9 +187,7 @@ def test_fit_logistic_requires_split_context():
 def test_calibrator_rejects_wrong_weight_length():
     cal = LogisticCalibrator(weights=np.array([0.1, 0.2]))  # too short for 3 features
     with pytest.raises(ValueError, match="weight length"):
-        cal.predict_proba(
-            {"mean_entropy": 0.1, "member_disagreement": 0.1, "mean_margin": 0.3}
-        )
+        cal.predict_proba({"mean_entropy": 0.1, "member_disagreement": 0.1, "mean_margin": 0.3})
 
 
 def test_identity_calibrator_safe_default():
@@ -278,9 +276,7 @@ def test_ml_only_live_hold_fusion_off():
         ml_live_trusted=True,
     )
     assert card.decision == Decision.HOLD
-    assert any(
-        s.get("id") == "ml_live_reliability" and s.get("actionable") for s in card.sources
-    )
+    assert any(s.get("id") == "ml_live_reliability" and s.get("actionable") for s in card.sources)
     assert any(
         s.get("id") == "ml_live_reliability" and s.get("weight") == 0.0 for s in card.sources
     )
@@ -573,15 +569,14 @@ def test_decide_from_request_http_untrusted():
     )
     assert http["decision"] == "ABSTAIN"
     assert float(http["confidence_pred"]) == 0.0
-    live_src = next(
-        s for s in http["sources"] if s.get("id") == "ml_live_reliability"
-    )
+    live_src = next(s for s in http["sources"] if s.get("id") == "ml_live_reliability")
     assert live_src["available"] is True
     assert live_src["actionable"] is False
 
 
 def test_decide_from_request_ml_prediction_path(tmp_path):
     import json
+
     from wildfire_front.product.decide_service import decide_from_request
 
     path = tmp_path / "live.json"

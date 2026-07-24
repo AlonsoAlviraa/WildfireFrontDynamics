@@ -71,9 +71,7 @@ def _find_and_packs() -> list[Path]:
     return sorted(
         d
         for d in OPEN_IF.iterdir()
-        if d.is_dir()
-        and d.name.startswith("and_")
-        and (d / "manifest.json").is_file()
+        if d.is_dir() and d.name.startswith("and_") and (d / "manifest.json").is_file()
     )
 
 
@@ -100,8 +98,7 @@ def _check_pack(pack: Path) -> dict[str, Any]:
         "rediam_perimeter_present": exists("vectors/perimeter_rediam.geojson"),
         "pack_manifest": bool(manifest),
         "metrics_o2": bool(metrics) and metrics.get("area_rediam_ha") is not None,
-        "scorecard_go_or_partial": scorecard.get("verdict")
-        in {"GO_OPEN_AND_O2", "PARTIAL"},
+        "scorecard_go_or_partial": scorecard.get("verdict") in {"GO_OPEN_AND_O2", "PARTIAL"},
         "map_html": exists("map.html"),
         "provenance_attribution": "REDIAM" in json.dumps(provenance)
         or "REDIAM" in json.dumps(manifest),
@@ -122,8 +119,7 @@ def _check_pack(pack: Path) -> dict[str, Any]:
 
     decision = scorecard.get("decision_open")
     decision_not_false_go = decision in {"HOLD", "ABSTAIN", "open_demo"} or (
-        decision is None
-        and scorecard.get("gates", {}).get("NO_FALSE_DISPATCH") == "PASS"
+        decision is None and scorecard.get("gates", {}).get("NO_FALSE_DISPATCH") == "PASS"
     )
     # Explicit GO for field dispatch without ASEMA is dishonest
     if decision in {"GO", "DISPATCH", "GO_FIELD_OPS"}:
@@ -238,9 +234,7 @@ def verify(
         report["steps"].append({"name": "live_wfs_smoke", "ok": r["ok"]})
         # live fail does not alone fail industrial if fixtures/packs exist
     else:
-        report["steps"].append(
-            {"name": "live_wfs_smoke", "ok": False, "skipped": True}
-        )
+        report["steps"].append({"name": "live_wfs_smoke", "ok": False, "skipped": True})
     report["live_wfs"] = live
 
     # Packs
@@ -282,9 +276,7 @@ def verify(
 
     # Honest gates: fail closed when no packs
     honest_ok = (
-        all(all(p.get("honest", {}).values()) for p in pack_reports)
-        if pack_reports
-        else False
+        all(all(p.get("honest", {}).values()) for p in pack_reports) if pack_reports else False
     )
     report["steps"].append({"name": "honest_gates", "ok": honest_ok})
     if not honest_ok:
@@ -308,9 +300,7 @@ def verify(
         if not r["ok"]:
             report["ok"] = False
     else:
-        report["steps"].append(
-            {"name": "pytest_and_smoke", "ok": False, "skipped": True}
-        )
+        report["steps"].append({"name": "pytest_and_smoke", "ok": False, "skipped": True})
 
     # Layer contract rollup — honest_gates is honest_ok only (no pack-existence OR)
     pytest_step = next(
@@ -318,11 +308,8 @@ def verify(
         {},
     )
     pytest_ok = bool(pytest_step.get("ok")) and not pytest_step.get("skipped")
-    if pytest_step.get("skipped"):
-        # Skipped pytest does not block industrial GO if packs+honesty OK
-        pytest_layer = True
-    else:
-        pytest_layer = pytest_ok
+    # Skipped pytest does not block industrial GO if packs+honesty OK
+    pytest_layer = True if pytest_step.get("skipped") else pytest_ok
 
     layer_status = {
         "rediam_perimeter_present": any(
@@ -408,10 +395,10 @@ def write_and_index() -> Path | None:
         rows.append(
             "<tr>"
             f'<td><a href="{p["id"]}/map.html">{p["id"]}</a></td>'
-            f'<td>{p.get("codigo")}</td><td>{p.get("fecha_inc")}</td>'
-            f'<td>{p.get("municipio")}/{p.get("provincia")}</td>'
-            f'<td>{p.get("area_rediam_ha")}</td>'
-            f'<td><b>{p.get("verdict")}</b></td>'
+            f"<td>{p.get('codigo')}</td><td>{p.get('fecha_inc')}</td>"
+            f"<td>{p.get('municipio')}/{p.get('provincia')}</td>"
+            f"<td>{p.get('area_rediam_ha')}</td>"
+            f"<td><b>{p.get('verdict')}</b></td>"
             "</tr>"
         )
     html = f"""<!DOCTYPE html>
@@ -429,7 +416,7 @@ th,td{{border:1px solid #333;padding:8px 10px;text-align:left}} th{{background:#
 </div>
 <table>
 <tr><th>Pack</th><th>Código</th><th>Fecha</th><th>Lugar</th><th>ha</th><th>Verdict</th></tr>
-{''.join(rows)}
+{"".join(rows)}
 </table>
 <p><a href="../../docs/AND_INDUSTRIAL_E2E_VERIFICATION.md">Acta E2E</a></p>
 </body></html>
@@ -547,15 +534,20 @@ def main() -> int:
     OUT_JSON.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     OUT_MD.write_text(render_md(report), encoding="utf-8")
     idx = write_and_index()
-    print(json.dumps({
-        "verdict": report.get("verdict"),
-        "ok": report.get("ok"),
-        "layers_pass": report.get("layers_pass"),
-        "n_packs": report.get("n_packs"),
-        "json": str(OUT_JSON.relative_to(ROOT)),
-        "md": str(OUT_MD.relative_to(ROOT)),
-        "and_index": str(idx.relative_to(ROOT)) if idx else None,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "verdict": report.get("verdict"),
+                "ok": report.get("ok"),
+                "layers_pass": report.get("layers_pass"),
+                "n_packs": report.get("n_packs"),
+                "json": str(OUT_JSON.relative_to(ROOT)),
+                "md": str(OUT_MD.relative_to(ROOT)),
+                "and_index": str(idx.relative_to(ROOT)) if idx else None,
+            },
+            indent=2,
+        )
+    )
     return 0 if report.get("ok") else 1
 
 

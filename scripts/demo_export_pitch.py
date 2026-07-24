@@ -115,19 +115,19 @@ def render_pitch_html(
   <h2>Tres sitios · un criterio</h2>
   <table>
     <thead><tr><th>IF</th><th>CCAA</th><th>Track</th><th>ha</th><th>Vp</th><th>Decisión</th><th>Verdict</th></tr></thead>
-    <tbody>{''.join(rows)}</tbody>
+    <tbody>{"".join(rows)}</tbody>
   </table>
   <ul>
-    <li><b>Tobarra OPS:</b> {_esc(_fmt_vp(kn_tb.get('vp_m_min')))} m/min · {_esc(_fmt_ha(kn_tb.get('area_ha')))} ha · {_esc(tb.get('status_anchor') or '—')}</li>
-    <li><b>Níjar AND O2:</b> ~{_esc(_fmt_ha(kn_nj.get('area_ha')))} ha REDIAM · {_esc(nj.get('verdict'))}</li>
-    <li><b>Caminomorisco EXT O2:</b> ~{_esc(_fmt_ha(kn_cm.get('area_ha')))} ha RAI · det {_esc(kn_cm.get('fecha_det') or '—')} → {_esc(kn_cm.get('fecha_ext') or '—')}</li>
+    <li><b>Tobarra OPS:</b> {_esc(_fmt_vp(kn_tb.get("vp_m_min")))} m/min · {_esc(_fmt_ha(kn_tb.get("area_ha")))} ha · {_esc(tb.get("status_anchor") or "—")}</li>
+    <li><b>Níjar AND O2:</b> ~{_esc(_fmt_ha(kn_nj.get("area_ha")))} ha REDIAM · {_esc(nj.get("verdict"))}</li>
+    <li><b>Caminomorisco EXT O2:</b> ~{_esc(_fmt_ha(kn_cm.get("area_ha")))} ha RAI · det {_esc(kn_cm.get("fecha_det") or "—")} → {_esc(kn_cm.get("fecha_ext") or "—")}</li>
   </ul>
 
   <h2>KPIs demo</h2>
   <ul>
-    <li>CCAA: {_esc(kpi.get('n_ccaa'))} · IF demo: {_esc(kpi.get('n_sites'))} · ha O2: {_esc(kpi.get('sum_ha_o2'))}</li>
-    <li>Catálogo AND: {_esc(kpi.get('n_and_catalog'))} IF · EXT entregados: {_esc(kpi.get('n_ext_delivery'))}</li>
-    <li>Anclas confirmed: {_esc(kpi.get('n_confirmed_anchors'))} · Gates PASS: {_esc(kpi.get('gate_pass'))}/{_esc(kpi.get('gate_total'))}</li>
+    <li>CCAA: {_esc(kpi.get("n_ccaa"))} · IF demo: {_esc(kpi.get("n_sites"))} · ha O2: {_esc(kpi.get("sum_ha_o2"))}</li>
+    <li>Catálogo AND: {_esc(kpi.get("n_and_catalog"))} IF · EXT entregados: {_esc(kpi.get("n_ext_delivery"))}</li>
+    <li>Anclas confirmed: {_esc(kpi.get("n_confirmed_anchors"))} · Gates PASS: {_esc(kpi.get("gate_pass"))}/{_esc(kpi.get("gate_total"))}</li>
   </ul>
 
   <h2>Por qué HOLD vende</h2>
@@ -143,7 +143,7 @@ def render_pitch_html(
   </div>
 
   <footer>
-    Built {built} · demo_version {_esc(version)} · git {gh} · schema {_esc(manifest.get('schema'))}<br/>
+    Built {built} · demo_version {_esc(version)} · git {gh} · schema {_esc(manifest.get("schema"))}<br/>
     Atribuciones: INFOCAM · REDIAM Junta Andalucía · RAI/INFOEX Junta Extremadura · material Heligrafics/CMA (LWIR Tobarra)
   </footer>
 </body>

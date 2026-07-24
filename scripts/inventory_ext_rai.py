@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import json
 import sys
@@ -56,21 +57,19 @@ def inventory_dir(raw: Path) -> list[dict[str, Any]]:
         prj = shp.with_suffix(".prj")
         crs_str = "EPSG:25829"
         if prj.exists():
-            try:
+            with contextlib.suppress(Exception):
                 crs_str = CRS.from_wkt(prj.read_text(encoding="utf-8", errors="ignore")).to_string()
-            except Exception:
-                pass
         crs = CRS.from_user_input(crs_str)
         for sr in r.iterShapeRecords():
-            props = {k: v for k, v in zip(field_names, sr.record)}
+            props = dict(zip(field_names, sr.record, strict=False))
             g = shape(sr.shape.__geo_interface__)
             if not crs.is_geographic:
                 tf = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
-                g4326 = transform(lambda x, y, z=None: tf.transform(x, y), g)
+                g4326 = transform(lambda x, y, z=None, _tf=tf: _tf.transform(x, y), g)
             else:
                 g4326 = g
             tf_ea = Transformer.from_crs("EPSG:4326", "EPSG:6933", always_xy=True)
-            gea = transform(lambda x, y, z=None: tf_ea.transform(x, y), g4326)
+            gea = transform(lambda x, y, z=None, _tf=tf_ea: _tf.transform(x, y), g4326)
             ha_geom = float(gea.area / 10000.0)
             id_raw = props.get("Id_incen")
             try:
@@ -88,7 +87,9 @@ def inventory_dir(raw: Path) -> list[dict[str, Any]]:
                     "objectid": props.get("OBJECTID"),
                     "fecha_det": fecha_det,
                     "fecha_ext": fecha_ext,
-                    "hectareas_attr": float(props["Hectareas"]) if props.get("Hectareas") is not None else None,
+                    "hectareas_attr": float(props["Hectareas"])
+                    if props.get("Hectareas") is not None
+                    else None,
                     "area_geom_ha": round(ha_geom, 2),
                     "medicion": props.get("MEDICION"),
                     "crs_native": crs_str if crs_str.startswith("EPSG") else "EPSG:25829",
@@ -127,7 +128,9 @@ def select_gold(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "tier": (
                     "gold"
                     if gold and r["id_incen"] == gold["id_incen"]
-                    else ("silver" if r["id_incen"] in {s["id_incen"] for s in silver} else "bronze")
+                    else (
+                        "silver" if r["id_incen"] in {s["id_incen"] for s in silver} else "bronze"
+                    )
                 ),
                 **{k: r[k] for k in r if k != "shp_path"},
                 "shp_path": r["shp_path"],

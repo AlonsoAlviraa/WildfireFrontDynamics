@@ -81,7 +81,16 @@ def main() -> int:
     report["finished_at_utc"] = datetime.now(UTC).isoformat()
     out = ROOT / "docs" / "DEMO_DUAL_PRODUCT_SNAPSHOT.json"
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(json.dumps({"ok": report["ok"], "snapshot": str(out), "steps": [s["name"] for s in report["steps"]]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "ok": report["ok"],
+                "snapshot": str(out),
+                "steps": [s["name"] for s in report["steps"]],
+            },
+            indent=2,
+        )
+    )
     return 0 if report["ok"] else 2
 
 

@@ -12,7 +12,9 @@ OBS = ROOT / "outputs" / "observatorio"
 
 def main() -> int:
     scorecard_path = OBS / "observatory_scorecard.json"
-    scorecard = json.loads(scorecard_path.read_text(encoding="utf-8")) if scorecard_path.is_file() else {}
+    scorecard = (
+        json.loads(scorecard_path.read_text(encoding="utf-8")) if scorecard_path.is_file() else {}
+    )
     rows = []
     for fire in scorecard.get("fires", []):
         fid = fire.get("fire_id", "")
@@ -51,12 +53,12 @@ span{{display:block;color:#9eb1bd;font-size:12px}} strong{{font-size:22px;color:
 table{{width:100%;border-collapse:collapse;background:#112532}} th,td{{padding:10px;border-bottom:1px solid #26404f;text-align:left}}
 </style>
 <h1>Entrega Observatorio</h1>
-<p>{scorecard.get('observatory_message_es', '')}</p>
+<p>{scorecard.get("observatory_message_es", "")}</p>
 <section class="grid">{gate_cards}</section>
 <table>
 <thead><tr><th>Incendio</th><th>Estado</th><th>Grado</th><th>Frames</th><th>Vp med m/min</th><th>Área máx ha</th><th>N vel</th><th>vs INFOCAM</th></tr></thead>
 <tbody>
-{''.join(rows)}
+{"".join(rows)}
 </tbody>
 </table>
 <p><strong>Limitación:</strong> reconstrucción de dinámica observada desde máscaras LWIR.

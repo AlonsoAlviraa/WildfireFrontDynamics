@@ -139,7 +139,9 @@ def main() -> int:
     if args.tobarra:
         report["tobarra"] = tobarra_smoke()
     ok = report["synthetic"]["ok"] and (
-        not args.tobarra or report.get("tobarra", {}).get("ok") or report.get("tobarra", {}).get("skipped")
+        not args.tobarra
+        or report.get("tobarra", {}).get("ok")
+        or report.get("tobarra", {}).get("skipped")
     )
     print(json.dumps({"ok": ok, **report}, indent=2, default=str))
     return 0 if ok else 1

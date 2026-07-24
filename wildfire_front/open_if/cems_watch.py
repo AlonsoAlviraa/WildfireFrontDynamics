@@ -15,9 +15,7 @@ EMSR896_NOTE = (
     "mapping.emergency.copernicus.eu."
 )
 
-DEFAULT_RELATED = (
-    "https://mapping.emergency.copernicus.eu/news/wildfire-in-aragon-spain-emsr896/"
-)
+DEFAULT_RELATED = "https://mapping.emergency.copernicus.eu/news/wildfire-in-aragon-spain-emsr896/"
 DEFAULT_PORTAL = "https://mapping.emergency.copernicus.eu/"
 
 

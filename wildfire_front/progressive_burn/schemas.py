@@ -8,8 +8,7 @@ PRODUCT_SCHEMA: Final = "progressive_synthetic_burn_v1"
 OPS_METHOD: Final = "proxy_ros_from_synthetic_stages"
 
 ATTRIBUTION_REDIAM: Final = (
-    "Fuente: REDIAM — Junta de Andalucía. "
-    "Uso libre con mención de autores y propietarios."
+    "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
 )
 
 HONESTY_LIMITATIONS: Final[tuple[str, ...]] = (

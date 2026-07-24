@@ -8,7 +8,6 @@ import os
 import pytest
 from shapely.affinity import rotate, scale
 from shapely.geometry import MultiPolygon, Point, Polygon, box
-from shapely.ops import unary_union
 
 from wildfire_front.progressive_burn.metrics import assert_all_invariants
 from wildfire_front.progressive_burn.pipeline import ProgressiveBurnConfig, build_stage_sequence
@@ -150,7 +149,7 @@ def test_determinism_same_seed():
     )
     a = build_stage_sequence(geom, cfg, source_crs="EPSG:6933")
     b = build_stage_sequence(geom, cfg, source_crs="EPSG:6933")
-    for sa, sb in zip(a.stages, b.stages):
+    for sa, sb in zip(a.stages, b.stages, strict=False):
         assert sa.geom_metric.wkt == sb.geom_metric.wkt
         assert sa.area_ha == pytest.approx(sb.area_ha)
 

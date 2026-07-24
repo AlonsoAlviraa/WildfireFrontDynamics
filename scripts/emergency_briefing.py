@@ -57,8 +57,7 @@ def _ensure_enriched(pack: Path, fire_id: str) -> dict:
         pack / "emergency_envelope_guidance.geojson",
         center_xy=center,
         fire_id=fire_id,
-        expansion_bearing_deg=bearing
-        or (ops.get("sector_ros") or {}).get("expansion_bearing_deg"),
+        expansion_bearing_deg=bearing or (ops.get("sector_ros") or {}).get("expansion_bearing_deg"),
     )
     return ops
 

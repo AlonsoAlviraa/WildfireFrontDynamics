@@ -93,9 +93,7 @@ def _save_scorecard(sc: dict[str, Any]) -> None:
             m_iou = float(mem_c.get("model_iou") or 0.0)
             m_delta = float(mem_c.get("improvement_vs_copy_iou") or 0.0)
             # Never overwrite a strictly better champion (e.g. external promote)
-            if (d_iou > m_iou + 1e-6) or (
-                abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6
-            ):
+            if (d_iou > m_iou + 1e-6) or (abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6):
                 sc["champion"] = disk_c
                 sc.setdefault("promotions", [])
                 # keep disk promotions that memory lacks
@@ -409,9 +407,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         flush=True,
     )
     per_source: dict[str, Any] = {}
-    folds = sorted(
-        p.name for p in LOFO.iterdir() if p.is_dir() and (p / "test").is_dir()
-    )
+    folds = sorted(p.name for p in LOFO.iterdir() if p.is_dir() and (p / "test").is_dir())
     for held in folds:
         test_dir = LOFO / held / "test"
         if not list(test_dir.glob("*.npz")):
@@ -420,9 +416,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         # diagnostic: mix only at thr=0.5 (fast + comparable to history)
         best = None
         for mix in grid:
-            m = score_mix_from_cache(
-                cache, mix, split_context=_CTX_REPORT_LOFO, threshold=0.5
-            )
+            m = score_mix_from_cache(cache, mix, split_context=_CTX_REPORT_LOFO, threshold=0.5)
             row = {
                 "mix": list(m["member_weights"]),
                 "threshold": 0.5,
@@ -493,12 +487,8 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
         }
         hold_transfer_thr = thr_transfer
 
-    hold = score_mix_from_cache(
-        test_cache, mix, split_context=_CTX_REPORT_TEST, threshold=thr_val
-    )
-    equal = score_mix_from_cache(
-        test_cache, None, split_context=_CTX_REPORT_TEST, threshold=0.5
-    )
+    hold = score_mix_from_cache(test_cache, mix, split_context=_CTX_REPORT_TEST, threshold=thr_val)
+    equal = score_mix_from_cache(test_cache, None, split_context=_CTX_REPORT_TEST, threshold=0.5)
     # also report transfer at thr=0.5 for continuity with v33
     hold_transfer_05 = None
     if transfer_mix is not None:
@@ -589,9 +579,7 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "status": "ok",
-        "single_change": (
-            "cached per-source mix + VAL mix×threshold + VAL temp sweep (honest)"
-        ),
+        "single_change": ("cached per-source mix + VAL mix×threshold + VAL temp sweep (honest)"),
         "leakage_guard": (
             "LOFO CARDOSO/test == holdout test; mix+threshold+temps for GO on VAL only"
         ),
@@ -641,19 +629,16 @@ def track_source_mix(*, champion: dict[str, Any]) -> dict[str, Any]:
             else None
         ),
         "verdict_transfer_thr05": (
-            _verdict(
-                hold_transfer_05, champion, "source_mix_transfer_non_cardoso_thr05"
-            )
+            _verdict(hold_transfer_05, champion, "source_mix_transfer_non_cardoso_thr05")
             if hold_transfer_05
             else None
         ),
         "verdict_val_temp": (
-            _verdict(hold_temp, champion, "source_mix_val_temp_calibrated")
-            if hold_temp
-            else None
+            _verdict(hold_temp, champion, "source_mix_val_temp_calibrated") if hold_temp else None
         ),
         "transfer_threshold": hold_transfer_thr,
     }
+
 
 # ── Track 3: multi-objective FT ─────────────────────────────────────────────
 
@@ -761,11 +746,7 @@ def track_multi_obj(
                         "model_iou_growth",
                     )
                 },
-                **(
-                    {"quad_with_ema": ens["quad_with_ema"]}
-                    if ens.get("quad_with_ema")
-                    else {}
-                ),
+                **({"quad_with_ema": ens["quad_with_ema"]} if ens.get("quad_with_ema") else {}),
             }
             if ens
             else None
@@ -958,13 +939,13 @@ def run_round(
             "multi_full_growth_025",
             "multi_full_growth_05",
         )[(round_id - 1) % 3]
-        mo = track_multi_obj(
-            epochs=epochs, patience=patience, lr=lr, init=init, metric=metric
-        )
+        mo = track_multi_obj(epochs=epochs, patience=patience, lr=lr, init=init, metric=metric)
         if mo.get("status") == "ok":
             vb = _verdict(mo["eval_holdout_test"], champion, f"r{round_id}_{metric}")
             mo["verdict"] = vb
-            _maybe_promote(sc, vb, {"type": "multi_obj", "metric": metric, "weights": mo["weights"]})
+            _maybe_promote(
+                sc, vb, {"type": "multi_obj", "metric": metric, "weights": mo["weights"]}
+            )
             if mo.get("eval_triple_if_available"):
                 base_triple = {
                     k: mo["eval_triple_if_available"][k]

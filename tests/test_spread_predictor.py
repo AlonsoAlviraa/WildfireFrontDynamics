@@ -157,9 +157,7 @@ class TestSpreadPredictor:
         # Binary may differ when threshold differs
         assert alt.binary.shape == base.binary.shape
 
-    def test_single_model_predict_with_uncertainty(
-        self, manifest_path: Path, weights_path: Path
-    ):
+    def test_single_model_predict_with_uncertainty(self, manifest_path: Path, weights_path: Path):
         from wildfire_front.ml.spread_predictor import SpreadPredictor
         from wildfire_front.ml.uncertainty import LogisticCalibrator
 
@@ -169,9 +167,7 @@ class TestSpreadPredictor:
         fire = np.zeros((64, 64), dtype=np.float32)
         fire[12:28, 12:28] = 1.0
         pred = predictor.predict(seq, fire)
-        cal = LogisticCalibrator(
-            weights=np.array([-2.5, -3.0, 4.0, 0.2], dtype=np.float64)
-        )
+        cal = LogisticCalibrator(weights=np.array([-2.5, -3.0, 4.0, 0.2], dtype=np.float64))
         unc = predictor.predict_with_uncertainty(
             seq, fire, calibrator=cal, product_id="single_test"
         )

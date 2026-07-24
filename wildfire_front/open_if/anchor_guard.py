@@ -6,8 +6,8 @@ an anchor. Confirmed requires operational Vp + ha + explicit operational source.
 
 from __future__ import annotations
 
-from typing import Any, Mapping
-
+from collections.abc import Mapping
+from typing import Any
 
 REQUIRED_CONFIRMED_FIELDS = ("vp_m_min", "area_ha", "source")
 
@@ -35,26 +35,21 @@ _PRESS_MEDIA = ("elpais", "europapress", "euronews", "datawrapper")
 def _is_missing(value: Any) -> bool:
     if value is None:
         return True
-    if isinstance(value, str) and not value.strip():
-        return True
-    return False
+    return bool(isinstance(value, str) and not value.strip())
 
 
 def _source_operational(src: str) -> bool:
     s = src.lower()
     if any(m in s for m in _OPERATIONAL_MARKERS):
         # INFOCAM alone + estimate language is not enough — need parte/egif/oficial/etc.
-        if "infocam" in s or "info cam" in s:
-            if any(m in s for m in _ESTIMATE_MARKERS) and not any(
-                m in s for m in ("egif", "parte", "oficial", "operativo", "fidias")
-            ):
-                return False
-        return True
+        return not (
+            ("infocam" in s or "info cam" in s)
+            and any(m in s for m in _ESTIMATE_MARKERS)
+            and not any(m in s for m in ("egif", "parte", "oficial", "operativo", "fidias"))
+        )
     # Bare "INFOCAM" without estimate language and without other markers: allow if
     # it looks like an operational part reference (year + INFOCAM).
-    if "infocam" in s and not any(m in s for m in _ESTIMATE_MARKERS):
-        return True
-    return False
+    return bool("infocam" in s and not any(m in s for m in _ESTIMATE_MARKERS))
 
 
 def can_promote_to_confirmed(anchor: Mapping[str, Any]) -> tuple[bool, list[str]]:
@@ -113,9 +108,13 @@ def can_promote_to_confirmed(anchor: Mapping[str, Any]) -> tuple[bool, list[str]
         try:
             if abs(float(area) - float(anchor["area_ha_press_provisional"])) < 1e-6:  # type: ignore[arg-type]
                 src = str(source or "").lower()
-                if "egif" not in src and "oficial" not in src and "parte" not in src:
-                    if any(m in src for m in _ESTIMATE_MARKERS):
-                        reasons.append("area_ha_matches_press_provisional_without_egif_source")
+                if (
+                    "egif" not in src
+                    and "oficial" not in src
+                    and "parte" not in src
+                    and any(m in src for m in _ESTIMATE_MARKERS)
+                ):
+                    reasons.append("area_ha_matches_press_provisional_without_egif_source")
         except (TypeError, ValueError):
             pass
 

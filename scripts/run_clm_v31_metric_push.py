@@ -56,9 +56,7 @@ def _verdict(test: dict, *, name: str) -> dict:
     iou = test["model_iou"]
     delta = test["improvement_vs_copy_iou"]
     growth = test["model_iou_growth"]
-    beats_v30 = (iou > V30["model_iou"] + 1e-6) or (
-        delta > V30["improvement_vs_copy_iou"] + 1e-6
-    )
+    beats_v30 = (iou > V30["model_iou"] + 1e-6) or (delta > V30["improvement_vs_copy_iou"] + 1e-6)
     stretch = (iou >= 0.875) or (delta >= 0.235)
     if stretch and beats_v30:
         verdict = "GO_PROMOTE_V31"
@@ -90,9 +88,7 @@ def exp_weighted_pair(v28: Path, lofo: Path, val: Path, test: Path) -> dict:
     val_rows = []
     for w28 in grid:
         mix = [w28, 1.0 - w28]
-        m = evaluate_clm_weights(
-            [v28, lofo], val, max_patches=400, member_weights=mix
-        )
+        m = evaluate_clm_weights([v28, lofo], val, max_patches=400, member_weights=mix)
         val_rows.append(
             {
                 "w_v28": w28,
@@ -104,9 +100,7 @@ def exp_weighted_pair(v28: Path, lofo: Path, val: Path, test: Path) -> dict:
         )
     best = max(val_rows, key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]))
     mix = [best["w_v28"], best["w_lofo"]]
-    test_m = evaluate_clm_weights(
-        [v28, lofo], test, max_patches=400, member_weights=mix
-    )
+    test_m = evaluate_clm_weights([v28, lofo], test, max_patches=400, member_weights=mix)
     equal = evaluate_clm_weights([v28, lofo], test, max_patches=400)
     out = {
         "single_change": "weighted soft-vote tuned on VAL (w_v28 grid)",
@@ -174,9 +168,7 @@ def exp_triple(v28: Path, ema: Path | None, lofo: Path, val: Path, test: Path) -
             if w28 + w_ema >= 0.95:
                 continue
             mix = [w28, w_ema, 1.0 - w28 - w_ema]
-            m = evaluate_clm_weights(
-                members, val, max_patches=400, member_weights=mix
-            )
+            m = evaluate_clm_weights(members, val, max_patches=400, member_weights=mix)
             val_rows.append(
                 {
                     "mix": mix,
@@ -185,9 +177,7 @@ def exp_triple(v28: Path, ema: Path | None, lofo: Path, val: Path, test: Path) -
                 }
             )
     best = max(val_rows, key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]))
-    test_w = evaluate_clm_weights(
-        members, test, max_patches=400, member_weights=best["mix"]
-    )
+    test_w = evaluate_clm_weights(members, test, max_patches=400, member_weights=best["mix"])
     out = {
         "single_change": "honest triple soft-vote (v28+EMA+LOFO-CARDOSO)",
         "test_equal": {
@@ -235,7 +225,10 @@ def exp_continue_ft(v28: Path, data: Path, epochs: int, patience: int) -> dict:
     test = ev(w, data / "test", max_patches=400)
     # honest ensemble with new weights + LOFO
     p = _paths()
-    lofo = _pick(p["lofo"], ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt")
+    lofo = _pick(
+        p["lofo"],
+        ROOT / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
+    )
     ens = None
     if lofo:
         ens = evaluate_clm_weights([w, lofo], data / "test", max_patches=400)
@@ -316,7 +309,11 @@ def main() -> int:
         print(">>> triple")
         trep = exp_triple(v28, p["ema"], lofo, p["val"], p["test"])
         report["experiments"]["triple"] = trep
-        print(json.dumps({k: trep.get(k) for k in ("verdict_equal", "verdict_weighted", "skipped")}, indent=2))
+        print(
+            json.dumps(
+                {k: trep.get(k) for k in ("verdict_equal", "verdict_weighted", "skipped")}, indent=2
+            )
+        )
 
     if "continue_ft" in jobs:
         print(">>> continue FT from v28")
@@ -334,7 +331,13 @@ def main() -> int:
     # Champion selection
     candidates = []
     for exp in report["experiments"].values():
-        for key in ("verdict_block", "verdict_equal", "verdict_weighted", "verdict_single", "verdict_ens"):
+        for key in (
+            "verdict_block",
+            "verdict_equal",
+            "verdict_weighted",
+            "verdict_single",
+            "verdict_ens",
+        ):
             vb = exp.get(key) if isinstance(exp, dict) else None
             if isinstance(vb, dict) and "model_iou" in vb:
                 candidates.append(vb)
@@ -348,9 +351,7 @@ def main() -> int:
         if champ.get("beats_v30") or champ.get("vs_v30", {}).get("beats_v30"):
             out_dir = ROOT / "outputs" / "ml_eval" / "v31_metric_push"
             out_dir.mkdir(parents=True, exist_ok=True)
-            (out_dir / "champion.json").write_text(
-                json.dumps(champ, indent=2), encoding="utf-8"
-            )
+            (out_dir / "champion.json").write_text(json.dumps(champ, indent=2), encoding="utf-8")
 
     out = ROOT / "docs" / "V31_ML_SCORECARD.json"
     # strip bulky aggregates

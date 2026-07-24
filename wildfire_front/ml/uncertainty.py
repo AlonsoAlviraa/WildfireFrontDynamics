@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -177,7 +178,7 @@ class LogisticCalibrator:
         return float(np.dot(self.weights[:-1], x) + self.weights[-1])
 
     def _apply_posthoc(self, z: float) -> float:
-        if self.has_platt:
+        if self.platt_a is not None and self.platt_b is not None:
             z = float(self.platt_a) * z + float(self.platt_b)
         elif abs(self.temperature - 1.0) > 1e-12:
             z = z / self.temperature
@@ -219,7 +220,7 @@ class LogisticCalibrator:
         z = float(np.dot(self.weights[:-1], x) + self.weights[-1])
         return self._apply_posthoc(z)
 
-    def with_temperature(self, temperature: float) -> "LogisticCalibrator":
+    def with_temperature(self, temperature: float) -> LogisticCalibrator:
         """Copy with temperature scaling (clears Platt)."""
         return LogisticCalibrator(
             weights=self.weights.copy(),
@@ -235,7 +236,7 @@ class LogisticCalibrator:
             platt_b=None,
         )
 
-    def with_platt(self, a: float, b: float) -> "LogisticCalibrator":
+    def with_platt(self, a: float, b: float) -> LogisticCalibrator:
         """Copy with Platt scaling on logit (temperature ignored when Platt set)."""
         return LogisticCalibrator(
             weights=self.weights.copy(),
@@ -286,18 +287,17 @@ class LogisticCalibrator:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "LogisticCalibrator":
+    def from_dict(cls, data: dict[str, Any]) -> LogisticCalibrator:
         method = str(data.get("method") or "logistic")
         if method != "logistic":
             raise ValueError(f"only logistic calibrator supported, got {method!r}")
         names = data.get("feature_names") or data.get("features")
-        if names is not None:
-            feature_names = tuple(str(n) for n in names)
-        else:
-            feature_names = HEAD_A_FEATURE_NAMES
+        feature_names = tuple(str(n) for n in names) if names is not None else HEAD_A_FEATURE_NAMES
         weights_raw = data.get("weights")
         params = data.get("params") if isinstance(data.get("params"), dict) else {}
-        if weights_raw is None or (isinstance(weights_raw, (list, tuple)) and len(weights_raw) == 0):
+        if weights_raw is None or (
+            isinstance(weights_raw, (list, tuple)) and len(weights_raw) == 0
+        ):
             coef = params.get("coef") if params else None
             intercept = params.get("intercept") if params else None
             if coef is not None:
@@ -322,10 +322,10 @@ class LogisticCalibrator:
             calibrator_id=str(data.get("calibrator_id") or "uncertainty_calibration_v1"),
             tau_iou=float(tau if tau is not None else 0.5),
             fit_split=str(data.get("fit_split") or "val"),
-            abstain_threshold=float(
-                data.get("abstain_threshold")
+            abstain_threshold=(
+                float(data["abstain_threshold"])
                 if data.get("abstain_threshold") is not None
-                else DEFAULT_ABSTAIN_THRESHOLD
+                else float(DEFAULT_ABSTAIN_THRESHOLD)
             ),
             allow_identity_heuristic=bool(data.get("allow_identity_heuristic", False)),
             temperature=float(temp if temp is not None else 1.0),
@@ -334,7 +334,7 @@ class LogisticCalibrator:
         )
 
     @classmethod
-    def identity(cls, *, allow_identity_heuristic: bool = False) -> "LogisticCalibrator":
+    def identity(cls, *, allow_identity_heuristic: bool = False) -> LogisticCalibrator:
         """Unfitted placeholder — conf=0.5; force abstain on product path."""
         return cls(
             weights=np.asarray([], dtype=np.float64),
@@ -422,8 +422,8 @@ def predict_proba_rows(
 
 
 def fit_temperature_on_logits(
-    logits: Sequence[float],
-    labels: Sequence[int | float | bool],
+    logits: Sequence[float] | np.ndarray,
+    labels: Sequence[int | float | bool] | np.ndarray,
     *,
     n_iter: int = 80,
     lr: float = 0.2,
@@ -462,8 +462,8 @@ def fit_temperature_on_logits(
 
 
 def fit_platt_on_logits(
-    logits: Sequence[float],
-    labels: Sequence[int | float | bool],
+    logits: Sequence[float] | np.ndarray,
+    labels: Sequence[int | float | bool] | np.ndarray,
     *,
     n_iter: int = 200,
     lr: float = 0.3,

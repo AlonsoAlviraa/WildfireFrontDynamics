@@ -7,7 +7,7 @@ from typing import Any
 
 from wildfire_front.scientific_ops import MAX_PLAUSIBLE_SPEED_M_MIN
 
-from .geometry import area_ha, area_m2, hausdorff_m, iou, nested_within, perimeter_m
+from .geometry import area_m2, hausdorff_m, iou, nested_within, perimeter_m
 from .pipeline import StageSequence
 from .schemas import (
     ATTRIBUTION_REDIAM,
@@ -125,10 +125,12 @@ def evaluate_invariants(
     if seq.engine_name == "area_fraction":
         for s in stages[:-1]:
             eps = max(FRACTION_EPS_ABS, FRACTION_EPS_REL * abs(s.area_fraction_target))
-            if abs(s.area_fraction_actual - s.area_fraction_target) > eps + 1e-6:
-                # soft: recorded as PARTIAL not hard fail if reason present
-                if "fraction_miss_after_nest_fix" not in s.partial_reasons:
-                    frac_ok = False
+            # soft: recorded as PARTIAL not hard fail if reason present
+            if (
+                abs(s.area_fraction_actual - s.area_fraction_target) > eps + 1e-6
+                and "fraction_miss_after_nest_fix" not in s.partial_reasons
+            ):
+                frac_ok = False
     ok("PSB_FRACTION_BAND", frac_ok or seq.engine_name != "area_fraction")
 
     pairs = compute_stage_pair_metrics(seq)
@@ -152,14 +154,21 @@ def evaluate_invariants(
     ok("PSB_NO_FALSE_DISPATCH", True)  # structural — vp always null in emit
 
     gates = {
-        "PSB_TERMINAL_IDENTITY": "PASS" if "PSB_TERMINAL_IDENTITY" in checks and not any(
-            f.startswith("PSB_TERMINAL_IDENTITY") for f in fails
-        ) else "FAIL",
-        "PSB_TERMINAL_METRIC_QA": "PASS" if not any(f.startswith("PSB_TERMINAL_METRIC_QA") for f in fails) else "FAIL",
-        "PSB_MONOTONE_AREA": "PASS" if not any(f.startswith("PSB_MONOTONE_AREA") for f in fails) else "FAIL",
+        "PSB_TERMINAL_IDENTITY": "PASS"
+        if "PSB_TERMINAL_IDENTITY" in checks
+        and not any(f.startswith("PSB_TERMINAL_IDENTITY") for f in fails)
+        else "FAIL",
+        "PSB_TERMINAL_METRIC_QA": "PASS"
+        if not any(f.startswith("PSB_TERMINAL_METRIC_QA") for f in fails)
+        else "FAIL",
+        "PSB_MONOTONE_AREA": "PASS"
+        if not any(f.startswith("PSB_MONOTONE_AREA") for f in fails)
+        else "FAIL",
         "PSB_NESTED": "PASS" if not any(f.startswith("PSB_NESTED") for f in fails) else "FAIL",
         "PSB_HONESTY": "PASS" if not any(f.startswith("PSB_HONESTY") for f in fails) else "FAIL",
-        "PSB_FRACTION_BAND": "PASS" if not any(f.startswith("PSB_FRACTION_BAND") for f in fails) else "PARTIAL",
+        "PSB_FRACTION_BAND": "PASS"
+        if not any(f.startswith("PSB_FRACTION_BAND") for f in fails)
+        else "PARTIAL",
         "PSB_PROXY_ROS": ros_status,
         "PSB_REPRO": "PASS",
         "PSB_NO_FALSE_DISPATCH": "PASS",
@@ -182,7 +191,11 @@ def evaluate_invariants(
 
     if hard_fail:
         verdict = "NO_GO"
-    elif partial_reasons or gates["PSB_PROXY_ROS"] == "PARTIAL" or gates["PSB_FRACTION_BAND"] == "PARTIAL":
+    elif (
+        partial_reasons
+        or gates["PSB_PROXY_ROS"] == "PARTIAL"
+        or gates["PSB_FRACTION_BAND"] == "PARTIAL"
+    ):
         verdict = "PARTIAL"
     else:
         verdict = "GO_PROGRESSIVE_SYNTHETIC"

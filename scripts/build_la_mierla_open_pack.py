@@ -168,8 +168,7 @@ def main() -> int:
                 "in this scrape; recheck mapping.emergency.copernicus.eu"
             ),
             "related_news": (
-                "https://mapping.emergency.copernicus.eu/news/"
-                "wildfire-in-aragon-spain-emsr896/"
+                "https://mapping.emergency.copernicus.eu/news/wildfire-in-aragon-spain-emsr896/"
             ),
         },
     }
@@ -420,8 +419,18 @@ See `manifest.json` in this pack.
     # Inline GeoJSON so map works via file:// (fetch of local files is blocked by browsers).
     hotspots_js = json.dumps(firms_gj, ensure_ascii=False, separators=(",", ":"))
     footprint_js = json.dumps(footprint, ensure_ascii=False, separators=(",", ":"))
-    lat_c = (firms_metrics["extent_observed"]["lat_min"] + firms_metrics["extent_observed"]["lat_max"]) / 2 if pts else 41.1
-    lon_c = (firms_metrics["extent_observed"]["lon_min"] + firms_metrics["extent_observed"]["lon_max"]) / 2 if pts else -3.05
+    lat_c = (
+        (firms_metrics["extent_observed"]["lat_min"] + firms_metrics["extent_observed"]["lat_max"])
+        / 2
+        if pts
+        else 41.1
+    )
+    lon_c = (
+        (firms_metrics["extent_observed"]["lon_min"] + firms_metrics["extent_observed"]["lon_max"])
+        / 2
+        if pts
+        else -3.05
+    )
     map_html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>

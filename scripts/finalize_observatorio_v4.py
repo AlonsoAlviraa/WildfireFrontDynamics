@@ -66,7 +66,9 @@ def main() -> int:
                 ],
             },
             "O4_operator_products": {
-                "verdict": "GO" if all(r.get("o4_operator_products") for r in results) else "PARTIAL",
+                "verdict": "GO"
+                if all(r.get("o4_operator_products") for r in results)
+                else "PARTIAL",
                 "products": [
                     "main_front.geojson",
                     "ros_timeline.csv",
@@ -119,7 +121,7 @@ def main() -> int:
 a{{color:#f5b942}} table{{width:100%;border-collapse:collapse;background:#112532}}
 th,td{{padding:10px;border-bottom:1px solid #26404f;text-align:left}} .ok{{color:#3d9a5f}}</style>
 <h1>Observatorio v4 — ejecución loop</h1>
-<p class="ok">{scorecard['session_summary_es']}</p>
+<p class="ok">{scorecard["session_summary_es"]}</p>
 <table><thead><tr><th>IF</th><th>Grado</th><th>ROS</th><th>vs INFOCAM</th><th>O4</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p>Brief: <code>brief_operativo.md</code> · Capa: <code>main_front.geojson</code> · Timeline: <code>ros_timeline.csv</code></p>

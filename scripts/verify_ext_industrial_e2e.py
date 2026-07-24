@@ -40,7 +40,7 @@ def main() -> int:
     ap.add_argument("--skip-pytest", action="store_true")
     args = ap.parse_args()
     started = _utc()
-    layers = {k: False for k in LAYERS}
+    layers = dict.fromkeys(LAYERS, False)
     steps: list[dict[str, Any]] = []
     packs: list[dict[str, Any]] = []
 
@@ -63,7 +63,7 @@ def main() -> int:
         perim = pdir / "vectors" / "perimeter_rai.geojson"
         mhtml = pdir / "map.html"
         prov = pdir / "provenance.json"
-        ok_pack = man.is_file() and perim.is_file() and sc_path.is_file()
+        man.is_file() and perim.is_file() and sc_path.is_file()
         layers["rai_perimeter_present"] = layers["rai_perimeter_present"] or perim.is_file()
         layers["pack_manifest"] = layers["pack_manifest"] or man.is_file()
         layers["metrics_o2"] = layers["metrics_o2"] or met.is_file()
@@ -87,7 +87,11 @@ def main() -> int:
             {
                 "dir": pdir.name,
                 "verdict": verdict,
-                "ha": (json.loads(man.read_text(encoding="utf-8")).get("area_rai_ha") if man.is_file() else None),
+                "ha": (
+                    json.loads(man.read_text(encoding="utf-8")).get("area_rai_ha")
+                    if man.is_file()
+                    else None
+                ),
                 "honest": h,
             }
         )
@@ -146,7 +150,7 @@ def main() -> int:
         f"**Verdict:** `{verdict}`  ",
         f"**Started:** {started}  ",
         f"**Finished:** {finished}  ",
-        f"**Attribution:** RAI — Junta de Extremadura / INFOEX",
+        "**Attribution:** RAI — Junta de Extremadura / INFOEX",
         "",
         "## Layer contract",
         "",
@@ -167,7 +171,9 @@ def main() -> int:
         "",
     ]
     for p in packs:
-        lines.append(f"- `{p['dir']}` · verdict={p['verdict']} · ha={p['ha']} · honest={p['honest']}")
+        lines.append(
+            f"- `{p['dir']}` · verdict={p['verdict']} · ha={p['ha']} · honest={p['honest']}"
+        )
     lines += [
         "",
         "## Honest constraints",

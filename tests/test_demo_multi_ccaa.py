@@ -186,8 +186,8 @@ def test_html_escapes_dynamic_fields(monkeypatch, tmp_path):
     mod = _load_builder()
     and_dir = tmp_path / "and_pack"
     and_dir.mkdir()
-    payload = '<img src=x onerror=alert(1)>'
-    reason_payload = '<script>alert(2)</script>'
+    payload = "<img src=x onerror=alert(1)>"
+    reason_payload = "<script>alert(2)</script>"
     (and_dir / "manifest.json").write_text(
         json.dumps(
             {
@@ -372,7 +372,12 @@ def test_no_fake_pack_dates_when_present_or_skip():
     # Never claim a tactical dispatch string
     html = (OUT / "index.html").read_text(encoding="utf-8")
     low = html.lower()
-    assert "despacho táctico" not in low or "no despacho" in low or "sin despacho" in low or "no_tactical" in str(man)
+    assert (
+        "despacho táctico" not in low
+        or "no despacho" in low
+        or "sin despacho" in low
+        or "no_tactical" in str(man)
+    )
     assert "orden táctica" not in low
     # Sites always have year_label key
     for sid in ("tobarra", "nijar", "camino"):

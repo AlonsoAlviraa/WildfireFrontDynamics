@@ -82,9 +82,7 @@ def run_psb_front_dynamics(
     - force primary_method ∈ {area_isotropic, equiv_radius}
     - quality grade ≤ B / synthetic_research
     """
-    observations = stages_to_observations(
-        seq, event_id=event_id, resolution_m=resolution_m
-    )
+    observations = stages_to_observations(seq, event_id=event_id, resolution_m=resolution_m)
     if len(observations) < 2:
         return {
             "status": "SKIP",

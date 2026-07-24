@@ -237,9 +237,7 @@ def summarize_stac(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "platform": props.get("platform"),
                 "bbox": it.get("bbox"),
                 "visual_href": visual,
-                "stac_self": (it.get("links") or [{}])[0].get("href")
-                if it.get("links")
-                else None,
+                "stac_self": (it.get("links") or [{}])[0].get("href") if it.get("links") else None,
             }
         )
     return out
@@ -257,21 +255,14 @@ def viewer_links(lat: float, lon: float, zoom: int = 11) -> dict[str, str]:
         "Reference_Labels_15m"
     )
     # FIRMS advanced map center
-    firms = (
-        f"https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@"
-        f"{lon:.4f},{lat:.4f},{zoom}z"
-    )
+    firms = f"https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@{lon:.4f},{lat:.4f},{zoom}z"
     worldview = (
         f"https://worldview.earthdata.nasa.gov/?v="
         f"{lon - 0.55},{lat - 0.35},{lon + 0.55},{lat + 0.35}"
         f"&l={wv_layers}&t=2026-07-20"
     )
-    gmaps_sat = (
-        f"https://www.google.com/maps/@{lat:.5f},{lon:.5f},{zoom}z/data=!3m1!1e3"
-    )
-    gmaps_search = (
-        f"https://www.google.com/maps/search/?api=1&query={lat:.5f},{lon:.5f}"
-    )
+    gmaps_sat = f"https://www.google.com/maps/@{lat:.5f},{lon:.5f},{zoom}z/data=!3m1!1e3"
+    gmaps_search = f"https://www.google.com/maps/search/?api=1&query={lat:.5f},{lon:.5f}"
     gearth = (
         f"https://earth.google.com/web/search/{lat:.5f},{lon:.5f}/"
         f"@{lat:.5f},{lon:.5f},2500a,12000d,35y,0h,0t,0r"
@@ -507,7 +498,12 @@ def main() -> int:
     links = viewer_links(lat_c, lon_c, zoom=11)
 
     # STAC Sentinel-2: fire window 14–21 jul 2026 + pre-fire for dNBR later
-    bbox = [ext["lon_min"] - 0.05, ext["lat_min"] - 0.05, ext["lon_max"] + 0.05, ext["lat_max"] + 0.05]
+    bbox = [
+        ext["lon_min"] - 0.05,
+        ext["lat_min"] - 0.05,
+        ext["lon_max"] + 0.05,
+        ext["lat_max"] + 0.05,
+    ]
     stac_meta: dict[str, Any] = {"bbox": bbox, "searches": {}}
     for label, dt_range, cloud in (
         ("during_fire_14_21_jul", "2026-07-14T00:00:00Z/2026-07-21T23:59:59Z", 90.0),
@@ -574,9 +570,7 @@ def main() -> int:
             "brief": "satellite_enrichment/SATELLITE_BRIEF.md",
         },
     }
-    (SAT_DIR / "enrichment_report.json").write_text(
-        json.dumps(report, indent=2), encoding="utf-8"
-    )
+    (SAT_DIR / "enrichment_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     (PACK / "satellite_enrichment_report.json").write_text(
         json.dumps(report, indent=2), encoding="utf-8"
     )
@@ -637,7 +631,7 @@ def main() -> int:
 |--------|------------|--------------|----------|
 {chr(10).join(sensor_lines)}
 
-**Unión puntos (con solapes entre sensores):** {len(all_feats)}  
+**Unión puntos (con solapes entre sensores):** {len(all_feats)}
 **Hull multi-sensor ~ha:** {hull_ha:.0f} (proxy térmico, no área quemada oficial)
 
 ### Timeline VIIRS N20 7 días (conteos por fecha)

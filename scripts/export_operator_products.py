@@ -85,18 +85,14 @@ def process_pack(pack_dir: Path) -> dict:
 
         structural = ops.get("structural") or {}
         write_ros_timeline_csv(structural, pack_dir / "ros_timeline.csv")
-        write_operator_brief_md(
-            event_id, ops, structural, pack_dir / "brief_operativo.md"
-        )
+        write_operator_brief_md(event_id, ops, structural, pack_dir / "brief_operativo.md")
         return {
             "fire_id": event_id,
             "status": "partial",
             "files": ["ros_timeline.csv", "brief_operativo.md"],
         }
 
-    paths = export_operator_bundle(
-        observations, ops, pack_dir, event_id=event_id
-    )
+    paths = export_operator_bundle(observations, ops, pack_dir, event_id=event_id)
     return {"fire_id": event_id, "status": "ok", "files": paths}
 
 

@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import math
-from typing import Callable
 
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from .geometry import (
     area_ha,
     area_m2,
-    as_multipolygon,
     component_polygons,
     drop_micro_components,
     ensure_valid,
@@ -151,9 +149,7 @@ def area_fraction_stage(
 
     method = "area_fraction_erode"
     if g.is_empty or not fraction_band_ok(area_m2(g) / a_f if a_f else 0.0, f_target):
-        g2 = _per_component_homothety(
-            final, f_target, min_component_area_ha=min_component_area_ha
-        )
+        g2 = _per_component_homothety(final, f_target, min_component_area_ha=min_component_area_ha)
         g2, dropped2 = _clean_stage(g2, final, min_component_area_ha=min_component_area_ha)
         if dropped2:
             reasons.append("micro_components_deferred")
@@ -205,11 +201,9 @@ def run_area_fraction_engine(
             reasons.append("fraction_miss_after_nest_fix")
         # If nest emptied, use parent slightly eroded as last resort
         if g_nested.is_empty and not parent.is_empty:
-            g_nested = erode(parent, max(parent.area ** 0.5 * 0.01, 1.0))
+            g_nested = erode(parent, max(parent.area**0.5 * 0.01, 1.0))
             inter2 = g_nested.intersection(parent) if not g_nested.is_empty else Polygon()
-            g_nested = (
-                ensure_valid(inter2, allow_empty=True) if not inter2.is_empty else Polygon()
-            )
+            g_nested = ensure_valid(inter2, allow_empty=True) if not inter2.is_empty else Polygon()
             reasons.append("nest_recover_erode_parent")
             method = method + "+nest_recover"
         stages[i] = g_nested if not g_nested.is_empty else g
@@ -224,7 +218,7 @@ def run_area_fraction_engine(
 
     # Forward pass: ensure area monotone by taking running max containment
     out: list[BaseGeometry] = []
-    for i, s in enumerate(stages):
+    for s in stages:
         assert s is not None
         out.append(s if s.is_empty else ensure_valid(s))
 
@@ -269,8 +263,8 @@ def run_buffer_rings_engine(
     d_max = max_erode_distance(final)
     if d_max <= 0:
         # Degenerate: all stages = final except empty early
-        stages = [ensure_valid(final) for _ in range(n_stages)]
-        return stages, ["buffer_rings"] * n_stages, [[] for _ in range(n_stages)]
+        early = [ensure_valid(final) for _ in range(n_stages)]
+        return early, ["buffer_rings"] * n_stages, [[] for _ in range(n_stages)]
 
     # distances: stage 0 most eroded, stage n-1 d=0
     distances = [d_max * (1.0 - (i + 1) / n_stages) for i in range(n_stages)]
@@ -293,8 +287,9 @@ def run_buffer_rings_engine(
             if g.is_empty:
                 reasons.append("stage_empty_buffer_collapse")
                 # recover: small disk about representative point
-                from .geometry import safe_homothety_center
                 from shapely.geometry import Point
+
+                from .geometry import safe_homothety_center
 
                 cx, cy = safe_homothety_center(final)
                 g = ensure_valid(Point(cx, cy).buffer(max(d_max * 0.05, 5.0)).intersection(final))
@@ -308,9 +303,7 @@ def run_buffer_rings_engine(
         if stages[i].is_empty:
             continue
         inter = stages[i].intersection(stages[i + 1])
-        stages[i] = (
-            ensure_valid(inter, allow_empty=True) if not inter.is_empty else Polygon()
-        )
+        stages[i] = ensure_valid(inter, allow_empty=True) if not inter.is_empty else Polygon()
 
     stages[-1] = ensure_valid(final)
     methods[-1] = "terminal_exact"

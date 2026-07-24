@@ -27,9 +27,7 @@ def main() -> int:
     ready = {p["id"]: bool(p.get("ready")) for p in products}
     # Require dual core + ensemble when present in catalog
     need = {"ndws_v21", "clm_v28"}
-    report["checks"]["dual_ready"] = need.issubset(set(ready)) and all(
-        ready.get(k) for k in need
-    )
+    report["checks"]["dual_ready"] = need.issubset(set(ready)) and all(ready.get(k) for k in need)
     ens_key = "clm_ensemble_v34" if "clm_ensemble_v34" in ready else "clm_ensemble_v30"
     if ens_key in ready:
         report["checks"]["ensemble_ready"] = bool(ready[ens_key])

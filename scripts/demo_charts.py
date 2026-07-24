@@ -9,12 +9,7 @@ from typing import Any
 
 def _xml(s: Any) -> str:
     t = str(s or "")
-    return (
-        t.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-    )
+    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 def _parse_day(v: Any) -> date | None:
@@ -110,10 +105,7 @@ def svg_gates_stacked(
         f'role="img" aria-label="Gates PASS SKIP FAIL counts">'
         f'<text x="{pad_l}" y="{height - 6}" fill="#8b9bb4" font-size="11">'
         f"Total gates: {total} · PASS {c['PASS']} · SKIP {c['SKIP']} · FAIL {c['FAIL']}"
-        f"</text>"
-        + "".join(legend)
-        + "".join(rects)
-        + "</svg>"
+        f"</text>" + "".join(legend) + "".join(rects) + "</svg>"
     )
 
 

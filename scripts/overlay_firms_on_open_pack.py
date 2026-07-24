@@ -89,8 +89,8 @@ def main() -> int:
         text = args.local_csv.read_text(encoding="utf-8", errors="replace")
     else:
         try:
-            text = urllib.request.urlopen(args.csv_url, timeout=90).read().decode(
-                "utf-8", "replace"
+            text = (
+                urllib.request.urlopen(args.csv_url, timeout=90).read().decode("utf-8", "replace")
             )
         except Exception as exc:
             print(f"FIRMS download failed: {exc}", file=sys.stderr)

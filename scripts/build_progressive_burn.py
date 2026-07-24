@@ -17,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from wildfire_front.progressive_burn.geometry import geojson_to_geom  # noqa: E402
+from wildfire_front.progressive_burn.metrics import evaluate_invariants  # noqa: E402
 from wildfire_front.progressive_burn.pack_attach import (  # noqa: E402
     attach_progressive_burn,
     sequence_to_geojson_fc,
 )
-from wildfire_front.progressive_burn.metrics import evaluate_invariants  # noqa: E402
 from wildfire_front.progressive_burn.pipeline import (  # noqa: E402
     ProgressiveBurnConfig,
     build_stage_sequence,
@@ -55,9 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if args.pack:
-        result = attach_progressive_burn(
-            args.pack, cfg, run_fd=not args.no_front_dynamics
-        )
+        result = attach_progressive_burn(args.pack, cfg, run_fd=not args.no_front_dynamics)
         print(json.dumps(result, indent=2))
         return 0 if result.get("verdict") != "NO_GO" else 2
 
@@ -76,7 +74,11 @@ def main(argv: list[str] | None = None) -> int:
     (out / "metrics_progressive.json").write_text(
         json.dumps(metrics, indent=2, default=str), encoding="utf-8"
     )
-    print(json.dumps({"verdict": metrics["verdict"], "n_stages": seq.n_stages, "out": str(out)}, indent=2))
+    print(
+        json.dumps(
+            {"verdict": metrics["verdict"], "n_stages": seq.n_stages, "out": str(out)}, indent=2
+        )
+    )
     return 0 if metrics["verdict"] != "NO_GO" else 2
 
 

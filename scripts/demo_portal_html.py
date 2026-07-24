@@ -19,7 +19,13 @@ def _safe_href(href: str | None) -> str | None:
     if not href:
         return None
     h = str(href).strip().replace("\\", "/")
-    if not h or h.startswith("/") or "://" in h or h.lower().startswith("javascript:") or h.startswith("//"):
+    if (
+        not h
+        or h.startswith("/")
+        or "://" in h
+        or h.lower().startswith("javascript:")
+        or h.startswith("//")
+    ):
         return None
     if len(h) >= 2 and h[1] == ":":
         return None
@@ -100,7 +106,9 @@ def render_portal(
     built = _esc(manifest.get("built_at_utc") or "")
     honesty = manifest.get("honesty") or {}
     any_vp = bool(honesty.get("any_vp_invented"))
-    decision_cards = decision_cards if decision_cards is not None else (manifest.get("decision_cards") or [])
+    decision_cards = (
+        decision_cards if decision_cards is not None else (manifest.get("decision_cards") or [])
+    )
     la_mierla = la_mierla if la_mierla is not None else manifest.get("la_mierla")
     git_short = git_short if git_short is not None else manifest.get("git_short")
     provenance = manifest.get("provenance") or {}
@@ -110,10 +118,10 @@ def render_portal(
     kpi_cells = []
     for k in kpi.get("kpis") or []:
         kpi_cells.append(
-            f"""<div class="kpi" data-i18n-label="{_esc(k.get('id'))}">
-  <div class="kpi-val">{_esc(k.get('value'))}{_esc(k.get('unit') or '')}</div>
-  <div class="kpi-lbl" data-es="{_esc(k.get('label'))}" data-en="{_esc(k.get('label_en') or k.get('label'))}">{_esc(k.get('label'))}</div>
-  <div class="kpi-hint">{_esc(k.get('hint'))}</div>
+            f"""<div class="kpi" data-i18n-label="{_esc(k.get("id"))}">
+  <div class="kpi-val">{_esc(k.get("value"))}{_esc(k.get("unit") or "")}</div>
+  <div class="kpi-lbl" data-es="{_esc(k.get("label"))}" data-en="{_esc(k.get("label_en") or k.get("label"))}">{_esc(k.get("label"))}</div>
+  <div class="kpi-hint">{_esc(k.get("hint"))}</div>
 </div>"""
         )
 
@@ -168,7 +176,10 @@ def render_portal(
                     f"<div class='metric'><span class='m-val' style='font-size:.95rem'>{_esc(fd or '—')}</span>"
                     f"<span class='m-lbl'>det→{_esc(fe or '—')}</span></div>"
                 )
-        metrics_html = "".join(bits) or "<div class='metric'><span class='m-val'>—</span><span class='m-lbl'>n/a</span></div>"
+        metrics_html = (
+            "".join(bits)
+            or "<div class='metric'><span class='m-val'>—</span><span class='m-lbl'>n/a</span></div>"
+        )
 
         links = s.get("links") or {}
         btns = []
@@ -200,36 +211,40 @@ def render_portal(
         if fr or fa:
             parts = []
             if fr:
-                parts.append(f"<a href='{_esc(fr)}' target='_blank'><img src='{_esc(fr)}' alt='ROS Tobarra' loading='lazy'/></a>")
+                parts.append(
+                    f"<a href='{_esc(fr)}' target='_blank'><img src='{_esc(fr)}' alt='ROS Tobarra' loading='lazy'/></a>"
+                )
             if fa:
-                parts.append(f"<a href='{_esc(fa)}' target='_blank'><img src='{_esc(fa)}' alt='Área Tobarra' loading='lazy'/></a>")
+                parts.append(
+                    f"<a href='{_esc(fa)}' target='_blank'><img src='{_esc(fa)}' alt='Área Tobarra' loading='lazy'/></a>"
+                )
             figs = f"<div class='fig-row'>{''.join(parts)}</div>"
 
         return f"""
-<article class="site-card" id="card-{sid}" data-panel="{_esc(s.get('panel'))}" data-track="{_esc(s.get('track'))}">
+<article class="site-card" id="card-{sid}" data-panel="{_esc(s.get("panel"))}" data-track="{_esc(s.get("track"))}">
   <header class="card-head">
     <div>
-      <span class="track track-{'ops' if s.get('track')=='OPS' else 'open'}">{_esc(s.get('track_label'))}</span>
-      <h2>{_esc(s.get('name_display'))}</h2>
-      <p class="ccaa">{_esc(s.get('ccaa'))} · {_esc(s.get('year_label'))}</p>
+      <span class="track track-{"ops" if s.get("track") == "OPS" else "open"}">{_esc(s.get("track_label"))}</span>
+      <h2>{_esc(s.get("name_display"))}</h2>
+      <p class="ccaa">{_esc(s.get("ccaa"))} · {_esc(s.get("year_label"))}</p>
     </div>
     <div class="verdicts">
-      <span class="pill {_verdict_class(str(s.get('verdict')))}">{_esc(s.get('verdict'))}</span>
-      <span class="pill {_verdict_class(str(s.get('decision_open')))}">decisión: {_esc(s.get('decision_open'))}</span>
+      <span class="pill {_verdict_class(str(s.get("verdict")))}">{_esc(s.get("verdict"))}</span>
+      <span class="pill {_verdict_class(str(s.get("decision_open")))}">decisión: {_esc(s.get("decision_open"))}</span>
     </div>
   </header>
-  <p class="headline">{_esc(s.get('headline'))}</p>
+  <p class="headline">{_esc(s.get("headline"))}</p>
   <div class="metrics">{metrics_html}</div>
   <div class="chips">{gate_chips(s)}</div>
   {map_div}
   {figs}
   <dl class="meta">
-    <div><dt data-es="Fuente" data-en="Source">Fuente</dt><dd>{_esc(s.get('source'))}</dd></div>
-    <div><dt data-es="Demuestra" data-en="Shows">Demuestra</dt><dd>{_esc(s.get('what_shows'))}</dd></div>
-    <div><dt data-es="No dice" data-en="Does not claim">No dice</dt><dd>{_esc(s.get('what_not'))}</dd></div>
+    <div><dt data-es="Fuente" data-en="Source">Fuente</dt><dd>{_esc(s.get("source"))}</dd></div>
+    <div><dt data-es="Demuestra" data-en="Shows">Demuestra</dt><dd>{_esc(s.get("what_shows"))}</dd></div>
+    <div><dt data-es="No dice" data-en="Does not claim">No dice</dt><dd>{_esc(s.get("what_not"))}</dd></div>
   </dl>
-  <p class="attr">{_esc(s.get('attribution'))}</p>
-  <div class="actions">{''.join(btns)}</div>
+  <p class="attr">{_esc(s.get("attribution"))}</p>
+  <div class="actions">{"".join(btns)}</div>
 </article>"""
 
     cards = "\n".join(card(s) for s in sites)
@@ -255,15 +270,15 @@ def render_portal(
     for r in compare.get("rows") or []:
         cmp_rows.append(
             f"""<tr>
-  <td>{_esc(r.get('name'))}</td>
-  <td>{_esc(r.get('ccaa'))}</td>
-  <td>{_esc(r.get('track'))}</td>
-  <td>{_esc(_fmt_ha(r.get('area_ha')))}</td>
-  <td>{_esc(_fmt_vp(r.get('vp_m_min')))}</td>
-  <td>{'sí' if r.get('lwir') else 'no'}</td>
-  <td class="{_verdict_class(str(r.get('decision')))}">{_esc(r.get('decision'))}</td>
-  <td>{_esc(r.get('verdict'))}</td>
-  <td class="src">{_esc(r.get('source'))}</td>
+  <td>{_esc(r.get("name"))}</td>
+  <td>{_esc(r.get("ccaa"))}</td>
+  <td>{_esc(r.get("track"))}</td>
+  <td>{_esc(_fmt_ha(r.get("area_ha")))}</td>
+  <td>{_esc(_fmt_vp(r.get("vp_m_min")))}</td>
+  <td>{"sí" if r.get("lwir") else "no"}</td>
+  <td class="{_verdict_class(str(r.get("decision")))}">{_esc(r.get("decision"))}</td>
+  <td>{_esc(r.get("verdict"))}</td>
+  <td class="src">{_esc(r.get("source"))}</td>
 </tr>"""
         )
 
@@ -310,9 +325,7 @@ def render_portal(
         if rel_false and dec_cls == "ok":
             dec_cls = "warn"
         sample_badge = (
-            '<span class="pill muted">SAMPLE SCHEMA (not field decide)</span>'
-            if is_sample
-            else ""
+            '<span class="pill muted">SAMPLE SCHEMA (not field decide)</span>' if is_sample else ""
         )
         rel_banner = ""
         if rel_false:
@@ -333,10 +346,10 @@ def render_portal(
         dc_html_parts.append(
             f"""<div class="{card_cls}">
   <div class="dc-head">
-    <span class="pill {dec_cls}">{_esc(dc.get('decision'))}</span>
+    <span class="pill {dec_cls}">{_esc(dc.get("decision"))}</span>
     {sample_badge}
-    <strong>{_esc(dc.get('label') or dc.get('id'))}</strong>
-    <span class="muted">{_esc(dc.get('event_id') or '')}</span>
+    <strong>{_esc(dc.get("label") or dc.get("id"))}</strong>
+    <span class="muted">{_esc(dc.get("event_id") or "")}</span>
   </div>
   <p class="muted" style="margin:.35rem 0;font-size:.82rem">conf {_esc(conf)} · reliability_pass={_esc(rel_pass)}</p>
   {rel_banner}
@@ -365,19 +378,19 @@ def render_portal(
 <article class="site-card optional-card" id="card-la_mierla" data-panel="la_mierla" data-optional="1">
   <header class="card-head">
     <div>
-      <span class="track track-open">{_esc(la_mierla.get('track_label'))}</span>
-      <h2>{_esc(la_mierla.get('name_display'))}</h2>
-      <p class="ccaa">{_esc(la_mierla.get('ccaa'))} · {_esc(la_mierla.get('year_label'))}</p>
+      <span class="track track-open">{_esc(la_mierla.get("track_label"))}</span>
+      <h2>{_esc(la_mierla.get("name_display"))}</h2>
+      <p class="ccaa">{_esc(la_mierla.get("ccaa"))} · {_esc(la_mierla.get("year_label"))}</p>
     </div>
     <div class="verdicts">
-      <span class="pill {_verdict_class(str(la_mierla.get('verdict')))}">{_esc(la_mierla.get('verdict'))}</span>
-      <span class="pill {_verdict_class(str(la_mierla.get('decision_open')))}">decisión: {_esc(la_mierla.get('decision_open'))}</span>
+      <span class="pill {_verdict_class(str(la_mierla.get("verdict")))}">{_esc(la_mierla.get("verdict"))}</span>
+      <span class="pill {_verdict_class(str(la_mierla.get("decision_open")))}">decisión: {_esc(la_mierla.get("decision_open"))}</span>
     </div>
   </header>
-  <p class="headline">{_esc(la_mierla.get('headline'))}</p>
+  <p class="headline">{_esc(la_mierla.get("headline"))}</p>
   <p class="muted" style="font-size:.8rem">Blocked: {blk} · no diluye el pitch de 3 sitios</p>
-  <p class="attr">{_esc(la_mierla.get('attribution'))}</p>
-  <div class="actions">{''.join(lm_btns) or "<span class='btn disabled'>SKIP</span>"}</div>
+  <p class="attr">{_esc(la_mierla.get("attribution"))}</p>
+  <div class="actions">{"".join(lm_btns) or "<span class='btn disabled'>SKIP</span>"}</div>
 </article>"""
 
     # Provenance
@@ -385,7 +398,11 @@ def render_portal(
     if not prov_sources:
         prov_sources = [
             {"label": "INFOCAM", "contact": "data/infocam_anchors.json", "role": "Anclas OPS"},
-            {"label": "REDIAM", "contact": "rediam.atiende.csma@juntadeandalucia.es", "role": "O2 AND"},
+            {
+                "label": "REDIAM",
+                "contact": "rediam.atiende.csma@juntadeandalucia.es",
+                "role": "O2 AND",
+            },
             {"label": "RAI/INFOEX", "contact": "rai@juntaex.es", "role": "O2 EXT"},
         ]
     prov_rows = "".join(
@@ -396,9 +413,7 @@ def render_portal(
 
     camino_days = (cm.get("key_numbers") or {}).get("duration_days")
     days_note = (
-        f" · duración det→ext: <b>{_esc(camino_days)} días</b>"
-        if camino_days is not None
-        else ""
+        f" · duración det→ext: <b>{_esc(camino_days)} días</b>" if camino_days is not None else ""
     )
 
     tb_confirmed = tb.get("status_anchor") == "confirmed"
@@ -628,11 +643,11 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   <main id="main">
   <header class="hero pitch-keep" id="hero">
     <p class="eyebrow" data-es="Producto demo industrial" data-en="Industrial demo product">Producto demo industrial</p>
-    <h2 id="hero-title">{_esc(i18n['hero_title']['es'])}</h2>
-    <p class="pitch" id="hero-sub">{i18n['hero_sub']['es']}</p>
+    <h2 id="hero-title">{_esc(i18n["hero_title"]["es"])}</h2>
+    <p class="pitch" id="hero-sub">{i18n["hero_sub"]["es"]}</p>
     <div class="cta-row">
-      <a class="btn primary" href="#guion" id="cta-demo">{_esc(i18n['cta_demo']['es'])}</a>
-      <a class="btn ops" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20ancla%20Vp%2Fha" id="cta-anchor">{_esc(i18n['cta_anchor']['es'])}</a>
+      <a class="btn primary" href="#guion" id="cta-demo">{_esc(i18n["cta_demo"]["es"])}</a>
+      <a class="btn ops" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20ancla%20Vp%2Fha" id="cta-anchor">{_esc(i18n["cta_anchor"]["es"])}</a>
       <a class="btn ghost" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20feedback%2030min">Feedback 30 min</a>
       <button type="button" class="btn ghost" id="btn-print">Exportar pitch (print)</button>
       <a class="btn ghost" href="export/pitch_onepager.html" target="_blank" rel="noopener">One-pager HTML</a>
@@ -645,7 +660,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
 
   <section id="kpis" class="pitch-keep" aria-label="KPIs" tabindex="-1">
     <div class="kpi-strip">
-      {''.join(kpi_cells)}
+      {"".join(kpi_cells)}
     </div>
   </section>
 
@@ -670,7 +685,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
     <div class="sec-body">
       <table class="grid">
         <thead><tr><th>Sitio</th><th>O2</th><th>Hausdorff</th><th>FIRMS</th><th>dNBR</th><th>No false dispatch</th><th>Provenance</th><th>Verdict</th></tr></thead>
-        <tbody>{''.join(sb_rows)}</tbody>
+        <tbody>{"".join(sb_rows)}</tbody>
       </table>
     </div>
   </section>
@@ -680,7 +695,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
     <div class="sec-body">
       <table class="grid">
         <thead><tr><th>IF</th><th>CCAA</th><th>Track</th><th>ha</th><th>Vp</th><th>LWIR</th><th>Decisión</th><th>Verdict</th><th>Fuente</th></tr></thead>
-        <tbody>{''.join(cmp_rows)}</tbody>
+        <tbody>{"".join(cmp_rows)}</tbody>
       </table>
       <p class="muted" style="font-size:.8rem">Cost of missing data: sin ancla OPS no hay Vp táctico; sin perímetro Junta no hay O2 oficial. El producto expone el hueco — no lo rellena con ficción.</p>
     </div>
@@ -717,8 +732,8 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
       </div>
       <div class="guion-step" data-step="0" data-panel="" tabindex="0">0:00 — Gancho: tres contratos, un criterio de calidad; HOLD es feature.</div>
       <div class="guion-step" data-step="1" data-panel="tobarra" tabindex="0">1–4 min — <b>Tobarra OPS</b>: LWIR + {tb_guion}. ROS multi-estimador. Sin este material no inventamos el número.</div>
-      <div class="guion-step" data-step="2" data-panel="nijar" tabindex="0">4–7 min — <b>Níjar AND</b>: perímetro REDIAM ~{ha_nj} ha · verdict {_esc(nj.get('verdict'))} · decisión {_esc(nj.get('decision_open'))}. FIRMS+dNBR cuando hay.</div>
-      <div class="guion-step" data-step="3" data-panel="camino" tabindex="0">7–10 min — <b>Caminomorisco EXT</b>: perímetro RAI ~{ha_cm} ha · det {_esc((cm.get('key_numbers') or {}).get('fecha_det'))} → {_esc((cm.get('key_numbers') or {}).get('fecha_ext'))}. PARTIAL si FIRMS SKIP — no inventamos hotspots.</div>
+      <div class="guion-step" data-step="2" data-panel="nijar" tabindex="0">4–7 min — <b>Níjar AND</b>: perímetro REDIAM ~{ha_nj} ha · verdict {_esc(nj.get("verdict"))} · decisión {_esc(nj.get("decision_open"))}. FIRMS+dNBR cuando hay.</div>
+      <div class="guion-step" data-step="3" data-panel="camino" tabindex="0">7–10 min — <b>Caminomorisco EXT</b>: perímetro RAI ~{ha_cm} ha · det {_esc((cm.get("key_numbers") or {}).get("fecha_det"))} → {_esc((cm.get("key_numbers") or {}).get("fecha_ext"))}. PARTIAL si FIRMS SKIP — no inventamos hotspots.</div>
       <div class="guion-step" data-step="4" data-panel="" tabindex="0">10–12 min — Síntesis dual + ask: 30 min feedback / ancla Vp-ha / carta interés.</div>
     </div>
   </section>
@@ -729,7 +744,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
       <p><b>Qué vendemos:</b> Fire Decision posture (GO/HOLD/ABSTAIN), multi-CCAA proof, scoreboard industrial, audit trail.</p>
       <p><b>Por qué HOLD vende:</b> el sistema se niega a recomendar cuando faltan fuentes — residual silent-GO controlado por diseño (suite de abstención/gates; target contractual ≤ 1×10⁻⁶ silent-GO bajo tests), no “mapa optimista”.</p>
       <p><b>Audit trail:</b> hash de inputs/outputs cuando hay decide API · actas E2E GOLD/AND/EXT · provenance de cada pack · timestamps UTC en footer.</p>
-      <p><b>Números de esta demo:</b> Tobarra {vp_tb} m/min · {ha_tb} ha · Níjar {ha_nj} ha O2 · Camino {ha_cm} ha O2 · catálogo AND {_esc(kpi.get('n_and_catalog', '—'))} IF.</p>
+      <p><b>Números de esta demo:</b> Tobarra {vp_tb} m/min · {ha_tb} ha · Níjar {ha_nj} ha O2 · Camino {ha_cm} ha O2 · catálogo AND {_esc(kpi.get("n_and_catalog", "—"))} IF.</p>
       <p class="muted">Print (botón) o <a href="export/pitch_onepager.html">export/pitch_onepager.html</a> · markdown en export/pitch_onepager.md</p>
     </div>
   </section>
@@ -741,8 +756,8 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
         <thead><tr><th>Fuente</th><th>Contacto / buzón</th><th>Rol en demo</th></tr></thead>
         <tbody>{prov_rows}</tbody>
       </table>
-      <p class="muted" style="font-size:.8rem;margin:.5rem 0 0">{_esc(provenance.get('note') or 'Atribuciones siempre visibles. No se inventan Vp/ha.')}
-        · Producto: <a href="mailto:{_esc(provenance.get('product_contact') or 'alonso.alvbal@gmail.com')}">{_esc(provenance.get('product_contact') or 'alonso.alvbal@gmail.com')}</a>
+      <p class="muted" style="font-size:.8rem;margin:.5rem 0 0">{_esc(provenance.get("note") or "Atribuciones siempre visibles. No se inventan Vp/ha.")}
+        · Producto: <a href="mailto:{_esc(provenance.get("product_contact") or "alonso.alvbal@gmail.com")}">{_esc(provenance.get("product_contact") or "alonso.alvbal@gmail.com")}</a>
         · Build UTC: {built}</p>
     </div>
   </section>
@@ -769,8 +784,8 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
         <div class="cta-card">
           <h4>Más producto</h4>
           <p>Sala de mando · Metrics hub · Decide API local.</p>
-          <a class="btn ghost" href="{_esc(_safe_href(manifest.get('commander_href')) or '../../docs/commander/index.html')}">Commander</a>
-          <a class="btn ghost" href="{_esc(_safe_href(manifest.get('portal_href')) or '../../docs/PORTAL.html')}">Portal</a>
+          <a class="btn ghost" href="{_esc(_safe_href(manifest.get("commander_href")) or "../../docs/commander/index.html")}">Commander</a>
+          <a class="btn ghost" href="{_esc(_safe_href(manifest.get("portal_href")) or "../../docs/PORTAL.html")}">Portal</a>
         </div>
       </div>
     </div>
@@ -792,9 +807,9 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </main>
 
   <footer class="footer">
-    Built {built} · demo_version {_esc(version)} · git {git_label} · schema {_esc(manifest.get('schema'))}<br/>
+    Built {built} · demo_version {_esc(version)} · git {git_label} · schema {_esc(manifest.get("schema"))}<br/>
     Contacto: <a href="mailto:alonso.alvbal@gmail.com">alonso.alvbal@gmail.com</a> ·
-    Plan: <a href="{_esc(_safe_href(manifest.get('plan_href')) or '../../docs/design/DEMO_MULTI_CCAA_TOBARRA_NIJAR_CAMINOMORISCO.md')}">demo multi-CCAA</a> ·
+    Plan: <a href="{_esc(_safe_href(manifest.get("plan_href")) or "../../docs/design/DEMO_MULTI_CCAA_TOBARRA_NIJAR_CAMINOMORISCO.md")}">demo multi-CCAA</a> ·
     <a href="export/pitch_onepager.html">pitch HTML</a>
   </footer>
 </div>

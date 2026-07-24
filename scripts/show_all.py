@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """One command to understand and show the whole product.
 
-  cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
-  $env:PYTHONPATH = "."
-  python scripts/show_all.py
+cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
+$env:PYTHONPATH = "."
+python scripts/show_all.py
 """
 
 from __future__ import annotations

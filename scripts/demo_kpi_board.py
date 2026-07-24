@@ -92,13 +92,62 @@ def compute_kpi_board(
     open_sites = max(1, n_sites - n_ops)
 
     kpis = [
-        {"id": "ccaa", "label": "CCAA", "label_en": "Regions", "value": len(ccaa), "unit": "", "hint": ", ".join(str(c) for c in ccaa)},
-        {"id": "sites", "label": "IF demo", "label_en": "Demo fires", "value": n_sites, "unit": "", "hint": "Tobarra · Níjar · Caminomorisco"},
-        {"id": "ha_o2", "label": "ha O2 oficiales", "label_en": "Official O2 ha", "value": sum_ha, "unit": "ha", "hint": "Suma perímetros Junta (OPEN)"},
-        {"id": "and_cat", "label": "Catálogo AND", "label_en": "AND catalog", "value": n_and_catalog, "unit": "IF", "hint": "REDIAM WFS 2022–25"},
-        {"id": "ext_n", "label": "EXT entregados", "label_en": "EXT delivered", "value": n_ext_delivery, "unit": "IF", "hint": "RAI shapes 2025"},
-        {"id": "anchors", "label": "Anclas confirmed", "label_en": "Confirmed anchors", "value": n_confirmed, "unit": "", "hint": "Vp/ha INFOCAM-class"},
-        {"id": "hold", "label": "HOLD / cautela", "label_en": "HOLD posture", "value": n_hold, "unit": "", "hint": "Abstención sin ancla ops"},
+        {
+            "id": "ccaa",
+            "label": "CCAA",
+            "label_en": "Regions",
+            "value": len(ccaa),
+            "unit": "",
+            "hint": ", ".join(str(c) for c in ccaa),
+        },
+        {
+            "id": "sites",
+            "label": "IF demo",
+            "label_en": "Demo fires",
+            "value": n_sites,
+            "unit": "",
+            "hint": "Tobarra · Níjar · Caminomorisco",
+        },
+        {
+            "id": "ha_o2",
+            "label": "ha O2 oficiales",
+            "label_en": "Official O2 ha",
+            "value": sum_ha,
+            "unit": "ha",
+            "hint": "Suma perímetros Junta (OPEN)",
+        },
+        {
+            "id": "and_cat",
+            "label": "Catálogo AND",
+            "label_en": "AND catalog",
+            "value": n_and_catalog,
+            "unit": "IF",
+            "hint": "REDIAM WFS 2022–25",
+        },
+        {
+            "id": "ext_n",
+            "label": "EXT entregados",
+            "label_en": "EXT delivered",
+            "value": n_ext_delivery,
+            "unit": "IF",
+            "hint": "RAI shapes 2025",
+        },
+        {
+            "id": "anchors",
+            "label": "Anclas confirmed",
+            "label_en": "Confirmed anchors",
+            "value": n_confirmed,
+            "unit": "",
+            "hint": "Vp/ha INFOCAM-class",
+        },
+        {
+            "id": "hold",
+            "label": "HOLD / cautela",
+            "label_en": "HOLD posture",
+            "value": n_hold,
+            "unit": "",
+            "hint": "Abstención sin ancla ops",
+        },
         {
             "id": "gates",
             "label": "Gates PASS",
@@ -254,17 +303,10 @@ def svg_ha_bars(sites: list[dict[str, Any]], *, width: int = 520, height: int = 
     h = pad_t + len(items) * row_h + 8
     return (
         f'<svg viewBox="0 0 {width} {h}" width="100%" height="{h}" '
-        f'role="img" aria-label="Hectáreas por incendio demo">'
-        + "".join(bars)
-        + "</svg>"
+        f'role="img" aria-label="Hectáreas por incendio demo">' + "".join(bars) + "</svg>"
     )
 
 
 def _xml(s: Any) -> str:
     t = str(s or "")
-    return (
-        t.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-    )
+    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")

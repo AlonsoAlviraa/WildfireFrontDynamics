@@ -61,11 +61,7 @@ def main() -> int:
     if not INIT.is_file():
         print("missing init weights", INIT, file=sys.stderr)
         return 1
-    folds = sorted(
-        p.name
-        for p in LOFO_ROOT.iterdir()
-        if p.is_dir() and (p / "train").is_dir()
-    )
+    folds = sorted(p.name for p in LOFO_ROOT.iterdir() if p.is_dir() and (p / "train").is_dir())
     # Prefer not redoing tobarra if already done unless --all
     redo_tobarra = "--all" in sys.argv
     rows = []

@@ -68,8 +68,11 @@ def fetch_aemet_daily(
         sys.exit(1)
 
     if meta.get("estado") != 200:
-        print(f"[ERROR] AEMET returned status {meta.get('estado')}: "
-              f"{meta.get('descripcion', 'unknown')}", file=sys.stderr)
+        print(
+            f"[ERROR] AEMET returned status {meta.get('estado')}: "
+            f"{meta.get('descripcion', 'unknown')}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     data_url = meta.get("datos")
@@ -105,6 +108,7 @@ def parse_aemet_obs(raw: list[dict]) -> list[dict]:
     """
     parsed = []
     for obs in raw:
+
         def _safe_float(val) -> float:
             """Parse AEMET values like '25,3' or 'Ip' (inappreciable)."""
             if val is None or val == "" or val == "Ip":
@@ -146,13 +150,15 @@ def compute_fwi_series(records: list[dict]) -> list[dict]:
     for rec in records:
         # wind for FFMC is in km/h; AEMET gives m/s
         wind_kmh = rec["wind_ms"] * 3.6
-        ffmc = float(compute_ffmc(
-            temp_c=rec["temp_c"],
-            rh_percent=rec["rh_percent"],
-            wind_kmh=wind_kmh,
-            precip_mm=rec["precip_mm"],
-            prev_ffmc=prev_ffmc,
-        ))
+        ffmc = float(
+            compute_ffmc(
+                temp_c=rec["temp_c"],
+                rh_percent=rec["rh_percent"],
+                wind_kmh=wind_kmh,
+                precip_mm=rec["precip_mm"],
+                prev_ffmc=prev_ffmc,
+            )
+        )
         rec["ffmc"] = ffmc
         prev_ffmc = ffmc  # Update for next day
 
@@ -162,8 +168,7 @@ def compute_fwi_series(records: list[dict]) -> list[dict]:
 def save_csv(records: list[dict], output_path: Path) -> None:
     """Save FWI records to a CSV file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["date", "temp_c", "rh_percent", "wind_ms", "precip_mm",
-                  "wind_dir", "ffmc"]
+    fieldnames = ["date", "temp_c", "rh_percent", "wind_ms", "precip_mm", "wind_dir", "ffmc"]
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -172,19 +177,12 @@ def save_csv(records: list[dict], output_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Fetch AEMET weather data and compute FWI/FFMC."
-    )
-    parser.add_argument("--api-key", required=True,
-                        help="AEMET OpenData API key")
-    parser.add_argument("--station", required=True,
-                        help="AEMET station indicator (e.g., 4624E)")
-    parser.add_argument("--start", required=True,
-                        help="Start date YYYY-MM-DD")
-    parser.add_argument("--end", required=True,
-                        help="End date YYYY-MM-DD")
-    parser.add_argument("--output", default="data/aemet/fwi.csv",
-                        help="Output CSV path")
+    parser = argparse.ArgumentParser(description="Fetch AEMET weather data and compute FWI/FFMC.")
+    parser.add_argument("--api-key", required=True, help="AEMET OpenData API key")
+    parser.add_argument("--station", required=True, help="AEMET station indicator (e.g., 4624E)")
+    parser.add_argument("--start", required=True, help="Start date YYYY-MM-DD")
+    parser.add_argument("--end", required=True, help="End date YYYY-MM-DD")
+    parser.add_argument("--output", default="data/aemet/fwi.csv", help="Output CSV path")
     args = parser.parse_args()
 
     # 1. Fetch raw data

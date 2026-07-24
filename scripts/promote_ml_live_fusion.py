@@ -24,16 +24,14 @@ import argparse
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-DEFAULT_SCORECARD = (
-    ROOT / "outputs" / "ml_eval" / "scorecards" / "ml_scorecard_u1_test.json"
-)
+DEFAULT_SCORECARD = ROOT / "outputs" / "ml_eval" / "scorecards" / "ml_scorecard_u1_test.json"
 DEFAULT_PROMOTE_RECORD = ROOT / "docs" / "ML_U1_PROMOTE_RECORD.json"
 DEFAULT_PRODUCT_SCORECARD = ROOT / "docs" / "ML_PRODUCT_SCORECARD.json"
 POLICY_PATH = ROOT / "config" / "decision_policies.json"
@@ -60,9 +58,7 @@ RESEARCH_OPEN_EXPERIMENTAL_NOTE = (
 _PROMOTE_ENABLE_CLAUSE_RE = re.compile(
     r"allow_ml_live_in_fusion enabled after U1 TEST honest promote \(\d{4}-\d{2}-\d{2}\)\.?"
 )
-_EXPERIMENTAL_CLAUSE = (
-    "EXPERIMENTAL research_open live fusion only — not field_ops, not tactical."
-)
+_EXPERIMENTAL_CLAUSE = "EXPERIMENTAL research_open live fusion only — not field_ops, not tactical."
 
 
 def _load_scorecard(path: Path) -> dict[str, Any]:
@@ -81,9 +77,7 @@ def _is_offline_or_synthetic(doc: dict[str, Any]) -> bool:
         return True
     if bool(doc.get("offline")):
         return True
-    if doc.get("synthetic_mode") not in (None, "", "none"):
-        return True
-    return False
+    return doc.get("synthetic_mode") not in (None, "", "none")
 
 
 def _n_patches(doc: dict[str, Any]) -> int:
@@ -160,9 +154,7 @@ def validate_promote_eligibility(
         n = _n_patches(doc)
         real_path = _has_real_eval_path(doc)
         if n < MIN_REAL_PATCHES and not real_path:
-            fails.append(
-                f"insufficient_real_patches:n={n}<{MIN_REAL_PATCHES}_and_no_real_eval_dir"
-            )
+            fails.append(f"insufficient_real_patches:n={n}<{MIN_REAL_PATCHES}_and_no_real_eval_dir")
         prov = doc.get("provenance") if isinstance(doc.get("provenance"), dict) else {}
         if prov.get("identity_calibrator") is True:
             fails.append("identity_calibrator")
@@ -242,20 +234,20 @@ def build_promote_record(
     honesty = list(FIXED_HONESTY_NOTES) + [RESEARCH_OPEN_EXPERIMENTAL_NOTE]
     return {
         "schema": "ml_u1_promote_record_v1",
-        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "created_utc": datetime.now(UTC).isoformat(),
         "product_id": doc.get("product_id"),
         "protocol": doc.get("protocol"),
         "scorecard_path": str(scorecard_path).replace("\\", "/"),
         "u1_eval_split": doc.get("u1_eval_split") or doc.get("split"),
-        "calibrator_fit_split": doc.get("calibrator_fit_split")
-        or prov.get("calibrator_fit_split"),
+        "calibrator_fit_split": doc.get("calibrator_fit_split") or prov.get("calibrator_fit_split"),
         "gates_snapshot": {
             "u1_test_honest": bool(gates.get("u1_test_honest")),
             "u1_val_lab_pass": bool(gates.get("u1_val_lab_pass")),
             "u1_val_optimistic": bool(gates.get("u1_val_optimistic")),
             "U1a": bool(gates.get("U1a_selective_ge_full_minus_eps")),
-            "U1b": bool(gates.get("U1b_selective_beats_random")
-                        or gates.get("U1_selective_beats_random")),
+            "U1b": bool(
+                gates.get("U1b_selective_beats_random") or gates.get("U1_selective_beats_random")
+            ),
             "allow_ml_live_in_fusion_recommended": bool(
                 doc.get("allow_ml_live_in_fusion_recommended")
             ),
@@ -308,9 +300,7 @@ def _normalize_research_open_notes(existing: str, *, today: str) -> str:
     cleaned = cleaned.replace(_EXPERIMENTAL_CLAUSE, "")
     # Collapse separators
     parts = [p.strip() for p in re.split(r"\s*\|\s*", cleaned) if p.strip()]
-    parts.append(
-        f"allow_ml_live_in_fusion enabled after U1 TEST honest promote ({today})."
-    )
+    parts.append(f"allow_ml_live_in_fusion enabled after U1 TEST honest promote ({today}).")
     parts.append(_EXPERIMENTAL_CLAUSE)
     # de-dupe preserving order
     seen: set[str] = set()
@@ -337,7 +327,7 @@ def apply_research_open_policy(policy_path: Path | None = None) -> dict[str, Any
         policies["field_ops"]["allow_ml_live_in_fusion"] = False
     ro = policies["research_open"]
     ro["allow_ml_live_in_fusion"] = True
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = datetime.now(UTC).date().isoformat()
     ro["notes"] = _normalize_research_open_notes(str(ro.get("notes") or ""), today=today)
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     if policies.get("field_ops", {}).get("allow_ml_live_in_fusion") is True:
@@ -401,9 +391,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     doc = _load_scorecard(sc_path)
-    fails = validate_promote_eligibility(
-        doc, allow_lab_synthetic=bool(args.allow_lab_synthetic)
-    )
+    fails = validate_promote_eligibility(doc, allow_lab_synthetic=bool(args.allow_lab_synthetic))
     eligible = len(fails) == 0
 
     if not eligible and not args.force_draft:
@@ -478,9 +466,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         out_sc = Path(args.product_scorecard)
         out_sc.parent.mkdir(parents=True, exist_ok=True)
-        out_sc.write_text(
-            json.dumps(snapshot, indent=2, allow_nan=False), encoding="utf-8"
-        )
+        out_sc.write_text(json.dumps(snapshot, indent=2, allow_nan=False), encoding="utf-8")
 
     print(
         json.dumps(

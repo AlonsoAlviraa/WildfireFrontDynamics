@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
-from typing import Any, Mapping, Sequence
-
+from typing import Any
 
 TIMELINE_SCHEMA = "open_if_timeline_daily_v1"
 _FRP_KEYS = ("frp_sum", "frp_mean", "frp_max")
@@ -38,7 +38,7 @@ def daily_stats_from_hotspot_rows(
         for k in frp_keys:
             if r.get(k) not in (None, ""):
                 try:
-                    frp_val = float(r[k])  # type: ignore[arg-type]
+                    frp_val = float(r[k])
                     break
                 except (TypeError, ValueError):
                     continue

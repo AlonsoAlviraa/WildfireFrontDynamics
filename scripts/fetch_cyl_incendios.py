@@ -22,10 +22,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-API = (
-    "https://jcyl.opendatasoft.com/api/explore/v2.1/catalog/datasets/"
-    "incendios-forestales/records"
-)
+API = "https://jcyl.opendatasoft.com/api/explore/v2.1/catalog/datasets/incendios-forestales/records"
 
 
 def fetch_records(
@@ -121,11 +118,7 @@ def main() -> int:
     results = data.get("results") or []
     if args.fecha_inicio:
         target = args.fecha_inicio
-        results = [
-            r
-            for r in results
-            if str(r.get("fecha_de_inicio") or "").startswith(target)
-        ]
+        results = [r for r in results if str(r.get("fecha_de_inicio") or "").startswith(target)]
 
     # Dedupe by province+municipio+start; prefer records with richer surface text
     unique: dict[tuple, dict] = {}
@@ -137,6 +130,7 @@ def main() -> int:
             continue
         prev_sup = str(prev.get("tipo_y_has_de_superficie_afectada") or "")
         cur_sup = str(rec.get("tipo_y_has_de_superficie_afectada") or "")
+
         # Prefer non "EN PERIMETRACION" and longer descriptions
         def _score(s: str) -> int:
             if not s or "PERIMETR" in s.upper():

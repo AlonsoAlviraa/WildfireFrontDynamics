@@ -45,14 +45,23 @@ def main() -> int:
         vp = anc.get("vp_m_min")
         area_ref = anc.get("area_ha")
         area_obs = ops.get("area_ha_max")
-        if area_obs is None and isinstance(ops.get("area_ha_series"), list) and ops["area_ha_series"]:
+        if (
+            area_obs is None
+            and isinstance(ops.get("area_ha_series"), list)
+            and ops["area_ha_series"]
+        ):
             try:
                 area_obs = max(float(x.get("area_ha") or 0) for x in ops["area_ha_series"])
             except (TypeError, ValueError):
                 area_obs = None
         ratio = None
         in_band = None
-        if status == "confirmed" and isinstance(vp, (int, float)) and vp > 0 and isinstance(ros, (int, float)):
+        if (
+            status == "confirmed"
+            and isinstance(vp, (int, float))
+            and vp > 0
+            and isinstance(ros, (int, float))
+        ):
             n_confirmed += 1
             ratio = float(ros) / float(vp)
             in_band = lo <= ratio <= hi
@@ -61,7 +70,11 @@ def main() -> int:
         if grade == "A":
             n_grade_a += 1
         area_ratio = None
-        if isinstance(area_ref, (int, float)) and area_ref > 0 and isinstance(area_obs, (int, float)):
+        if (
+            isinstance(area_ref, (int, float))
+            and area_ref > 0
+            and isinstance(area_obs, (int, float))
+        ):
             area_ratio = float(area_obs) / float(area_ref)
 
         rows.append(

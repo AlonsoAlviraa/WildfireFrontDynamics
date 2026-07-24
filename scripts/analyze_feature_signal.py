@@ -92,8 +92,10 @@ def analyze_dir(data_dir: Path, max_patches: int) -> dict:
         corr_t = _pearson(sample, tgt_cat[: sample.size])
         corr_g = _pearson(sample, growth_cat[: sample.size])
         corr_c = _pearson(sample, change_cat[: sample.size])
-        label = "must" if abs(corr_g) >= 0.05 or abs(corr_c) >= 0.05 else (
-            "never" if std < 1e-4 or frac_const > 0.99 else "maybe"
+        label = (
+            "must"
+            if abs(corr_g) >= 0.05 or abs(corr_c) >= 0.05
+            else ("never" if std < 1e-4 or frac_const > 0.99 else "maybe")
         )
         channels.append(
             {

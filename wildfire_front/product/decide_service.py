@@ -234,7 +234,8 @@ def _normalize_ml_live_payload(data: Mapping[str, Any]) -> dict[str, Any]:
     # Tolerate thin wrapper with top-level confidence + diagnostics
     if "confidence" in data and ("mean_entropy" in data or "diagnostics" in data):
         out = dict(data)
-        diag = data.get("diagnostics") if isinstance(data.get("diagnostics"), Mapping) else {}
+        raw_diag = data.get("diagnostics")
+        diag: dict[str, Any] = dict(raw_diag) if isinstance(raw_diag, Mapping) else {}
         for k in ("mean_entropy", "member_disagreement", "mean_margin", "n_members"):
             if k not in out and k in diag:
                 out[k] = diag[k]
@@ -454,10 +455,7 @@ def decide_from_request(
         ml_live_trusted = False
     else:
         raw_trust = req.get("ml_live_trusted")
-        if isinstance(raw_trust, bool):
-            ml_live_trusted = raw_trust
-        else:
-            ml_live_trusted = True
+        ml_live_trusted = raw_trust if isinstance(raw_trust, bool) else True
     allow_ml_live_in_fusion = bool(req.get("allow_ml_live_in_fusion", False))
 
     card: DecisionCard = build_decision_card(

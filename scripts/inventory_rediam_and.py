@@ -22,9 +22,9 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import json
-import math
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 try:
-    from shapely.geometry import mapping, shape
+    from shapely.geometry import shape
     from shapely.ops import transform
 except ImportError:  # pragma: no cover
     print("shapely required: pip install shapely", file=sys.stderr)
@@ -45,7 +45,9 @@ try:
 except ImportError:  # pragma: no cover
     Transformer = None  # type: ignore
 
-ATTRIBUTION = "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
+ATTRIBUTION = (
+    "Fuente: REDIAM — Junta de Andalucía. Uso libre con mención de autores y propietarios."
+)
 DEFAULT_CACHE = ROOT / "data" / "open_if" / "rediam_andalucia" / "wfs_cache"
 DEFAULT_OUT = ROOT / "data" / "open_if" / "rediam_andalucia" / "inventory"
 NATIVE_CRS = "EPSG:3042"
@@ -168,10 +170,8 @@ def sup_total_ha(props: dict[str, Any]) -> float | None:
     tip = []
     for k in ("SUP_ARBOLA", "SUP_MATORR", "SUP_PASTIZ"):
         if props.get(k) not in (None, ""):
-            try:
+            with contextlib.suppress(TypeError, ValueError):
                 tip.append(float(props[k]))
-            except (TypeError, ValueError):
-                pass
     if tip:
         return sum(tip)
     return sum(vals) if vals else None
@@ -234,17 +234,9 @@ def feature_row(f: dict[str, Any]) -> dict[str, Any]:
         if projected and src_crs is None:
             if 50_000 < minx < 900_000 and 3_500_000 < miny < 4_600_000:
                 src_crs = NATIVE_CRS
-                qa = (
-                    "assumed_epsg3042_sanity"
-                    if qa == "ok"
-                    else f"{qa};assumed_epsg3042_sanity"
-                )
+                qa = "assumed_epsg3042_sanity" if qa == "ok" else f"{qa};assumed_epsg3042_sanity"
             else:
-                qa = (
-                    "missing_crs_projected"
-                    if qa == "ok"
-                    else f"{qa};missing_crs_projected"
-                )
+                qa = "missing_crs_projected" if qa == "ok" else f"{qa};missing_crs_projected"
                 geom = None
 
     geom_ha = (
@@ -268,11 +260,7 @@ def feature_row(f: dict[str, Any]) -> dict[str, Any]:
     else:
         ha = geom_ha
 
-    wgs = (
-        to_wgs84_geom(geom, src_crs)
-        if geom is not None and src_crs is not None
-        else None
-    )
+    wgs = to_wgs84_geom(geom, src_crs) if geom is not None and src_crs is not None else None
     bbox_wgs = None
     centroid = None
     and_ok = False
@@ -287,7 +275,9 @@ def feature_row(f: dict[str, Any]) -> dict[str, Any]:
         )
 
     fecha = parse_fecha_inc(props.get("FECHA_INC") or props.get("fecha_inc"))
-    codigo = str(props.get("CODIGO") or props.get("codigo") or f"IDX{year}_{f.get('_feature_index')}")
+    codigo = str(
+        props.get("CODIGO") or props.get("codigo") or f"IDX{year}_{f.get('_feature_index')}"
+    )
 
     score = 0
     reasons: list[str] = []
@@ -403,7 +393,9 @@ def try_firms_probe(row: dict[str, Any], *, pad_days: int = 2) -> int:
         return -1
 
 
-def select_tiers(rows: list[dict[str, Any]], *, gold_n: int = 1, silver_n: int = 2) -> dict[str, Any]:
+def select_tiers(
+    rows: list[dict[str, Any]], *, gold_n: int = 1, silver_n: int = 2
+) -> dict[str, Any]:
     ranked = sorted(
         rows,
         key=lambda r: (
@@ -413,6 +405,7 @@ def select_tiers(rows: list[dict[str, Any]], *, gold_n: int = 1, silver_n: int =
         ),
         reverse=True,
     )
+
     # Hard filters only — never promote invalid / non-Andalucía rows to gold
     def _qa_ok(r: dict[str, Any]) -> bool:
         q = str(r.get("qa_geometry") or "")
@@ -482,9 +475,7 @@ def select_tiers(rows: list[dict[str, Any]], *, gold_n: int = 1, silver_n: int =
         "n_catalog": len(rows),
         "n_eligible": len(eligible),
         "selection_error": (
-            None
-            if eligible
-            else "no_eligible_events_after_hard_filters_fecha_geom_ha_and_bbox"
+            None if eligible else "no_eligible_events_after_hard_filters_fecha_geom_ha_and_bbox"
         ),
         "notes": [
             "Gold = full E2E pack + acta",
@@ -568,7 +559,10 @@ def build_inventory(
     with csv_path.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         w.writeheader()
-        for r in sorted(all_rows, key=lambda x: (-float(x.get("score_total") or 0), -float(x.get("ha_best") or 0))):
+        for r in sorted(
+            all_rows,
+            key=lambda x: (-float(x.get("score_total") or 0), -float(x.get("ha_best") or 0)),
+        ):
             w.writerow(r)
 
     sel_path = out_dir / "selection_gold.json"
@@ -581,10 +575,8 @@ def build_inventory(
         by_year[str(r["year"])] = by_year.get(str(r["year"]), 0) + 1
         p = r.get("provincia") or "?"
         by_prov[p] = by_prov.get(p, 0) + 1
-        try:
+        with contextlib.suppress(TypeError, ValueError):
             ha_sum += float(r.get("ha_best") or 0)
-        except (TypeError, ValueError):
-            pass
 
     stats = {
         "schema": "rediam_and_inventory_stats_v1",
@@ -598,8 +590,12 @@ def build_inventory(
         "n_silver": len(selection.get("silver") or []),
         "qa_counts": {},
         "cache": str(cache),
-        "catalog_csv": str(csv_path.relative_to(ROOT)) if csv_path.is_relative_to(ROOT) else str(csv_path),
-        "selection_json": str(sel_path.relative_to(ROOT)) if sel_path.is_relative_to(ROOT) else str(sel_path),
+        "catalog_csv": str(csv_path.relative_to(ROOT))
+        if csv_path.is_relative_to(ROOT)
+        else str(csv_path),
+        "selection_json": str(sel_path.relative_to(ROOT))
+        if sel_path.is_relative_to(ROOT)
+        else str(sel_path),
     }
     qa_counts: dict[str, int] = {}
     for r in all_rows:
@@ -607,15 +603,20 @@ def build_inventory(
     stats["qa_counts"] = qa_counts
     (out_dir / "inventory_stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
 
-    print(json.dumps({
-        "n_events": stats["n_events"],
-        "n_gold": stats["n_gold"],
-        "n_silver": stats["n_silver"],
-        "gold": [g["codigo"] for g in selection.get("gold") or []],
-        "silver": [s["codigo"] for s in selection.get("silver") or []],
-        "catalog": stats["catalog_csv"],
-        "selection_error": selection.get("selection_error"),
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "n_events": stats["n_events"],
+                "n_gold": stats["n_gold"],
+                "n_silver": stats["n_silver"],
+                "gold": [g["codigo"] for g in selection.get("gold") or []],
+                "silver": [s["codigo"] for s in selection.get("silver") or []],
+                "catalog": stats["catalog_csv"],
+                "selection_error": selection.get("selection_error"),
+            },
+            indent=2,
+        )
+    )
     return {"stats": stats, "selection": selection, "rows": all_rows}
 
 

@@ -97,7 +97,7 @@ def main() -> int:
 a{{color:#f5b942}}table{{width:100%;border-collapse:collapse;background:#112532}}
 th,td{{padding:10px;border-bottom:1px solid #26404f;text-align:left}}.ok{{color:#3d9a5f}}</style>
 <h1>Tramo loop: O3 + multi-IF</h1>
-<p class="ok">{score['session_es']}</p>
+<p class="ok">{score["session_es"]}</p>
 <table><thead><tr><th>IF</th><th>Grado</th><th>ROS</th><th>vs INFOCAM</th><th>Métodos</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <p>O3: early/mid/late en <code>outputs/temporal_windows/tobarra_20240802/</code></p>

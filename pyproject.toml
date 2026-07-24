@@ -106,6 +106,7 @@ ignore = [
 "scripts/prepare_real_if_geotiffs.py" = ["E402"]
 "scripts/build_real_if_frame_manifest.py" = ["E402"]
 "scripts/audit_real_data_speeds.py" = ["E402"]
+"scripts/build_ext_if_pack.py" = ["E402"]  # sys.path + load sibling AND builder
 
 [tool.ruff.format]
 quote-style = "double"

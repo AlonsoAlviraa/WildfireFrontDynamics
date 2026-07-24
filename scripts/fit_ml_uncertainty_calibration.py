@@ -236,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     if cache_path is not None and cache_path.is_file():
         print(f"Loading VAL features cache {cache_path} …", flush=True)
         try:
+
             def _cache_str(zobj: Any, key: str) -> str:
                 if key not in zobj.files:
                     return ""
@@ -275,9 +276,7 @@ def main(argv: list[str] | None = None) -> int:
                 for part in [p.lower() for p in cache_path.parts]:
                     base = part.split(".")[0]
                     if base == "test" or base == "lofo" or base.startswith("lofo"):
-                        raise ValueError(
-                            f"refusing features-cache path with component {part!r}"
-                        )
+                        raise ValueError(f"refusing features-cache path with component {part!r}")
                 feats = np.asarray(z["features"], dtype=np.float64)
                 labels = [int(v) for v in np.asarray(z["labels"]).ravel()]
                 ious = [float(v) for v in np.asarray(z["ious"]).ravel()]
@@ -401,9 +400,7 @@ def main(argv: list[str] | None = None) -> int:
             second_stage=second_stage,
         )
         # Drop non-JSON calibrator object before persistence
-        nested_metrics = {
-            k: v for k, v in nested_metrics.items() if k != "calibrator"
-        }
+        nested_metrics = {k: v for k, v in nested_metrics.items() if k != "calibrator"}
         recommended_l2 = float(nested_metrics.get("recommended_l2") or recommended_l2)
 
     # Stage 2 (post-nested): final calibrator — second_stage only here, not in nested ECE.
@@ -476,16 +473,12 @@ def main(argv: list[str] | None = None) -> int:
     confs = _confs_from_rows(cal, feature_rows)
     ece = ece_patch_conf(confs, labels, n_bins=10)  # full-VAL diagnostic (may include outer)
     sel = selective_iou_at_coverage(ious, confs, coverage=0.8)
-    u1 = selective_beats_random(
-        ious, confs, coverage=0.8, n_trials=50, seed=seed, margin=0.01
-    )
+    u1 = selective_beats_random(ious, confs, coverage=0.8, n_trials=50, seed=seed, margin=0.01)
     full_mean = float(np.mean(ious))
     sel_iou = float(sel.get("selective_iou") or float("nan"))
     u1a = bool(np.isfinite(sel_iou) and sel_iou >= full_mean - 0.01)
 
-    nested_block = (
-        nested_cv_provenance_block(nested_metrics) if nested_metrics else None
-    )
+    nested_block = nested_cv_provenance_block(nested_metrics) if nested_metrics else None
 
     metrics_on_val: dict[str, Any] = {
         # Backward-compat key: full-VAL ECE with final cal (diagnostic; may be
@@ -577,9 +570,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     metrics_path = Path(args.metrics_out)
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(
-        json.dumps(metrics_doc, indent=2, allow_nan=False), encoding="utf-8"
-    )
+    metrics_path.write_text(json.dumps(metrics_doc, indent=2, allow_nan=False), encoding="utf-8")
 
     print(
         json.dumps(

@@ -116,8 +116,7 @@ def main() -> int:
         "beats_zero_shot": (
             zero.get("improvement_vs_copy_iou") is not None
             and summary.get("improvement_vs_copy_iou") is not None
-            and float(summary["improvement_vs_copy_iou"])
-            > float(zero["improvement_vs_copy_iou"])
+            and float(summary["improvement_vs_copy_iou"]) > float(zero["improvement_vs_copy_iou"])
         ),
     }
     out = args.output_dir / "v28_transfer_report.json"

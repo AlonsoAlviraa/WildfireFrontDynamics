@@ -46,7 +46,9 @@ def _write_json(path: Path, obj: Any) -> None:
     path.write_text(json.dumps(obj, indent=2, default=str), encoding="utf-8")
 
 
-def _write_preview_tif(path: Path, arr: np.ndarray, bbox: tuple[float, float, float, float]) -> None:
+def _write_preview_tif(
+    path: Path, arr: np.ndarray, bbox: tuple[float, float, float, float]
+) -> None:
     import rasterio
     from rasterio.transform import from_bounds
 

@@ -13,12 +13,7 @@ from wildfire_front.ml.uncertainty import (
     save_calibrator,
 )
 
-FIXTURE = (
-    Path(__file__).resolve().parent
-    / "fixtures"
-    / "ml"
-    / "uncertainty_calibrator_v1.json"
-)
+FIXTURE = Path(__file__).resolve().parent / "fixtures" / "ml" / "uncertainty_calibrator_v1.json"
 
 
 def test_fixture_exists():
@@ -81,9 +76,7 @@ def test_load_calibrator_params_coef_form(tmp_path: Path):
         encoding="utf-8",
     )
     cal = load_calibrator(path)
-    p = cal.predict_proba(
-        {"mean_entropy": 0.1, "member_disagreement": 0.1, "mean_margin": 0.4}
-    )
+    p = cal.predict_proba({"mean_entropy": 0.1, "member_disagreement": 0.1, "mean_margin": 0.4})
     assert np.isfinite(p)
 
 

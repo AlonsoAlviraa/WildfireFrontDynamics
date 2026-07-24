@@ -47,9 +47,7 @@ def enrich_pack(pack_dir: Path) -> dict:
         precise = sector_ros_from_local_samples(
             local_rows,
             expansion_bearing_deg=bearing,
-            scale_to_primary_m_min=float(bulk_primary)
-            if bulk_primary is not None
-            else None,
+            scale_to_primary_m_min=float(bulk_primary) if bulk_primary is not None else None,
         )
 
         if precise.get("status") == "estimated" and precise.get("sectors"):

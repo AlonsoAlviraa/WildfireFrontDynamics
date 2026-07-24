@@ -9,7 +9,6 @@ from shapely.geometry import MultiPolygon, Point, box
 
 from wildfire_front.progressive_burn.engines import fraction_band_ok
 from wildfire_front.progressive_burn.geometry import (
-    area_ha,
     nested_within,
     safe_homothety_center,
 )
@@ -64,8 +63,8 @@ def test_schedules_end_at_one_and_increasing():
 def test_early_fast_power_half():
     fr = fraction_schedule("early_fast", 4)
     # ((i+1)/4)^0.5
-    assert abs(fr[0] - (0.25 ** 0.5)) < 1e-9
-    assert abs(fr[1] - (0.5 ** 0.5)) < 1e-9
+    assert abs(fr[0] - (0.25**0.5)) < 1e-9
+    assert abs(fr[1] - (0.5**0.5)) < 1e-9
 
 
 def test_honesty_constants():

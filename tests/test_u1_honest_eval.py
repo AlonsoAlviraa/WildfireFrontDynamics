@@ -87,9 +87,10 @@ def test_primary_iou_not_catalog_without_split_label():
     assert primary["model_iou_split"] == "test"
     assert primary["model_iou_source"] == "eval_split_mean"
     # Catalog reference value must not silently become unlabeled model_iou
-    assert primary["model_iou"] != CATALOG_HOLDOUT_TEST_IOU or primary[
-        "model_iou_source"
-    ] == "eval_split_mean"
+    assert (
+        primary["model_iou"] != CATALOG_HOLDOUT_TEST_IOU
+        or primary["model_iou_source"] == "eval_split_mean"
+    )
 
 
 def test_scorecard_val_synthetic_pass_not_recommended():
@@ -217,6 +218,7 @@ def test_promote_accepts_test_honest(tmp_path: Path):
 def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
     """--apply-policy may flip research_open only; field_ops stays false."""
     import json
+
     from scripts.ml_scorecard import build_scorecard
     from scripts.promote_ml_live_fusion import apply_research_open_policy, main
 
