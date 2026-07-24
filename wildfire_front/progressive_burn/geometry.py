@@ -15,7 +15,7 @@ from shapely.validation import make_valid
 try:
     from pyproj import Transformer
 except ImportError:  # pragma: no cover
-    Transformer = None  # type: ignore
+    Transformer = None
 
 from .schemas import MIN_COMPONENT_AREA_HA_DEFAULT
 

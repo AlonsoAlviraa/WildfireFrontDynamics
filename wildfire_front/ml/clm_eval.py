@@ -234,7 +234,8 @@ def collect_member_growth_cache(
 
     # free GPU/CPU model refs
     del models
-    if device.type == "cuda":
+    # str() works when torch is untyped (CI mypy --ignore-missing-imports)
+    if "cuda" in str(device):
         torch.cuda.empty_cache()
 
     return {
