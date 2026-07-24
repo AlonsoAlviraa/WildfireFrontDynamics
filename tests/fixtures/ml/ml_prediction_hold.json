@@ -1,0 +1,35 @@
+{
+  "schema": "ml_prediction_v1",
+  "product_id": "clm_ensemble_v34",
+  "event_id": "ml_live_card_demo",
+  "abstain": false,
+  "confidence": 0.72,
+  "diagnostics": {
+    "mean_entropy": 0.18,
+    "member_disagreement": 0.05,
+    "mean_margin": 0.32,
+    "n_members": 3
+  },
+  "ml_live_metrics": {
+    "schema": "ml_live_metrics_v1",
+    "product_id": "clm_ensemble_v34",
+    "confidence": 0.72,
+    "abstain": false,
+    "mean_entropy": 0.18,
+    "member_disagreement": 0.05,
+    "mean_margin": 0.32,
+    "calibrator_id": "fixture_hold_v1",
+    "n_members": 3
+  },
+  "calibrator_id": "fixture_hold_v1",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "offline_fixture": true,
+  "scenario": "hold",
+  "honesty_note": "Offline fixture: high patch confidence (not holdout IoU). Expect ML-only HOLD under research_open when trusted + not abstained.",
+  "mask_summary": {
+    "mean_prob": 0.42,
+    "fire_frac": 0.22,
+    "shape": [64, 64],
+    "synthetic": true
+  }
+}

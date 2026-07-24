@@ -450,12 +450,17 @@ def _write_guion_12min(sites: list[dict[str, Any]], path: Path) -> None:
         "",
         "## 10–12 min · Síntesis + ask",
         "Dual track + scoreboard + reliability (residual silent-GO).",
+        "ML-first (U1 TEST honest, lab): mean IoU eval ~0.86 · selective@80 ~0.90 · ECE ~0.15.",
+        "Catalog holdout 0.8963 = provenance only — not live fire certainty, not ROS.",
+        "Live ML → Decision Card: HOLD/ABSTAIN when conf unreliable "
+        "(demo: scripts/run_ml_live_card_demo.py). field_ops fusion OFF.",
         "Ask: 30 min feedback · ancla Vp/ha (1 IF) · carta interés UE.",
         "Contacto: alonso.alvbal@gmail.com",
         "",
         "## No decir",
         "- Apagamos incendios con IA / 99% precisión / sustituimos INFOCA",
         "- Hull FIRMS = ha quemadas / inventamos Vp",
+        "- Catalog 0.8963 como “certeza en vivo” del fuego",
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -933,6 +938,23 @@ def build() -> dict[str, Any]:
             "hold_without_ops_anchor": True,
             "policy_never_invent_vp": True,
             "residual_silent_go_story": True,
+            # ML-first pitch surface (U1 TEST honest — not catalog 0.8963 as live certainty)
+            "ml_u1_test_honest": {
+                "mean_iou_eval": 0.857,
+                "selective_iou_at_80": 0.903,
+                "ece_patch_conf": 0.153,
+                "catalog_holdout_iou_provenance_only": 0.8963,
+                "refs": [
+                    "docs/ML_PRODUCT_SCORECARD.json",
+                    "docs/ML_U1_PROMOTE_RECORD.json",
+                    "docs/ML_LIVE_ABSTAIN_ECE_NOTE.md",
+                ],
+                "note": (
+                    "Pitch uses U1 TEST honest metrics. Catalog 0.8963 is holdout "
+                    "research quality under provenance only — not live fire certainty, "
+                    "not ops ROS. field_ops live fusion remains OFF."
+                ),
+            },
         },
         "deep_links": {
             "tobarra": "?panel=tobarra",

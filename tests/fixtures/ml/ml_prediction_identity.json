@@ -1,0 +1,36 @@
+{
+  "schema": "ml_prediction_v1",
+  "product_id": "clm_ensemble_v34",
+  "event_id": "ml_live_card_demo",
+  "abstain": true,
+  "confidence": 0.5,
+  "diagnostics": {
+    "mean_entropy": 0.4,
+    "member_disagreement": 0.15,
+    "mean_margin": 0.2,
+    "n_members": 3
+  },
+  "ml_live_metrics": {
+    "schema": "ml_live_metrics_v1",
+    "product_id": "clm_ensemble_v34",
+    "confidence": 0.5,
+    "abstain": true,
+    "mean_entropy": 0.4,
+    "member_disagreement": 0.15,
+    "mean_margin": 0.2,
+    "calibrator_id": "identity",
+    "n_members": 3
+  },
+  "calibrator_id": "identity",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "offline_fixture": true,
+  "scenario": "identity",
+  "identity_calibrator": true,
+  "honesty_note": "Offline fixture: identity calibrator forces abstain on product path (conf=0.5 is not a reliability claim). Decision Card → ABSTAIN.",
+  "mask_summary": {
+    "mean_prob": 0.35,
+    "fire_frac": 0.15,
+    "shape": [64, 64],
+    "synthetic": true
+  }
+}

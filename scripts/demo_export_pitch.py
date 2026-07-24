@@ -130,6 +130,14 @@ def render_pitch_html(
     <li>Anclas confirmed: {_esc(kpi.get("n_confirmed_anchors"))} · Gates PASS: {_esc(kpi.get("gate_pass"))}/{_esc(kpi.get("gate_total"))}</li>
   </ul>
 
+  <h2>ML-first (U1 TEST honest — lab)</h2>
+  <ul>
+    <li>mean IoU eval ~<b>0.86</b> · selective@80 ~<b>0.90</b> · ECE ~<b>0.15</b></li>
+    <li>Catalog holdout <b>0.8963</b> = provenance only — not live fire certainty, not ops ROS</li>
+    <li>Live ML → Decision Card HOLD/ABSTAIN when unreliable · field_ops fusion OFF</li>
+    <li>Refs: docs/ML_PRODUCT_SCORECARD.json · docs/ML_U1_PROMOTE_RECORD.json</li>
+  </ul>
+
   <h2>Por qué HOLD vende</h2>
   <p>Reliability gate: el sistema <b>no emite GO táctico</b> si faltan fuentes.
     Residual silent-GO controlado por diseño (suite de abstención/gates).
@@ -204,6 +212,12 @@ def write_pitch_exports(
             f"- AND catalog IF: {kpi.get('n_and_catalog')}",
             f"- EXT delivered IF: {kpi.get('n_ext_delivery')}",
             f"- Gates PASS: {kpi.get('gate_pass')}/{kpi.get('gate_total')}",
+            "",
+            "## ML-first (U1 TEST honest — lab)",
+            "- mean IoU eval ~0.86 · selective@80 ~0.90 · ECE ~0.15",
+            "- Catalog holdout 0.8963 = provenance only (not live fire certainty, not ROS)",
+            "- Live ML → Decision Card HOLD/ABSTAIN when unreliable; field_ops fusion OFF",
+            "- Refs: docs/ML_PRODUCT_SCORECARD.json · docs/ML_U1_PROMOTE_RECORD.json",
             "",
             "## Reliability",
             "- HOLD/ABSTAIN without ops anchor is a product feature",

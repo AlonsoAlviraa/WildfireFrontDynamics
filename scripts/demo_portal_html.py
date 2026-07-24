@@ -794,6 +794,13 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   <section class="block" id="honest" tabindex="-1">
     <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3>Honestidad · Q&amp;A</h3><span>▾</span></div>
     <div class="sec-body">
+      <div class="honesty-banner" role="note" style="background:rgba(47,212,200,.10);border-color:rgba(47,212,200,.45);color:#b8f0ea">
+        <strong>ML-first (U1 TEST honest):</strong>
+        mean IoU eval ~<b>0.86</b> · selective@80 ~<b>0.90</b> · ECE ~<b>0.15</b>.
+        Catalog holdout <b>0.8963</b> = provenance only — <em>not</em> live fire certainty, not ops ROS.
+        Live ML → Card HOLD/ABSTAIN when unreliable · <code>field_ops</code> fusion OFF ·
+        refs: <code>docs/ML_PRODUCT_SCORECARD.json</code>, <code>docs/ML_U1_PROMOTE_RECORD.json</code>.
+      </div>
       <ul>
         <li>No inventamos Vp/ha · hull FIRMS ≠ quemado oficial</li>
         <li>HOLD/ABSTAIN sin ancla ops · no despacho táctico</li>
@@ -801,6 +808,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
         <li><b>¿Por qué PARTIAL EXT?</b> O2 RAI PASS; archive FIRMS Spain 2025 no publicado (404) → SKIP satélite, no hotspots inventados.</li>
         <li><b>¿Sustituís INFOCA?</b> No. Validación y apoyo a la decisión.</li>
         <li><b>Reliability:</b> residual silent-GO mitigado por gates + ABSTAIN/HOLD; ver ONEPAGER comercial.</li>
+        <li><b>ML live demo:</b> <code>python scripts/run_ml_live_card_demo.py --mode offline</code> → Decision Card + abstain/ECE note.</li>
       </ul>
     </div>
   </section>

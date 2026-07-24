@@ -118,14 +118,15 @@ pre.cmd {
       <p class="sub" style="margin-top:.6rem">Si faltan fuentes → ABSTAIN. No inventamos acción.</p>
     </div>
     <div class="card">
-      <h2>ML España (v34)</h2>
-      <div class="big">0.8963</div>
-      <div class="sub">IoU holdout · Δ vs copy <b>0.2545</b></div>
+      <h2>ML España (v34) · U1 honest</h2>
+      <div class="big">~0.86</div>
+      <div class="sub">U1 TEST mean IoU eval · sel@80 ~<b>0.90</b> · ECE ~<b>0.15</b></div>
       <div class="sub">Producto: clm_ensemble_v34 (no es ROS de dron)</div>
       <ul class="sub" style="margin-top:.6rem;padding-left:1.1rem">
-        <li><b>Holdout IoU</b> = catalog TEST research quality (~0.8963) — not live certainty, not ROS, not Tobarra/REDIAM O2.</li>
+        <li><b>Pitch surface</b> = U1 TEST honest (scorecard / promote record) — not catalog 0.8963 as live certainty.</li>
+        <li><b>Catalog holdout 0.8963</b> = provenance / research quality only (Δ vs copy 0.2545).</li>
         <li><b>Live confidence</b> = ensemble disagreement + VAL-fit calibrator; Card can HOLD/ABSTAIN.</li>
-        <li><b>Fusion live weight OFF</b> until U1 on <b>TEST</b> with frozen calibrator (VAL-only U1 is lab, not promote).</li>
+        <li><b>research_open</b> fusion experimental after U1; <b>field_ops fusion OFF</b>. Demo: <code>scripts/run_ml_live_card_demo.py</code>.</li>
       </ul>
     </div>
     <div class="card">
@@ -175,7 +176,7 @@ python scripts\show_all.py</pre>
     <div class="card wide">
       <h2>Trabajo hecho (visible)</h2>
       <div class="work">
-        <div class="row"><span>ML ensemble CLM v34 (holdout honesto)</span><span class="ok-text">HECHO · IoU 0.8963</span></div>
+        <div class="row"><span>ML ensemble CLM v34 (U1 TEST honest + catalog provenance)</span><span class="ok-text">HECHO · U1 ~0.86 / cat 0.8963</span></div>
         <div class="row"><span>Incident runtime + field kit</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>FDC en cada incident update (outbox)</span><span class="ok-text">HECHO · fire_decision_card.json</span></div>
         <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · 5 packs</span></div>
@@ -239,8 +240,9 @@ python scripts\show_all.py</pre>
     <div class="card">
       <h2>Números clave</h2>
       <ul>
-        <li>ML IoU: <b>0.8963</b></li>
-        <li>ML Δ: <b>0.2545</b></li>
+        <li>ML U1 mean IoU: <b>~0.86</b> (lab honest)</li>
+        <li>ML catalog holdout: <b>0.8963</b> (provenance)</li>
+        <li>ML Δ vs copy: <b>0.2545</b></li>
         <li>Open packs: <b>5</b></li>
         <li>Max ha open: <b>29000</b></li>
         <li>Score dual vs CLM-solo: <b>95.0</b> / <b>39.0</b></li>

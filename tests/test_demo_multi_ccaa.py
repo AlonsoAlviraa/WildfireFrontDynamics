@@ -57,6 +57,43 @@ def test_index_html_contains_three_sites():
     assert "Sell kit" in html or "CTA" in html or "feedback" in html.lower()
     assert "Exportar pitch" in html or "btn-print" in html
     assert "whatif" in html.lower() or "What-if" in html
+    # Sprint 1: ML-first U1 honest banner (not 0.8963 as live certainty)
+    assert "U1" in html
+    assert "0.86" in html
+    assert "0.8963" in html  # still mentioned as provenance
+    assert "live fire certainty" in html.lower() or "certeza" in html.lower()
+    assert "provenance" in html.lower()
+
+
+def test_ml_u1_honesty_manifest_and_exports():
+    """S1-2: manifest honesty block + guion/pitch use U1 TEST, not live 0.8963."""
+    mod = _load_builder()
+    man = mod.build()
+    honesty = man.get("honesty") or {}
+    u1 = honesty.get("ml_u1_test_honest") or {}
+    assert u1, "manifest.honesty.ml_u1_test_honest missing"
+    assert abs(float(u1.get("mean_iou_eval")) - 0.86) < 0.02
+    assert float(u1.get("selective_iou_at_80") or 0) > 0.85
+    assert float(u1.get("ece_patch_conf") or 0) > 0.05
+    assert abs(float(u1.get("catalog_holdout_iou_provenance_only")) - 0.8963) < 1e-3
+    note = str(u1.get("note") or "").lower()
+    assert "provenance" in note
+    assert "not live" in note or "live fire" in note
+    assert "field_ops" in note and "off" in note
+    refs = u1.get("refs") or []
+    assert any("ML_PRODUCT_SCORECARD" in str(r) for r in refs)
+
+    guion = (OUT / "export" / "guion_12min.md").read_text(encoding="utf-8")
+    assert "U1" in guion
+    assert "0.86" in guion or "~0.86" in guion
+    assert "provenance only" in guion.lower() or "not live fire certainty" in guion.lower()
+    assert "0.8963" in guion
+    assert "certeza en vivo" in guion or "live fire certainty" in guion.lower()
+
+    pitch = (OUT / "export" / "pitch_onepager.md").read_text(encoding="utf-8")
+    assert "U1" in pitch or "0.86" in pitch
+    assert "provenance only" in pitch.lower() or "not live" in pitch.lower()
+    assert "field_ops" in pitch.lower()
 
 
 def test_demo_manifest_sites_required_keys():

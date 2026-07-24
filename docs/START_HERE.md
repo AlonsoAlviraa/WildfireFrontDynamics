@@ -36,17 +36,17 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 | Qué | Valor |
 |-----|------:|
-| ML v34 IoU holdout | **0.8963** |
+| ML U1 TEST honest (lab) | mean IoU ~**0.86** · sel@80 ~**0.90** · ECE ~**0.15** |
+| Catalog holdout IoU (provenance only) | **0.8963** — not live certainty |
 | Packs open CEMS | **5** (hasta ~29000 ha) |
-| Decisión ejemplo | **GO** (conf 0.76) |
 
 ## ML-first (honest bullets)
 
-1. **Holdout IoU research quality** (v34 catalog TEST ~**0.8963**) — protocol-clean next-day **mask** metric only; **not** live fire certainty, **not** ops ROS, **not** Tobarra tactical speed, **not** REDIAM O2 perimeter truth.
-2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths).
-3. **Fusion live weight stays OFF** until **U1 on holdout TEST** with that **frozen** calibrator (`gates.u1_test_honest` → `allow_ml_live_in_fusion_recommended`). VAL-only U1 is a **lab** diagnostic (optimistic if same-split as fit) and **does not** promote fusion. `field_ops` never auto-enables ML live fusion.
+1. **Pitch with U1 TEST honest** metrics (mean IoU eval ~**0.86**, selective@80 ~**0.90**, ECE ~**0.15**) from `docs/ML_PRODUCT_SCORECARD.json` / `docs/ML_U1_PROMOTE_RECORD.json`. Catalog holdout **0.8963** is **provenance only** — protocol-clean next-day **mask** research quality; **not** live fire certainty, **not** ops ROS, **not** Tobarra tactical speed, **not** REDIAM O2 perimeter truth.
+2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths). Demo: `python scripts/run_ml_live_card_demo.py --mode offline`.
+3. **`research_open` live fusion is experimental** after U1 TEST honest promote; **`field_ops.allow_ml_live_in_fusion` remains false**. VAL-only U1 is a **lab** diagnostic and does not alone promote fusion.
 4. Dual product: ML mask product ≠ ops `front_dynamics_v1`. Promote checklist: `scripts/promote_ml_live_fusion.py` (never flips policy without `--apply-policy`, and only `research_open`).
-5. **Lab claim surface** (not tactical): `docs/ML_PRODUCT_SCORECARD.json` after honest TEST promote — research quality only; no ROS / no field_ops.
+5. **Lab claim surface** (not tactical): scorecard + abstain/ECE note `docs/ML_LIVE_ABSTAIN_ECE_NOTE.md` — research quality only; no ROS / no field_ops.
 
 ## Documentos clave
 

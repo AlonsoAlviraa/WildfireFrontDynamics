@@ -1,0 +1,35 @@
+{
+  "schema": "ml_prediction_v1",
+  "product_id": "clm_ensemble_v34",
+  "event_id": "ml_live_card_demo",
+  "abstain": true,
+  "confidence": 0.18,
+  "diagnostics": {
+    "mean_entropy": 0.65,
+    "member_disagreement": 0.28,
+    "mean_margin": 0.08,
+    "n_members": 3
+  },
+  "ml_live_metrics": {
+    "schema": "ml_live_metrics_v1",
+    "product_id": "clm_ensemble_v34",
+    "confidence": 0.18,
+    "abstain": true,
+    "mean_entropy": 0.65,
+    "member_disagreement": 0.28,
+    "mean_margin": 0.08,
+    "calibrator_id": "fixture_abstain_v1",
+    "n_members": 3
+  },
+  "calibrator_id": "fixture_abstain_v1",
+  "protocol": "clm_holdout_test_seed42_v1",
+  "offline_fixture": true,
+  "scenario": "abstain",
+  "honesty_note": "Offline fixture: low patch confidence / explicit abstain. Unreliable conf → Decision Card ABSTAIN (never invent ROS).",
+  "mask_summary": {
+    "mean_prob": 0.35,
+    "fire_frac": 0.15,
+    "shape": [64, 64],
+    "synthetic": true
+  }
+}
