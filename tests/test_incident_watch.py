@@ -445,6 +445,30 @@ def test_publish_this_run_reliability_gate(tmp_path: Path) -> None:
     assert (outbox / "reliability_gate_report.json").is_file()
 
 
+def test_this_run_reliability_gate_ros_zero_fails(tmp_path: Path) -> None:
+    """A4: ros_ok requires ros > 0 (not >= 0)."""
+    from wildfire_front.incident.pipeline import write_this_run_reliability_gate
+
+    outbox = tmp_path / "outbox"
+    outbox.mkdir()
+    gate = write_this_run_reliability_gate(
+        outbox,
+        "ros_zero",
+        {
+            "quality_grade": "A",
+            "primary_ros_m_min": 0.0,
+            "n_frames_staged": 12,
+            "area_ha_max": 40,
+            "speed_vs_ref_ratio": 0.9,
+        },
+        decision_policy="field_ops",
+    )
+    data = json.loads(gate.read_text(encoding="utf-8"))
+    assert data["field_unlock"] is False
+    checks = (data.get("system_reliability") or {}).get("checks") or {}
+    assert checks.get("R2_gates") is not True
+
+
 def test_suite_only_outbox_gate_does_not_unlock(tmp_path: Path) -> None:
     """Neutralized suite sample in outbox must not unlock field_ops."""
     from wildfire_front.incident.pipeline import publish_decision_card

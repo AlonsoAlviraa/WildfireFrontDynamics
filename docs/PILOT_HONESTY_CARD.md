@@ -1,52 +1,58 @@
-# Piloto honesty — Decision Card multi-fuente
+# Piloto de honestidad — tarjeta de decisión multi-fuente
 Tobarra · Níjar · Caminomorisco
-Generated: 2026-07-24T00:00:00+00:00 · policy primary: research_open · product: clm_ensemble_v34
+Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm_ensemble_v34
 
-## 0. Banner de honestidad (dual product)
+## 0. Banner de honestidad (producto dual)
 - Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)
-- Fusión solo en Decision Card; field_ops live fusion = OFF
+- Fusión solo en tarjeta de decisión; field_ops fusión live = OFF
 - No es orden táctica de despacho
 - U1 TEST honest (scorecard): IoU eval ≈ 0.857 · sel@80 ≈ 0.903 · ECE ≈ 0.153
-- Catalog holdout 0.8963 = provenance only (not live certainty)
+- Catalog holdout 0.8963 = provenance only (no es certeza en vivo)
 
-## 1. Tabla de hechos (auto from facts_table.json)
-| Site | Track | Sources | Decision (research_open) | conf | live_ok | Decision (field_ops) | Key number | Notes |
+## 1. Tabla de hechos
+| Sitio | Pista | Fuentes | Decisión (research_open) | confianza | ML live | Decisión (field_ops) | Cifra clave | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Tobarra | OPS | ops+ml_live | GO | 0.672 | True | ABSTAIN | primary_ros_m_min=6.752 | No tactical Vp |
-| Níjar | OPEN_AND | open+ml_live | HOLD | 0.610 | True | HOLD | area_ha=2169.340 | No tactical Vp; open HOLD |
-| Caminomorisco | OPEN_EXT | open+ml_live | HOLD | 0.500 | False | HOLD | area_ha=2679.140 | No tactical Vp; open HOLD |
+| Tobarra | OPS | ops+ml_live | GO | 0.672 | sí | ABSTAIN | ROS primario (m/min)=6.752 | Sin Vp táctica |
+| Níjar | OPEN_AND | open+ml_live | HOLD | 0.610 | sí | HOLD | área (ha)=2169.340 | Sin Vp táctica; open HOLD |
+| Caminomorisco | OPEN_EXT | open+ml_live | HOLD | 0.500 | no | HOLD | área (ha)=2679.140 | Sin Vp táctica; open HOLD |
 
 ## 2. Lectura por incendio
 ### Tobarra (OPS)
-- Key number: primary_ros_m_min = 6.7521 (source: operational_metrics.speed_median_m_min)
-- Card research_open: GO · conf=0.672 · live_ok=True
-- field_ops contrast: ABSTAIN (no fake R1–R4; fusion OFF)
-- Honesty: vp_invented=False; firms_hull≠burned; sources_incomplete=False
+- Cifra clave: ROS primario (m/min) = 6.7521 (fuente: operational_metrics.speed_median_m_min; clave: primary_ros_m_min)
+- Tarjeta research_open: GO · confianza=0.672 · ML live=sí
+- Contraste field_ops: ABSTAIN (sin R1–R4 inventados; fusión OFF)
+- Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ### Níjar (OPEN_AND)
-- Key number: area_ha = 2169.3400 (source: metrics_o2.area_rediam_ha)
-- Card research_open: HOLD · conf=0.610 · live_ok=True
-- field_ops contrast: HOLD (no fake R1–R4; fusion OFF)
-- Honesty: vp_invented=False; firms_hull≠burned; sources_incomplete=False
+- Cifra clave: área (ha) = 2169.3400 (fuente: metrics_o2.area_rediam_ha; clave: area_ha)
+- Tarjeta research_open: HOLD · confianza=0.610 · ML live=sí
+- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión OFF)
+- Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ### Caminomorisco (OPEN_EXT)
-- Key number: area_ha = 2679.1400 (source: metrics_o2.area_rai_ha)
-- Card research_open: HOLD · conf=0.500 · live_ok=False
-- field_ops contrast: HOLD (no fake R1–R4; fusion OFF)
-- Honesty: vp_invented=False; firms_hull≠burned; sources_incomplete=False
+- Cifra clave: área (ha) = 2679.1400 (fuente: metrics_o2.area_rai_ha; clave: area_ha)
+- Tarjeta research_open: HOLD · confianza=0.500 · ML live=no
+- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión OFF)
+- Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ## 3. Contraste de políticas
-- research_open: lab / open-friendly HOLD; experimental live fusion
-- field_ops: require_ops_for_go; live fusion OFF; fail-closed ABSTAIN if GO without verified reliability (reason field_ops_fail_closed_reliability_unverified) — pilot does not invent gates
+- research_open: laboratorio / amigable con open (HOLD); fusión live experimental
+- field_ops: require_ops_for_go; fusión live OFF; ABSTAIN fail-closed (cierre seguro) si GO sin fiabilidad verificada (reason field_ops_fail_closed_reliability_unverified) — el piloto no inventa gates
 
 ## 4. Límites y no-claims
-- Not multi-CCAA “works across all Spain”
-- FIRMS hull ≠ official burned area
-- No retrain in this pilot
-- ml_product_go remains false until product gates
+- No es multi-CCAA «funciona en toda España»
+- Casco FIRMS ≠ área quemada oficial
+- Sin reentrenamiento en este piloto
+- ml_product_go sigue en false hasta gates de producto
 
-## 5. Artefactos
-- Pilot root: `outputs/pilot_honesty_card`
-- Per site: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`
-- `facts_table.json` · `pilot_summary.json` · this report
+## 5. Modo presentación (1 página)
+- Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail
+- research_open puede ir a GO experimental; field_ops se calla (ABSTAIN/HOLD) — fusión OFF
+- Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada
+- Holdout catálogo 0.8963 = provenance only, no certeza del incendio
+
+## 6. Artefactos
+- Raíz piloto: `outputs/pilot_honesty_card`
+- Por sitio: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`
+- `facts_table.json` · `pilot_summary.json` · `index.html` · este informe
 

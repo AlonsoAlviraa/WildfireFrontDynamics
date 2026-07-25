@@ -2,12 +2,67 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_verify_ext_honest_report_derives_from_packs(tmp_path: Path, monkeypatch):
+    """A9: honest.* must derive from pack scorecards, never hardcode True."""
+    spec = importlib.util.spec_from_file_location(
+        "verify_ext_industrial_e2e",
+        ROOT / "scripts" / "verify_ext_industrial_e2e.py",
+    )
+    assert spec and spec.loader
+    ver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ver)
+
+    out = tmp_path / "open_if"
+    out.mkdir()
+    # Dishonest pack: missing vp_invented → must not claim no_invented_vp True
+    pdir = out / "ext_fake_20250101"
+    pdir.mkdir()
+    (pdir / "scorecard_ext_industrial.json").write_text(
+        json.dumps(
+            {
+                "verdict": "PARTIAL",
+                "decision_open": "HOLD",
+                # vp_invented intentionally omitted
+                "firms_hull_is_official_burned_area": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pdir / "manifest.json").write_text(json.dumps({"area_rai_ha": 1.0}), encoding="utf-8")
+
+    inv = tmp_path / "inventory"
+    inv.mkdir()
+    (inv / "event_catalog.csv").write_text("id\n", encoding="utf-8")
+    (inv / "selection_gold.json").write_text(
+        json.dumps({"gold": [], "silver": [], "events": {}}), encoding="utf-8"
+    )
+
+    monkeypatch.setattr(ver, "OUT", out)
+    monkeypatch.setattr(ver, "INV", inv)
+    md = tmp_path / "EXT.md"
+    js = tmp_path / "EXT.json"
+    monkeypatch.setattr(ver, "MD", md)
+    monkeypatch.setattr(ver, "JS", js)
+    monkeypatch.setattr(
+        "sys.argv",
+        ["verify_ext_industrial_e2e.py", "--skip-pytest"],
+    )
+
+    rc = ver.main()
+    assert rc in (0, 1)  # may be partial overall
+    report = json.loads(js.read_text(encoding="utf-8"))
+    assert report["honest"]["no_invented_vp"] is False
+    assert report["packs"]
+    assert report["packs"][0]["vp_invented_ok"] is False
 
 
 def test_inventory_and_build_offline(tmp_path, monkeypatch):

@@ -625,7 +625,8 @@ def write_this_run_reliability_gate(
     grade = str(ops_m.get("quality_grade") or "").strip().upper()
     ros = ops_m.get("primary_ros_m_min")
     try:
-        ros_ok = ros is not None and float(ros) >= 0.0
+        # ROS floor: strictly positive (zero / missing is not a usable ops signal).
+        ros_ok = ros is not None and float(ros) > 0.0
     except (TypeError, ValueError):
         ros_ok = False
     gates_ok = n_frames >= 2 and grade in {"A", "B"} and ros_ok

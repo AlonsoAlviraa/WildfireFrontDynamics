@@ -87,6 +87,7 @@ def test_enrich_ops_dict():
         "speed_n_observable": 5,
         "quality_grade": "A",
     }
+    # Default path: cn_hybrid OFF — no invented wind / hybrid ROS
     out = enrich_ops_dict(ops, expansion_bearing_deg=90.0)
     assert "sector_ros" in out
     assert out["sector_ros"]["sectors"]["head_m_min"] > 0
@@ -94,9 +95,43 @@ def test_enrich_ops_dict():
     assert out["short_horizon_envelope"].get("sector_aware") is True
     assert "head_radius_m" in out["short_horizon_envelope"]["envelopes"][0]
     assert out["not_a_product"] == "validated_tactical_dispatch"
+    assert "cn_hybrid_ros" not in out
+
+
+def test_enrich_ops_dict_cn_hybrid_off_by_default_no_invented_wind():
+    ops = {
+        "speed_median_m_min": 5.71,
+        "speed_p25_m_min": 2.8,
+        "speed_p75_m_min": 6.9,
+        "speed_n_observable": 5,
+        "quality_grade": "A",
+    }
+    out = enrich_ops_dict(ops, expansion_bearing_deg=90.0)
+    assert "cn_hybrid_ros" not in out
+    # Explicit cn_hybrid without wind → inputs_assumed / abstained, no operational numeric ROS
+    out2 = enrich_ops_dict(ops, expansion_bearing_deg=90.0, cn_hybrid=True)
+    cn = out2.get("cn_hybrid_ros") or {}
+    assert cn.get("status") in ("inputs_assumed", "abstained")
+    assert "ros_head_m_min" not in cn
+    assert cn.get("vp_tactical") is None
+
+
+def test_enrich_ops_dict_cn_hybrid_with_explicit_wind():
+    ops = {
+        "speed_median_m_min": 5.71,
+        "speed_p25_m_min": 2.8,
+        "speed_p75_m_min": 6.9,
+        "speed_n_observable": 5,
+        "quality_grade": "A",
+    }
+    out = enrich_ops_dict(
+        ops, expansion_bearing_deg=90.0, cn_hybrid=True, wind_from_deg=270.0
+    )
     assert out["cn_hybrid_ros"]["status"] == "ok"
     assert out["cn_hybrid_ros"]["ros_head_m_min"] >= out["cn_hybrid_ros"]["ros_rear_m_min"]
     assert out["cn_hybrid_ros"]["scale_factor"] > 0
+    assert out["cn_hybrid_ros"]["wind_from_deg"] == 270.0
+    assert out["cn_hybrid_ros"].get("not_tactical") is True
 
 
 def test_envelope_to_geojson_feature_collection():

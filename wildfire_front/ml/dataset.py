@@ -8,6 +8,7 @@ them into 30x30 patches for the A3C-LSTM architecture.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import rasterio
@@ -37,6 +38,10 @@ class WildfireDataset(Dataset):
         fsm_path: Path | None = None,
         weather_data: dict[str, float] | None = None,
         max_patches: int | None = None,
+        *,
+        resolution_m: float | None = None,
+        allow_unaligned_crop: bool = False,
+        shape_align_tolerance_px: int = 0,
     ) -> None:
         """
         Args:
@@ -48,6 +53,14 @@ class WildfireDataset(Dataset):
             ndvi_path: Optional path to an NDVI GeoTIFF.
             fsm_path: Optional path to an FSM GeoTIFF.
             weather_data: Optional dictionary with custom weather variables.
+            resolution_m: Optional pixel size (metres) for DEM gradient scaling.
+                When missing and transform has no metric scale, slope is marked
+                non-physical / synthetic (not true metres).
+            allow_unaligned_crop: If False (default), multi-frame shapes/transforms
+                that differ beyond ``shape_align_tolerance_px`` hard-fail rather
+                than silently top-left cropping misaligned frames.
+            shape_align_tolerance_px: Max allowed H/W difference across frames
+                before refuse (default 0 = exact match required unless opt-in).
         """
         self.images_dir = Path(images_dir)
         self.masks_dir = Path(masks_dir)
@@ -57,6 +70,13 @@ class WildfireDataset(Dataset):
         self.ndvi_path = ndvi_path
         self.fsm_path = fsm_path
         self.max_patches = max_patches
+        self.resolution_m = resolution_m
+        self.allow_unaligned_crop = bool(allow_unaligned_crop)
+        self.shape_align_tolerance_px = int(shape_align_tolerance_px)
+        # DEM honesty flags (set in _load_or_synthesize_dem)
+        self.dem_slope_is_synthetic = False
+        self.dem_slope_physical_metres = False
+        self.dem_resolution_m: float | None = resolution_m
 
         self.weather_data = weather_data or {
             "temp": 25.0,
@@ -90,20 +110,53 @@ class WildfireDataset(Dataset):
                 f"need at least {self.sequence_length + 1}."
             )
 
-        # Read all images/masks to find the common intersection dimensions.
-        # Tobarra LWIR frames have variable pixel dimensions (drone footprints
-        # shift between captures), so we crop everything to the smallest
-        # height/width across the sequence.
-        #
-        # H3 note: this is a top-left crop, not a CRS reproject/align.
-        # Multi-frame GeoTIFF datasets require reprojected, pixel-aligned
-        # inputs; unaligned drone footprints yield spatially incoherent sequences.
+        # Multi-frame alignment check. Default refuses silent top-left crop of
+        # misaligned shapes/transforms (opt-in allow_unaligned_crop=True only).
         raw_shapes: list[tuple[int, int]] = []
+        raw_transforms: list[Any] = []
         for _img_path, mask_path, _ in self.samples:
             with rasterio.open(mask_path) as src:
                 raw_shapes.append((src.height, src.width))
-        self.height = min(h for h, _ in raw_shapes)
-        self.width = min(w for _, w in raw_shapes)
+                raw_transforms.append(src.transform)
+
+        heights = [h for h, _ in raw_shapes]
+        widths = [w for _, w in raw_shapes]
+        h_span = max(heights) - min(heights)
+        w_span = max(widths) - min(widths)
+        if (
+            (h_span > self.shape_align_tolerance_px or w_span > self.shape_align_tolerance_px)
+            and not self.allow_unaligned_crop
+        ):
+            raise ValueError(
+                "unaligned multi-frame shapes: "
+                f"H span={h_span}px W span={w_span}px "
+                f"(tolerance={self.shape_align_tolerance_px}). "
+                "Refuse silent top-left crop of misaligned frames. "
+                "Reproject/align inputs or pass allow_unaligned_crop=True "
+                "(research-only; spatially incoherent risk)."
+            )
+        # Transform drift beyond origin/scale tolerance also refuses by default
+        if len(raw_transforms) >= 2 and not self.allow_unaligned_crop:
+            t0 = raw_transforms[0]
+            for ti in raw_transforms[1:]:
+                if ti is None or t0 is None:
+                    continue
+                # Compare affine components (a,b,c,d,e,f)
+                diffs = [
+                    abs(float(getattr(t0, k)) - float(getattr(ti, k)))
+                    for k in ("a", "b", "c", "d", "e", "f")
+                ]
+                # Pixel-size relative tolerance on origin: 0.5 * |pixel|
+                px = max(abs(float(t0.a)), abs(float(t0.e)), 1e-9)
+                if any(d > 0.5 * px for d in diffs):
+                    raise ValueError(
+                        "unaligned multi-frame geotransforms (origin/scale differ). "
+                        "Refuse silent crop; reproject to common grid or pass "
+                        "allow_unaligned_crop=True (research-only)."
+                    )
+
+        self.height = min(heights)
+        self.width = min(widths)
         self.transform = None
         self.crs = None
 
@@ -125,18 +178,49 @@ class WildfireDataset(Dataset):
         self.patches = self._generate_sequence_patches()
 
     def _load_or_synthesize_dem(self) -> tuple[np.ndarray, np.ndarray]:
+        """Load DEM slope/aspect; scale ``np.gradient`` by pixel size when known.
+
+        When resolution is unknown, slope is **not** claimed as physical metres —
+        ``dem_slope_physical_metres=False`` and ``dem_slope_is_synthetic=True``.
+        """
         if self.dem_path and self.dem_path.exists():
             with rasterio.open(self.dem_path) as src:
                 dem = src.read(1, out_shape=(self.height, self.width)).astype(float)
-                # Compute slope and aspect from DEM elevation using gradients
-                dy, dx = np.gradient(dem)
+                res_x: float | None = None
+                res_y: float | None = None
+                if self.resolution_m is not None and float(self.resolution_m) > 0:
+                    res_x = float(self.resolution_m)
+                    res_y = float(self.resolution_m)
+                else:
+                    try:
+                        # Affine: a = pixel width, e = pixel height (often negative)
+                        ax = abs(float(src.transform.a))
+                        ey = abs(float(src.transform.e))
+                        if ax > 0 and ey > 0:
+                            res_x, res_y = ax, ey
+                    except Exception:
+                        res_x, res_y = None, None
+                if res_x is not None and res_y is not None:
+                    # np.gradient: first spacing is axis-0 (rows/y), second axis-1 (cols/x)
+                    dy, dx = np.gradient(dem, res_y, res_x)
+                    self.dem_slope_physical_metres = True
+                    self.dem_slope_is_synthetic = False
+                    self.dem_resolution_m = float((res_x + res_y) / 2.0)
+                else:
+                    # No resolution: refuse physical-metre claim; unit-pixel gradient only
+                    dy, dx = np.gradient(dem)
+                    self.dem_slope_physical_metres = False
+                    self.dem_slope_is_synthetic = True
+                    self.dem_resolution_m = None
                 slope = np.arctan(np.sqrt(dx**2 + dy**2))
                 aspect = np.arctan2(-dy, dx)
                 return slope, aspect
-        # Synthesize a smooth gradient slope and aspect
+        # Synthesize a smooth gradient slope and aspect (explicit synthetic)
         y, x = np.mgrid[: self.height, : self.width]
-        slope = (x / self.width) * 0.1
-        aspect = (y / self.height) * 2 * np.pi
+        slope = (x / max(self.width, 1)) * 0.1
+        aspect = (y / max(self.height, 1)) * 2 * np.pi
+        self.dem_slope_is_synthetic = True
+        self.dem_slope_physical_metres = False
         return slope, aspect
 
     def _load_or_synthesize_ndvi(self) -> np.ndarray:

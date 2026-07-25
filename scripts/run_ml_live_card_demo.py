@@ -46,17 +46,19 @@ CALIBRATOR_PRODUCT = (
     PROJECT_ROOT / "models" / "clm_ensemble" / "uncertainty_calibration_v1.json"
 )
 
-# U1 TEST honest reference (lab claim surface — not live fire certainty)
+# U1 numeric fallbacks for demo banners only when scorecard is missing.
+# Gates default False: never claim honest TEST / fusion-recommended without a real scorecard.
 _U1_FALLBACK: dict[str, Any] = {
     "mean_iou_eval": 0.8569,
     "selective_iou_at_80": 0.9034,
     "ece_patch_conf": 0.1528,
     "catalog_holdout_iou_provenance": 0.8963,
-    "u1_test_honest": True,
-    "allow_ml_live_in_fusion_recommended": True,
+    "u1_test_honest": False,
+    "allow_ml_live_in_fusion_recommended": False,
     "field_ops_fusion": False,
     "note": (
         "U1 TEST honest metrics from scorecard when present. "
+        "Fallback gates are False (not inventing u1_test_honest). "
         "Catalog 0.8963 is holdout research quality under provenance only — "
         "not live fire certainty, not ops ROS."
     ),

@@ -106,10 +106,10 @@ def _check_pack(pack: Path) -> dict[str, Any]:
         "dnbr_status": exists("dnbr_status.json"),
     }
 
-    # Fail closed: invented Vp / tactical value is dishonest
+    # Fail closed: require explicit vp_invented is False (missing key = fail).
     vp_flag = scorecard.get("vp_invented")
     vp_tactical = manifest.get("vp_tactical")
-    vp_not_invented_ok = (vp_flag is not True) and (
+    vp_not_invented_ok = (vp_flag is False) and (
         vp_tactical is None or vp_tactical == "" or vp_tactical == 0
     )
 

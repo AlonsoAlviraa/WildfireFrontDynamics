@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -250,12 +251,38 @@ def _find_live_source(sources: Sequence[Mapping[str, Any]]) -> Mapping[str, Any]
 
 
 def score_ops_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Score thermal ops source. Available only with finite primary ROS > 0.
+
+    Grade alone is never enough: a grade-A stub without rate-of-spread must not
+    look like an operational source.
+    """
     if not metrics:
         return {"id": "ops", "available": False, "weight": 0.0, "confidence": 0.0}
     grade = str(metrics.get("quality_grade") or metrics.get("grade") or "")
     grade_map = {"A": 0.85, "B": 0.55, "C": 0.30, "D": 0.12}
     conf = grade_map.get(grade.upper(), 0.2)
     ros = metrics.get("primary_ros_m_min")
+    ros_f: float | None
+    try:
+        ros_f = float(ros) if ros is not None else None
+    except (TypeError, ValueError):
+        ros_f = None
+    # Honesty: finite primary ROS strictly > 0 required for available=True.
+    if ros_f is None or not math.isfinite(ros_f) or ros_f <= 0.0:
+        return {
+            "id": "ops_thermal_front",
+            "available": False,
+            "weight": 0.0,
+            "confidence": 0.0,
+            "metrics": {
+                "quality_grade": grade,
+                "primary_ros_m_min": ros,
+                "n_frames": int(metrics.get("n_frames_staged") or metrics.get("n_frames") or 0),
+                "area_ha_max": metrics.get("area_ha_max") or metrics.get("area_ha"),
+                "speed_vs_ref_ratio": metrics.get("speed_vs_ref_ratio"),
+                "unavailable_reason": "primary_ros_m_min_missing_or_non_positive",
+            },
+        }
     n = int(metrics.get("n_frames_staged") or metrics.get("n_frames") or 0)
     if n >= 5:
         conf = _clip01(conf + 0.05)
@@ -272,7 +299,7 @@ def score_ops_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
         "confidence": conf,
         "metrics": {
             "quality_grade": grade,
-            "primary_ros_m_min": ros,
+            "primary_ros_m_min": ros_f,
             "n_frames": n,
             "area_ha_max": metrics.get("area_ha_max") or metrics.get("area_ha"),
             "speed_vs_ref_ratio": metrics.get("speed_vs_ref_ratio"),

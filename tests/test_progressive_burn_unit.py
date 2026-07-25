@@ -170,6 +170,38 @@ def test_to_observations_and_front_dynamics():
             "equiv_radius",
             "abstained",
         )
+    # B2: sanitized summary — no raw FD primary_ros as ops
+    summary = fd.get("summary") or {}
+    assert summary.get("vp_tactical") is None
+    assert summary.get("proxy_synthetic") is True or summary.get("status") == "synthetic_proxy_only"
+    assert "primary_ros_m_min" not in summary
+    assert summary.get("not_ops") is True or summary.get("label") == "proxy_synthetic"
+    if summary.get("structural_grade_capped") is not None:
+        assert summary["structural_grade_capped"] != "A"
+
+
+def test_psb_summary_sanitized_payload():
+    """B2: run_psb_front_dynamics never embeds unfiltered FD summary as operational."""
+    poly = _circle_poly(r=600.0)
+    cfg = ProgressiveBurnConfig(
+        n_stages=4,
+        engine="area_fraction",
+        schedule="linear",
+        source_crs="EPSG:6933",
+        metric_crs="EPSG:6933",
+        total_duration_s=12 * 3600,
+    )
+    seq = build_stage_sequence(poly, cfg, source_crs="EPSG:6933")
+    fd = run_psb_front_dynamics(seq)
+    assert fd["vp_tactical"] is None
+    s = fd["summary"]
+    assert s.get("vp_tactical") is None
+    assert s.get("status") == "synthetic_proxy_only"
+    assert "primary_ros_m_min" not in s
+    assert "pairs" not in s  # raw FD pairs dump stripped
+    # proxy ROS may be present under explicit proxy key only
+    if "proxy_ros_m_min" in s and s["proxy_ros_m_min"] is not None:
+        assert s.get("not_ops") is True
 
 
 def test_sector_ros_wrap():
@@ -193,3 +225,24 @@ def test_empty_geom_errors():
 
 def test_ops_cap_constant_aligned():
     assert MAX_PLAUSIBLE_SPEED_M_MIN == 60.0
+
+
+def test_geojson_fc_union_or_last_feature():
+    """FC with multiple polygons → union (not first-only)."""
+    from shapely.geometry import box
+
+    from wildfire_front.progressive_burn.geometry import geojson_to_geom
+
+    a = box(0, 0, 10, 10)
+    b = box(20, 0, 30, 10)
+    fc = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": {}, "geometry": a.__geo_interface__},
+            {"type": "Feature", "properties": {}, "geometry": b.__geo_interface__},
+        ],
+    }
+    g = geojson_to_geom(fc)
+    # Union area ~200; first-only would be 100
+    assert g.area == pytest.approx(200.0, rel=1e-6)
+    assert not g.equals(a)

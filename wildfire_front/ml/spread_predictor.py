@@ -395,7 +395,9 @@ class EnsembleSpreadPredictor:
         abs_list: list[torch.Tensor] = []
         temps = list(self.manifest.member_temperatures) if self.manifest.member_temperatures else []
         if temps and len(temps) != len(self.models):
-            temps = []
+            raise ValueError(
+                f"member_temperatures length {len(temps)} != n_models {len(self.models)}"
+            )
         for mi, model in enumerate(self.models):
             logits = model_forward(model, x, fire_t, self.manifest.architecture)
             t = float(temps[mi]) if temps else 1.0
@@ -479,7 +481,9 @@ class EnsembleSpreadPredictor:
         abs_list: list[torch.Tensor] = []
         temps = list(self.manifest.member_temperatures) if self.manifest.member_temperatures else []
         if temps and len(temps) != len(self.models):
-            temps = []
+            raise ValueError(
+                f"member_temperatures length {len(temps)} != n_models {len(self.models)}"
+            )
         for mi, model in enumerate(self.models):
             logits = model_forward(model, x, fire_t, self.manifest.architecture)
             t = float(temps[mi]) if temps else 1.0

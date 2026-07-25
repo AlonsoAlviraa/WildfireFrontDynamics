@@ -30,6 +30,14 @@ class PathNotAllowedError(ValueError):
     """Raised when work_dir/open_pack resolves outside the allowlist."""
 
 
+class UntrustedInlineMetricsError(ValueError):
+    """Raised when an untrusted channel supplies inline ops/open metrics dicts.
+
+    Untrusted HTTP must load ops/open only from sandboxed file packs (work_dir /
+    open_pack paths under base). CLI and test channels may still pass inline dicts.
+    """
+
+
 def _is_under(path: Path, root: Path) -> bool:
     try:
         path.resolve().relative_to(root.resolve())
@@ -305,16 +313,24 @@ def industrial_scorecard_to_open_metrics(
         "O2_cems_delineation": _o2_delineation_from_industrial(scorecard),
         "pack_id": str(pack_id),
         "source_scorecard": source_scorecard,
-        "vp_invented": bool(scorecard["vp_invented"])
-        if isinstance(scorecard.get("vp_invented"), bool)
-        else False,
-        "firms_hull_is_official_burned_area": bool(
-            scorecard["firms_hull_is_official_burned_area"]
-        )
-        if isinstance(scorecard.get("firms_hull_is_official_burned_area"), bool)
-        else False,
         "area_source": area_source,
     }
+    # Honesty: missing vp_invented / firms_hull flags → incomplete, never claim False.
+    sources_incomplete = False
+    if isinstance(scorecard.get("vp_invented"), bool):
+        out["vp_invented"] = bool(scorecard["vp_invented"])
+    else:
+        out["vp_invented"] = None
+        sources_incomplete = True
+    if isinstance(scorecard.get("firms_hull_is_official_burned_area"), bool):
+        out["firms_hull_is_official_burned_area"] = bool(
+            scorecard["firms_hull_is_official_burned_area"]
+        )
+    else:
+        out["firms_hull_is_official_burned_area"] = None
+        sources_incomplete = True
+    if sources_incomplete:
+        out["sources_incomplete"] = True
     if scorecard.get("track") is not None:
         out["track"] = scorecard.get("track")
     if scorecard.get("decision_open") is not None:
@@ -347,16 +363,24 @@ def _legacy_pista_b_to_open_metrics(
         "activation": scorecard.get("activation"),
         "O2_cems_delineation": scorecard.get("O2_cems_delineation"),
         "source_scorecard": "scorecard_pista_b.json",
-        "vp_invented": bool(scorecard["vp_invented"])
-        if isinstance(scorecard.get("vp_invented"), bool)
-        else False,
-        "firms_hull_is_official_burned_area": bool(
-            scorecard["firms_hull_is_official_burned_area"]
-        )
-        if isinstance(scorecard.get("firms_hull_is_official_burned_area"), bool)
-        else False,
         "area_source": "scorecard.max_area_ha",
     }
+    # Honesty: missing vp_invented / firms_hull → incomplete; do not claim False.
+    sources_incomplete = False
+    if isinstance(scorecard.get("vp_invented"), bool):
+        out["vp_invented"] = bool(scorecard["vp_invented"])
+    else:
+        out["vp_invented"] = None
+        sources_incomplete = True
+    if isinstance(scorecard.get("firms_hull_is_official_burned_area"), bool):
+        out["firms_hull_is_official_burned_area"] = bool(
+            scorecard["firms_hull_is_official_burned_area"]
+        )
+    else:
+        out["firms_hull_is_official_burned_area"] = None
+        sources_incomplete = True
+    if sources_incomplete:
+        out["sources_incomplete"] = True
     if scorecard.get("pack_id") is not None:
         out["pack_id"] = scorecard.get("pack_id")
     elif scorecard.get("activation") is not None:
@@ -625,13 +649,14 @@ def load_infocam_anchor(
     base: Path | None = None,
     include_repo_root: bool = True,
 ) -> dict[str, Any] | None:
-    """Load a confirmed INFOCAM anchor record (audit only — never sole ROS)."""
+    """Load a confirmed INFOCAM anchor record (audit only — never sole ROS).
+
+    Fail closed: PathNotAllowedError does **not** fall through to arbitrary FS.
+    """
     try:
         path = _as_path(anchors_path, base=base, include_repo_root=include_repo_root)
     except PathNotAllowedError:
-        path = Path(anchors_path)
-        if not path.is_file():
-            return None
+        return None
     if path is None or not path.is_file():
         return None
     data = _load_json_obj(path)
@@ -760,13 +785,18 @@ def load_ops_metrics_from_work_dir(
 
 
 def _normalize_ml_live_payload(data: Mapping[str, Any]) -> dict[str, Any]:
-    """Accept flat ml_live_metrics_v1 or outbox ml_prediction_v1 wrapper."""
+    """Accept flat ml_live_metrics_v1 or outbox ml_prediction_v1 wrapper.
+
+    Never invents ``schema: ml_live_metrics_v1`` — only accept payloads that
+    already carry a proper schema (or nested ``ml_live_metrics`` that does).
+    Missing schema is left as-is; ``score_ml_live_source`` marks invalid_schema.
+    """
     if str(data.get("schema") or "") == "ml_live_metrics_v1":
         return dict(data)
     nested = data.get("ml_live_metrics")
     if isinstance(nested, Mapping):
         return dict(nested)
-    # Tolerate thin wrapper with top-level confidence + diagnostics
+    # Tolerate thin wrapper with top-level confidence + diagnostics (no schema invent).
     if "confidence" in data and ("mean_entropy" in data or "diagnostics" in data):
         out = dict(data)
         raw_diag = data.get("diagnostics")
@@ -774,7 +804,6 @@ def _normalize_ml_live_payload(data: Mapping[str, Any]) -> dict[str, Any]:
         for k in ("mean_entropy", "member_disagreement", "mean_margin", "n_members"):
             if k not in out and k in diag:
                 out[k] = diag[k]
-        out.setdefault("schema", "ml_live_metrics_v1")
         return out
     return dict(data)
 
@@ -811,13 +840,36 @@ def resolve_sources(
     *,
     base: Path | None = None,
     include_repo_root: bool = True,
+    allow_inline_ops_open: bool = True,
 ) -> dict[str, Any | None]:
-    """Resolve ml/ops/open/ml_live metrics from request paths or inline dicts."""
+    """Resolve ml/ops/open/ml_live metrics from request paths or inline dicts.
+
+    When ``allow_inline_ops_open`` is False (untrusted HTTP), inline dict
+    ``ops_metrics`` / ``open_metrics`` are **rejected** with
+    :class:`UntrustedInlineMetricsError`. File packs under the sandbox
+    (``work_dir`` / ``open_pack``) remain allowed.
+    """
     base = base or Path.cwd()
     ml_m = request.get("ml_metrics")
     ops_m = request.get("ops_metrics")
     open_m = request.get("open_metrics")
     ml_live_m = request.get("ml_live_metrics")
+
+    if not allow_inline_ops_open:
+        if isinstance(ops_m, Mapping):
+            raise UntrustedInlineMetricsError(
+                "untrusted channel refuses inline ops_metrics dict; "
+                "load from sandboxed work_dir files only"
+            )
+        if isinstance(open_m, Mapping):
+            raise UntrustedInlineMetricsError(
+                "untrusted channel refuses inline open_metrics dict; "
+                "load from sandboxed open_pack files only"
+            )
+        # Paths-as-strings are not treated as inline dicts here.
+        ops_m = None
+        open_m = None
+
     if ml_m is None and request.get("use_ml_v34"):
         # Catalog ML is always repo-local research metadata (not sandboxed).
         ml_m = load_ml_metrics_v34(base=base if include_repo_root else REPO_ROOT)
@@ -937,19 +989,27 @@ def decide_from_request(
     channel = str(req.get("channel") or "decide_service")
 
     # Path trust: HTTP / explicit False → sandbox base only (no REPO_ROOT).
-    if trust_client_reliability is False or channel == "http_api":
+    untrusted = trust_client_reliability is False or channel == "http_api"
+    if untrusted:
         include_repo_root = False
         allow_inline_gate = False
         reject_docs_gate = True
+        allow_inline_ops_open = False
     else:
         include_repo_root = True
         allow_inline_gate = True
         reject_docs_gate = False
+        allow_inline_ops_open = True
 
     # Free-floating R1–R4 booleans: opt-in + channel allowlist only.
     accept_client_bools = bool(trust_client_reliability) and channel in CLIENT_RELIABILITY_CHANNELS
 
-    sources = resolve_sources(req, base=base, include_repo_root=include_repo_root)
+    sources = resolve_sources(
+        req,
+        base=base,
+        include_repo_root=include_repo_root,
+        allow_inline_ops_open=allow_inline_ops_open,
+    )
 
     if accept_client_bools:
         gates_ok = _opt_bool_strict(req["gates_ok"]) if "gates_ok" in req else None

@@ -448,6 +448,50 @@ def render_portal(
         },
         "cta_demo": {"es": "Ver guion 12 min", "en": "12-min demo script"},
         "cta_anchor": {"es": "Pedir ancla Vp/ha", "en": "Request Vp/ha anchor"},
+        "cta_feedback": {"es": "Feedback 30 min", "en": "30-min feedback"},
+        "cta_print": {"es": "Exportar pitch (print)", "en": "Export pitch (print)"},
+        "cta_onepager": {"es": "One-pager HTML", "en": "One-pager HTML"},
+        "nav_kpis": {"es": "KPIs", "en": "KPIs"},
+        "nav_sites": {"es": "Sitios", "en": "Sites"},
+        "nav_gates": {"es": "Gates", "en": "Gates"},
+        "nav_compare": {"es": "Comparar", "en": "Compare"},
+        "nav_decision": {"es": "Decision", "en": "Decision"},
+        "nav_guion": {"es": "Guion", "en": "Script"},
+        "nav_pitch": {"es": "Pitch", "en": "Pitch"},
+        "nav_provenance": {"es": "Provenance", "en": "Provenance"},
+        "nav_cta": {"es": "CTA", "en": "CTA"},
+        "nav_honesty": {"es": "Honestidad", "en": "Honesty"},
+        "sec_charts": {"es": "Estadísticas · ha · gates · timeline", "en": "Stats · ha · gates · timeline"},
+        "sec_scoreboard": {"es": "Scoreboard industrial (gates)", "en": "Industrial scoreboard (gates)"},
+        "sec_compare": {"es": "Comparar tracks (OPS vs OPEN O2)", "en": "Compare tracks (OPS vs OPEN O2)"},
+        "sec_decision": {"es": "Decision Card viewer", "en": "Decision Card viewer"},
+        "sec_silver": {"es": "Packs silver EXT (misma tubería)", "en": "EXT silver packs (same pipeline)"},
+        "sec_open_more": {
+            "es": "Más IF open (opcional · no diluye pitch)",
+            "en": "More open IF (optional · does not dilute pitch)",
+        },
+        "sec_guion": {"es": "Guion interactivo 12 min", "en": "Interactive 12-min script"},
+        "sec_pitch": {"es": "Pitch 60 s + reliability story", "en": "60s pitch + reliability story"},
+        "sec_provenance": {"es": "Provenance · contactos fuente", "en": "Provenance · source contacts"},
+        "sec_sell": {"es": "Sell kit · CTAs", "en": "Sell kit · CTAs"},
+        "sec_honest": {"es": "Honestidad · Q&A", "en": "Honesty · Q&A"},
+        "mode_guion": {"es": "Guion", "en": "Script"},
+        "banner_eyebrow": {"es": "Producto demo industrial", "en": "Industrial demo product"},
+        "whatif_label": {
+            "es": "What-if seguro: simular Tobarra sin ancla OPS → postura HOLD (no inventa números; solo narrativa).",
+            "en": "Safe what-if: simulate Tobarra without OPS anchor → HOLD posture (does not invent numbers; narrative only).",
+        },
+        "guion_start": {"es": "Iniciar", "en": "Start"},
+        "guion_next": {"es": "Siguiente paso", "en": "Next step"},
+        "guion_reset": {"es": "Reset", "en": "Reset"},
+        "honesty_banner": {
+            "es": "ML-first (U1 TEST honest): mean IoU eval ~0.86 · selective@80 ~0.90 · ECE ~0.15. Catalog holdout 0.8963 = solo provenance — no es certeza en vivo, no es ROS ops. field_ops fusion OFF.",
+            "en": "ML-first (U1 TEST honest): mean IoU eval ~0.86 · selective@80 ~0.90 · ECE ~0.15. Catalog holdout 0.8963 = provenance only — not live fire certainty, not ops ROS. field_ops fusion OFF.",
+        },
+        "kbd_help": {
+            "es": "Teclado: 1–3 sitios, G guion, P pitch, L idioma. Tab navega secciones.",
+            "en": "Keyboard: 1–3 sites, G script, P pitch, L language. Tab navigates sections.",
+        },
     }
     # neutralize </script> breakout (no backslash inside f-string expr)
     i18n_json = json.dumps(i18n, ensure_ascii=False).replace("</", "<" + "\\/")
@@ -619,42 +663,42 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
       </div>
     </div>
     <div class="nav-links" id="nav-links">
-      <a href="#kpis">KPIs</a>
-      <a href="#sites">Sitios</a>
-      <a href="#scoreboard">Gates</a>
-      <a href="#compare">Comparar</a>
-      <a href="#decision">Decision</a>
-      <a href="#guion">Guion</a>
-      <a href="#pitch">Pitch</a>
-      <a href="#provenance">Provenance</a>
-      <a href="#sell">CTA</a>
-      <a href="#honest">Honestidad</a>
+      <a href="#kpis" data-i18n="nav_kpis">KPIs</a>
+      <a href="#sites" data-i18n="nav_sites">Sitios</a>
+      <a href="#scoreboard" data-i18n="nav_gates">Gates</a>
+      <a href="#compare" data-i18n="nav_compare">Comparar</a>
+      <a href="#decision" data-i18n="nav_decision">Decision</a>
+      <a href="#guion" data-i18n="nav_guion">Guion</a>
+      <a href="#pitch" data-i18n="nav_pitch">Pitch</a>
+      <a href="#provenance" data-i18n="nav_provenance">Provenance</a>
+      <a href="#sell" data-i18n="nav_cta">CTA</a>
+      <a href="#honest" data-i18n="nav_honesty">Honestidad</a>
     </div>
     <div style="display:flex;gap:.35rem;align-items:center">
       <button type="button" class="mode-btn" id="btn-mode-full" data-mode="full" aria-pressed="true">Full</button>
       <button type="button" class="mode-btn" id="btn-mode-pitch" data-mode="pitch" aria-pressed="false">Pitch</button>
-      <button type="button" class="mode-btn" id="btn-mode-guion" data-mode="guion" aria-pressed="false">Guion</button>
+      <button type="button" class="mode-btn" id="btn-mode-guion" data-mode="guion" data-i18n="mode_guion" aria-pressed="false">Guion</button>
       <button type="button" class="lang-btn" id="btn-lang" title="ES/EN" aria-label="Toggle language ES EN">ES</button>
     </div>
   </nav>
-  <p class="kbd-hint sr-only" id="kbd-help">Teclado: 1–3 sitios, G guion, P pitch, L idioma. Tab navega secciones.</p>
+  <p class="kbd-hint sr-only" id="kbd-help" data-i18n="kbd_help">Teclado: 1–3 sitios, G guion, P pitch, L idioma. Tab navega secciones.</p>
   {banner}
 
   <main id="main">
   <header class="hero pitch-keep" id="hero">
-    <p class="eyebrow" data-es="Producto demo industrial" data-en="Industrial demo product">Producto demo industrial</p>
+    <p class="eyebrow" data-i18n="banner_eyebrow" data-es="Producto demo industrial" data-en="Industrial demo product">Producto demo industrial</p>
     <h2 id="hero-title">{_esc(i18n["hero_title"]["es"])}</h2>
     <p class="pitch" id="hero-sub">{i18n["hero_sub"]["es"]}</p>
     <div class="cta-row">
-      <a class="btn primary" href="#guion" id="cta-demo">{_esc(i18n["cta_demo"]["es"])}</a>
-      <a class="btn ops" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20ancla%20Vp%2Fha" id="cta-anchor">{_esc(i18n["cta_anchor"]["es"])}</a>
-      <a class="btn ghost" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20feedback%2030min">Feedback 30 min</a>
-      <button type="button" class="btn ghost" id="btn-print">Exportar pitch (print)</button>
-      <a class="btn ghost" href="export/pitch_onepager.html" target="_blank" rel="noopener">One-pager HTML</a>
+      <a class="btn primary" href="#guion" id="cta-demo" data-i18n="cta_demo">{_esc(i18n["cta_demo"]["es"])}</a>
+      <a class="btn ops" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20ancla%20Vp%2Fha" id="cta-anchor" data-i18n="cta_anchor">{_esc(i18n["cta_anchor"]["es"])}</a>
+      <a class="btn ghost" href="mailto:alonso.alvbal@gmail.com?subject=WFD%20feedback%2030min" data-i18n="cta_feedback">Feedback 30 min</a>
+      <button type="button" class="btn ghost" id="btn-print" data-i18n="cta_print">Exportar pitch (print)</button>
+      <a class="btn ghost" href="export/pitch_onepager.html" target="_blank" rel="noopener" data-i18n="cta_onepager">One-pager HTML</a>
     </div>
     <div class="whatif">
       <input type="checkbox" id="whatif-no-anchor"/>
-      <label for="whatif-no-anchor"><strong>What-if seguro:</strong> simular Tobarra <em>sin</em> ancla OPS → postura HOLD (no inventa números; solo narrativa).</label>
+      <label for="whatif-no-anchor" data-i18n="whatif_label"><strong>What-if seguro:</strong> simular Tobarra <em>sin</em> ancla OPS → postura HOLD (no inventa números; solo narrativa).</label>
     </div>
   </header>
 
@@ -669,7 +713,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open pitch-keep" id="sec-charts">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Estadísticas · ha · gates · timeline</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_charts">Estadísticas · ha · gates · timeline</h3><span>▾</span></div>
     <div class="sec-body">
       <div class="charts-grid">
         <div class="chart-box">{ha_chart_svg}</div>
@@ -681,7 +725,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open" id="scoreboard" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Scoreboard industrial (gates)</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_scoreboard">Scoreboard industrial (gates)</h3><span>▾</span></div>
     <div class="sec-body">
       <table class="grid">
         <thead><tr><th>Sitio</th><th>O2</th><th>Hausdorff</th><th>FIRMS</th><th>dNBR</th><th>No false dispatch</th><th>Provenance</th><th>Verdict</th></tr></thead>
@@ -691,7 +735,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open" id="compare" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Comparar tracks (OPS vs OPEN O2)</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_compare">Comparar tracks (OPS vs OPEN O2)</h3><span>▾</span></div>
     <div class="sec-body">
       <table class="grid">
         <thead><tr><th>IF</th><th>CCAA</th><th>Track</th><th>ha</th><th>Vp</th><th>LWIR</th><th>Decisión</th><th>Verdict</th><th>Fuente</th></tr></thead>
@@ -702,7 +746,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open pitch-keep" id="decision" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Decision Card viewer</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_decision">Decision Card viewer</h3><span>▾</span></div>
     <div class="sec-body">
       <p class="muted" style="font-size:.85rem;margin-top:0">GO / HOLD / ABSTAIN desde rutas gold/decide si existen. Soft SKIP si no hay card.</p>
       {decision_html}
@@ -710,24 +754,24 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block" id="sec-silver">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3>Packs silver EXT (misma tubería)</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3 data-i18n="sec_silver">Packs silver EXT (misma tubería)</h3><span>▾</span></div>
     <div class="sec-body">{silver_html or '<p class="muted">Sin silver listados</p>'}</div>
   </section>
 
   <section class="block" id="sec-open-more">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3>Más IF open (opcional · no diluye pitch)</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3 data-i18n="sec_open_more">Más IF open (opcional · no diluye pitch)</h3><span>▾</span></div>
     <div class="sec-body">
       {la_html or '<p class="muted">La Mierla pack no presente (SKIP soft)</p>'}
     </div>
   </section>
 
   <section class="block open pitch-keep" id="sec-guion">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 id="guion">Guion interactivo 12 min</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 id="guion" data-i18n="sec_guion">Guion interactivo 12 min</h3><span>▾</span></div>
     <div class="sec-body">
       <div class="guion-controls">
-        <button type="button" class="btn primary" id="guion-start">Iniciar</button>
-        <button type="button" class="btn" id="guion-next">Siguiente paso</button>
-        <button type="button" class="btn ghost" id="guion-reset">Reset</button>
+        <button type="button" class="btn primary" id="guion-start" data-i18n="guion_start">Iniciar</button>
+        <button type="button" class="btn" id="guion-next" data-i18n="guion_next">Siguiente paso</button>
+        <button type="button" class="btn ghost" id="guion-reset" data-i18n="guion_reset">Reset</button>
         <span class="muted" id="guion-status" aria-live="polite">Paso 0 / 5</span>
       </div>
       <div class="guion-step" data-step="0" data-panel="" tabindex="0">0:00 — Gancho: tres contratos, un criterio de calidad; HOLD es feature.</div>
@@ -739,7 +783,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open pitch-keep" id="pitch" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Pitch 60 s + reliability story</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_pitch">Pitch 60 s + reliability story</h3><span>▾</span></div>
     <div class="sec-body">
       <p><b>Qué vendemos:</b> Fire Decision posture (GO/HOLD/ABSTAIN), multi-CCAA proof, scoreboard industrial, audit trail.</p>
       <p><b>Por qué HOLD vende:</b> el sistema se niega a recomendar cuando faltan fuentes — residual silent-GO controlado por diseño (suite de abstención/gates; target contractual ≤ 1×10⁻⁶ silent-GO bajo tests), no “mapa optimista”.</p>
@@ -750,7 +794,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open" id="provenance" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Provenance · contactos fuente</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_provenance">Provenance · contactos fuente</h3><span>▾</span></div>
     <div class="sec-body">
       <table class="grid">
         <thead><tr><th>Fuente</th><th>Contacto / buzón</th><th>Rol en demo</th></tr></thead>
@@ -763,7 +807,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block open pitch-keep" id="sell" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3>Sell kit · CTAs</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="true"><h3 data-i18n="sec_sell">Sell kit · CTAs</h3><span>▾</span></div>
     <div class="sec-body">
       <div class="cta-box">
         <div class="cta-card">
@@ -792,9 +836,9 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   </section>
 
   <section class="block" id="honest" tabindex="-1">
-    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3>Honestidad · Q&amp;A</h3><span>▾</span></div>
+    <div class="sec-head" data-toggle role="button" tabindex="0" aria-expanded="false"><h3 data-i18n="sec_honest">Honestidad · Q&amp;A</h3><span>▾</span></div>
     <div class="sec-body">
-      <div class="honesty-banner" role="note" style="background:rgba(47,212,200,.10);border-color:rgba(47,212,200,.45);color:#b8f0ea">
+      <div class="honesty-banner" role="note" style="background:rgba(47,212,200,.10);border-color:rgba(47,212,200,.45);color:#b8f0ea" data-i18n="honesty_banner">
         <strong>ML-first (U1 TEST honest):</strong>
         mean IoU eval ~<b>0.86</b> · selective@80 ~<b>0.90</b> · ECE ~<b>0.15</b>.
         Catalog holdout <b>0.8963</b> = provenance only — <em>not</em> live fire certainty, not ops ROS.
@@ -936,7 +980,7 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
   document.getElementById('btn-mode-pitch').onclick = () => setMode('pitch');
   document.getElementById('btn-mode-guion').onclick = () => {{ setMode('guion'); document.getElementById('sec-guion').classList.add('open'); }};
 
-  // i18n
+  // i18n — switch major UI strings (nav, CTAs, section heads, banners), not only hero
   let lang = 'es';
   const i18n = JSON.parse(document.getElementById('i18n-data').textContent || '{{}}');
   function applyLang() {{
@@ -946,7 +990,14 @@ a:focus-visible,button:focus-visible,.btn:focus-visible,.nav-links a:focus-visib
     const hs = document.getElementById('hero-sub');
     if (ht && i18n.hero_title) ht.textContent = i18n.hero_title[lang];
     if (hs && i18n.hero_sub) hs.innerHTML = i18n.hero_sub[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {{
+      const key = el.getAttribute('data-i18n');
+      if (key && i18n[key] && i18n[key][lang] != null) {{
+        el.textContent = i18n[key][lang];
+      }}
+    }});
     document.querySelectorAll('[data-es][data-en]').forEach(el => {{
+      if (el.hasAttribute('data-i18n')) return; // already handled
       el.textContent = el.getAttribute('data-' + lang) || el.textContent;
     }});
   }}

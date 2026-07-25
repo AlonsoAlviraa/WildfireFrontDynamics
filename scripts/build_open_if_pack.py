@@ -315,18 +315,20 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
         primary = [p for p in products if p.get("area_ha") and _is_fire_layer(p)]
     timeline = sorted(primary, key=_sort_key)
 
-    # multi-perimeter ROS proxy: area growth / time unknown → use monitoring sequence index
-    # Without exact acquisition times in zip, estimate dt from MONIT steps as 24h default
+    # multi-perimeter growth proxy: without real acquisition times do NOT invent
+    # m/min ROS as primary_ros / Vp tactical. Prefer ha/day (or ha/h) + ros_is_proxy.
+    # Assumed 24h spacing is flagged; m/min only under explicit proxy key if retained.
     ros_rows: list[dict[str, Any]] = []
     for i in range(1, len(timeline)):
         a0 = float(timeline[i - 1]["area_ha"])
         a1 = float(timeline[i]["area_ha"])
-        # effective radius growth (circle equivalent) as crude ROS proxy (m/day)
         r0 = math.sqrt(max(a0, 0) * 10_000 / math.pi)
         r1 = math.sqrt(max(a1, 0) * 10_000 / math.pi)
-        dt_h = 24.0  # conservative default between CEMS products
-        ros_m_min = ((r1 - r0) / (dt_h * 60.0)) if r1 > r0 else 0.0
-        growth_ha_h = (a1 - a0) / dt_h
+        dt_h = 24.0  # assumed only — not a measured acquisition delta
+        growth_ha_day = (a1 - a0) * (24.0 / dt_h) if dt_h else (a1 - a0)
+        growth_ha_h = (a1 - a0) / dt_h if dt_h else None
+        # Retained only as flagged proxy (never primary_ros / vp_tactical)
+        equiv_r_growth_m_min_proxy = ((r1 - r0) / (dt_h * 60.0)) if r1 > r0 else 0.0
         # perimeter-to-perimeter distances (m) if both geojson present
         haus_m = None
         mean_boundary_m = None
@@ -365,13 +367,21 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
                 "area_ha_to": a1,
                 "delta_area_ha": a1 - a0,
                 "assumed_dt_hours": dt_h,
-                "equiv_radius_growth_m_min": ros_m_min,
+                "dt_is_assumed": True,
+                "growth_ha_per_day": growth_ha_day,
                 "growth_ha_per_hour": growth_ha_h,
+                # Never as primary_ros / Vp tactical — proxy only, assumed dt
+                "equiv_radius_growth_m_min_proxy": equiv_r_growth_m_min_proxy,
+                "ros_is_proxy": True,
+                "not_primary_ros": True,
+                "not_vp_tactical": True,
+                "vp_tactical": None,
                 "hausdorff_m": haus_m,
                 "mean_boundary_to_prev_m": mean_boundary_m,
                 "note": (
-                    "Proxy from successive CEMS products with assumed 24h spacing "
-                    "when exact acquisition times are not parsed. Not tactical ROS. "
+                    "Area growth proxy from successive CEMS products with *assumed* 24h "
+                    "spacing (no parsed acquisition times). Prefer ha/day. "
+                    "equiv_radius_growth_m_min_proxy is NOT primary_ros and NOT tactical Vp. "
                     "Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
                 ),
             }
@@ -491,9 +501,13 @@ def _render_brief(report: dict[str, Any]) -> str:
     if not report.get("ros_proxy_rows"):
         lines.append("- (un solo producto con área — no hay secuencia multi-perímetro)")
     for r in report.get("ros_proxy_rows") or []:
+        gday = r.get("growth_ha_per_day")
+        gday_s = f"{gday:.2f}" if gday is not None else "—"
+        gh = r.get("growth_ha_per_hour")
+        gh_s = f"{gh:.2f}" if gh is not None else "—"
         lines.append(
-            f"- Δarea={r['delta_area_ha']:.1f} ha · growth≈{r['growth_ha_per_hour']:.2f} ha/h · "
-            f"r_eq growth≈{r['equiv_radius_growth_m_min']:.3f} m/min "
+            f"- Δarea={r['delta_area_ha']:.1f} ha · growth≈{gday_s} ha/day "
+            f"({gh_s} ha/h) · ros_is_proxy=true · not primary_ros "
             f"(dt asumido {r['assumed_dt_hours']} h)"
         )
     lines.extend(

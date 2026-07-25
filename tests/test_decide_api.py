@@ -13,6 +13,7 @@ from wildfire_front.product.api_server import start_background
 from wildfire_front.product.decide_service import (
     MAX_BODY_BYTES,
     PathNotAllowedError,
+    UntrustedInlineMetricsError,
     _as_path,
     decide_from_request,
 )
@@ -246,13 +247,18 @@ def test_reliability_gate_path_outside_allowlist_rejected(tmp_path: Path):
 
 
 def test_http_ignores_client_asserted_gates(tmp_path: Path):
-    """HTTP cannot self-assert gates to defeat field_ops fail-closed."""
+    """HTTP cannot self-assert gates to defeat field_ops fail-closed.
+
+    Inline ops/open metrics are rejected (A2); free-floating gate bools also ignored.
+    File-based gate only under sandbox still cannot invent ops quality.
+    """
     httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
     base = f"http://127.0.0.1:{port}"
     try:
-        body = json.dumps(
+        # A2: inline ops_metrics on HTTP must be rejected (not silently fused).
+        body_inline = json.dumps(
             {
-                "event_id": "http_self_cert",
+                "event_id": "http_self_cert_inline",
                 "policy_id": "field_ops",
                 "ops_metrics": {
                     "quality_grade": "A",
@@ -262,6 +268,32 @@ def test_http_ignores_client_asserted_gates(tmp_path: Path):
                     "area_ha_max": 50,
                 },
                 "open_metrics": {"max_area_ha": 2000, "n_timeline_steps": 5},
+                "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+                "gates_ok": True,
+                "determinism_ok": True,
+                "abstention_enforced": True,
+                "provenance_ok": True,
+            }
+        ).encode("utf-8")
+        req_inline = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body_inline,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(req_inline, timeout=5)
+            raise AssertionError("expected HTTPError for inline ops on http_api")
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 400
+            detail = json.loads(exc.read().decode("utf-8"))
+            assert detail.get("error") == "untrusted_inline_metrics"
+
+        # Without inline ops: free-floating gates + inline reliability still fail-closed.
+        body = json.dumps(
+            {
+                "event_id": "http_self_cert",
+                "policy_id": "field_ops",
                 "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
                 "gates_ok": True,
                 "determinism_ok": True,
@@ -280,7 +312,6 @@ def test_http_ignores_client_asserted_gates(tmp_path: Path):
             card = json.loads(resp.read().decode("utf-8"))
         assert card.get("system_reliability_pass") is False
         assert card["decision"] == "ABSTAIN"
-        assert any("fail_closed" in r for r in (card.get("reasons") or []))
     finally:
         httpd.shutdown()
         httpd.server_close()
@@ -445,3 +476,100 @@ def test_http_default_base_is_not_repo_root():
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_http_api_rejects_inline_ops_metrics():
+    """A2: channel=http_api must refuse inline ops_metrics dicts."""
+    with pytest.raises(UntrustedInlineMetricsError, match="ops_metrics"):
+        decide_from_request(
+            {
+                "event_id": "a2_ops",
+                "channel": "http_api",
+                "ops_metrics": {
+                    "quality_grade": "A",
+                    "primary_ros_m_min": 5.0,
+                    "n_frames_staged": 10,
+                },
+            },
+            trust_client_reliability=False,
+        )
+
+
+def test_http_api_rejects_inline_open_metrics():
+    """A2: channel=http_api must refuse inline open_metrics dicts."""
+    with pytest.raises(UntrustedInlineMetricsError, match="open_metrics"):
+        decide_from_request(
+            {
+                "event_id": "a2_open",
+                "channel": "http_api",
+                "open_metrics": {"max_area_ha": 1000, "n_timeline_steps": 3},
+            },
+            trust_client_reliability=False,
+        )
+
+
+def test_cli_channel_still_allows_inline_ops():
+    """A2: trusted CLI/default channel may pass inline ops for tests/CLI."""
+    payload = decide_from_request(
+        {
+            "event_id": "a2_cli",
+            "channel": "decide_service",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 5.0,
+                "n_frames_staged": 10,
+                "speed_vs_ref_ratio": 0.9,
+            },
+        }
+    )
+    assert payload["decision"] in ("GO", "HOLD", "ABSTAIN")
+    ops_src = next(s for s in payload["sources"] if s.get("id") == "ops_thermal_front")
+    assert ops_src.get("available") is True
+
+
+def test_normalize_ml_live_does_not_invent_schema():
+    """A5: thin confidence+diag wrapper must not invent schema ml_live_metrics_v1."""
+    from wildfire_front.product.decide_service import _normalize_ml_live_payload
+
+    thin = {
+        "confidence": 0.8,
+        "mean_entropy": 0.1,
+        "member_disagreement": 0.05,
+        "mean_margin": 0.3,
+    }
+    out = _normalize_ml_live_payload(thin)
+    assert out.get("schema") != "ml_live_metrics_v1"
+    assert "schema" not in out or out.get("schema") is None
+
+    proper = {
+        "schema": "ml_live_metrics_v1",
+        "confidence": 0.8,
+        "mean_entropy": 0.1,
+        "member_disagreement": 0.05,
+        "mean_margin": 0.3,
+    }
+    assert _normalize_ml_live_payload(proper)["schema"] == "ml_live_metrics_v1"
+
+    nested = {
+        "schema": "ml_prediction_v1",
+        "ml_live_metrics": {
+            "schema": "ml_live_metrics_v1",
+            "confidence": 0.7,
+            "mean_entropy": 0.1,
+            "member_disagreement": 0.05,
+            "mean_margin": 0.3,
+        },
+    }
+    assert _normalize_ml_live_payload(nested)["schema"] == "ml_live_metrics_v1"
+
+
+def test_load_infocam_anchor_fails_closed_outside_allowlist(tmp_path: Path):
+    """A6: PathNotAllowedError must not fall through to arbitrary filesystem."""
+    from wildfire_front.product.decide_service import load_infocam_anchor
+
+    # Absolute path outside sandbox + no repo root → refuse (return None)
+    evil = Path(tmp_path.anchor) / "wfd_anchors_not_allowed.json"
+    assert (
+        load_infocam_anchor(evil, "tobarra_20240802", base=tmp_path, include_repo_root=False)
+        is None
+    )

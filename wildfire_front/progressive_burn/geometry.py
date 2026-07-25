@@ -12,12 +12,16 @@ from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform, unary_union
 from shapely.validation import make_valid
 
+from .schemas import MIN_COMPONENT_AREA_HA_DEFAULT
+
+# Optional pyproj: typed so mypy is clean with and without stubs installed.
+Transformer: type[Any] | None
 try:
-    from pyproj import Transformer
+    from pyproj import Transformer as _Transformer
+
+    Transformer = _Transformer
 except ImportError:  # pragma: no cover
     Transformer = None
-
-from .schemas import MIN_COMPONENT_AREA_HA_DEFAULT
 
 
 @lru_cache(maxsize=32)
@@ -163,11 +167,33 @@ def geom_to_geojson(geom: BaseGeometry) -> dict[str, Any]:
 
 
 def geojson_to_geom(obj: dict[str, Any]) -> BaseGeometry:
+    """Parse GeoJSON geometry.
+
+    For FeatureCollections prefer **union of all polygon geometries** (or the
+    last/final feature if union is empty) — never silently take features[0] only
+    when multiple features exist (PSB final / multi-part official perimeters).
+    """
     if obj.get("type") == "FeatureCollection":
         feats = obj.get("features") or []
         if not feats:
             raise ValueError("empty FeatureCollection")
-        return shape(feats[0]["geometry"])
+        geoms: list[BaseGeometry] = []
+        for f in feats:
+            g = f.get("geometry") if isinstance(f, dict) else None
+            if g is not None:
+                geoms.append(shape(g))
+        if not geoms:
+            raise ValueError("FeatureCollection has no geometries")
+        if len(geoms) == 1:
+            return geoms[0]
+        try:
+            u = unary_union(geoms)
+            if u is not None and not u.is_empty:
+                return u
+        except Exception:
+            pass
+        # Fallback: last/final feature (terminal perimeter convention)
+        return geoms[-1]
     if obj.get("type") == "Feature":
         return shape(obj["geometry"])
     return shape(obj)

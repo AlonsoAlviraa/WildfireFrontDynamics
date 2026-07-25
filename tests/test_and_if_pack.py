@@ -247,6 +247,49 @@ def test_check_pack_honest_fail_closed(tmp_path: Path):
     assert report["ok"] is False
 
 
+def test_check_pack_missing_vp_invented_fails(tmp_path: Path):
+    """A8: missing vp_invented key must fail (not treat as not-True)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "verify_and_industrial_e2e",
+        ROOT / "scripts" / "verify_and_industrial_e2e.py",
+    )
+    assert spec and spec.loader
+    ver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ver)
+
+    pack = tmp_path / "and_missing_vp"
+    pack.mkdir()
+    (pack / "vectors").mkdir()
+    (pack / "vectors" / "perimeter_rediam.geojson").write_text("{}", encoding="utf-8")
+    (pack / "map.html").write_text("<html></html>", encoding="utf-8")
+    (pack / "operator_brief_open_if.md").write_text("REDIAM", encoding="utf-8")
+    (pack / "dnbr_status.json").write_text("{}", encoding="utf-8")
+    (pack / "manifest.json").write_text(
+        json.dumps({"attribution": "Fuente: REDIAM", "vp_tactical": None}),
+        encoding="utf-8",
+    )
+    (pack / "metrics_o2.json").write_text(json.dumps({"area_rediam_ha": 50}), encoding="utf-8")
+    # Intentionally omit vp_invented
+    (pack / "scorecard_and_industrial.json").write_text(
+        json.dumps(
+            {
+                "verdict": "PARTIAL",
+                "firms_hull_is_official_burned_area": False,
+                "decision_open": "HOLD",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pack / "provenance.json").write_text(
+        json.dumps({"attribution": "Fuente: REDIAM"}),
+        encoding="utf-8",
+    )
+    report = ver._check_pack(pack)
+    assert report["honest"]["vp_not_invented_ok"] is False
+
+
 def test_check_pack_honest_pass(tmp_path: Path):
     import importlib.util
 

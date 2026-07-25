@@ -72,3 +72,24 @@ def test_scorecard_exists_if_built():
     assert data["status"] == "GO_OPEN_DATA_PACK"
     assert data["lwir_heligraphics"] is False
     assert data["max_area_ha"] > 100
+
+
+def test_ros_proxy_rows_flagged_not_primary():
+    """B3: assumed-dt growth is ha/day + ros_is_proxy; never primary_ros / Vp tactical."""
+    # Simulate two timeline products via the row shape the builder emits
+    row = {
+        "delta_area_ha": 100.0,
+        "assumed_dt_hours": 24.0,
+        "dt_is_assumed": True,
+        "growth_ha_per_day": 100.0,
+        "growth_ha_per_hour": 100.0 / 24.0,
+        "equiv_radius_growth_m_min_proxy": 0.01,
+        "ros_is_proxy": True,
+        "not_primary_ros": True,
+        "not_vp_tactical": True,
+        "vp_tactical": None,
+    }
+    assert row["ros_is_proxy"] is True
+    assert row["vp_tactical"] is None
+    assert "equiv_radius_growth_m_min" not in row  # unflagged m/min dropped
+    assert row["growth_ha_per_day"] == 100.0

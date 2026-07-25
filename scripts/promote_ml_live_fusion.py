@@ -36,6 +36,12 @@ DEFAULT_PROMOTE_RECORD = ROOT / "docs" / "ML_U1_PROMOTE_RECORD.json"
 DEFAULT_PRODUCT_SCORECARD = ROOT / "docs" / "ML_PRODUCT_SCORECARD.json"
 POLICY_PATH = ROOT / "config" / "decision_policies.json"
 MIN_REAL_PATCHES = 50
+# Catalog holdout TEST IoU — never promote if primary.model_iou matches this.
+CATALOG_HOLDOUT_TEST_IOU = 0.8963
+_CATALOG_IOU_TOL = 1e-4
+_CATALOG_IOU_SOURCES = frozenset(
+    {"", "catalog", "catalog_holdout", "holdout_catalog", "catalog_test", "manifest"}
+)
 
 CHECKLIST = [
     "Scorecard schema_validation.pass == true",
@@ -146,6 +152,20 @@ def validate_promote_eligibility(
         fails.append(f"calibrator_fit_split_not_val:{fit}")
     if gates.get("ml_product_go") is True:
         fails.append("ml_product_go_already_true_unexpected")
+
+    # Refuse catalog holdout IoU leaked into primary.model_iou, or unlabeled/catalog source.
+    primary = doc.get("primary") if isinstance(doc.get("primary"), dict) else {}
+    iou_src = primary.get("model_iou_source")
+    src_norm = str(iou_src).strip().lower() if iou_src is not None else ""
+    if iou_src is None or src_norm in _CATALOG_IOU_SOURCES:
+        fails.append("model_iou_source_missing_or_catalog")
+    iou_raw = primary.get("model_iou")
+    if iou_raw is not None:
+        try:
+            if abs(float(iou_raw) - CATALOG_HOLDOUT_TEST_IOU) <= _CATALOG_IOU_TOL:
+                fails.append("primary_model_iou_matches_catalog_holdout_0.8963")
+        except (TypeError, ValueError):
+            fails.append("primary_model_iou_unparseable")
 
     # Real-data rails (Issue 2): refuse offline/synthetic unless explicit lab override
     if not allow_lab_synthetic:

@@ -84,6 +84,66 @@ def _esc(s: Any) -> str:
     return html_lib.escape(str(s), quote=True)
 
 
+def _load_u1_honesty_snapshot() -> dict[str, Any]:
+    """Reuse shared U1 honesty loader from run_ml_live_card_demo (scorecard live)."""
+    import importlib.util
+
+    path = ROOT / "scripts" / "run_ml_live_card_demo.py"
+    spec = importlib.util.spec_from_file_location("run_ml_live_card_demo", path)
+    if spec is None or spec.loader is None:
+        return {
+            "mean_iou_eval": 0.0,
+            "selective_iou_at_80": 0.0,
+            "ece_patch_conf": 0.0,
+            "catalog_holdout_iou_provenance": 0.8963,
+            "u1_test_honest": False,
+            "allow_ml_live_in_fusion_recommended": False,
+            "u1_source": "fallback",
+            "note": "U1 loader unavailable; gates false.",
+        }
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load_u1_honesty_snapshot()
+
+
+def _ml_u1_honesty_block() -> dict[str, Any]:
+    """Pitch surface from docs/ML_PRODUCT_SCORECARD.json when present; gates false if missing."""
+    u1 = _load_u1_honesty_snapshot()
+    source = u1.get("u1_source") or "fallback"
+    from_scorecard = source == "scorecard"
+    # Do not hardcode 0.857 as live claim when scorecard absent — use snapshot values
+    # (fallback numerics allowed for display) but gates stay false without scorecard.
+    return {
+        "mean_iou_eval": float(u1.get("mean_iou_eval") or 0.0),
+        "selective_iou_at_80": float(u1.get("selective_iou_at_80") or 0.0),
+        "ece_patch_conf": float(u1.get("ece_patch_conf") or 0.0),
+        "catalog_holdout_iou_provenance_only": float(
+            u1.get("catalog_holdout_iou_provenance") or 0.8963
+        ),
+        "u1_test_honest": bool(u1.get("u1_test_honest")) if from_scorecard else False,
+        "allow_ml_live_in_fusion_recommended": (
+            bool(u1.get("allow_ml_live_in_fusion_recommended")) if from_scorecard else False
+        ),
+        "field_ops_fusion": False,
+        "u1_source": source,
+        "refs": [
+            "docs/ML_PRODUCT_SCORECARD.json",
+            "docs/ML_U1_PROMOTE_RECORD.json",
+            "docs/ML_LIVE_ABSTAIN_ECE_NOTE.md",
+        ],
+        "note": (
+            str(u1.get("note") or "")
+            + (
+                " Pitch uses U1 TEST honest metrics from scorecard when present. "
+                if from_scorecard
+                else " Scorecard missing — gates false (not inventing u1_test_honest). "
+            )
+            + "Catalog 0.8963 is holdout research quality under provenance only — "
+            "not live fire certainty, not ops ROS. field_ops live fusion remains OFF."
+        ).strip(),
+    }
+
+
 def _safe_href(href: str | None) -> str | None:
     """Allow only relative paths (from _rel). Reject schemes / absolute Windows paths."""
     if not href:
@@ -939,22 +999,7 @@ def build() -> dict[str, Any]:
             "policy_never_invent_vp": True,
             "residual_silent_go_story": True,
             # ML-first pitch surface (U1 TEST honest — not catalog 0.8963 as live certainty)
-            "ml_u1_test_honest": {
-                "mean_iou_eval": 0.857,
-                "selective_iou_at_80": 0.903,
-                "ece_patch_conf": 0.153,
-                "catalog_holdout_iou_provenance_only": 0.8963,
-                "refs": [
-                    "docs/ML_PRODUCT_SCORECARD.json",
-                    "docs/ML_U1_PROMOTE_RECORD.json",
-                    "docs/ML_LIVE_ABSTAIN_ECE_NOTE.md",
-                ],
-                "note": (
-                    "Pitch uses U1 TEST honest metrics. Catalog 0.8963 is holdout "
-                    "research quality under provenance only — not live fire certainty, "
-                    "not ops ROS. field_ops live fusion remains OFF."
-                ),
-            },
+            "ml_u1_test_honest": _ml_u1_honesty_block(),
         },
         "deep_links": {
             "tobarra": "?panel=tobarra",

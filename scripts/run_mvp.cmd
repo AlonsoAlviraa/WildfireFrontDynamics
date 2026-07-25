@@ -2,7 +2,8 @@
 setlocal
 cd /d "%~dp0\.."
 
-python -m unittest discover -s tests -v
+set PYTHONPATH=.
+python -m pytest tests/ -q --tb=line -m "not slow and not requires_weights" --maxfail=25
 if errorlevel 1 exit /b %errorlevel%
 
 python -m wildfire_front demo --output outputs\demo

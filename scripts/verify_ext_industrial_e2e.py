@@ -56,6 +56,8 @@ def main() -> int:
 
     pack_dirs = sorted(OUT.glob("ext_*"))
     honest_ok = True
+    no_invented_vp = True
+    firms_hull_not_burned = True
     for pdir in pack_dirs:
         man = pdir / "manifest.json"
         sc_path = pdir / "scorecard_ext_industrial.json"
@@ -75,12 +77,15 @@ def main() -> int:
         verdict = sc.get("verdict", "")
         if verdict in {"GO_OPEN_EXT_O2", "PARTIAL"}:
             layers["scorecard_go_or_partial"] = True
-        # honest gates fail-closed
-        h = (
-            sc.get("vp_invented") is False
-            and sc.get("firms_hull_is_official_burned_area") is False
-            and sc.get("decision_open") in {"HOLD", "ABSTAIN", "open_demo"}
-        )
+        # honest gates fail-closed (explicit False required; missing key = fail)
+        vp_ok = sc.get("vp_invented") is False
+        firms_ok = sc.get("firms_hull_is_official_burned_area") is False
+        decision_ok = sc.get("decision_open") in {"HOLD", "ABSTAIN", "open_demo"}
+        h = vp_ok and firms_ok and decision_ok
+        if not vp_ok:
+            no_invented_vp = False
+        if not firms_ok:
+            firms_hull_not_burned = False
         if not h:
             honest_ok = False
         packs.append(
@@ -93,9 +98,14 @@ def main() -> int:
                     else None
                 ),
                 "honest": h,
+                "vp_invented_ok": vp_ok,
+                "firms_hull_not_official": firms_ok,
             }
         )
     layers["honest_gates"] = bool(packs) and honest_ok
+    # Report honesty from computed pack results (never hardcode True).
+    report_no_invented_vp = bool(packs) and no_invented_vp
+    report_firms_ok = bool(packs) and firms_hull_not_burned
 
     if not args.skip_pytest:
         r = subprocess.run(
@@ -137,8 +147,8 @@ def main() -> int:
         "packs": packs,
         "steps": steps,
         "honest": {
-            "no_invented_vp": True,
-            "firms_hull_not_burned_area": True,
+            "no_invented_vp": report_no_invented_vp,
+            "firms_hull_not_burned_area": report_firms_ok,
             "attribution": "RAI — Junta de Extremadura / INFOEX",
             "decision": "HOLD without ops anchor",
         },

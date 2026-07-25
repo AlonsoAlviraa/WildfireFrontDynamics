@@ -48,6 +48,23 @@ def test_bare_fixture_root_loads_pilot_sites_json(tmp_path: Path):
     assert (out / "pilot_manifest.json").is_file()
     assert (out / "facts_table.json").is_file()
     assert (out / "report" / "PILOT_HONESTY_CARD.md").is_file()
+    assert (out / "index.html").is_file()
+    portal = (out / "index.html").read_text(encoding="utf-8")
+    assert 'lang="es"' in portal
+    assert "Tobarra" in portal and "Níjar" in portal and "Caminomorisco" in portal
+    assert "No es orden táctica" in portal
+    assert "Not a tactical dispatch" not in portal
+    assert "field_ops" in portal and "OFF" in portal
+    assert "provenance only" in portal
+    assert "confianza" in portal
+    assert "sitios OK" in portal
+    assert "Saltar al contenido" in portal
+    assert "Sitios" in portal and "Contraste" in portal
+    assert "se calla" in portal  # Tobarra research GO → field_ops ABSTAIN
+    assert ">sí<" in portal or ">no<" in portal  # ML live bools Spanish
+    report = (out / "report" / "PILOT_HONESTY_CARD.md").read_text(encoding="utf-8")
+    assert "sí" in report or "no" in report  # no raw True/False in table
+    assert "True" not in report and "False" not in report
     for sid in ("tobarra", "nijar", "caminomorisco"):
         site_dir = out / "sites" / sid
         assert (site_dir / "decision_card.json").is_file()
@@ -205,7 +222,7 @@ def test_report_pure_render_budget_and_substrings():
                 "key_number_value": 6.752,
                 "key_number_source": "operational_metrics.speed_median_m_min",
                 "pack_verdict": None,
-                "honesty_note": "No tactical Vp",
+                "honesty_note": "Sin Vp táctica",
             },
             {
                 "site_id": "nijar",
@@ -223,7 +240,7 @@ def test_report_pure_render_budget_and_substrings():
                 "key_number_value": 2169.34,
                 "key_number_source": "metrics_o2.area_rediam_ha",
                 "pack_verdict": "GO_OPEN_AND_O2",
-                "honesty_note": "No tactical Vp; open HOLD",
+                "honesty_note": "Sin Vp táctica; open HOLD",
             },
             {
                 "site_id": "caminomorisco",
@@ -241,7 +258,7 @@ def test_report_pure_render_budget_and_substrings():
                 "key_number_value": 2679.14,
                 "key_number_source": "metrics_o2.area_rai_ha",
                 "pack_verdict": "PARTIAL",
-                "honesty_note": "No tactical Vp; open HOLD",
+                "honesty_note": "Sin Vp táctica; open HOLD",
             },
         ],
     }
@@ -277,20 +294,56 @@ def test_report_pure_render_budget_and_substrings():
     assert GEN_AT in body
     assert "field_ops" in body and "OFF" in body
     assert "provenance only" in body
-    assert "No es orden táctica" in body or "Not a tactical dispatch" in body
+    assert "No es orden táctica" in body
+    assert "Not a tactical dispatch" not in body
     assert "Ops" in body and "ML" in body
     assert "Tobarra" in body and "Níjar" in body and "Caminomorisco" in body
     assert (
         "field_ops_fail_closed_reliability_unverified" in body
-        or "does not invent R1–R4" in body
-        or "no fake R1–R4" in body
+        or "sin R1–R4 inventados" in body
+        or "No inventa R1–R4" in body
     )
+    # Spanish UI labels (human-facing); no Python bools
+    assert "Generado:" in body
+    assert "Tabla de hechos" in body or "Cifra clave" in body
+    assert "Modo presentación" in body
+    assert "Contraste de políticas" in body or "Contraste field_ops" in body
+    assert "confianza" in body
+    assert "True" not in body and "False" not in body
+    assert "sí" in body or "no" in body
+    assert "se calla" in body
     # u1_source labeling
     assert "U1 TEST honest" in body
     assert u1.get("u1_source") in body
     # numbers come from facts (interpolated), not silent invent
     assert "2169.34" in body or "2169.340" in body
     assert "6.752" in body
+
+    portal = mod.render_pilot_portal_html(
+        facts,
+        site_summaries,
+        u1,
+        generated_at=GEN_AT,
+        pilot_manifest={
+            "policy_id": "research_open",
+            "product_id": "clm_ensemble_v34",
+            "out_dir": "outputs/pilot_honesty_card",
+        },
+    )
+    assert 'lang="es"' in portal
+    assert "pill go" in portal or "pill hold" in portal or "pill abstain" in portal
+    assert "research_open" in portal and "field_ops" in portal
+    assert "No es orden táctica" in portal
+    assert "Not a tactical dispatch" not in portal
+    assert "provenance only" in portal
+    assert "se calla" in portal  # field_ops ABSTAIN on Tobarra unit fixture
+    assert "sitios OK" in portal
+    assert "confianza" in portal
+    assert "Saltar al contenido" in portal
+    assert ">sí<" in portal or ">no<" in portal
+    assert portal.count("se calla") >= 1
+    # Single silence chip next to pill (not duplicated in chips row)
+    assert "contraste: se calla" not in portal
 
 
 def test_cli_bare_fixture_root(tmp_path: Path):
@@ -319,6 +372,8 @@ def test_cli_bare_fixture_root(tmp_path: Path):
     payload = json.loads(r.stdout)
     assert payload["n_ok"] == 3
     assert (out / "report" / "PILOT_HONESTY_CARD.md").is_file()
+    assert (out / "index.html").is_file()
+    assert "No es orden táctica" in (out / "index.html").read_text(encoding="utf-8")
 
 
 def test_load_catalog_fixture_root_total():

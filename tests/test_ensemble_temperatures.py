@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -70,3 +71,53 @@ def test_scorecard_champion_protect_logic():
     m_delta = float(mem_c["improvement_vs_copy_iou"])
     keep_disk = (d_iou > m_iou + 1e-6) or (abs(d_iou - m_iou) <= 1e-6 and d_delta > m_delta + 1e-6)
     assert keep_disk is True
+
+
+def test_predict_raises_on_member_temperatures_length_mismatch(tmp_path: Path):
+    """A10: member_temperatures length mismatch must raise (no silent drop)."""
+    import pytest
+
+    torch = pytest.importorskip("torch")
+    from models.unet_model import ResidualWildfireUNetSmall
+    from wildfire_front.ml.spread_predictor import (
+        EnsembleSpreadPredictor,
+        SpreadModelManifest,
+    )
+
+    weight_paths: list[Path] = []
+    for i in range(2):
+        model = ResidualWildfireUNetSmall(in_channels=18)
+        wp = tmp_path / f"w{i}.pt"
+        torch.save(model.state_dict(), wp)
+        weight_paths.append(wp)
+
+    man_path = tmp_path / "manifest.json"
+    man_path.write_text(
+        json.dumps(
+            {
+                "version": "temp-mismatch",
+                "architecture": "residual",
+                "target_mode": "delta",
+                "in_channels": 18,
+                "sequence_timesteps": 1,
+                "sequence_channels": 17,
+                "patch_size": 64,
+                "threshold": 0.5,
+                "filter_mode": "any_fire",
+                "weights_file": weight_paths[0].name,
+                "members": [p.name for p in weight_paths],
+                "member_weights": [0.5, 0.5],
+                "member_temperatures": [0.7, 0.7, 1.3],  # 3 temps, 2 models
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest = SpreadModelManifest.from_json(man_path)
+    ens = EnsembleSpreadPredictor(manifest, weight_paths, ensemble_mode="mean_prob")
+    seq = np.random.randn(1, 17, 64, 64).astype(np.float32) * 0.1
+    fire = np.zeros((64, 64), dtype=np.float32)
+    fire[20:40, 20:40] = 1.0
+    with pytest.raises(ValueError, match="member_temperatures length"):
+        ens.predict(seq, fire)
+    with pytest.raises(ValueError, match="member_temperatures length"):
+        ens.predict_with_uncertainty(seq, fire)

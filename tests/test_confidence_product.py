@@ -253,6 +253,36 @@ def test_gate_report_event_id_mismatch_rejected():
     assert card.system_reliability_pass is False
 
 
+def test_score_ops_source_requires_positive_ros():
+    """A3: grade alone is not enough — finite primary_ros_m_min > 0 required."""
+    from wildfire_front.product.confidence import score_ops_source
+
+    no_ros = score_ops_source({"quality_grade": "A", "n_frames_staged": 12})
+    assert no_ros["available"] is False
+    assert no_ros["weight"] == 0.0
+
+    zero_ros = score_ops_source(
+        {"quality_grade": "A", "primary_ros_m_min": 0.0, "n_frames_staged": 12}
+    )
+    assert zero_ros["available"] is False
+
+    neg = score_ops_source(
+        {"quality_grade": "B", "primary_ros_m_min": -1.0, "n_frames_staged": 5}
+    )
+    assert neg["available"] is False
+
+    ok = score_ops_source(
+        {
+            "quality_grade": "A",
+            "primary_ros_m_min": 5.7,
+            "n_frames_staged": 10,
+            "speed_vs_ref_ratio": 0.9,
+        }
+    )
+    assert ok["available"] is True
+    assert ok["weight"] > 0.0
+
+
 def test_ml_holdout_not_fused_into_live_confidence():
     """Static catalog IoU is holdout_quality research metadata, weight 0."""
     from wildfire_front.product.confidence import score_ml_source

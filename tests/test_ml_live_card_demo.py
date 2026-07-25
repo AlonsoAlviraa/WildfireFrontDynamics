@@ -152,6 +152,20 @@ def test_u1_honesty_snapshot_has_expected_keys():
     assert 0.5 < float(u1["mean_iou_eval"]) < 0.95
 
 
+def test_u1_fallback_gates_are_false():
+    """A11: _U1_FALLBACK must not claim honest TEST / fusion recommended."""
+    mod = _load_demo_mod()
+    assert mod._U1_FALLBACK["u1_test_honest"] is False
+    assert mod._U1_FALLBACK["allow_ml_live_in_fusion_recommended"] is False
+    # Missing scorecard → fall back to False gates (not True invent)
+    u1 = mod.load_u1_honesty_snapshot(
+        scorecard_path=Path("/nonexistent/scorecard.json"),
+        promote_path=Path("/nonexistent/promote.json"),
+    )
+    assert u1["u1_test_honest"] is False
+    assert u1["allow_ml_live_in_fusion_recommended"] is False
+
+
 def test_field_ops_does_not_enable_fusion_from_demo(tmp_path: Path):
     mod = _load_demo_mod()
     # Explicit field_ops policy: fusion must stay off even with strong live conf

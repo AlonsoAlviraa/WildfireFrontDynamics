@@ -78,7 +78,10 @@ def test_legacy_pista_b_still_works(tmp_path: Path):
     assert m["n_timeline_steps"] == 5
     assert m["activation"] == "EMSR578"
     assert m["source_scorecard"] == "scorecard_pista_b.json"
-    assert m["vp_invented"] is False
+    # Missing honesty flags → incomplete; never invent vp_invented=False
+    assert m.get("vp_invented") is None
+    assert m.get("firms_hull_is_official_burned_area") is None
+    assert m.get("sources_incomplete") is True
     _assert_no_ros(m)
 
 
@@ -176,3 +179,23 @@ def test_empty_pack_returns_none(tmp_path: Path):
     pack = tmp_path / "empty"
     pack.mkdir()
     assert load_open_metrics_from_pack(pack, base=tmp_path, include_repo_root=False) is None
+
+
+def test_missing_vp_invented_marks_sources_incomplete(tmp_path: Path):
+    """A12: missing vp_invented / firms_hull must not claim False."""
+    pack = tmp_path / "incomplete_honesty"
+    pack.mkdir()
+    (pack / "scorecard_and_industrial.json").write_text(
+        json.dumps({"pack_id": "x", "verdict": "PARTIAL", "decision_open": "HOLD"}),
+        encoding="utf-8",
+    )
+    (pack / "metrics_o2.json").write_text(
+        json.dumps({"area_rediam_ha": 42.0}),
+        encoding="utf-8",
+    )
+    m = load_open_metrics_from_pack(pack, base=tmp_path, include_repo_root=False)
+    assert m is not None
+    assert m.get("vp_invented") is None
+    assert m.get("firms_hull_is_official_burned_area") is None
+    assert m.get("sources_incomplete") is True
+    assert m["max_area_ha"] == pytest.approx(42.0)

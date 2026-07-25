@@ -132,10 +132,51 @@ def run_psb_front_dynamics(
         "enable_coreg": False,
         "vp_tactical": None,
         "not_real_lwir": True,
+        "proxy_synthetic": True,
         "n_observations": len(observations),
         "pairs": pairs_out,
-        "summary": dict(result.summary) if result.summary else {},
+        # Never embed raw FD summary as operational (no unfiltered primary_ros as ops).
+        "summary": _sanitize_psb_fd_summary(result.summary if result.summary else {}),
         "limitations": list(HONESTY_LIMITATIONS),
+    }
+
+
+def _sanitize_psb_fd_summary(raw: dict[str, Any] | None) -> dict[str, Any]:
+    """Strip/rewrite FD summary so PSB never exposes ops-looking primary_ros.
+
+    - ``vp_tactical`` always null
+    - grade capped (A → B)
+    - ROS only under explicit proxy_* keys
+    - synthetic / not_ops flags always set
+    """
+    raw = raw or {}
+    grade = raw.get("structural_grade")
+    if grade == "A":
+        grade = "B"
+    if grade is None:
+        grade = "synthetic_research"
+    proxy_ros = raw.get("primary_ros_m_min")
+    return {
+        "status": "synthetic_proxy_only",
+        "vp_tactical": None,
+        "proxy_synthetic": True,
+        "not_ops": True,
+        "not_real_lwir": True,
+        "not_tactical_dispatch": True,
+        "n_pairs": raw.get("n_pairs"),
+        "structural_grade_capped": grade,
+        "structural_label_es": "proxy sintético — no operativo",
+        "primary_methods_used": raw.get("primary_methods_used"),
+        "primary_ros_n": raw.get("primary_ros_n"),
+        # Explicit proxy naming — never primary_ros_m_min as ops field
+        "proxy_ros_m_min": proxy_ros,
+        "proxy_ros_p25_m_min": raw.get("primary_ros_p25_m_min"),
+        "proxy_ros_p75_m_min": raw.get("primary_ros_p75_m_min"),
+        "label": "proxy_synthetic",
+        "note": (
+            "PSB sanitized FD summary: geometric proxy only; "
+            "not operational ROS; not tactical Vp; not dispatch."
+        ),
     }
 
 

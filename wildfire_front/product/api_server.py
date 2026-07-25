@@ -32,6 +32,7 @@ from .decide_service import (
     PRODUCT_ID,
     REPO_ROOT,
     PathNotAllowedError,
+    UntrustedInlineMetricsError,
     decide_from_request,
 )
 from .forensics import render_acta_md, render_radio_bridge, replay_decision
@@ -254,6 +255,12 @@ class DecideHandler(BaseHTTPRequestHandler):
         except PathNotAllowedError as exc:
             status, body, ctype = _json_bytes(
                 {"error": "path_not_allowed", "detail": str(exc)}, status=400
+            )
+            self._send(status, body, ctype)
+            return
+        except UntrustedInlineMetricsError as exc:
+            status, body, ctype = _json_bytes(
+                {"error": "untrusted_inline_metrics", "detail": str(exc)}, status=400
             )
             self._send(status, body, ctype)
             return

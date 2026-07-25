@@ -78,10 +78,31 @@ def test_ml_u1_honesty_manifest_and_exports():
     assert abs(float(u1.get("catalog_holdout_iou_provenance_only")) - 0.8963) < 1e-3
     note = str(u1.get("note") or "").lower()
     assert "provenance" in note
-    assert "not live" in note or "live fire" in note
+    assert "not live" in note or "live fire" in note or "field_ops" in note
     assert "field_ops" in note and "off" in note
     refs = u1.get("refs") or []
     assert any("ML_PRODUCT_SCORECARD" in str(r) for r in refs)
+    # B5: live scorecard source when docs/ML_PRODUCT_SCORECARD.json present
+    scorecard = ROOT / "docs" / "ML_PRODUCT_SCORECARD.json"
+    if scorecard.is_file():
+        assert u1.get("u1_source") == "scorecard"
+        assert u1.get("field_ops_fusion") is False
+
+
+def test_ml_u1_honesty_gates_false_without_scorecard(tmp_path):
+    """B5: missing scorecard → gates false (do not hardcode honest=true)."""
+    import importlib.util
+
+    demo_path = ROOT / "scripts" / "run_ml_live_card_demo.py"
+    spec = importlib.util.spec_from_file_location("run_ml_live_card_demo_b5", demo_path)
+    assert spec and spec.loader
+    demo_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(demo_mod)
+    empty = tmp_path / "missing_scorecard.json"
+    u1 = demo_mod.load_u1_honesty_snapshot(scorecard_path=empty, promote_path=empty)
+    assert u1["u1_source"] == "fallback"
+    assert u1["u1_test_honest"] is False
+    assert u1["allow_ml_live_in_fusion_recommended"] is False
 
     guion = (OUT / "export" / "guion_12min.md").read_text(encoding="utf-8")
     assert "U1" in guion
@@ -398,6 +419,13 @@ def test_modes_strings_and_i18n_in_html():
     assert "hero_title" in html
     assert "Multi-region decision support" in html or "decision support" in html.lower()
     assert "btn-lang" in html
+    # B5: EN/ES toggle switches major UI (nav/CTAs/sections), not only hero
+    assert 'data-i18n="nav_sites"' in html or "data-i18n" in html
+    assert "nav_sites" in html or "nav_compare" in html
+    assert "sec_scoreboard" in html or "sec_guion" in html
+    assert "cta_demo" in html
+    assert "applyLang" in html
+    assert "data-i18n" in html
 
 
 def test_no_fake_pack_dates_when_present_or_skip():

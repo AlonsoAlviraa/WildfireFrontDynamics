@@ -291,11 +291,11 @@ def build_facts_row(
     if honesty.get("vp_invented"):
         note_parts.append("vp_invented")
     else:
-        note_parts.append("No tactical Vp")
+        note_parts.append("Sin Vp táctica")
     if open_m and open_m.get("decision_open"):
         note_parts.append(f"open {open_m.get('decision_open')}")
     if honesty.get("sources_incomplete"):
-        note_parts.append("sources_incomplete")
+        note_parts.append("fuentes_incompletas")
 
     return {
         "site_id": site.get("site_id"),
@@ -317,6 +317,27 @@ def build_facts_row(
     }
 
 
+def _fmt_bool_es(v: Any) -> str:
+    if v is True:
+        return "sí"
+    if v is False:
+        return "no"
+    return "—"
+
+
+def _key_number_label_es(label: Any) -> str:
+    """Human Spanish label for key-number machine keys; keep raw in fuente chips."""
+    raw = str(label or "").strip()
+    if not raw or raw == "—":
+        return "—"
+    mapping = {
+        "primary_ros_m_min": "ROS primario (m/min)",
+        "area_ha": "área (ha)",
+        "max_area_ha": "área (ha)",
+    }
+    return mapping.get(raw, raw)
+
+
 def render_report(
     facts: dict[str, Any],
     site_summaries: list[dict[str, Any]],
@@ -325,7 +346,7 @@ def render_report(
     generated_at: str,
     pilot_manifest: dict[str, Any] | None = None,
 ) -> str:
-    """Deterministic MD. No wall clock. Numbers only from facts/summaries/u1."""
+    """MD determinista en español. Sin reloj. Cifras solo de facts/summaries/u1."""
     rows = list(facts.get("rows") or [])
     site_names = [str(r.get("display_name") or r.get("site_id") or "") for r in rows]
     site_names_joined = " · ".join(n for n in site_names if n)
@@ -339,20 +360,23 @@ def render_report(
 
     def _fmt(v: Any, nd: int = 3) -> str:
         if v is None:
-            return "n/a"
+            return "—"
         try:
             return f"{float(v):.{nd}f}"
         except (TypeError, ValueError):
             return str(v)
 
     lines: list[str] = [
-        "# Piloto honesty — Decision Card multi-fuente",
+        "# Piloto de honestidad — tarjeta de decisión multi-fuente",
         site_names_joined,
-        f"Generated: {generated_at} · policy primary: {policy} · product: {product_id}",
+        (
+            f"Generado: {generated_at} · política: {policy} · "
+            f"producto: {product_id}"
+        ),
         "",
-        "## 0. Banner de honestidad (dual product)",
+        "## 0. Banner de honestidad (producto dual)",
         "- Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)",
-        "- Fusión solo en Decision Card; field_ops live fusion = OFF",
+        "- Fusión solo en tarjeta de decisión; field_ops fusión live = OFF",
         "- No es orden táctica de despacho",
         (
             f"- U1 TEST honest ({u1_source}): IoU eval ≈ {_fmt(mean_iou)} · "
@@ -360,13 +384,13 @@ def render_report(
         ),
         (
             f"- Catalog holdout {_fmt(catalog_iou, 4)} = provenance only "
-            "(not live certainty)"
+            "(no es certeza en vivo)"
         ),
         "",
-        "## 1. Tabla de hechos (auto from facts_table.json)",
+        "## 1. Tabla de hechos",
         (
-            "| Site | Track | Sources | Decision (research_open) | conf | "
-            "live_ok | Decision (field_ops) | Key number | Notes |"
+            "| Sitio | Pista | Fuentes | Decisión (research_open) | confianza | "
+            "ML live | Decisión (field_ops) | Cifra clave | Notas |"
         ),
         "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
@@ -374,12 +398,13 @@ def render_report(
     for r in rows:
         kn = r.get("key_number_label")
         kv = r.get("key_number_value")
-        key_cell = f"{kn}={_fmt(kv, 3)}" if kn and kn != "—" else "—"
+        kn_es = _key_number_label_es(kn)
+        key_cell = f"{kn_es}={_fmt(kv, 3)}" if kn and kn != "—" else "—"
         lines.append(
             f"| {r.get('display_name')} | {r.get('track')} | {r.get('sources')} | "
             f"{r.get('decision_research_open')} | {_fmt(r.get('confidence_pred'))} | "
-            f"{r.get('live_ok')} | {r.get('decision_field_ops')} | {key_cell} | "
-            f"{r.get('honesty_note')} |"
+            f"{_fmt_bool_es(r.get('live_ok'))} | {r.get('decision_field_ops')} | "
+            f"{key_cell} | {r.get('honesty_note')} |"
         )
 
     lines.extend(["", "## 2. Lectura por incendio"])
@@ -389,51 +414,88 @@ def render_report(
         summ = by_id.get(sid) or {}
         contrast = summ.get("contrast_field_ops") or {}
         honesty = summ.get("honesty_flags") or {}
+        conf_v = (
+            summ.get("confidence_pred")
+            if summ.get("confidence_pred") is not None
+            else r.get("confidence_pred")
+        )
+        live_v = (
+            summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
+        )
+        kn = r.get("key_number_label")
+        kn_es = _key_number_label_es(kn)
         lines.append(f"### {r.get('display_name')} ({r.get('track')})")
         lines.append(
-            f"- Key number: {r.get('key_number_label')} = "
+            f"- Cifra clave: {kn_es} = "
             f"{_fmt(r.get('key_number_value'), 4)} "
-            f"(source: {r.get('key_number_source')})"
+            f"(fuente: {r.get('key_number_source')}; clave: {kn})"
         )
         lines.append(
-            f"- Card research_open: {summ.get('decision') or r.get('decision_research_open')} "
-            f"· conf={_fmt(summ.get('confidence_pred') if summ.get('confidence_pred') is not None else r.get('confidence_pred'))} "
-            f"· live_ok={summ.get('live_ok') if summ.get('live_ok') is not None else r.get('live_ok')}"
+            f"- Tarjeta research_open: "
+            f"{summ.get('decision') or r.get('decision_research_open')} "
+            f"· confianza={_fmt(conf_v)} · ML live={_fmt_bool_es(live_v)}"
         )
         lines.append(
-            f"- field_ops contrast: {contrast.get('decision') or r.get('decision_field_ops')} "
-            "(no fake R1–R4; fusion OFF)"
+            f"- Contraste field_ops: "
+            f"{contrast.get('decision') or r.get('decision_field_ops')} "
+            "(sin R1–R4 inventados; fusión OFF)"
         )
         lines.append(
-            f"- Honesty: vp_invented={honesty.get('vp_invented', False)}; "
-            f"firms_hull≠burned; sources_incomplete={honesty.get('sources_incomplete', False)}"
+            f"- Honestidad: Vp inventada={_fmt_bool_es(honesty.get('vp_invented', False))}; "
+            f"casco FIRMS≠quemado; "
+            f"fuentes incompletas="
+            f"{_fmt_bool_es(honesty.get('sources_incomplete', False))}"
         )
         lines.append("")
 
     lines.extend(
         [
             "## 3. Contraste de políticas",
-            "- research_open: lab / open-friendly HOLD; experimental live fusion",
             (
-                "- field_ops: require_ops_for_go; live fusion OFF; fail-closed ABSTAIN "
-                "if GO without verified reliability "
+                "- research_open: laboratorio / amigable con open (HOLD); "
+                "fusión live experimental"
+            ),
+            (
+                "- field_ops: require_ops_for_go; fusión live OFF; ABSTAIN fail-closed "
+                "(cierre seguro) si GO sin fiabilidad verificada "
                 "(reason field_ops_fail_closed_reliability_unverified) — "
-                "pilot does not invent gates"
+                "el piloto no inventa gates"
             ),
             "",
             "## 4. Límites y no-claims",
-            "- Not multi-CCAA “works across all Spain”",
-            "- FIRMS hull ≠ official burned area",
-            "- No retrain in this pilot",
-            "- ml_product_go remains false until product gates",
+            "- No es multi-CCAA «funciona en toda España»",
+            "- Casco FIRMS ≠ área quemada oficial",
+            "- Sin reentrenamiento en este piloto",
+            "- ml_product_go sigue en false hasta gates de producto",
             "",
-            "## 5. Artefactos",
+            "## 5. Modo presentación (1 página)",
+            (
+                "- Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail"
+            ),
+            (
+                "- research_open puede ir a GO experimental; field_ops se calla "
+                "(ABSTAIN/HOLD) — fusión OFF"
+            ),
+            (
+                "- Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada"
+            ),
+            (
+                f"- Holdout catálogo {_fmt(catalog_iou, 4)} = provenance only, "
+                "no certeza del incendio"
+            ),
+            "",
+            "## 6. Artefactos",
         ]
     )
     art_root = (pilot_manifest or {}).get("out_dir") or "outputs/pilot_honesty_card"
-    lines.append(f"- Pilot root: `{art_root}`")
-    lines.append("- Per site: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`")
-    lines.append("- `facts_table.json` · `pilot_summary.json` · this report")
+    lines.append(f"- Raíz piloto: `{art_root}`")
+    lines.append(
+        "- Por sitio: `decision_card.json`, `decision_card_field_ops.json`, "
+        "`site_summary.json`"
+    )
+    lines.append(
+        "- `facts_table.json` · `pilot_summary.json` · `index.html` · este informe"
+    )
     lines.append("")
 
     body = "\n".join(lines)
@@ -441,13 +503,427 @@ def render_report(
     words = body.split()
     if len(nonempty) > REPORT_MAX_NONEMPTY_LINES:
         raise ValueError(
-            f"report budget exceeded: nonempty_lines={len(nonempty)} > {REPORT_MAX_NONEMPTY_LINES}"
+            f"report budget exceeded: nonempty_lines={len(nonempty)} > "
+            f"{REPORT_MAX_NONEMPTY_LINES}"
         )
     if len(words) > REPORT_MAX_WORDS:
         raise ValueError(
             f"report budget exceeded: words={len(words)} > {REPORT_MAX_WORDS}"
         )
     return body
+
+
+def _decision_pill_class(decision: Any) -> str:
+    u = str(decision or "").upper().strip()
+    if u == "GO" or u.startswith("GO_") or u.startswith("GO "):
+        return "go"
+    if u == "HOLD" or "HOLD" in u:
+        return "hold"
+    if u == "ABSTAIN" or "ABSTAIN" in u:
+        return "abstain"
+    return "muted"
+
+
+def _html_esc(s: Any) -> str:
+    import html as html_lib
+
+    if s is None:
+        return ""
+    return html_lib.escape(str(s), quote=True)
+
+
+def _fmt_num(v: Any, nd: int = 3) -> str:
+    if v is None:
+        return "—"
+    try:
+        return f"{float(v):.{nd}f}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def render_pilot_portal_html(
+    facts: dict[str, Any],
+    site_summaries: list[dict[str, Any]],
+    u1: dict[str, Any],
+    *,
+    generated_at: str,
+    pilot_manifest: dict[str, Any] | None = None,
+    pilot_summary: dict[str, Any] | None = None,
+) -> str:
+    """Portal HTML español, scannable, sin solapes; listo para presentación."""
+    rows = list(facts.get("rows") or [])
+    by_id = {s.get("site_id"): s for s in site_summaries if isinstance(s, dict)}
+    policy = (pilot_manifest or {}).get("policy_id") or DEFAULT_POLICY
+    product_id = (pilot_manifest or {}).get("product_id") or DEFAULT_PRODUCT
+    u1_source = str(u1.get("u1_source") or "fallback")
+    catalog_iou = u1.get("catalog_holdout_iou_provenance")
+    mean_iou = u1.get("mean_iou_eval")
+    sel80 = u1.get("selective_iou_at_80")
+    ece = u1.get("ece_patch_conf")
+    n_ok = (pilot_summary or {}).get("n_ok")
+    n_sites = (pilot_summary or {}).get("n_sites") or len(rows)
+    if n_ok is None:
+        n_ok = sum(
+            1
+            for s in site_summaries
+            if isinstance(s, dict) and not s.get("skipped") and not s.get("failed")
+        )
+
+    track_label = {
+        "OPS": "OPS · térmico",
+        "OPEN_AND": "OPEN · AND",
+        "OPEN_EXT": "OPEN · EXT",
+    }
+
+    site_cards: list[str] = []
+    for r in rows:
+        sid = r.get("site_id")
+        summ = by_id.get(sid) or {}
+        contrast = summ.get("contrast_field_ops") or {}
+        honesty = summ.get("honesty_flags") or {}
+        dec_ro = summ.get("decision") or r.get("decision_research_open") or "—"
+        dec_fo = contrast.get("decision") or r.get("decision_field_ops") or "—"
+        conf = (
+            summ.get("confidence_pred")
+            if summ.get("confidence_pred") is not None
+            else r.get("confidence_pred")
+        )
+        live_ok = (
+            summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
+        )
+        kn = r.get("key_number_label") or "—"
+        kn_es = _key_number_label_es(kn)
+        kv = r.get("key_number_value")
+        ks = r.get("key_number_source") or "—"
+        track = str(r.get("track") or "")
+        tlab = track_label.get(track, track)
+        track_cls = "ops" if track == "OPS" else "open"
+        # Single "se calla" badge next to field_ops pill (no duplicate in chips)
+        se_calla_badge = (
+            '<span class="chip silence" title="field_ops se calla">se calla</span>'
+            if str(dec_fo).upper() == "ABSTAIN"
+            else ""
+        )
+        incomplete = bool(honesty.get("sources_incomplete"))
+        site_cards.append(
+            f"""
+<article class="site-card" id="site-{_html_esc(sid)}">
+  <header class="card-head">
+    <div class="card-title">
+      <span class="track track-{track_cls}">{_html_esc(tlab)}</span>
+      <h2>{_html_esc(r.get("display_name") or sid)}</h2>
+      <p class="meta-line">{_html_esc(r.get("sources") or "—")}</p>
+    </div>
+    <div class="pills">
+      <div class="pill-stack">
+        <span class="pill-lbl">research_open</span>
+        <span class="pill {_decision_pill_class(dec_ro)}">{_html_esc(dec_ro)}</span>
+      </div>
+      <div class="pill-stack">
+        <span class="pill-lbl">field_ops</span>
+        <span class="pill {_decision_pill_class(dec_fo)}">{_html_esc(dec_fo)}</span>
+        {se_calla_badge}
+      </div>
+    </div>
+  </header>
+  <div class="metrics">
+    <div class="metric">
+      <span class="m-val">{_html_esc(_fmt_num(conf, 3))}</span>
+      <span class="m-lbl">confianza</span>
+    </div>
+    <div class="metric">
+      <span class="m-val">{_html_esc(_fmt_num(kv, 3) if kn != "—" else "—")}</span>
+      <span class="m-lbl">{_html_esc(kn_es)}</span>
+    </div>
+    <div class="metric">
+      <span class="m-val m-small">{_html_esc(_fmt_bool_es(live_ok))}</span>
+      <span class="m-lbl">ML live</span>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip">fuente · {_html_esc(ks)}</span>
+    <span class="chip">clave · {_html_esc(kn)}</span>
+    <span class="chip {"warn" if incomplete else "ok"}">
+      {"fuentes incompletas" if incomplete else "fuentes OK"}
+    </span>
+    <span class="chip">Sin Vp táctica</span>
+  </div>
+</article>"""
+        )
+
+    contrast_cells: list[str] = []
+    for r in rows:
+        sid = r.get("site_id")
+        summ = by_id.get(sid) or {}
+        contrast = summ.get("contrast_field_ops") or {}
+        dec_ro = summ.get("decision") or r.get("decision_research_open") or "—"
+        dec_fo = contrast.get("decision") or r.get("decision_field_ops") or "—"
+        contrast_cells.append(
+            f"""
+<div class="contrast-cell">
+  <div class="contrast-name">{_html_esc(r.get("display_name") or sid)}</div>
+  <div class="contrast-pair">
+    <span class="pill {_decision_pill_class(dec_ro)}" title="research_open">{_html_esc(dec_ro)}</span>
+    <span class="arrow" aria-hidden="true">→</span>
+    <span class="pill {_decision_pill_class(dec_fo)}" title="field_ops">{_html_esc(dec_fo)}</span>
+  </div>
+</div>"""
+        )
+
+    sites_joined = " · ".join(
+        str(r.get("display_name") or r.get("site_id") or "") for r in rows
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WFD · Piloto de honestidad — Tobarra · Níjar · Caminomorisco</title>
+<meta name="description" content="Tarjetas de decisión multi-fuente con honestidad (producto dual). GO/HOLD/ABSTAIN. field_ops fusión OFF."/>
+<style>
+:root {{
+  --bg:#070b12; --card:#111925; --card-hi:#152032; --line:rgba(100,140,190,.22);
+  --text:#e8eef8; --muted:#8b9bb4; --accent:#3b9eff; --cyan:#2fd4c8; --ops:#f0a030;
+  --go:#1ecf8c; --hold:#f0b429; --abstain:#ff5c6c; --radius:14px;
+  --font:"Segoe UI",system-ui,-apple-system,sans-serif;
+  --shadow:0 8px 28px rgba(0,0,0,.28);
+}}
+*{{box-sizing:border-box}}
+html{{scroll-behavior:smooth}}
+body{{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
+  line-height:1.45;min-height:100vh;-webkit-font-smoothing:antialiased}}
+.bg-fx{{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(ellipse 70% 45% at 12% -8%,rgba(45,100,180,.28),transparent 55%),
+  radial-gradient(ellipse 50% 35% at 92% 12%,rgba(200,80,40,.12),transparent 50%),
+  linear-gradient(180deg,#080d16,#070b12)}}
+.wrap{{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 1.1rem 2.5rem}}
+.topnav{{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
+  background:rgba(7,11,18,.9);display:flex;align-items:center;justify-content:space-between;
+  gap:.75rem;flex-wrap:wrap;padding:.7rem 0;border-bottom:1px solid var(--line);margin-bottom:.85rem}}
+.brand{{display:flex;align-items:center;gap:.6rem;min-width:0}}
+.brand-mark{{flex:0 0 auto;width:32px;height:32px;border-radius:10px;
+  background:conic-gradient(from 200deg,var(--cyan),var(--accent),var(--ops),var(--cyan))}}
+.brand h1{{margin:0;font-size:.88rem;letter-spacing:.06em;font-weight:800}}
+.brand .sub{{color:var(--muted);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}}
+.nav-links{{display:flex;gap:.28rem;flex-wrap:wrap}}
+.nav-links a{{font-size:.7rem;font-weight:650;padding:.28rem .5rem;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);text-decoration:none}}
+.nav-links a:hover{{color:var(--text);border-color:rgba(59,158,255,.45)}}
+.hero{{padding:.6rem 0 .4rem}}
+.eyebrow{{color:var(--cyan);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}}
+.hero h2{{margin:.35rem 0 .55rem;font-size:clamp(1.2rem,2.6vw,1.65rem);font-weight:750;
+  max-width:40rem;letter-spacing:-.02em}}
+.hero p{{margin:0;color:var(--muted);max-width:42rem;font-size:.92rem}}
+.hero p b{{color:var(--text)}}
+.kpi-strip{{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1rem 0 1.1rem}}
+@media(max-width:900px){{.kpi-strip{{grid-template-columns:repeat(2,1fr)}}}}
+@media(max-width:480px){{.kpi-strip{{grid-template-columns:1fr}}}}
+.kpi{{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.7rem .85rem;min-width:0}}
+.kpi-val{{font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  overflow-wrap:anywhere}}
+.kpi-lbl{{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:.12rem}}
+.cards{{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:.4rem 0 1rem;
+  align-items:stretch}}
+@media(max-width:960px){{.cards{{grid-template-columns:1fr}}}}
+.site-card{{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:1rem;display:flex;flex-direction:column;gap:.55rem;min-width:0;
+  box-shadow:var(--shadow);transition:border-color .15s ease,transform .15s ease}}
+@media (hover:hover) and (pointer:fine){{
+  .site-card:hover{{border-color:rgba(59,158,255,.4);transform:translateY(-1px)}}
+}}
+.card-head{{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;min-width:0}}
+.card-title{{min-width:0;flex:1}}
+.card-title h2{{margin:.28rem 0 0;font-size:1.2rem;line-height:1.2;overflow-wrap:anywhere}}
+.meta-line{{margin:.2rem 0 0;color:var(--muted);font-size:.75rem;overflow-wrap:anywhere}}
+.track{{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.05em;
+  padding:.14rem .42rem;border-radius:6px;text-transform:uppercase}}
+.track-ops{{background:rgba(240,160,48,.15);color:var(--ops);border:1px solid rgba(240,160,48,.35)}}
+.track-open{{background:rgba(47,212,200,.1);color:var(--cyan);border:1px solid rgba(47,212,200,.3)}}
+.pills{{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;flex:0 0 auto}}
+.pill-stack{{display:flex;flex-direction:column;align-items:flex-end;gap:.12rem}}
+.pill-lbl{{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}}
+.pill{{display:inline-flex;align-items:center;justify-content:center;min-width:4.4rem;
+  font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:.28rem .55rem;
+  border-radius:999px;border:1px solid var(--line);text-transform:uppercase}}
+.pill.go{{color:var(--go);background:rgba(30,207,140,.14);border-color:rgba(30,207,140,.5);
+  box-shadow:0 0 0 1px rgba(30,207,140,.12)}}
+.pill.hold{{color:var(--hold);background:rgba(240,180,41,.16);border-color:rgba(240,180,41,.5)}}
+.pill.abstain{{color:var(--abstain);background:rgba(255,92,108,.14);border-color:rgba(255,92,108,.5);
+  box-shadow:0 0 12px rgba(255,92,108,.12)}}
+.pill.muted{{color:var(--muted)}}
+.metrics{{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;
+  padding:.55rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}}
+.metric{{min-width:0}}
+.m-val{{display:block;font-size:1.2rem;font-weight:750;font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}}
+.m-val.m-small{{font-size:1.05rem}}
+.m-lbl{{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}}
+.chips{{display:flex;flex-wrap:wrap;gap:.28rem}}
+.chip{{font-size:.7rem;font-weight:650;padding:.16rem .4rem;border-radius:6px;
+  border:1px solid var(--line);color:var(--muted);max-width:100%;overflow-wrap:anywhere}}
+.chip.ok{{color:var(--go);border-color:rgba(30,207,140,.35)}}
+.chip.warn{{color:var(--hold);border-color:rgba(240,180,41,.4)}}
+.chip.silence{{color:var(--abstain);border-color:rgba(255,92,108,.45);
+  background:rgba(255,92,108,.08);font-weight:750}}
+.block{{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  margin:1rem 0;padding:1rem 1.1rem;min-width:0}}
+.block h3{{margin:0 0 .65rem;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}}
+.contrast-strip{{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem}}
+@media(max-width:720px){{.contrast-strip{{grid-template-columns:1fr}}}}
+.contrast-cell{{background:var(--card-hi);border:1px solid var(--line);border-radius:12px;
+  padding:.7rem .75rem;min-width:0}}
+.contrast-name{{font-weight:700;font-size:.9rem;margin-bottom:.4rem}}
+.contrast-pair{{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}}
+.arrow{{color:var(--muted);font-weight:700}}
+.policy-grid{{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}}
+@media(max-width:720px){{.policy-grid{{grid-template-columns:1fr}}}}
+.policy{{background:var(--card-hi);border:1px solid var(--line);border-radius:12px;padding:.75rem .85rem}}
+.policy h4{{margin:0 0 .35rem;font-size:.92rem}}
+.policy p{{margin:0;font-size:.8rem;color:var(--muted)}}
+.policy ul{{margin:.4rem 0 0;padding-left:1.05rem;font-size:.78rem;color:var(--muted)}}
+.policy.lab{{border-color:rgba(59,158,255,.3)}}
+.policy.field{{border-color:rgba(255,92,108,.28)}}
+.present{{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin:0;padding:0}}
+@media(max-width:720px){{.present{{grid-template-columns:1fr}}}}
+.present li{{list-style:none;background:var(--card-hi);border:1px solid var(--line);
+  border-radius:10px;padding:.55rem .7rem;font-size:.82rem;color:var(--muted)}}
+.present li b{{color:var(--text)}}
+.disclaimer-bar{{position:relative;z-index:2;margin:1rem 0 0;padding:.65rem .85rem;
+  border-radius:12px;background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.35);
+  font-size:.75rem;color:var(--hold);display:flex;flex-wrap:wrap;gap:.35rem .75rem;align-items:center}}
+.disclaimer-bar strong{{color:var(--text);font-weight:750}}
+.disclaimer-bar span{{white-space:normal}}
+.footer{{margin-top:1.4rem;padding-top:.85rem;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.72rem}}
+.footer code{{font-size:.7rem;color:var(--cyan)}}
+.skip-to{{position:absolute;left:-9999px}}
+.skip-to:focus{{position:static;display:inline-block;padding:.35rem .6rem;
+  background:var(--accent);color:#fff;border-radius:8px;z-index:100}}
+:focus-visible{{outline:2px solid var(--cyan);outline-offset:2px}}
+@media (prefers-reduced-motion:reduce){{
+  html{{scroll-behavior:auto}}
+  *{{animation:none!important;transition:none!important}}
+}}
+@media print {{
+  .bg-fx,.nav-links{{display:none!important}}
+  body{{background:#fff;color:#111}}
+  .site-card,.block,.kpi{{background:#fff;border-color:#ccc;box-shadow:none;color:#111}}
+  .pill.go{{color:#060}} .pill.hold{{color:#860}} .pill.abstain{{color:#900}}
+  .disclaimer-bar{{color:#530;border-color:#ca0}}
+}}
+</style>
+</head>
+<body>
+<a class="skip-to" href="#main">Saltar al contenido</a>
+<div class="bg-fx" aria-hidden="true"></div>
+<div class="wrap">
+  <nav class="topnav" aria-label="Piloto">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <h1>WFD · PILOTO DE HONESTIDAD</h1>
+        <div class="sub">{_html_esc(sites_joined)} · {_html_esc(product_id)}</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#sitios">Sitios</a>
+      <a href="#contraste">Contraste</a>
+      <a href="#politicas">Políticas</a>
+      <a href="#presentacion">Presentación</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="main">
+    <div class="eyebrow">Producto dual · tarjeta de decisión multi-fuente</div>
+    <h2>GO / HOLD / ABSTAIN con honestidad: Ops ≠ ML, y field_ops se calla.</h2>
+    <p>
+      Tres sitios, un criterio. <b>research_open</b> puede ser experimental;
+      <b>field_ops</b> fusión live = <b>OFF</b>. No es orden táctica de despacho.
+    </p>
+  </header>
+
+  <section class="kpi-strip" aria-label="Indicadores">
+    <div class="kpi">
+      <div class="kpi-val">{_html_esc(n_ok)}/{_html_esc(n_sites)}</div>
+      <div class="kpi-lbl">sitios OK</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">{_html_esc(_fmt_num(catalog_iou, 4))}</div>
+      <div class="kpi-lbl">holdout · solo provenance</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">{_html_esc(_fmt_num(mean_iou, 3))}</div>
+      <div class="kpi-lbl">U1 IoU ({_html_esc(u1_source)})</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">{_html_esc(policy)}</div>
+      <div class="kpi-lbl">política primaria</div>
+    </div>
+  </section>
+
+  <section id="sitios" class="cards" aria-label="Tarjetas por sitio">
+    {"".join(site_cards)}
+  </section>
+
+  <section class="block" id="contraste">
+    <h3>Contraste research_open → field_ops</h3>
+    <div class="contrast-strip">
+      {"".join(contrast_cells)}
+    </div>
+  </section>
+
+  <section class="block" id="politicas">
+    <h3>Políticas</h3>
+    <div class="policy-grid">
+      <div class="policy lab">
+        <h4>research_open</h4>
+        <p>Laboratorio / amigable con open. Fusión live experimental.</p>
+        <ul>
+          <li>Puede emitir GO con live</li>
+          <li>Útil para demo de lab</li>
+        </ul>
+      </div>
+      <div class="policy field">
+        <h4>field_ops · fusión OFF</h4>
+        <p>require_ops_for_go · ABSTAIN fail-closed (cierre seguro) sin fiabilidad verificada.</p>
+        <ul>
+          <li>No inventa R1–R4</li>
+          <li>reason: field_ops_fail_closed_reliability_unverified</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="presentacion">
+    <h3>Modo presentación</h3>
+    <ul class="present">
+      <li><b>1.</b> Ops ≠ ML — fusión solo en tarjeta de decisión</li>
+      <li><b>2.</b> field_ops fusión live = OFF — se calla (ABSTAIN/HOLD)</li>
+      <li><b>3.</b> Cifras: ROS solo OPS; ha solo open; sin Vp táctica</li>
+      <li><b>4.</b> Catalog holdout {_html_esc(_fmt_num(catalog_iou, 4))} = provenance only</li>
+      <li><b>5.</b> U1 ({_html_esc(u1_source)}): IoU {_html_esc(_fmt_num(mean_iou))} · sel@80 {_html_esc(_fmt_num(sel80))} · ECE {_html_esc(_fmt_num(ece))}</li>
+      <li><b>6.</b> No es multi-CCAA «funciona en toda España»</li>
+    </ul>
+  </section>
+
+  <div class="disclaimer-bar" role="note">
+    <strong>Honestidad</strong>
+    <span>No es orden táctica</span>
+    <span>· field_ops fusión OFF</span>
+    <span>· provenance only (no certeza en vivo)</span>
+    <span>· FIRMS ≠ quemado oficial</span>
+  </div>
+
+  <footer class="footer">
+    Generado: {_html_esc(generated_at)} · producto {_html_esc(product_id)} ·
+    informe <code>report/PILOT_HONESTY_CARD.md</code>
+  </footer>
+</div>
+</body>
+</html>
+"""
 
 
 def process_site(
@@ -901,47 +1377,70 @@ def run_pilot(
             "u1_source": u1.get("u1_source"),
         },
         "honesty": [
-            "Ops ≠ ML; fuse only at Decision Card; never train on fused labels.",
-            "No tactical Vp/ROS invented from open packs or ML masks.",
-            "Catalog holdout IoU is provenance only — not live fire certainty.",
-            "research_open live fusion is experimental lab surface; field_ops fusion OFF.",
-            "field_ops contrast does not invent R1–R4; expect HOLD/ABSTAIN not fake GO.",
+            "Ops ≠ ML; fusión solo en Decision Card; nunca entrenar con etiquetas fusionadas.",
+            "Sin Vp/ROS táctico inventado desde packs open o máscaras ML.",
+            "Catalog holdout IoU es provenance only — no es certeza del incendio en vivo.",
+            "research_open fusión live es superficie de lab experimental; field_ops fusión OFF.",
+            "Contraste field_ops no inventa R1–R4; esperar HOLD/ABSTAIN, no GO falso.",
         ],
         "failed": failed,
     }
+
+    portal_html = render_pilot_portal_html(
+        facts_table,
+        site_summaries,
+        u1,
+        generated_at=gen_at,
+        pilot_manifest=pilot_manifest,
+        pilot_summary=pilot_summary,
+    )
 
     _write_json(out / "pilot_manifest.json", pilot_manifest)
     _write_json(out / "pilot_summary.json", pilot_summary)
     _write_json(out / "facts_table.json", facts_table)
     report_path = report_dir / "PILOT_HONESTY_CARD.md"
     report_path.write_text(report_md + "\n", encoding="utf-8")
+    portal_path = out / "index.html"
+    portal_path.write_text(portal_html, encoding="utf-8")
 
     readme = "\n".join(
         [
-            "# Pilot honesty card",
+            "# Piloto de honestidad — tarjeta de decisión",
             "",
-            "Multi-source Decision Cards for Tobarra (OPS), Níjar (AND), Caminomorisco (EXT).",
+            "Tarjetas multi-fuente: Tobarra (OPS), Níjar (AND), Caminomorisco (EXT).",
             "",
-            "## Honesty",
-            "- Dual product: Ops ≠ ML",
-            "- field_ops live fusion OFF",
+            "## Abrir",
+            "- Portal: `index.html`",
+            "- Informe: `report/PILOT_HONESTY_CARD.md`",
+            "",
+            "## Honestidad",
+            "- Producto dual: Ops ≠ ML",
+            "- field_ops fusión live = OFF",
             "- Catalog holdout IoU = provenance only",
-            "- Not a tactical dispatch order",
+            "- No es orden táctica de despacho",
             "",
-            f"Generated: {gen_at}",
+            f"Generado: {gen_at}",
             "",
         ]
     )
     (out / "README.md").write_text(readme, encoding="utf-8")
 
-    if write_docs_report:
+    # Publish docs when explicitly requested or when writing the default pilot out dir
+    publish_docs = bool(write_docs_report)
+    try:
+        if out.resolve() == DEFAULT_OUT.resolve():
+            publish_docs = True
+    except OSError:
+        pass
+    if publish_docs:
         DOCS_REPORT.parent.mkdir(parents=True, exist_ok=True)
         DOCS_REPORT.write_text(report_md + "\n", encoding="utf-8")
 
     pilot_summary["_paths"] = {
         "out_dir": str(out),
         "report": str(report_path),
-        "docs_report": str(DOCS_REPORT) if write_docs_report else None,
+        "portal": str(portal_path),
+        "docs_report": str(DOCS_REPORT) if publish_docs else None,
     }
     pilot_summary["_failed"] = failed
     return pilot_summary
@@ -1093,6 +1592,8 @@ def main(argv: list[str] | None = None) -> int:
                 )
         paths = summary.get("_paths") or {}
         print(f"report: {paths.get('report')}")
+        if paths.get("portal"):
+            print(f"portal: {paths.get('portal')}")
     return 0
 
 

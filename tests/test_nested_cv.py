@@ -228,6 +228,53 @@ def test_temperature_and_platt_helpers():
     assert len(p_t) == len(p_raw)
 
 
+def test_promote_refuses_catalog_holdout_iou():
+    """A7: primary.model_iou ≈ 0.8963 or catalog/missing source → refuse."""
+    from scripts.promote_ml_live_fusion import validate_promote_eligibility
+
+    base = {
+        "schema": "ml_scorecard_v1",
+        "product_id": "clm_ensemble_v34",
+        "split": "test",
+        "u1_eval_split": "test",
+        "calibrator_fit_split": "val",
+        "allow_ml_live_in_fusion_recommended": True,
+        "gates": {"u1_test_honest": True, "ml_product_go": False},
+        "primary": {
+            "model_iou": 0.8963,
+            "model_iou_source": "eval_split_mean",
+            "n_patches": 100,
+        },
+        "uncertainty": {"n_patches": 100},
+        "provenance": {
+            "offline": False,
+            "frozen_calibrator": True,
+            "identity_calibrator": False,
+            "eval_dir": "data/clm/test",
+        },
+        "schema_validation": {"pass": True},
+    }
+    fails = validate_promote_eligibility(base, allow_lab_synthetic=True)
+    assert any("catalog_holdout" in f or "0.8963" in f for f in fails)
+
+    missing_src = dict(base)
+    missing_src["primary"] = {
+        "model_iou": 0.85,
+        "n_patches": 100,
+    }
+    fails2 = validate_promote_eligibility(missing_src, allow_lab_synthetic=True)
+    assert any("model_iou_source_missing_or_catalog" in f for f in fails2)
+
+    catalog_src = dict(base)
+    catalog_src["primary"] = {
+        "model_iou": 0.85,
+        "model_iou_source": "catalog",
+        "n_patches": 100,
+    }
+    fails3 = validate_promote_eligibility(catalog_src, allow_lab_synthetic=True)
+    assert any("model_iou_source_missing_or_catalog" in f for f in fails3)
+
+
 def test_promote_still_refuses_without_u1_test_honest(tmp_path: Path):
     from scripts.ml_scorecard import build_scorecard
     from scripts.promote_ml_live_fusion import main, validate_promote_eligibility

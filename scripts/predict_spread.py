@@ -243,7 +243,15 @@ def main() -> int:
             target_fire = data.get("target_fire", None)
 
         thr = predictor.manifest.threshold
-        if use_unc and hasattr(predictor, "predict_with_uncertainty"):
+        if use_unc:
+            if not hasattr(predictor, "predict_with_uncertainty"):
+                print(
+                    "ERROR: --with-uncertainty / --ml-live-json requires a predictor "
+                    "implementing predict_with_uncertainty "
+                    f"(product={product_id!r}, type={type(predictor).__name__}).",
+                    file=sys.stderr,
+                )
+                return 2
             from wildfire_front.ml.uncertainty import build_ml_prediction_document
 
             unc_kwargs: dict = {
