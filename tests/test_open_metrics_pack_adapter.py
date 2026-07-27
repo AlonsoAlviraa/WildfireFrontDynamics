@@ -69,9 +69,7 @@ def test_legacy_pista_b_still_works(tmp_path: Path):
         "n_timeline_steps": 5,
         "O2_cems_delineation": "GO",
     }
-    (pack / "scorecard_pista_b.json").write_text(
-        json.dumps(sc), encoding="utf-8"
-    )
+    (pack / "scorecard_pista_b.json").write_text(json.dumps(sc), encoding="utf-8")
     m = load_open_metrics_from_pack(pack, base=tmp_path, include_repo_root=False)
     assert m is not None
     assert m["max_area_ha"] == pytest.approx(2693.48)
@@ -100,9 +98,7 @@ def test_both_and_ext_named_industrial_returns_none(tmp_path: Path):
     pack.mkdir()
     (pack / "scorecard_and_industrial.json").write_text("{}", encoding="utf-8")
     (pack / "scorecard_ext_industrial.json").write_text("{}", encoding="utf-8")
-    (pack / "metrics_o2.json").write_text(
-        json.dumps({"area_rediam_ha": 100.0}), encoding="utf-8"
-    )
+    (pack / "metrics_o2.json").write_text(json.dumps({"area_rediam_ha": 100.0}), encoding="utf-8")
     assert load_open_metrics_from_pack(pack, base=tmp_path, include_repo_root=False) is None
 
 
@@ -115,9 +111,7 @@ def test_two_glob_industrial_returns_none(tmp_path: Path):
     (pack / "scorecard_bar_industrial.json").write_text(
         json.dumps({"pack_id": "bar"}), encoding="utf-8"
     )
-    (pack / "metrics_o2.json").write_text(
-        json.dumps({"area_rediam_ha": 50.0}), encoding="utf-8"
-    )
+    (pack / "metrics_o2.json").write_text(json.dumps({"area_rediam_ha": 50.0}), encoding="utf-8")
     assert load_open_metrics_from_pack(pack, base=tmp_path, include_repo_root=False) is None
 
 
@@ -163,9 +157,7 @@ def test_industrial_helper_direct_and_partial(tmp_path: Path):
         "vp_invented": False,
         "firms_hull_is_official_burned_area": False,
     }
-    (pack / "metrics_o2.json").write_text(
-        json.dumps({"area_rai_ha": 10.5}), encoding="utf-8"
-    )
+    (pack / "metrics_o2.json").write_text(json.dumps({"area_rai_ha": 10.5}), encoding="utf-8")
     m = industrial_scorecard_to_open_metrics(
         pack, sc, source_scorecard="scorecard_ext_industrial.json", kind="EXT"
     )

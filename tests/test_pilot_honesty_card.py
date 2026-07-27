@@ -117,9 +117,7 @@ def test_open_metrics_never_contain_ros_keys(tmp_path: Path):
     )
     banned = ("primary_ros_m_min", "vp_m_min", "vp_tactical", "ros_m_min")
     for sid in ("nijar", "caminomorisco"):
-        sources = json.loads(
-            (out / "sites" / sid / "sources.json").read_text(encoding="utf-8")
-        )
+        sources = json.loads((out / "sites" / sid / "sources.json").read_text(encoding="utf-8"))
         open_m = sources.get("open") or {}
         blob = json.dumps(open_m)
         for k in banned:
@@ -184,15 +182,9 @@ def test_live_path_catalog_iou_honesty(tmp_path: Path):
         flags = s.get("honesty_flags") or {}
         assert flags.get("catalog_iou_is_provenance_only") is True
         card = json.loads(
-            (out / "sites" / s["site_id"] / "decision_card.json").read_text(
-                encoding="utf-8"
-            )
+            (out / "sites" / s["site_id"] / "decision_card.json").read_text(encoding="utf-8")
         )
-        live_ids = {
-            src.get("id")
-            for src in (card.get("sources") or [])
-            if isinstance(src, dict)
-        }
+        live_ids = {src.get("id") for src in (card.get("sources") or []) if isinstance(src, dict)}
         assert "ml_live_reliability" in live_ids or "ml_live" in live_ids
     report = (out / "report" / "PILOT_HONESTY_CARD.md").read_text(encoding="utf-8")
     assert "provenance only" in report
@@ -393,9 +385,7 @@ def test_fixture_root_without_pilot_sites_json_falls_through(tmp_path: Path):
     empty_root.mkdir()
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        catalog, source = mod.load_catalog(
-            sites_config=None, fixture_root=empty_root
-        )
+        catalog, source = mod.load_catalog(sites_config=None, fixture_root=empty_root)
     assert source == "builtin_production"
     assert catalog.get("schema") == "pilot_sites_catalog_v1"
     assert any(

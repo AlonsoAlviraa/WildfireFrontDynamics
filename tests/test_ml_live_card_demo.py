@@ -311,8 +311,6 @@ def test_build_card_ops_metrics_pass_through(tmp_path: Path):
         work_dir=ops_dir,
     )
     assert summary["decision"] in {"HOLD", "GO", "ABSTAIN"}
-    card2 = json.loads(
-        (tmp_path / "ops_demo" / "decision_card.json").read_text(encoding="utf-8")
-    )
+    card2 = json.loads((tmp_path / "ops_demo" / "decision_card.json").read_text(encoding="utf-8"))
     ids = {s.get("id") for s in card2.get("sources") or []}
     assert "ops_thermal_front" in ids or "ops" in ids

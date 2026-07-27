@@ -124,9 +124,7 @@ def test_enrich_ops_dict_cn_hybrid_with_explicit_wind():
         "speed_n_observable": 5,
         "quality_grade": "A",
     }
-    out = enrich_ops_dict(
-        ops, expansion_bearing_deg=90.0, cn_hybrid=True, wind_from_deg=270.0
-    )
+    out = enrich_ops_dict(ops, expansion_bearing_deg=90.0, cn_hybrid=True, wind_from_deg=270.0)
     assert out["cn_hybrid_ros"]["status"] == "ok"
     assert out["cn_hybrid_ros"]["ros_head_m_min"] >= out["cn_hybrid_ros"]["ros_rear_m_min"]
     assert out["cn_hybrid_ros"]["scale_factor"] > 0

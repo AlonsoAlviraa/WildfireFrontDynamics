@@ -266,9 +266,7 @@ def test_score_ops_source_requires_positive_ros():
     )
     assert zero_ros["available"] is False
 
-    neg = score_ops_source(
-        {"quality_grade": "B", "primary_ros_m_min": -1.0, "n_frames_staged": 5}
-    )
+    neg = score_ops_source({"quality_grade": "B", "primary_ros_m_min": -1.0, "n_frames_staged": 5})
     assert neg["available"] is False
 
     ok = score_ops_source(

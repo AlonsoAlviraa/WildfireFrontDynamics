@@ -741,8 +741,7 @@ def load_ops_metrics_from_work_dir(
                     return {
                         "quality_grade": st.get("quality_grade"),
                         "primary_ros_m_min": ros_b,
-                        "n_frames_staged": st.get("n_frames_staged")
-                        or st.get("n_frames_seen"),
+                        "n_frames_staged": st.get("n_frames_staged") or st.get("n_frames_seen"),
                         "area_ha_max": st.get("area_ha_max"),
                         "speed_vs_ref_ratio": st.get("speed_vs_ref_ratio"),
                     }

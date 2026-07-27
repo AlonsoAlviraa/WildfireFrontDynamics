@@ -124,9 +124,8 @@ class WildfireDataset(Dataset):
         h_span = max(heights) - min(heights)
         w_span = max(widths) - min(widths)
         if (
-            (h_span > self.shape_align_tolerance_px or w_span > self.shape_align_tolerance_px)
-            and not self.allow_unaligned_crop
-        ):
+            h_span > self.shape_align_tolerance_px or w_span > self.shape_align_tolerance_px
+        ) and not self.allow_unaligned_crop:
             raise ValueError(
                 "unaligned multi-frame shapes: "
                 f"H span={h_span}px W span={w_span}px "

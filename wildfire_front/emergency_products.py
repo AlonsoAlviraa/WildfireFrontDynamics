@@ -271,9 +271,7 @@ def enrich_ops_dict(
             try:
                 from wildfire_front.cn_wang_zhengfei import hybrid_ros_prior
 
-                hybrid = hybrid_ros_prior(
-                    float(primary), wind_from_deg=float(wind_from_deg)
-                )
+                hybrid = hybrid_ros_prior(float(primary), wind_from_deg=float(wind_from_deg))
                 # Drop full polar from ops JSON bulk; keep summary + sample
                 if hybrid.get("status") == "ok":
                     out["cn_hybrid_ros"] = {
