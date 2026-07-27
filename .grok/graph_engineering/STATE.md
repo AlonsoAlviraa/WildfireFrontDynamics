@@ -4,39 +4,28 @@
 |-------|--------|
 | **Mode** | Fully Autonomous Graph Engineering |
 | **Active graph** | `wfd-autonomous-cycle` v1.1 |
-| **Secondary** | `wfd-pilot-regression` v1 · `wfd-open-pack-audit` v1 |
-| **Cycle** | c0-bootstrap **COMPLETE** → fixes in `4f487d7` |
-| **Next cycle** | c1 integrity re-verify + pilot regression |
-| **HEAD** | `4f487d7` |
-| **Scheduler** | `019fa3f50f7c` every 2h |
-| **Last confirmed** | 5 honesty findings → fixed |
-| **Human gates** | none |
-| **Hard rails** | field_ops fusion **hard clamp**; promote needs human signoff flag |
+| **Cycles done** | c0-bootstrap, c1-reverify, pilot-regression |
+| **HEAD** | post-holdout honesty fix (see `git log -1`) |
+| **CI** | `60d4d55` green; new push pending verify |
+| **Scheduler** | `019fa3f50f7c` every **2h** (durable) |
+| **Pilotrails** | field_ops fusion hard-off · holdout never conf/HOLD · promote signoff · no lab apply-policy |
 
-## Topology v1.1
+## Results
+
+| Cycle | Confirmed | Action |
+|-------|-----------|--------|
+| c0 | 5 | field_ops clamp, README, promote signoff, audit effective, unknown fail-closed |
+| c1 | 6 | holdout conf/HOLD kill, docs U1, lab apply refuse |
+| pilot | 0 fail | 38/38 tests green |
+
+## Next autonomous step (scheduler / c2)
+
+1. Re-run integrity cycle  
+2. If 0 bugs → open-pack-audit  
+3. Else fix and push  
+
+## Topology
 
 ```
-Sense → parallel(ScanHonesty, ScanCI, ScanDualProduct)
-      → Verify(max 6)
-      → Synthesize
-      → [if confirmed] fix_locally → re-run
-      → [if empty] pilot-regression → open-pack-audit
+Sense → Scan×3 → Verify → Synthesize → Fix → Re-run → Pilot → Open-pack-audit
 ```
-
-## Decision policy
-
-| Condition | Action |
-|-----------|--------|
-| confirmed > 0 | fix + re-run integrity |
-| empty after fix | pilot-regression |
-| pilot green 2× | open-pack-audit |
-| CI red | format/lint only |
-
-## Last sense
-
-| Check | Value |
-|-------|--------|
-| u1_test_honest | true |
-| ml_product_go | false |
-| field_ops fusion catalog | false |
-| field_ops fusion CLI override | **blocked** (4f487d7) |

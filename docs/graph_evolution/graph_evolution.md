@@ -42,13 +42,6 @@ Sense → parallel(ScanHonesty, ScanCI, ScanDualProduct) → VerifyFindings → 
 
 **Scheduler:** `019fa3f50f7c` every 2h durable continuation.
 
-## Next planned
-
-- c1: re-run `wfd-autonomous-cycle` expecting 0 confirmed on prior five  
-- then `wfd-pilot-regression`
-
----
-
 ## 2026-07-27 — c0-bootstrap synthesize (v1 held)
 
 **HEAD:** `ba01ee2`  
@@ -75,3 +68,48 @@ Sense → parallel(ScanHonesty, ScanCI, ScanDualProduct) → VerifyFindings → 
 **graph_evolve (no topology fork yet):** Keep Sense→parallel scans→Verify→Synthesize; after local field_ops clamp + README U1 pitch fix, re-run same cycle before spawning pilot-regression.
 
 **Dual-product rails:** preserved in claims; fix must not invent ROS or auto-flip `ml_product_go` / field_ops catalog policy.
+
+---
+
+## 2026-07-27 — c1-reverify synthesize (v1 held)
+
+**HEAD:** `60d4d551d2fe2bb5456c7b95caee7f0d64dd5ef7`  
+**Report:** [`cycle_c1_reverify.md`](cycle_c1_reverify.md)
+
+| Metric | Value |
+|--------|--------|
+| confirmed_count | **6** |
+| rejected/unverified | **0** |
+| next_action | **fix_confirmed_locally** |
+| format | pass (138 files) |
+| u1_test_honest | true |
+| ml_product_go | false |
+| field_ops.allow_ml_live_in_fusion | false |
+| research_open.allow_ml_live_in_fusion | true (experimental) |
+| primary.model_iou | ~0.8569 |
+| ece_patch_conf | ~0.1528 |
+| prior c0 bugs re-opened | 0 |
+
+**Top confirmed ids**
+1. `HR-catalog-holdout-conf-1` (**bug**) — holdout saturates to conf 1.0 HIGH as phenomenon certainty when live absent
+2. `HR-ml-only-legacy-holdout-ok` (**bug**) — holdout alone drives `ml_ok` → ML-only HOLD under non-field_ops
+3. `HR-core-docs-catalog-pitch` (suggestion) — VISION/MEMORY/ARCHITECTURE/RULES/PRODUCTO_DUAL still lead 0.8963
+4. `HR-metrics-hub-stale-fusion` (suggestion) — METRICS_HUB stale vs U1 / research_open
+5. `HR-industrial-readiness-catalog-only` (suggestion) — snapshot catalog-only, no honesty block
+6. `HR-lab-synthetic-public-scorecard` (suggestion) — lab synthetic eligible → public scorecard + apply-policy
+
+**graph_evolve:** Keep Sense→parallel(ScanHonesty,ScanCI,ScanDualProduct)→Verify→Synthesize; add a Verify sub-check that DecisionCard.confidence_pred must not equal holdout_quality when live channel is absent, then fix confidence path before spawning pilot-regression.
+
+**Dual-product rails:** field_ops fusion OFF; ml_product_go false; no ROS/tactical upgrade; fix must not auto-promote.
+
+## 2026-07-27 — c1 fixes shipped
+
+**Commit:** `c50fbb3` holdout never drives conf or ML-only HOLD (+ docs U1 + lab apply refuse).  
+**Pilot:** already green 38/38.  
+**Next:** c2 integrity re-run via scheduler or live workflow.
+
+## Next planned
+
+1. ~~fix_confirmed_locally~~ done in `c50fbb3`
+2. Re-run `wfd-autonomous-cycle` as c2
+3. If clean → `wfd-open-pack-audit`
