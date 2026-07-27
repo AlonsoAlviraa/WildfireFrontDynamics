@@ -16,13 +16,14 @@ _UTC: 2026-07-21T10:57:40.724454+00:00_ · git `29fb877` · hash `a3e8ac658fae�
 | Métrica | Valor |
 |---------|------:|
 | product | clm_ensemble_v34 |
-| test_iou | 0.8963 |
+| u1_test_honest_mean_iou (lab) | ~0.857 |
+| catalog_holdout_iou (provenance only) | 0.8963 |
 | improvement_vs_copy_iou | 0.2545 |
 | model_iou_growth | 0.9071 |
 | temps | [0.7, 0.7, 1.3] |
 | mix | [0.28, 0.32, 0.4] |
 
-**ML-first honesty:** catalog holdout TEST IoU **0.8963** is research quality only (not live certainty, not ROS, not Tobarra/REDIAM O2). Live confidence uses ensemble disagreement + **VAL-fit** calibrator (Card may HOLD/ABSTAIN). Fusion live weight OFF until **U1 on TEST** with frozen calibrator (`u1_test_honest`); VAL-only U1 is lab/optimistic and must not promote fusion.
+**ML-first honesty:** pitch U1 TEST honest (mean IoU ~**0.86**, ECE ~**0.15**). Catalog holdout **0.8963** is provenance only (not live certainty, not ROS, not Tobarra/REDIAM O2). Live confidence uses ensemble disagreement + **VAL-fit** calibrator (Card may HOLD/ABSTAIN). `research_open.allow_ml_live_in_fusion` is **experimental** after U1 TEST honest; **`field_ops` fusion stays hard-off**; `ml_product_go` remains false until human promote.
 
 ## Ops (Tobarra representativo)
 

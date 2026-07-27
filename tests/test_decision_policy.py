@@ -39,15 +39,15 @@ def test_default_matches_legacy_require_ops_flag():
 
 
 def test_field_ops_blocks_ml_only_hold():
+    """Catalog holdout alone never drives HOLD; live is required for ml_ok."""
     demo = build_decision_card("d", ml_metrics=ML, policy_id="default")
     field = build_decision_card("d", ml_metrics=ML, policy_id="field_ops")
-    # same conf, different decision surface
     assert demo.confidence_pred == field.confidence_pred
-    assert demo.decision == Decision.HOLD
+    assert demo.confidence_pred == 0.0
+    assert demo.decision == Decision.ABSTAIN
     assert field.decision == Decision.ABSTAIN
-    assert (
-        "ml_only_blocked_by_policy" in " ".join(field.reasons) or field.decision == Decision.ABSTAIN
-    )
+    assert "ml_holdout_quality_display" not in " ".join(demo.reasons)
+    assert "ml_holdout_research_only_conf_zero" in " ".join(demo.reasons)
 
 
 def test_field_ops_go_needs_higher_ops_confidence():

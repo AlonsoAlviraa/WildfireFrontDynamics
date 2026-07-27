@@ -86,9 +86,10 @@ v21 remains research/production NDWS until a run honestly beats both gates.
 
 | Metric | Current (v34 holdout) | Floor (do not ship below without decision) |
 |--------|----------------------|--------------------------------------------|
-| Test IoU | **0.8963** | ≥ clm_v28 (0.838) preferred |
-| Δ vs copy IoU | **+0.2545** | positive vs copy required |
-| Growth IoU | **0.9071** | track; do not optimize on test |
+| U1 TEST honest mean IoU (lab pitch) | ~**0.86** | primary public claim surface |
+| Catalog holdout IoU (provenance only) | **0.8963** | not live certainty · not ROS · not ops |
+| Δ vs copy IoU (catalog) | **+0.2545** | positive vs copy required |
+| Growth IoU (catalog) | **0.9071** | track; do not optimize on test |
 
 Single specialist `clm_v28`: IoU **0.838**, Δ **+0.196**.
 

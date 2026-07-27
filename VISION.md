@@ -26,7 +26,7 @@ Wildfires move faster than bureaucracy. What pays in the field is not another fr
 
 | Layer | State |
 |-------|--------|
-| ML Spain ensemble | `clm_ensemble_v34` · holdout IoU **0.8963** · Δ vs copy **0.2545** |
+| ML Spain ensemble | `clm_ensemble_v34` · U1 TEST honest ~**0.86** IoU / ECE ~**0.15** · catalog holdout **0.8963** provenance only (not live certainty) |
 | Incident runtime | Outbox includes **fire_decision_card.json** on every update |
 | Open CEMS | **4** packs demo-ready |
 | Product gates | Metrics Hub + reliability gate + portal (`docs/PORTAL.html`) |

@@ -441,6 +441,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     policy_applied = False
+    lab_synthetic = bool(args.allow_lab_synthetic)
+    if args.apply_policy and lab_synthetic:
+        print(
+            "ERROR: --apply-policy refused under --allow-lab-synthetic "
+            "(lab offline/synthetic must not flip research_open fusion). "
+            "Use a real non-offline TEST scorecard for apply-policy.",
+            file=sys.stderr,
+        )
+        return 2
     if args.apply_policy and not bool(args.confirm_human_signoff):
         print(
             "ERROR: --apply-policy requires --confirm-human-signoff "
@@ -469,7 +478,7 @@ def main(argv: list[str] | None = None) -> int:
         scorecard_path=sc_path,
         apply_policy=bool(args.apply_policy),
         policy_applied=policy_applied,
-        allow_lab_synthetic=bool(args.allow_lab_synthetic),
+        allow_lab_synthetic=lab_synthetic,
     )
     if not eligible:
         record["checklist_status"] = "refused"
@@ -484,9 +493,21 @@ def main(argv: list[str] | None = None) -> int:
     out_rec.parent.mkdir(parents=True, exist_ok=True)
     out_rec.write_text(json.dumps(record, indent=2, allow_nan=False), encoding="utf-8")
 
-    # Write public/docs product scorecard when eligible unless suppressed.
-    # --write-docs-scorecard documents explicit intent; eligible still writes by default.
+    # Eligible writes product scorecard by default (lab synthetic may write tmp fixtures).
+    # --apply-policy is already refused under lab synthetic (above). Prefer not pointing
+    # --product-scorecard at docs/ when using --allow-lab-synthetic.
     write_docs = bool(eligible) and not bool(args.no_write_product_scorecard)
+    if write_docs and lab_synthetic:
+        sc_target = Path(args.product_scorecard)
+        # Refuse polluting repo docs claim surface from synthetic eligibility.
+        parts = {p.lower() for p in sc_target.parts}
+        if "docs" in parts and sc_target.name.upper().startswith("ML_PRODUCT"):
+            print(
+                "ERROR: lab-synthetic promote refuses writing public docs scorecard "
+                f"({sc_target}). Use a temp --product-scorecard path.",
+                file=sys.stderr,
+            )
+            return 2
     if args.write_docs_scorecard and not eligible:
         print(
             "NOTE: --write-docs-scorecard ignored (not eligible / u1_test_honest false "

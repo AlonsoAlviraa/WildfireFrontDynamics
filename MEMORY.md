@@ -8,7 +8,8 @@ Minimal working memory for the dual-product loop. Full experiment log: `docs/EXP
 |-------|-----|--------|------:|
 | ML research | `ndws_v21` | NDWS test IoU / Δ copy | 0.226 / +0.076 |
 | ML Spain single | `clm_v28` | CLM holdout IoU / Δ copy | 0.838 / +0.196 |
-| ML Spain ensemble | `clm_ensemble_v34` | holdout IoU / Δ / growth | **0.8963** / **+0.2545** / 0.9071 |
+| ML Spain ensemble | `clm_ensemble_v34` | U1 TEST honest IoU / ECE (lab) | ~**0.86** / ~**0.15** |
+| ML Spain catalog | `clm_ensemble_v34` | holdout IoU provenance only | **0.8963** / +0.2545 — not live certainty |
 | Ops | `front_dynamics_v1` | ROS from observed LWIR | geometry only (not IoU) |
 | Decision | Decision Card | GO / HOLD / ABSTAIN | abstain if sources weak |
 

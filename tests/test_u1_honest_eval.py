@@ -294,9 +294,8 @@ def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
                 str(tmp_path / "rec2.json"),
                 "--product-scorecard",
                 str(tmp_path / "prod2.json"),
-                "--apply-policy",
-                "--confirm-human-signoff",
-                "--allow-lab-synthetic",  # offline fixture — lab only
+                # Lab synthetic: scorecard/record only; apply-policy refused
+                "--allow-lab-synthetic",
             ]
         )
     finally:
@@ -304,7 +303,9 @@ def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
 
     assert rc == 0
     pol_after = json.loads(policy_path2.read_text(encoding="utf-8"))
-    assert pol_after["policies"]["research_open"]["allow_ml_live_in_fusion"] is True
+    assert pol_after["policies"]["research_open"]["allow_ml_live_in_fusion"] is False
     assert pol_after["policies"]["field_ops"]["allow_ml_live_in_fusion"] is False
     prod2 = json.loads((tmp_path / "prod2.json").read_text(encoding="utf-8"))
     assert prod2["gates"]["ml_product_go"] is False
+    # Direct helper still never enables field_ops (apply_research_open_policy above)
+    assert result["field_ops.allow_ml_live_in_fusion"] is False

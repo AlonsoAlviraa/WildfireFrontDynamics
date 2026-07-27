@@ -101,8 +101,10 @@ def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     delta = float(
         metrics.get("improvement_vs_copy_iou") or metrics.get("improvement_vs_copy") or 0.0
     )
-    # Holdout quality 0..1 (research metadata; not probability of next fire)
-    conf = _clip01(0.35 * (iou / 0.9) + 0.45 * (delta / 0.25) + 0.2)
+    # Holdout quality is research metadata only — never saturates to 1.0 certainty.
+    # Cap well below 1.0 so catalog IoU (e.g. 0.8963) cannot look like phenomenon conf.
+    raw = 0.35 * (iou / 0.9) + 0.45 * (delta / 0.25) + 0.2
+    conf = _clip01(min(0.75, raw))
     return {
         "id": "ml_clm_ensemble",
         "available": True,
@@ -110,7 +112,7 @@ def score_ml_source(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
         "weight": 0.0,
         "confidence": conf,
         "holdout_quality": conf,
-        # Research metadata only — ML-only legacy path keys off available + role.
+        # Research metadata only — never actionable for GO/HOLD.
         "actionable": False,
         "abstained": False,
         "role": "holdout_quality",
@@ -386,9 +388,6 @@ def decide(
     open_ok = any(s.get("id") == "open_cems_perimeter" and s.get("available") for s in sources)
     # Live ML: channel requested (id in sources list) vs available vs actionable (orthogonal).
     live = _find_live_source(sources)
-    holdout = _source_by_id(sources, "ml_clm_ensemble")
-    # Source present in list means channel was requested (even if schema invalid).
-    live_channel_present = live is not None
     if live is not None:
         live_available = bool(live.get("available"))
         # live_ok = actionable only (NOT weight>0). Untrusted: available but not actionable.
@@ -396,9 +395,9 @@ def decide(
     else:
         live_available = False
         live_ok = False
-    holdout_ok = bool(holdout and holdout.get("available"))
-    # If live channel was requested, never fall back to holdout for ml_ok (even bad schema).
-    ml_ok = live_ok if live_channel_present else holdout_ok
+    # Catalog holdout (ml_clm_ensemble) is research metadata only — never ml_ok.
+    # Live channel is the only ML path that can set ml_ok (actionable live).
+    ml_ok = live_ok
 
     if confidence_pred < float(pol.abstain_below):
         return Decision.ABSTAIN, reasons + [f"confidence_pred<{pol.abstain_below}"]
@@ -705,8 +704,9 @@ def build_decision_card(
                     reason = "ml_live_not_actionable_conf_zero"
                 fuse_reasons = list(fuse_reasons) + [reason]
         elif ml_holdout and ml_holdout.get("available"):
-            conf = float(ml_holdout.get("holdout_quality") or ml_holdout.get("confidence") or 0.0)
-            fuse_reasons = list(fuse_reasons) + ["ml_holdout_quality_display"]
+            # Research metadata only: never promote holdout quality into confidence_pred.
+            conf = 0.0
+            fuse_reasons = list(fuse_reasons) + ["ml_holdout_research_only_conf_zero"]
     decision, dec_reasons = decide(
         conf,
         sources,

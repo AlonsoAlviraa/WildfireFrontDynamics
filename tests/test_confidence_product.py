@@ -316,6 +316,17 @@ def test_ml_holdout_not_fused_into_live_confidence():
     src = score_ml_source({"test_iou": 0.9, "improvement_vs_copy_iou": 0.25})
     assert src["role"] == "holdout_quality"
     assert src["weight"] == 0.0
+    assert src["actionable"] is False
+    assert float(src["holdout_quality"]) <= 0.75
+    # Alone: ABSTAIN, never conf=1.0 phenomenon certainty
+    card = build_decision_card(
+        "holdout_only",
+        ml_metrics={"test_iou": 0.8963, "improvement_vs_copy_iou": 0.2545},
+    )
+    assert card.decision == Decision.ABSTAIN
+    assert card.confidence_pred == 0.0
+    assert "ml_holdout_research_only_conf_zero" in " ".join(card.reasons)
+    assert src["weight"] == 0.0
     assert src["available"] is True
     # Ops-only fusion must match ops+ml fusion (ml not fused)
     ops = {

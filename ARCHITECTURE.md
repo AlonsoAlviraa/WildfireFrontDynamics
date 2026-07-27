@@ -50,7 +50,7 @@ Catalog source of truth: `models/catalog.json` + `wildfire_front/ml/product_cata
 |---------|--------|-----|-------|
 | `ndws_v21` | NDWS test | **0.226** | Δ vs copy **+0.076**; research / NDWS-like only |
 | `clm_v28` | CLM holdout test | **0.838** | Δ vs copy **+0.196** |
-| `clm_ensemble_v34` | CLM holdout ensemble | **0.8963** | Δ **+0.2545**; mix/temps on VAL only |
+| `clm_ensemble_v34` | CLM holdout ensemble | U1 ~**0.86** · catalog **0.8963** | Catalog = provenance only; U1 TEST honest is lab pitch; mix/temps on VAL only |
 
 Weights (`*.pt`) are gitignored; install via `scripts/install_dual_weights.py` (local workspace). CI without weights cannot assert real product paths.
 
