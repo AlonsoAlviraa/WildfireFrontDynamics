@@ -23,6 +23,30 @@ Sense → parallel(ScanHonesty, ScanCI, ScanDualProduct) → VerifyFindings → 
 
 **Next if stagnant:** spawn `wfd-pilot-regression` (tests fixtures only) or `wfd-open-pack-audit`.
 
+## 2026-07-27 — cycle c0-bootstrap results → fix → v1.1
+
+**Outcome:** 5/6 adversarial confirmations. Primary bug: field_ops live fusion OR-override via CLI.
+
+**Graph decision:** keep topology; execute `fix_confirmed_locally` then re-run.
+
+**Mutations shipped in code (not graph topology):**
+- field_ops fusion hard clamp
+- promote human signoff gate
+- unknown policy fail-closed
+- README U1 pitch
+- effective fusion audit field
+
+**Graph assets added:**
+- `wfd-pilot-regression.rhai`
+- `wfd-open-pack-audit.rhai` (v2 path when integrity clean)
+
+**Scheduler:** `019fa3f50f7c` every 2h durable continuation.
+
+## Next planned
+
+- c1: re-run `wfd-autonomous-cycle` expecting 0 confirmed on prior five  
+- then `wfd-pilot-regression`
+
 ---
 
 ## 2026-07-27 — c0-bootstrap synthesize (v1 held)
