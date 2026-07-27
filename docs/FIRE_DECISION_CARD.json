@@ -9,15 +9,17 @@
       "id": "ml_clm_ensemble",
       "available": true,
       "weight": 0.0,
-      "confidence": 1.0,
-      "holdout_quality": 1.0,
+      "confidence": 0.75,
+      "holdout_quality": 0.75,
+      "actionable": false,
+      "abstained": false,
       "role": "holdout_quality",
       "source_type": "research_metadata",
       "metrics": {
         "test_iou": 0.8963,
         "improvement_vs_copy_iou": 0.2545,
         "model_iou_growth": 0.9071,
-        "holdout_quality": 1.0
+        "holdout_quality": 0.75
       }
     },
     {
@@ -39,7 +41,7 @@
       "weight": 0.35,
       "confidence": 0.5,
       "metrics": {
-        "max_area_ha": 29000.0,
+        "max_area_ha": 32000.0,
         "n_timeline_steps": 1,
         "activation": "guadalajara_la_mierla_20260717",
         "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
@@ -51,8 +53,9 @@
       "test_iou": 0.8963,
       "improvement_vs_copy_iou": 0.2545,
       "model_iou_growth": 0.9071,
-      "holdout_quality": 1.0
+      "holdout_quality": 0.75
     },
+    "ml_live": null,
     "ops": {
       "quality_grade": "A",
       "primary_ros_m_min": 5.71,
@@ -61,16 +64,19 @@
       "speed_vs_ref_ratio": 0.8157142857142857
     },
     "open_cems": {
-      "max_area_ha": 29000.0,
+      "max_area_ha": 32000.0,
       "n_timeline_steps": 1,
       "activation": "guadalajara_la_mierla_20260717",
       "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
     },
     "fused_confidence_pred": 0.7559999999999999,
-    "policy_id": "default"
+    "policy_id": "default",
+    "live_ok": false,
+    "live_available": false,
+    "allow_ml_live_in_fusion": false
   },
   "reasons": [
-    "ml_clm_ensemble:holdout_quality=1.000:not_fused",
+    "ml_clm_ensemble:holdout_quality=0.750:not_fused",
     "ops_thermal_front:conf=0.980:w=0.40",
     "open_cems_perimeter:conf=0.500:w=0.35",
     "policy:default",
@@ -84,9 +90,9 @@
     "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
   ],
   "audit": {
-    "input_hash": "45023760165727664f72b044296af00501d65451eb1839dcbb0a5f8384805d8a",
-    "output_hash": "2543d49d5593ff8f677e278360f22385717943b423834c090523e217381405a0",
-    "git_commit": "29fb877",
+    "input_hash": "c2e15e6634c17f6dcf4bd87f8b8bacb9ed23f3c7b5749f5c004de7094ac5f356",
+    "output_hash": "0cc785f605f0c9fb92587481bbad4d60d074aaf148a4f09900e65c1dfab60559",
+    "git_commit": "c58d118",
     "schema": "fire_decision_card_v1",
     "policy_id": "default",
     "policy_label": "Default (historical product thresholds)",
@@ -98,7 +104,12 @@
       "hold_open_min": 0.35,
       "hold_ml_only_min": 0.5,
       "allow_ml_only_hold": true,
-      "allow_open_only_hold": true
+      "allow_open_only_hold": true,
+      "allow_ml_live_in_fusion": false,
+      "effective_allow_ml_live_in_fusion": false,
+      "ml_live_max_weight": 0.25,
+      "ml_live_abstain_below": 0.35,
+      "ml_live_veto_on_abstain": false
     },
     "abstention_heuristic_ok": true,
     "provenance_hashes_attached": true,
@@ -116,5 +127,5 @@
       "fire_prediction_accuracy_claim": "NOT_CLAIMED"
     }
   },
-  "built_at_utc": "2026-07-21T10:57:40.724454+00:00"
+  "built_at_utc": "2026-07-27T14:55:16.684105+00:00"
 }

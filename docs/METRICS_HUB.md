@@ -1,13 +1,13 @@
 # Metrics Hub — todas las métricas
 
-_UTC: 2026-07-21T10:57:40.724454+00:00_ · git `29fb877` · hash `a3e8ac658fae…`
+_UTC: 2026-07-27T14:55:16.684105+00:00_ · git `c58d118` · hash `471e89014d52…`
 
 ## Decision Card (fusión)
 
 - **decision:** `GO`
 - **confidence_pred:** 0.7559999999999999 (HIGH)
 - **system_reliability_pass:** False
-- **reasons:** ml_clm_ensemble:holdout_quality=1.000:not_fused, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.500:w=0.35, policy:default, ops_confidence_ok
+- **reasons:** ml_clm_ensemble:holdout_quality=0.750:not_fused, ops_thermal_front:conf=0.980:w=0.40, open_cems_perimeter:conf=0.500:w=0.35, policy:default, ops_confidence_ok
 
 > Fire prediction is **not** 99.9999% accurate. Five-nines bound = no silent GO without gates under automation.
 
@@ -16,14 +16,11 @@ _UTC: 2026-07-21T10:57:40.724454+00:00_ · git `29fb877` · hash `a3e8ac658fae�
 | Métrica | Valor |
 |---------|------:|
 | product | clm_ensemble_v34 |
-| u1_test_honest_mean_iou (lab) | ~0.857 |
-| catalog_holdout_iou (provenance only) | 0.8963 |
+| test_iou | 0.8963 |
 | improvement_vs_copy_iou | 0.2545 |
 | model_iou_growth | 0.9071 |
 | temps | [0.7, 0.7, 1.3] |
 | mix | [0.28, 0.32, 0.4] |
-
-**ML-first honesty:** pitch U1 TEST honest (mean IoU ~**0.86**, ECE ~**0.15**). Catalog holdout **0.8963** is provenance only (not live certainty, not ROS, not Tobarra/REDIAM O2). Live confidence uses ensemble disagreement + **VAL-fit** calibrator (Card may HOLD/ABSTAIN). `research_open.allow_ml_live_in_fusion` is **experimental** after U1 TEST honest; **`field_ops` fusion stays hard-off**; `ml_product_go` remains false until human promote.
 
 ## Ops (Tobarra representativo)
 
@@ -45,7 +42,7 @@ n_packs = **5**
 | EMSR581 | 2209.8 | 4 | GO |
 | EMSR583 | 1790.6 | 5 | GO |
 | EMSR632 | 5319.5 | 4 | GO |
-| guadalajara_la_mierla_20260717 | 29000.0 | 1 | NOT_ACTIVATED_OR_UNKNOWN |
+| guadalajara_la_mierla_20260717 | 32000.0 | 1 | NOT_ACTIVATED_OR_UNKNOWN |
 
 ## Gates industriales
 
@@ -76,5 +73,5 @@ n_packs = **5**
 
 ## Audit
 
-- decision audit: `2543d49d5593ff8f…`
-- hub hash: `a3e8ac658fae1b2e629082e1e53a6090f0f7cc233001013a0b8db0278b293fa5`
+- decision audit: `0cc785f605f0c9fb…`
+- hub hash: `471e89014d526a7f09bc1b8d88701aebd0123114913e95e7a63e73d72d88d7bf`

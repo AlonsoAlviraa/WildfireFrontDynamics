@@ -1,7 +1,7 @@
 {
   "schema": "commander_app_data_v1",
-  "built_at_utc": "2026-07-21T10:57:41.381369+00:00",
-  "git": "29fb877",
+  "built_at_utc": "2026-07-27T14:55:17.030872+00:00",
+  "git": "c58d118",
   "title": "WFD COMMAND",
   "subtitle": "Sala de mando \u00b7 Decision Card \u00b7 Open CEMS \u00b7 Ops t\u00e9rmico",
   "decision_card": {
@@ -15,15 +15,17 @@
         "id": "ml_clm_ensemble",
         "available": true,
         "weight": 0.0,
-        "confidence": 1.0,
-        "holdout_quality": 1.0,
+        "confidence": 0.75,
+        "holdout_quality": 0.75,
+        "actionable": false,
+        "abstained": false,
         "role": "holdout_quality",
         "source_type": "research_metadata",
         "metrics": {
           "test_iou": 0.8963,
           "improvement_vs_copy_iou": 0.2545,
           "model_iou_growth": 0.9071,
-          "holdout_quality": 1.0
+          "holdout_quality": 0.75
         }
       },
       {
@@ -57,8 +59,9 @@
         "test_iou": 0.8963,
         "improvement_vs_copy_iou": 0.2545,
         "model_iou_growth": 0.9071,
-        "holdout_quality": 1.0
+        "holdout_quality": 0.75
       },
+      "ml_live": null,
       "ops": {
         "quality_grade": "A",
         "primary_ros_m_min": 5.71,
@@ -74,16 +77,21 @@
       },
       "fused_confidence_pred": 0.8586666666666667,
       "policy_id": "demo",
+      "live_ok": false,
+      "live_available": false,
+      "allow_ml_live_in_fusion": false,
       "extra": {
         "channel": "commander_app",
         "api_version": "decide_api_v1",
         "policy_id": "demo",
         "reliability_trusted_client": false,
-        "path_include_repo_root": true
+        "path_include_repo_root": true,
+        "ml_live_trusted": true,
+        "allow_ml_live_in_fusion": false
       }
     },
     "reasons": [
-      "ml_clm_ensemble:holdout_quality=1.000:not_fused",
+      "ml_clm_ensemble:holdout_quality=0.750:not_fused",
       "ops_thermal_front:conf=0.980:w=0.40",
       "open_cems_perimeter:conf=0.720:w=0.35",
       "policy:demo",
@@ -97,8 +105,8 @@
       "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
     ],
     "audit": {
-      "input_hash": "9fa435747215d783ed6add10c4e095b255754864de190116a675b2ddef9988da",
-      "output_hash": "eda21edefe39b26f71c79bdf1ce61835752d83e8e3850c95f2363ab395f211f4",
+      "input_hash": "b5c1d810fd9611fcd415effcd0b735875d688c589bc35babae3b11b253abe61b",
+      "output_hash": "2de4b79b593610aa37658000e1bb603c82d3f9397d445f711f68fcacfb534f1d",
       "git_commit": null,
       "schema": "fire_decision_card_v1",
       "policy_id": "demo",
@@ -111,7 +119,12 @@
         "hold_open_min": 0.35,
         "hold_ml_only_min": 0.5,
         "allow_ml_only_hold": true,
-        "allow_open_only_hold": true
+        "allow_open_only_hold": true,
+        "allow_ml_live_in_fusion": false,
+        "effective_allow_ml_live_in_fusion": false,
+        "ml_live_max_weight": 0.25,
+        "ml_live_abstain_below": 0.35,
+        "ml_live_veto_on_abstain": false
       },
       "abstention_heuristic_ok": true,
       "provenance_hashes_attached": true,
@@ -129,13 +142,13 @@
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-21T10:57:40.817592+00:00",
-    "latency_ms": 4.082,
+    "built_at_utc": "2026-07-27T14:55:16.770805+00:00",
+    "latency_ms": 4.232,
     "api_version": "decide_api_v1",
     "product": "fire_decision_card",
     "policy_id": "demo"
   },
-  "radio": "WFD COMMAND_DEMO: GO conf=0.86 (HIGH). NO es orden t\u00e1ctica. hash=eda21edefe\u2026 src=ml+ops+cems",
+  "radio": "WFD COMMAND_DEMO: GO conf=0.86 (HIGH). NO es orden t\u00e1ctica. hash=2de4b79b59\u2026 src=ml+ops+cems",
   "ml": {
     "product": "clm_ensemble_v34",
     "metrics": {
@@ -12178,14 +12191,14 @@
     {
       "id": "la_mierla_20260717",
       "activation": "guadalajara_la_mierla_20260717",
-      "max_area_ha": 29000,
+      "max_area_ha": 32000,
       "n_timeline_steps": 1,
       "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN",
-      "dnbr_status": null,
+      "dnbr_status": "BLOCKED",
       "dnbr_mean": null,
       "status": null,
-      "lat": 41.10677,
-      "lon": -3.05062,
+      "lat": 41.150830000000006,
+      "lon": -3.0284850000000003,
       "geojson": {
         "type": "FeatureCollection",
         "features": [
@@ -12197,20 +12210,16 @@
               "coordinates": [
                 [
                   [
-                    -3.18936,
-                    40.98775
+                    -3.14509,
+                    41.06816
                   ],
                   [
-                    -3.18043,
-                    40.98004
+                    -2.96818,
+                    41.12101
                   ],
                   [
-                    -3.04639,
-                    41.00663
-                  ],
-                  [
-                    -2.91423,
-                    41.1482
+                    -2.91255,
+                    41.1817
                   ],
                   [
                     -2.91188,
@@ -12229,16 +12238,16 @@
                     41.21073
                   ],
                   [
-                    -3.12896,
-                    41.16592
+                    -3.12757,
+                    41.1806
                   ],
                   [
-                    -3.18692,
-                    41.04756
+                    -3.14144,
+                    41.16551
                   ],
                   [
-                    -3.18936,
-                    40.98775
+                    -3.14509,
+                    41.06816
                   ]
                 ]
               ]
@@ -12252,24 +12261,24 @@
               "coordinates": [
                 [
                   [
-                    -3.20936,
-                    40.96004
+                    -3.16509,
+                    41.048159999999996
                   ],
                   [
                     -2.89188,
-                    40.96004
+                    41.048159999999996
                   ],
                   [
                     -2.89188,
                     41.2535
                   ],
                   [
-                    -3.20936,
+                    -3.16509,
                     41.2535
                   ],
                   [
-                    -3.20936,
-                    40.96004
+                    -3.16509,
+                    41.048159999999996
                   ]
                 ]
               ]
@@ -12297,7 +12306,7 @@
       "id": "research_open",
       "label": "Research / open-data lab (not field dispatch)",
       "require_ops_for_go": false,
-      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order."
+      "notes": "More permissive HOLD for open/ML demos. Still not a tactical order. | allow_ml_live_in_fusion enabled after U1 TEST honest promote (2026-07-23). | EXPERIMENTAL research_open live fusion only \u2014 not field_ops, not tactical."
     },
     {
       "id": "demo",

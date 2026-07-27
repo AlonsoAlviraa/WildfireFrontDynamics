@@ -646,13 +646,15 @@ def build_decision_card(
     elif not isinstance(policy, DecisionPolicy):
         policy = get_policy(policy_id or "default")
 
-    # Thread live policy fields; kwargs can enable fusion (OR with policy).
-    # field_ops is hard-off: never allow live ML fusion via CLI/kwargs override.
-    allow_fusion = bool(allow_ml_live_in_fusion) or bool(
-        getattr(policy, "allow_ml_live_in_fusion", False)
-    )
+    # Live fusion follows policy catalog only — kwargs/CLI cannot unlock a policy
+    # that disallows fusion (default/demo stay off; research_open catalog may allow).
+    # field_ops remains hard-off even if a future catalog flip is mistaken.
+    # Note: allow_ml_live_in_fusion kwarg is kept for API compatibility / audit hash
+    # but does not enable fusion when the policy forbids it.
+    allow_fusion = bool(getattr(policy, "allow_ml_live_in_fusion", False))
     if str(getattr(policy, "id", "") or "") == "field_ops":
         allow_fusion = False
+    _ = allow_ml_live_in_fusion  # API surface retained; no unlock when policy false
     ml_live_max_weight = float(getattr(policy, "ml_live_max_weight", 0.25))
     ml_live_abstain_below = float(getattr(policy, "ml_live_abstain_below", 0.35))
     ml_live_veto = bool(getattr(policy, "ml_live_veto_on_abstain", False))
@@ -794,6 +796,8 @@ def build_decision_card(
                 "open": open_metrics,
                 "policy_id": policy.id,
                 "allow_ml_live_in_fusion": allow_fusion,
+                # Request flag kept for forensics even when policy forbids unlock.
+                "allow_ml_live_in_fusion_request": bool(allow_ml_live_in_fusion),
                 "ml_live_trusted": bool(ml_live_trusted),
             }
         ),

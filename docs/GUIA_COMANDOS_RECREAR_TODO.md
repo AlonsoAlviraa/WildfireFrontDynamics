@@ -93,7 +93,7 @@ python C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\scripts\smoke_pr
   --max-patches 12
 ```
 
-**Qué enseñar:** IoU holdout v34 ≈ **0.8963**, Δ vs copy ≈ **0.2545** (manifest).
+**Qué enseñar:** U1 TEST honest mean IoU ~**0.86**, sel@80 ~**0.90**, ECE ~**0.15**. Catalog holdout **0.8963** (Δ vs copy ≈ **0.2545**) es **solo provenance** — no certeza en vivo ni ROS.
 
 ---
 

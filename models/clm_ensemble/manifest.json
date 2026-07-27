@@ -28,8 +28,9 @@
     "improvement_vs_copy_iou": 0.2545,
     "model_iou_growth": 0.9071
   },
-  "verdict": "GO_PROMOTE",
+  "verdict": "GO_RESEARCH_HOLDOUT",
+  "verdict_note": "Research holdout quality only — not ml_product_go, not field_ops fusion, not live certainty. Product promote is separate (U1 TEST honest + human checklist).",
   "parent": "clm_ensemble_v33 + VAL temperature calibration",
   "leakage_policy": "mix and per-member temperatures selected on holdout VAL only; multi_if never trained on Cardoso; eval only on holdout test",
-  "notes": "Soft-vote weighted growth with logit temperature scaling. Temperatures [0.7, 0.7, 1.3] sharpen v28/EMA and soften multi_if. Honest gain vs v33: IoU +0.0010, Δ +0.0010, growth +0.018."
+  "notes": "Soft-vote weighted growth with logit temperature scaling. Temperatures [0.7, 0.7, 1.3] sharpen v28/EMA and soften multi_if. Honest gain vs v33: IoU +0.0010, Δ +0.0010, growth +0.018. Catalog test_iou 0.8963 is provenance only."
 }

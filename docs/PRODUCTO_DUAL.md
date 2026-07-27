@@ -6,7 +6,7 @@
 |----------|--------|---------|----------------|
 | **NDWS global** | `ndws_v21` | Next-day patches Google NDWS | IoU **0.226**, Δ copy **+0.076** |
 | **CLM España** | `clm_v28` | Holdout incendios CLM | IoU **0.838**, Δ copy **+0.196** |
-| **CLM ensemble** | **`clm_ensemble_v34`** | Soft-vote v28+EMA+multi_if + temps VAL | IoU **0.8963**, Δ **+0.2545**, growth **0.9071** |
+| **CLM ensemble** | **`clm_ensemble_v34`** | Soft-vote v28+EMA+multi_if + temps VAL | U1 TEST honest ~**0.86** IoU / ECE ~**0.15** (lab pitch); catalog holdout **0.8963** provenance only — not live certainty · not ROS |
 | **Ops frente** | (no ML) | Secuencias LWIR reales | ROS multi-estimador (`front_dynamics_v1`) |
 | **Incident live** | `incident_*` | Inbox LWIR → outbox | `incident_runtime_v1` |
 
