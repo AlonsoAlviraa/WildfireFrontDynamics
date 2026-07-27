@@ -72,6 +72,9 @@ def test_scorecard_exists_if_built():
     assert data["status"] == "GO_OPEN_DATA_PACK"
     assert data["lwir_heligraphics"] is False
     assert data["max_area_ha"] > 100
+    # Honesty: data-pack GO is not tactical GO
+    assert data.get("decision_open") in ("HOLD", "ABSTAIN")
+    assert data.get("not_tactical_dispatch") is True or data.get("not_ops_ros") is True
 
 
 def test_ros_proxy_rows_flagged_not_primary():

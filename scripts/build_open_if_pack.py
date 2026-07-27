@@ -457,7 +457,7 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
     brief = _render_brief(report)
     (pack_dir / "operator_brief_open_if.md").write_text(brief, encoding="utf-8")
 
-    # scorecard
+    # scorecard — data-pack GO is not tactical GO; decision_open is monitoring-only.
     score = {
         "track": "Pista_B",
         "activation": activation,
@@ -468,6 +468,14 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
         "O2_national_official": report["gates"]["O2_official_national_perimeter"],
         "lwir_heligraphics": False,
         "status": "GO_OPEN_DATA_PACK",
+        "decision_open": "HOLD",
+        "decision_open_note": (
+            "Open CEMS pack is monitoring/research only — not tactical dispatch, "
+            "not ops ROS, not field_ops GO. status=GO_OPEN_DATA_PACK means data pack ready."
+        ),
+        "not_tactical_dispatch": True,
+        "not_ops_ros": True,
+        "ros_is_proxy_only": True,
         "pack_dir": str(pack_dir.relative_to(ROOT)),
     }
     (pack_dir / "scorecard_pista_b.json").write_text(json.dumps(score, indent=2), encoding="utf-8")
