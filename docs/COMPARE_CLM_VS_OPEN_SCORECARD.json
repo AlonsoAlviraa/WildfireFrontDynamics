@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-07-17T18:11:29.182241+00:00",
+  "updated_at_utc": "2026-07-21T10:57:40.202819+00:00",
   "definition": "docs/PLAN_COMERCIAL_SUPERA_CLM.md",
   "clm_product": {
     "id": "clm_ensemble_v34",
@@ -249,6 +249,19 @@
           "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
         }
       ]
+    },
+    {
+      "id": "la_mierla_20260717",
+      "activation": "guadalajara_la_mierla_20260717",
+      "max_area_ha": 29000,
+      "n_timeline_steps": 1,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "NOT_ACTIVATED_OR_UNKNOWN",
+      "map": "outputs\\open_if\\la_mierla_20260717\\map.html",
+      "brief": "outputs\\open_if\\la_mierla_20260717\\operator_brief_open_if.md",
+      "activation_url": null,
+      "ros_proxy_rows": []
     }
   ],
   "scores_clm_only": {
@@ -282,7 +295,7 @@
   "claims_allowed": [
     "Dual product: thermal front when drone data exists + open CEMS perimeter intelligence",
     "Public multi-fire packs without NDA",
-    "Open packs max area ~5320 ha"
+    "Open packs max area ~29000 ha"
   ],
   "claims_forbidden": [
     "Open CEMS IoU better than CLM ensemble on Cardoso holdout",

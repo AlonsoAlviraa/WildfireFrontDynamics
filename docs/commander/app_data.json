@@ -1,25 +1,29 @@
 {
   "schema": "commander_app_data_v1",
-  "built_at_utc": "2026-07-17T19:36:09.701036+00:00",
-  "git": "d57ae16",
+  "built_at_utc": "2026-07-21T10:57:41.381369+00:00",
+  "git": "29fb877",
   "title": "WFD COMMAND",
   "subtitle": "Sala de mando \u00b7 Decision Card \u00b7 Open CEMS \u00b7 Ops t\u00e9rmico",
   "decision_card": {
     "event_id": "COMMAND_DEMO",
     "decision": "GO",
-    "confidence_pred": 0.894,
+    "confidence_pred": 0.8586666666666667,
     "confidence_pred_label": "HIGH",
-    "system_reliability_pass": true,
+    "system_reliability_pass": false,
     "sources": [
       {
         "id": "ml_clm_ensemble",
         "available": true,
-        "weight": 0.25,
+        "weight": 0.0,
         "confidence": 1.0,
+        "holdout_quality": 1.0,
+        "role": "holdout_quality",
+        "source_type": "research_metadata",
         "metrics": {
           "test_iou": 0.8963,
           "improvement_vs_copy_iou": 0.2545,
-          "model_iou_growth": 0.9071
+          "model_iou_growth": 0.9071,
+          "holdout_quality": 1.0
         }
       },
       {
@@ -52,7 +56,8 @@
       "ml": {
         "test_iou": 0.8963,
         "improvement_vs_copy_iou": 0.2545,
-        "model_iou_growth": 0.9071
+        "model_iou_growth": 0.9071,
+        "holdout_quality": 1.0
       },
       "ops": {
         "quality_grade": "A",
@@ -67,16 +72,18 @@
         "activation": "EMSR578",
         "O2_cems_delineation": "GO"
       },
-      "fused_confidence_pred": 0.894,
+      "fused_confidence_pred": 0.8586666666666667,
       "policy_id": "demo",
       "extra": {
         "channel": "commander_app",
         "api_version": "decide_api_v1",
-        "policy_id": "demo"
+        "policy_id": "demo",
+        "reliability_trusted_client": false,
+        "path_include_repo_root": true
       }
     },
     "reasons": [
-      "ml_clm_ensemble:conf=1.000:w=0.25",
+      "ml_clm_ensemble:holdout_quality=1.000:not_fused",
       "ops_thermal_front:conf=0.980:w=0.40",
       "open_cems_perimeter:conf=0.720:w=0.35",
       "policy:demo",
@@ -86,11 +93,12 @@
       "Not a tactical dispatch order.",
       "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
       "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
-      "ABSTAIN means the product refuses to recommend action."
+      "ABSTAIN means the product refuses to recommend action.",
+      "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
     ],
     "audit": {
       "input_hash": "9fa435747215d783ed6add10c4e095b255754864de190116a675b2ddef9988da",
-      "output_hash": "a90d057ec839d97a18abe06e656e26afc4f0245138e84b8912eac9783d266a77",
+      "output_hash": "eda21edefe39b26f71c79bdf1ce61835752d83e8e3850c95f2363ab395f211f4",
       "git_commit": null,
       "schema": "fire_decision_card_v1",
       "policy_id": "demo",
@@ -105,26 +113,29 @@
         "allow_ml_only_hold": true,
         "allow_open_only_hold": true
       },
+      "abstention_heuristic_ok": true,
+      "provenance_hashes_attached": true,
       "system_reliability": {
-        "system_reliability_pass": true,
+        "system_reliability_pass": false,
+        "status": "unknown",
         "checks": {
-          "R1_determinism": true,
-          "R2_gates": true,
-          "R3_abstention_enforced": true,
-          "R4_provenance": true
+          "R1_determinism": null,
+          "R2_gates": null,
+          "R3_abstention_enforced": null,
+          "R4_provenance": null
         },
-        "residual_silent_go_risk_bound": 1e-06,
-        "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+        "residual_silent_go_risk_bound": 1.0,
+        "five_nines_claim": "UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.",
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-17T19:36:09.448578+00:00",
-    "latency_ms": 2.781,
+    "built_at_utc": "2026-07-21T10:57:40.817592+00:00",
+    "latency_ms": 4.082,
     "api_version": "decide_api_v1",
     "product": "fire_decision_card",
     "policy_id": "demo"
   },
-  "radio": "WFD COMMAND_DEMO: GO conf=0.89 (HIGH). NO es orden t\u00e1ctica. hash=a90d057ec8\u2026 src=ml+ops+cems",
+  "radio": "WFD COMMAND_DEMO: GO conf=0.86 (HIGH). NO es orden t\u00e1ctica. hash=eda21edefe\u2026 src=ml+ops+cems",
   "ml": {
     "product": "clm_ensemble_v34",
     "metrics": {
@@ -12163,6 +12174,110 @@
         ]
       },
       "map_rel": "../../outputs/open_if/emsr632/map.html"
+    },
+    {
+      "id": "la_mierla_20260717",
+      "activation": "guadalajara_la_mierla_20260717",
+      "max_area_ha": 29000,
+      "n_timeline_steps": 1,
+      "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": 41.10677,
+      "lon": -3.05062,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -3.18936,
+                    40.98775
+                  ],
+                  [
+                    -3.18043,
+                    40.98004
+                  ],
+                  [
+                    -3.04639,
+                    41.00663
+                  ],
+                  [
+                    -2.91423,
+                    41.1482
+                  ],
+                  [
+                    -2.91188,
+                    41.1864
+                  ],
+                  [
+                    -2.97975,
+                    41.2335
+                  ],
+                  [
+                    -3.01834,
+                    41.22909
+                  ],
+                  [
+                    -3.08366,
+                    41.21073
+                  ],
+                  [
+                    -3.12896,
+                    41.16592
+                  ],
+                  [
+                    -3.18692,
+                    41.04756
+                  ],
+                  [
+                    -3.18936,
+                    40.98775
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -3.20936,
+                    40.96004
+                  ],
+                  [
+                    -2.89188,
+                    40.96004
+                  ],
+                  [
+                    -2.89188,
+                    41.2535
+                  ],
+                  [
+                    -3.20936,
+                    41.2535
+                  ],
+                  [
+                    -3.20936,
+                    40.96004
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "map_rel": "../../outputs/open_if/la_mierla_20260717/map.html"
     }
   ],
   "policies": [
@@ -12193,7 +12308,7 @@
   ],
   "reliability_ok": true,
   "api_p95_ms": 25.687,
-  "plan_items_done": 12,
+  "plan_items_done": 13,
   "disclaimers": [
     "Not a tactical dispatch order.",
     "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",

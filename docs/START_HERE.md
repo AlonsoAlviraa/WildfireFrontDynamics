@@ -52,6 +52,7 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 | Doc | Para qué |
 |------|----------|
+| **`docs/CURSO_WFD_PARA_DESCONOCIDOS.md`** | **Curso completo** (qué es cada cosa, cómo usarlo) |
 | `docs/PORTAL.html` | **Ver todo** |
 | `docs/ML_PRODUCT_SCORECARD.json` | **Lab claim surface** (ML product; not tactical) |
 | `docs/START_HERE.md` | Este resumen |

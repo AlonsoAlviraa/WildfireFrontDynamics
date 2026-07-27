@@ -85,7 +85,7 @@ Actualizar `docs/EXPERIMENT_TRACKER.md` en cada cierre de kernel.
 
 | Día | Pista | Trabajo | Salida |
 |-----|-------|---------|--------|
-| 1 | M | Evaluar **v27 T=2** (COMPLETE → métricas vs G1/v21) | `docs/V27_TEMPORAL_VERDICT.json` GO/NO_PROMOTE |
+| 1 | M | Evaluar **v27 T=2** (COMPLETE → métricas vs G1/v21) | `docs/archive/V27_TEMPORAL_VERDICT.json` GO/NO_PROMOTE |
 | 1–2 | O | Enviar correo + informe CMA si no enviado | hilo con Pablo |
 | 2–3 | M | Si v27 señal: lanzar **v27b T=3**; si no: **cerrar temporal rail** para G1 | kernel o kill doc |
 | 3–4 | O | Inventario 8 IF: Brazatortas, Polán, ACOM2 — packs faltantes | packs o “skip justificado” |

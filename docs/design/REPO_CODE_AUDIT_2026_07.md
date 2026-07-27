@@ -218,12 +218,12 @@ Frames de dron con footprints distintos → secuencias espacialmente incoherente
 
 #### H6 — Scripts de “análisis” con fallback sintético silencioso
 
-| Script | Comportamiento |
-|--------|----------------|
-| `scripts/reeval_cross_protocol.py` | Sin data → NPZ aleatorios; métricas plausibles en ruido |
-| `scripts/analyze_leakage_and_shap.py` | Sin data → fires sintéticos sin seed; “SHAP/leakage” fake |
+| Script | Comportamiento (estado 2026-07-21) |
+|--------|-------------------------------------|
+| `scripts/archive/reeval_cross_protocol.py` | **Archived.** Hard-fails without real data unless `--smoke`; smoke tags `"synthetic": true` and refuses to write under `docs/` / `models/` / `data/` |
+| `scripts/archive/analyze_leakage_and_shap.py` | **Archived.** Same contract: `--smoke` only for synthetic; no silent product scorecard writes |
 
-**Fix:** fallar hard en modo real; smoke debe marcar `"synthetic": true` y no escribir a scorecards de producción.
+**Fix (done for archived tools):** fallar hard en modo real; smoke marca `"synthetic": true` y no escribe a scorecards de producción.
 
 ---
 

@@ -67,61 +67,67 @@ set PYTHONPATH=. && python scripts\audit_dataset_candidate.py ^
     --masks-dir artifacts\<fire_name>_lwir_masks
 ```
 
-### 3.3. Fine-tuning (smoke test primero, luego run completo)
+### 3.3. Fine-tuning (legacy A3C — archived)
 
-**Smoke test rápido (CPU, ~15s):**
+> **Product path is U-Net / CLM**, not A3C-LSTM. The old smoke finetune lives under
+> `scripts/archive/smoke_test_finetune.py` for forensic replay only.
 
 ```bash
-set PYTHONPATH=. && python scripts\smoke_test_finetune.py ^
+# Forensic only (A3C-LSTM, not product weights)
+set PYTHONPATH=. && python scripts\archive\smoke_test_finetune.py ^
     --images-dir artifacts\<fire_name>_reprojected_lwir ^
     --masks-dir artifacts\<fire_name>_lwir_masks ^
     --epochs 1 ^
     --max-patches 30
 ```
 
-**Run completo (GPU o CPU paciente):**
+**Product ML validation (preferred):**
 
 ```bash
-set PYTHONPATH=. && python scripts\smoke_test_finetune.py ^
-    --images-dir artifacts\<fire_name>_reprojected_lwir ^
-    --masks-dir artifacts\<fire_name>_lwir_masks ^
-    --epochs 10 ^
-    --max-patches 0 ^
-    --output models\<fire_name>_finetuned.pt
+python scripts\predict_spread.py --list-products
+python scripts\predict_spread.py --product clm_ensemble_v34 --help
 ```
 
-> `--max-patches 0` desactiva el límite (usa todos los patches con fuego).
+### 3.4. Validación de producto (U-Net / CLM)
 
-### 3.4. Validación cualitativa
+```bash
+# Listar productos ML y smoke holdout
+python scripts\predict_spread.py --list-products
+set PYTHONPATH=. && python scripts\smoke_production_products.py --products clm_v28,clm_ensemble_v34 --max-patches 12
+
+# Ops / incidente sintético
+set PYTHONPATH=. && python scripts\smoke_incident_runtime.py
+```
+
+Legacy A3C qualitative compare (forensic only):
 
 ```bash
 set PYTHONPATH=. && python scripts\archive\compare_base_vs_finetuned.py
 ```
 
-> Legacy A3C compare (archived). Prefer production U-Net / CLM eval via
-> `scripts\predict_spread.py` and CLM scorecards when validating product weights.
-
-Comparar `BASE acc` vs `FINE-TUNED acc`. El fine-tuned debe ser >= base y
-`target_spread > 0` confirma que hay transiciones reales.
-
 ## 4. Incorporar múltiples incendios
 
-Para combinar varios incendios en un único dataset:
+**Ops / packs (producto):**
 
-1. Concatenar los directorios reproyectados en uno solo (o usar symlinks).
-2. Re-ejecutar la materialización de máscaras sobre el directorio combinado.
-3. Fine-tuning sobre el directorio combinado.
+1. Procesar cada incendio con el pipeline de ingest (`scripts/batch_process_fires.py` o per-fire).
+2. Materializar máscaras LWIR y auditar (`materialize_lwir_masks.py` + `audit_dataset_candidate.py`).
+3. Para open CEMS multi-día: `scripts/build_open_if_pack.py` / La Mierla week scripts.
 
-> **Nota**: el `WildfireDataset` asume que todos los frames de un directorio
-> pertenecen a la misma secuencia temporal. Para múltiples incendios,
-> mantener directorios separados y crear un `ConcatDataset` de PyTorch.
+**ML holdout / patches (CLM España):**
+
+1. Mantener directorios por incendio; no mezclar secuencias en un solo folder.
+2. Generar patches con el protocolo holdout documentado (`build_clm_holdout_splits.py`, `preprocess_clm_to_ndws_npz.py`).
+3. Evaluar con `smoke_production_products.py` o scorecards CLM — **no** A3C fine-tune.
+
+> **Nota histórica (A3C):** `WildfireDataset` legacy asumía una secuencia por
+> directorio; el path de producto es Residual U-Net / ensemble CLM v34.
 
 ## 5. Checklist de calidad
 
 - [ ] Todas las imágenes tienen CRS proyectado (no 4326).
 - [ ] Las máscaras contienen píxeles > 0 (ver audit script).
-- [ ] `target_spread > 0` en la comparación (hay transiciones reales).
-- [ ] `FINE-TUNED acc >= BASE acc`.
+- [ ] Producto ML: `clm_ensemble_v34` / `clm_v28` listados y smoke holdout OK.
+- [ ] Ops: incident doctor / smoke-incident sin errores en fixture.
 - [ ] `pred_spread > 0` (el modelo no colapsa a predecir "no propagación").
 - [ ] Los pesos fine-tuned se guardan en `models/`.
 

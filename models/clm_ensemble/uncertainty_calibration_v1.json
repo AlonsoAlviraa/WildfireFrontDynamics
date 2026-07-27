@@ -1,0 +1,115 @@
+{
+  "schema": "ml_uncertainty_calibration_v1",
+  "method": "logistic",
+  "calibrator_id": "uncertainty_calibration_v1",
+  "weights": [
+    -0.34205135735156494,
+    -0.1303913567966543,
+    0.15725253879323609,
+    1.1064826473077154
+  ],
+  "feature_names": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "features": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "tau_iou": 0.5,
+  "fit_split": "val",
+  "head": "patch_reliability",
+  "label": {
+    "type": "patch_iou_ge_tau",
+    "tau": 0.5,
+    "mask_threshold": 0.5
+  },
+  "params": {
+    "coef": [
+      -0.34205135735156494,
+      -0.1303913567966543,
+      0.15725253879323609
+    ],
+    "intercept": 1.1064826473077154,
+    "platt_a": 1.33145545162161,
+    "platt_b": -0.14128450303395038
+  },
+  "temperature": 1.0,
+  "platt_a": 1.33145545162161,
+  "platt_b": -0.14128450303395038,
+  "abstain_threshold": 0.35,
+  "protocol": "clm_holdout_test_seed42_v1",
+  "product_id": "clm_ensemble_v34",
+  "metrics_on_val": {
+    "ece_patch_conf": 0.09874366976133947,
+    "val_full_mixture_ece": 0.09874366976133947,
+    "val_full_mixture_ece_note": "Diagnostic only when second_stage!=none: includes outer used for Platt/temp. Use nested_val_ece_mean (logistic outer) and TEST ECE for honesty.",
+    "val_inner_ece": 8.212207092128665e-08,
+    "val_outer_ece": 0.08632284385558309,
+    "val_outer_ece_note": "val_outer_ece scores second_stage on the outer used to fit it (optimistic for post-hoc; not nested_val_ece_mean). Prefer TEST ECE.",
+    "selective_iou_at_80pct_coverage": 0.7972855116675504,
+    "full_coverage_mean_iou": 0.7382807266326851,
+    "u1a_selective_ge_full_minus_eps": true,
+    "beats_random_selective": true,
+    "delta_vs_random": 0.0584326913897073,
+    "n_patches": 390,
+    "positive_rate": 0.7589743589743589,
+    "fit_data_dir": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\artifacts\\clm_ndws_patches\\holdout_v1\\val",
+    "fit_split": "val",
+    "l2": 0.05,
+    "n_iter": 800,
+    "class_weight": false,
+    "second_stage": "platt",
+    "second_stage_detail": "platt a=1.3315 b=-0.1413 on post_nested_val_outer n=98",
+    "nested_val_ece_mean": 0.05810209704264652,
+    "nested_val_ece_std": 0.035882015652798485,
+    "nested_logistic_ece_mean": 0.05810209704264652,
+    "nested_cv": {
+      "k": 5,
+      "mean_ece": 0.05810209704264652,
+      "nested_val_ece_mean": 0.05810209704264652,
+      "nested_val_ece_std": 0.035882015652798485,
+      "nested_logistic_ece_mean": 0.05810209704264652,
+      "mean_u1a": 1.0,
+      "mean_u1b": 1.0,
+      "recommended_l2": 0.05,
+      "second_stage": "platt",
+      "second_stage_in_nested_scoring": false,
+      "seed": 42,
+      "n_patches": 390,
+      "mode": "kfold",
+      "honesty": "nested_val_ece_mean is logistic-only ECE on outer folds (outer never used for that fold's logistic fit; second_stage not fit on outer). Platt/temperature is fit only post-nested on a VAL outer holdout for the final calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+    },
+    "test_ece_note": "TEST ECE is not computed here (never fit/report-mix on TEST in fit script). Run: python scripts/eval_ml_uncertainty_u1.py --split test --calibrator models/clm_ensemble/uncertainty_calibration_v1.json"
+  },
+  "n_patches_fit": 390,
+  "predictor_type": "cached_features",
+  "nested_cv": {
+    "k": 5,
+    "mean_ece": 0.05810209704264652,
+    "nested_val_ece_mean": 0.05810209704264652,
+    "nested_val_ece_std": 0.035882015652798485,
+    "nested_logistic_ece_mean": 0.05810209704264652,
+    "mean_u1a": 1.0,
+    "mean_u1b": 1.0,
+    "recommended_l2": 0.05,
+    "second_stage": "platt",
+    "second_stage_in_nested_scoring": false,
+    "seed": 42,
+    "n_patches": 390,
+    "mode": "kfold",
+    "honesty": "nested_val_ece_mean is logistic-only ECE on outer folds (outer never used for that fold's logistic fit; second_stage not fit on outer). Platt/temperature is fit only post-nested on a VAL outer holdout for the final calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+  },
+  "fit_hyperparams": {
+    "l2": 0.05,
+    "n_iter": 800,
+    "class_weight": false,
+    "second_stage": "platt",
+    "second_stage_detail": "platt a=1.3315 b=-0.1413 on post_nested_val_outer n=98",
+    "nested_cv_k": 5,
+    "val_inner_frac": 0.75,
+    "seed": 42
+  }
+}

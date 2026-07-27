@@ -31,6 +31,27 @@ https://firms.modaps.eosdis.nasa.gov/data/country/viirs-snpp/2024/viirs-snpp_202
 | **EGIF stats MITECO** | Estadística general | https://www.miteco.gob.es/es/biodiversidad/temas/incendios-forestales/estadisticas-datos.html |
 | **Heligrafics / CMA** | LWIR + KMZ (ya en Dropbox del proyecto) | Contacto Pablo |
 
+### 2a. Andalucía — REDIAM (GO 2026-07-22)
+
+> Respuesta oficial a outreach: `docs/open_if_intake/REDIAM_ANDALUCIA_PERIMETROS_20260722.md`  
+> **Uso libre y gratuito** con mención a autores/REDIAM (WFS AccessConstraints).  
+> **No** desbloquea O2 de Tobarra/Cardoso (son CLM); sí corpus multi-CCAA de perímetros oficiales >10 ha.
+
+| Recurso | Qué da | Acceso | Uso en WFD |
+|---------|--------|--------|------------|
+| **Perímetros IIFF Andalucía 2008–2025** | Polígonos anuales >10 ha (INFOCA/REDIAM); attrs: municipio, provincia, código, fecha, sup arbolada/matorral/pastizal, XY inicio | **WFS/WMS:** `https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_perimetros_incendios_forestales?` · capas `ms:perim_incendios_YYYY` · GeoJSON CRS **EPSG:3042** · [Descargas](https://portalrediam.cica.es/descargas/index.php/s/mxHMWXyHfrCxyNK?dir=/06_RIESGOS_NATURALES_TECNOLOG/03_ACCIDENTES_DESASTRES/01_INCENDIOS/00_INCENDIOS/Historico_Incendios_COR) · [Ficha WMS/WFS](https://www.juntadeandalucia.es/medioambiente/portal/landing-page-servicio-ogc/-/asset_publisher/1qlWV3LW9vV6/content/rediam.-wms-per-c3-admetros-de-incendios-forestales-en-andaluc-c3-ada.-2008-2016/20151) | Pack open_if Andalucía; Hausdorff metodológico; BA oficial-lite multi-año |
+| **Áreas recorridas por el fuego 1975–actualidad** | BA por teledetección (Landsat→S2/Pléiades); capas anuales + histórico | **WMS:** `https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_historico_areas_recorridas_fuego?` · [Portal ARF](https://www.juntadeandalucia.es/medioambiente/portal/acceso-rediam/observacion-caracterizacion-territorio/observacion/accidentes-desastres-naturales/areas-recorridas-fuego) · [Descargas](https://portalrediam.cica.es/descargas/index.php/s/mxHMWXyHfrCxyNK?dir=/06_RIESGOS_NATURALES_TECNOLOG%2F03_ACCIDENTES_DESASTRES%2F01_INCENDIOS%2F00_INCENDIOS%2FAreasRecorrFuego) | Recurrencia / severidad contextual; no sustituye perímetro táctico |
+| **Agencia de Emergencias de Andalucía** | Gestión operativa IIFF (INFOCA) | Canal vía `gerencia.asema@juntadeandalucia.es` / DG Jorge Luque (sin email personal público) | Anclas Vp/ha, posible LWIR/ops — **follow-up humano** |
+
+**Smoke WFS (PowerShell / curl):**
+
+```bash
+curl.exe -sL --get "https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_perimetros_incendios_forestales" ^
+  --data-urlencode "SERVICE=WFS" --data-urlencode "VERSION=2.0.0" ^
+  --data-urlencode "REQUEST=GetFeature" --data-urlencode "TYPENAMES=ms:perim_incendios_2024" ^
+  --data-urlencode "COUNT=3" --data-urlencode "OUTPUTFORMAT=geojson" -o perim_2024_sample.geojson
+```
+
 ---
 
 ## 2b. FIRE-RES (H2020, finalizado) — deliverables públicos EWE

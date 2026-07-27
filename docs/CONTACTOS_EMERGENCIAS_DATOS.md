@@ -78,8 +78,9 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 |-------------|------------------|------|
 | **Castilla-La Mancha — INFOCAM / GEACAM** | Ver Prioridad 1 | Principal para vuestros IF |
 | **Castilla y León — INFOCAL / CDF / datos** | Ver bloque **CyL** abajo | Datos abiertos + CDF León |
-| **Andalucía — INFOCA / datos REDIAM** | `rediam.atiende.csmaea@juntadeandalucia.es` · `rediam.atiende.csma@juntadeandalucia.es` · cartografía medios: `cor.top.cagpds@juntadeandalucia.es` · ASEMA: `gerencia.asema@juntadeandalucia.es` | Datos espaciales y metadatos; no es el 112 |
-| **Galicia — PLADIGA / Medio Rural** | `forestal.mediorural@xunta.gal` · `monte.mediorural@xunta.gal` · `secretaria.cmr@xunta.gal` · `coordinacion-medios.medio-rural@xunta.gal` | Formación/medios; aviso incendios 085 (no email) |
+| **Andalucía — INFOCA / datos REDIAM** | **`rediam.atiende.csma@juntadeandalucia.es`** (oficial; `…csmaea@` renombrado) · cartografía: `cor.top.cagpds@juntadeandalucia.es` · ASEMA Gerencia: `gerencia.asema@juntadeandalucia.es` (Alejandro García Hernández) · DG Gestión IIFF: Jorge Luque Illescas (sin email personal público; vía gerencia) · **Agencia de Emergencias de Andalucía** (REDIAM 2026-07: canal ops IIFF) | **GO datos espaciales** 2026-07: perímetros 2008–2025 + ARF 1975–hoy — ver `docs/open_if_intake/REDIAM_ANDALUCIA_PERIMETROS_20260722.md` · WFS `mapwms/REDIAM_perimetros_incendios_forestales` · no es el 112 |
+| **Galicia — PLADIGA / Medio Rural** | **`defensadomonte.mediorural@xunta.gal`** (DX Defensa do Monte — **Manuel Francisco Gutiérrez**, jefe incendios) · `forestal.mediorural@xunta.gal` (DX Planificación Forestal) · `secretaria.cmr@xunta.gal` · `sxt.medio-rural@xunta.gal` · **NO usar** `monte.mediorural@` (550 User unknown) | Directorio: https://www.xunta.gal/es/medio-rural/directorio · aviso 085 |
+| **Extremadura — INFOEX / DG PEIFF** | `dgpeiiff.prs@juntaex.es` (DIR3; **José Antonio Bayón**, DG) · `dgma.marpat@juntaex.es` · portal: https://www.infoex.info/ · Tel. DG 924 008 745 · X: @PLANINFOEX | Preferir `dgpeiiff`; no es el 112 |
 | **Catalunya — Bombers / Interior** | Formulario: https://interior.gencat.cat/ · CTFC más útil para ciencia | Operativo vía web; datos investigación vía CTFC |
 | **C. Valenciana — Bombers forestals / GVA** | Portales GVA / SGISE (form web; no listar buzones no verificados) | Investigación causas: GOIIF vía Conselleria Medio Ambiente |
 | **Resto CCAA** | Buscar en sede electrónica de cada consejería “incendios forestales” + “contacto” | INFOAR (Aragón), INFOCAEX, etc. — **email solo si aparece en sede** |
@@ -152,7 +153,8 @@ alonso.alvbal@gmail.com
 | **CTFC (Solsona) genérico** | `secretaria@ctfc.cat` · Tel. +34 973 481 752 · form: https://www.ctfc.cat | Canal institucional si no contesta el investigador |
 | **FIRE-RES (buzón proyecto)** | `fire-res@ctfc.cat` · https://fire-res.eu/contact-us/ | CC opcional junto a Pau Brunet |
 | **Pau Costa Foundation** | `info@paucostafoundation.org` · https://www.paucostafoundation.org | Red profesional, formación, Firelogue legacy |
-| **USC** (grupos I+D) | `imaisd@usc.gal` (gestión grupos; pedir IP incendios/restauración) | Galicia — ecología/restauración post-fuego |
+| **USC** (grupos I+D) | `imaisd@usc.gal` (gestión grupos; pedir IP incendios/restauración) · máster montes: `carlos.amiama@usc.gal` | Galicia — ecología/restauración post-fuego; especialidad incendios |
+| **UEx / Mosaico** (prevención territorial) | F. Pulido y red Mosaico (email personal no listado en web pública estable) · portal: https://cortafuegosproductivos.unex.es/ | Extremadura — cortafuegos productivos / prevención; contactar vía web proyecto o DG INFOEX |
 | **UPV Máster incendios** | https://www.upv.es/estudios/master/muifcgi/ (contacto vía web máster) | Gestión integral emergencias |
 | **UPM / ETSIM / otras ETS forestales** | Directorio escuela en web (no inventar) | Modelos comportamiento |
 | **CILIFO** (legado POCTEP ES–PT) | https://cilifo.eu / partners UCO–Junta | Red ibérica; contactar vía UCO `jrmolina@` o webs partner |

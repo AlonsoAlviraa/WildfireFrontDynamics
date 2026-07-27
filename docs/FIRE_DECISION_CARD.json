@@ -1,19 +1,23 @@
 {
   "event_id": "hub_aggregate",
   "decision": "GO",
-  "confidence_pred": 0.894,
+  "confidence_pred": 0.7559999999999999,
   "confidence_pred_label": "HIGH",
-  "system_reliability_pass": true,
+  "system_reliability_pass": false,
   "sources": [
     {
       "id": "ml_clm_ensemble",
       "available": true,
-      "weight": 0.25,
+      "weight": 0.0,
       "confidence": 1.0,
+      "holdout_quality": 1.0,
+      "role": "holdout_quality",
+      "source_type": "research_metadata",
       "metrics": {
         "test_iou": 0.8963,
         "improvement_vs_copy_iou": 0.2545,
-        "model_iou_growth": 0.9071
+        "model_iou_growth": 0.9071,
+        "holdout_quality": 1.0
       }
     },
     {
@@ -33,12 +37,12 @@
       "id": "open_cems_perimeter",
       "available": true,
       "weight": 0.35,
-      "confidence": 0.72,
+      "confidence": 0.5,
       "metrics": {
-        "max_area_ha": 5319.506429634212,
-        "n_timeline_steps": 4,
-        "activation": "EMSR632",
-        "O2_cems_delineation": "GO"
+        "max_area_ha": 29000.0,
+        "n_timeline_steps": 1,
+        "activation": "guadalajara_la_mierla_20260717",
+        "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
       }
     }
   ],
@@ -46,7 +50,8 @@
     "ml": {
       "test_iou": 0.8963,
       "improvement_vs_copy_iou": 0.2545,
-      "model_iou_growth": 0.9071
+      "model_iou_growth": 0.9071,
+      "holdout_quality": 1.0
     },
     "ops": {
       "quality_grade": "A",
@@ -56,18 +61,18 @@
       "speed_vs_ref_ratio": 0.8157142857142857
     },
     "open_cems": {
-      "max_area_ha": 5319.506429634212,
-      "n_timeline_steps": 4,
-      "activation": "EMSR632",
-      "O2_cems_delineation": "GO"
+      "max_area_ha": 29000.0,
+      "n_timeline_steps": 1,
+      "activation": "guadalajara_la_mierla_20260717",
+      "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
     },
-    "fused_confidence_pred": 0.894,
+    "fused_confidence_pred": 0.7559999999999999,
     "policy_id": "default"
   },
   "reasons": [
-    "ml_clm_ensemble:conf=1.000:w=0.25",
+    "ml_clm_ensemble:holdout_quality=1.000:not_fused",
     "ops_thermal_front:conf=0.980:w=0.40",
-    "open_cems_perimeter:conf=0.720:w=0.35",
+    "open_cems_perimeter:conf=0.500:w=0.35",
     "policy:default",
     "ops_confidence_ok"
   ],
@@ -75,12 +80,13 @@
     "Not a tactical dispatch order.",
     "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
     "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
-    "ABSTAIN means the product refuses to recommend action."
+    "ABSTAIN means the product refuses to recommend action.",
+    "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
   ],
   "audit": {
-    "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
-    "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-    "git_commit": "d57ae16",
+    "input_hash": "45023760165727664f72b044296af00501d65451eb1839dcbb0a5f8384805d8a",
+    "output_hash": "2543d49d5593ff8f677e278360f22385717943b423834c090523e217381405a0",
+    "git_commit": "29fb877",
     "schema": "fire_decision_card_v1",
     "policy_id": "default",
     "policy_label": "Default (historical product thresholds)",
@@ -94,18 +100,21 @@
       "allow_ml_only_hold": true,
       "allow_open_only_hold": true
     },
+    "abstention_heuristic_ok": true,
+    "provenance_hashes_attached": true,
     "system_reliability": {
-      "system_reliability_pass": true,
+      "system_reliability_pass": false,
+      "status": "unknown",
       "checks": {
-        "R1_determinism": true,
-        "R2_gates": true,
-        "R3_abstention_enforced": true,
-        "R4_provenance": true
+        "R1_determinism": null,
+        "R2_gates": null,
+        "R3_abstention_enforced": null,
+        "R4_provenance": null
       },
-      "residual_silent_go_risk_bound": 1e-06,
-      "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+      "residual_silent_go_risk_bound": 1.0,
+      "five_nines_claim": "UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.",
       "fire_prediction_accuracy_claim": "NOT_CLAIMED"
     }
   },
-  "built_at_utc": "2026-07-17T19:36:09.936263+00:00"
+  "built_at_utc": "2026-07-21T10:57:40.724454+00:00"
 }

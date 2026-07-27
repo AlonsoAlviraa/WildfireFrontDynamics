@@ -1,8 +1,8 @@
 {
   "schema": "metrics_hub_v1",
-  "built_at_utc": "2026-07-17T19:36:09.936263+00:00",
-  "git_commit": "d57ae16",
-  "content_hash": "d1cae9cf4b99222e25d927cacce18b8bf1466625bc186d768cbd897ff88d8664",
+  "built_at_utc": "2026-07-21T10:57:40.724454+00:00",
+  "git_commit": "29fb877",
+  "content_hash": "a3e8ac658fae1b2e629082e1e53a6090f0f7cc233001013a0b8db0278b293fa5",
   "ml": {
     "product": "clm_ensemble_v34",
     "metrics": {
@@ -48,7 +48,7 @@
     }
   },
   "open_cems": {
-    "n_packs": 4,
+    "n_packs": 5,
     "packs": [
       {
         "id": "emsr578",
@@ -154,31 +154,71 @@
           17.78597526735486,
           46.69691636823359
         ]
+      },
+      {
+        "id": "la_mierla_20260717",
+        "activation": "guadalajara_la_mierla_20260717",
+        "track": "open_firms_only",
+        "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN",
+        "O2_national_official": "BLOCKED",
+        "max_area_ha": 29000,
+        "max_area_ha_source": "infocam_x_estimate_2026-07-21T08:33Z",
+        "firms_hull_area_ha_approx": 39979.8,
+        "n_timeline_steps": 1,
+        "n_hotspots_24h": 595,
+        "civil_protection_level": 2,
+        "evacuated_municipalities_reported": 34,
+        "confined_municipalities_reported": 14,
+        "people_affected_reported": 1200,
+        "terrestrial_means_reported": 72,
+        "personnel_reported": 394,
+        "pma": "Tamajon / Guadalajara",
+        "domain": "CLM_Guadalajara",
+        "not_official_perimeter": true,
+        "not_tactical_dispatch": true,
+        "generated_at_utc": "2026-07-21T10:52:10.854160+00:00",
+        "notes": [
+          "Open track only: FIRMS + INFOCAM X + press metadata",
+          "29k ha is INFOCAM estimated surface (not EGIF final)",
+          "Hull area is NOT burned area (convex hull of thermal pixels)",
+          "No LWIR / no confirmed Vp/ha anchor for O1"
+        ],
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
       }
     ],
     "best": {
-      "id": "emsr632",
-      "track": "Pista_B",
-      "activation": "EMSR632",
-      "max_area_ha": 5319.506429634212,
-      "n_timeline_steps": 4,
-      "n_ros_proxy_steps": 3,
-      "O2_cems_delineation": "GO",
-      "O2_national_official": "NO_GO_CEMS_PROXY",
-      "lwir_heligraphics": false,
-      "status": "GO_OPEN_DATA_PACK",
-      "pack_dir": "outputs\\open_if\\emsr632",
-      "ros_proxy_n": 3,
-      "hausdorff_series": [
-        1603.8602999953632,
-        1192.2899964858168,
-        4144.184082006344
+      "id": "la_mierla_20260717",
+      "activation": "guadalajara_la_mierla_20260717",
+      "track": "open_firms_only",
+      "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN",
+      "O2_national_official": "BLOCKED",
+      "max_area_ha": 29000,
+      "max_area_ha_source": "infocam_x_estimate_2026-07-21T08:33Z",
+      "firms_hull_area_ha_approx": 39979.8,
+      "n_timeline_steps": 1,
+      "n_hotspots_24h": 595,
+      "civil_protection_level": 2,
+      "evacuated_municipalities_reported": 34,
+      "confined_municipalities_reported": 14,
+      "people_affected_reported": 1200,
+      "terrestrial_means_reported": 72,
+      "personnel_reported": 394,
+      "pma": "Tamajon / Guadalajara",
+      "domain": "CLM_Guadalajara",
+      "not_official_perimeter": true,
+      "not_tactical_dispatch": true,
+      "generated_at_utc": "2026-07-21T10:52:10.854160+00:00",
+      "notes": [
+        "Open track only: FIRMS + INFOCAM X + press metadata",
+        "29k ha is INFOCAM estimated surface (not EGIF final)",
+        "Hull area is NOT burned area (convex hull of thermal pixels)",
+        "No LWIR / no confirmed Vp/ha anchor for O1"
       ],
-      "growth_ha_h": [
-        18.992425678442164,
-        17.78597526735486,
-        46.69691636823359
-      ]
+      "ros_proxy_n": 0,
+      "hausdorff_series": [],
+      "growth_ha_h": []
     }
   },
   "gates": {
@@ -211,19 +251,23 @@
   "decision_card": {
     "event_id": "hub_aggregate",
     "decision": "GO",
-    "confidence_pred": 0.894,
+    "confidence_pred": 0.7559999999999999,
     "confidence_pred_label": "HIGH",
-    "system_reliability_pass": true,
+    "system_reliability_pass": false,
     "sources": [
       {
         "id": "ml_clm_ensemble",
         "available": true,
-        "weight": 0.25,
+        "weight": 0.0,
         "confidence": 1.0,
+        "holdout_quality": 1.0,
+        "role": "holdout_quality",
+        "source_type": "research_metadata",
         "metrics": {
           "test_iou": 0.8963,
           "improvement_vs_copy_iou": 0.2545,
-          "model_iou_growth": 0.9071
+          "model_iou_growth": 0.9071,
+          "holdout_quality": 1.0
         }
       },
       {
@@ -243,12 +287,12 @@
         "id": "open_cems_perimeter",
         "available": true,
         "weight": 0.35,
-        "confidence": 0.72,
+        "confidence": 0.5,
         "metrics": {
-          "max_area_ha": 5319.506429634212,
-          "n_timeline_steps": 4,
-          "activation": "EMSR632",
-          "O2_cems_delineation": "GO"
+          "max_area_ha": 29000.0,
+          "n_timeline_steps": 1,
+          "activation": "guadalajara_la_mierla_20260717",
+          "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
         }
       }
     ],
@@ -256,7 +300,8 @@
       "ml": {
         "test_iou": 0.8963,
         "improvement_vs_copy_iou": 0.2545,
-        "model_iou_growth": 0.9071
+        "model_iou_growth": 0.9071,
+        "holdout_quality": 1.0
       },
       "ops": {
         "quality_grade": "A",
@@ -266,18 +311,18 @@
         "speed_vs_ref_ratio": 0.8157142857142857
       },
       "open_cems": {
-        "max_area_ha": 5319.506429634212,
-        "n_timeline_steps": 4,
-        "activation": "EMSR632",
-        "O2_cems_delineation": "GO"
+        "max_area_ha": 29000.0,
+        "n_timeline_steps": 1,
+        "activation": "guadalajara_la_mierla_20260717",
+        "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
       },
-      "fused_confidence_pred": 0.894,
+      "fused_confidence_pred": 0.7559999999999999,
       "policy_id": "default"
     },
     "reasons": [
-      "ml_clm_ensemble:conf=1.000:w=0.25",
+      "ml_clm_ensemble:holdout_quality=1.000:not_fused",
       "ops_thermal_front:conf=0.980:w=0.40",
-      "open_cems_perimeter:conf=0.720:w=0.35",
+      "open_cems_perimeter:conf=0.500:w=0.35",
       "policy:default",
       "ops_confidence_ok"
     ],
@@ -285,12 +330,13 @@
       "Not a tactical dispatch order.",
       "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
       "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
-      "ABSTAIN means the product refuses to recommend action."
+      "ABSTAIN means the product refuses to recommend action.",
+      "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
     ],
     "audit": {
-      "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
-      "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-      "git_commit": "d57ae16",
+      "input_hash": "45023760165727664f72b044296af00501d65451eb1839dcbb0a5f8384805d8a",
+      "output_hash": "2543d49d5593ff8f677e278360f22385717943b423834c090523e217381405a0",
+      "git_commit": "29fb877",
       "schema": "fire_decision_card_v1",
       "policy_id": "default",
       "policy_label": "Default (historical product thresholds)",
@@ -304,20 +350,23 @@
         "allow_ml_only_hold": true,
         "allow_open_only_hold": true
       },
+      "abstention_heuristic_ok": true,
+      "provenance_hashes_attached": true,
       "system_reliability": {
-        "system_reliability_pass": true,
+        "system_reliability_pass": false,
+        "status": "unknown",
         "checks": {
-          "R1_determinism": true,
-          "R2_gates": true,
-          "R3_abstention_enforced": true,
-          "R4_provenance": true
+          "R1_determinism": null,
+          "R2_gates": null,
+          "R3_abstention_enforced": null,
+          "R4_provenance": null
         },
-        "residual_silent_go_risk_bound": 1e-06,
-        "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+        "residual_silent_go_risk_bound": 1.0,
+        "five_nines_claim": "UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.",
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-17T19:36:09.936263+00:00"
+    "built_at_utc": "2026-07-21T10:57:40.724454+00:00"
   },
   "reliability_note": "system_reliability five-nines bound applies to silent-GO prevention under tests, NOT to fire-spread forecast accuracy."
 }

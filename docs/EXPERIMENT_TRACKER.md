@@ -35,7 +35,7 @@
 ### v27_temporal_t2: Temporal rail — RUNNING (S1)
 - **Kernel:** `alonsoalviraaaa/wildfire-front-training-v27-temporal-t2`
 - **Single change:** `sequence_length=2` on legacy17 residual+delta any_fire
-- **Eval script:** `python scripts/archive/eval_kaggle_v27_verdict.py` → `docs/V27_TEMPORAL_VERDICT.json` (archived G1)
+- **Eval script:** `python scripts/archive/eval_kaggle_v27_verdict.py` → `docs/archive/V27_TEMPORAL_VERDICT.json` (archived G1)
 - **Loop 1M:** `docs/LOOP_1M_MEJORA_CONTINUA.md` (S1 D0 started 2026-07-16)
 
 ### Loop 1M — S1 inventory

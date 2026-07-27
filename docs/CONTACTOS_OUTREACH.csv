@@ -16,26 +16,32 @@ prioridad,org,rol,email,canal_web,que_pedir,estado,fecha_envio,notas
 3,SECF,Sociedad forestal,secforestales@secforestales.org,https://secforestales.org,Red/congresos,OPCIONAL,,
 3,ASELF,Lucha contra el fuego,administracion@aself.org,https://www.aself.org,Red ops/jornadas,OPCIONAL,,
 3,ASELF comunicación,Comunicación,comunicacion@aself.org,https://www.aself.org,Prensa/jornadas,OPCIONAL,,
-4,Andalucía REDIAM,Datos espaciales,rediam.atiende.csmaea@juntadeandalucia.es,,Cartografía incendios,OPCIONAL,,
-4,Andalucía REDIAM alt,Datos espaciales,rediam.atiende.csma@juntadeandalucia.es,,Cartografía incendios,OPCIONAL,,
-4,Andalucía TOP/medios,Metadatos medios,cor.top.cagpds@juntadeandalucia.es,,Catálogo medios INFOCA,OPCIONAL,,
-4,Andalucía ASEMA,Gerencia,gerencia.asema@juntadeandalucia.es,,Institucional,OPCIONAL,,
-4,Galicia forestal,DG Planificación Forestal,forestal.mediorural@xunta.gal,https://www.xunta.gal/es/medio-rural/directorio,Contacto forestal,OPCIONAL,,
-4,Galicia monte,Medio Rural monte,monte.mediorural@xunta.gal,,Monte/incendios docs,OPCIONAL,,
-4,Galicia secretaría CMR,Secretaría,secretaria.cmr@xunta.gal,,Institucional,OPCIONAL,,
-4,Galicia coordinación medios,Medios,coordinacion-medios.medio-rural@xunta.gal,,Formación/medios,OPCIONAL,,
+4,Andalucía REDIAM obsoleto,Datos espaciales,rediam.atiende.csmaea@juntadeandalucia.es,,NO USAR renombrado,OBSOLETO,2026-07-22,autorrespuesta → rediam.atiende.csma@
+4,Andalucía REDIAM,Datos espaciales,rediam.atiende.csma@juntadeandalucia.es,https://portalrediam.cica.es/descargas/index.php/s/mxHMWXyHfrCxyNK,Cartografía incendios,RESPONDIDO_GO,2026-07-22,"Respuesta: descargas + WFS. Ver docs/open_if_intake/REDIAM_ANDALUCIA_PERIMETROS_20260722.md"
+4,Andalucía TOP/medios,Metadatos medios,cor.top.cagpds@juntadeandalucia.es,,Catálogo medios INFOCA,ENVIADO,2026-07-22,id 19f88a94a370a77a
+4,Andalucía ASEMA Gerencia,Alejandro García Hernández,gerencia.asema@juntadeandalucia.es,https://www.juntadeandalucia.es/organismos/ema/estructura/titular.html,Reenvío DG IIFF / Agencia Emergencias,ENVIADO,2026-07-22,"ids 19f88a9b8950144d + 19f88abfdb500bd7; REDIAM sugiere contactar Agencia Emergencias AND"
+4,Andalucía DG Gestión IIFF,Jorge Luque Illescas,,LinkedIn buscar nombre,Sin email personal público; vía gerencia.asema + Agencia Emergencias,FOLLOW_UP,2026-07-22,"REDIAM 2026-07: contactar Agencia de Emergencias de Andalucía (gestión IIFF)"
+4,Galicia forestal,María Luisa Piñeiro DX Forestal,forestal.mediorural@xunta.gal,https://www.xunta.gal/es/medio-rural/directorio,Contacto forestal,ENVIADO,2026-07-22,id 19f88a94a5653182
+4,Galicia monte MUERTO,NO USAR,monte.mediorural@xunta.gal,,550 User unknown,FALLO,2026-07-22,bounce 19f88a98511872ac
+4,Galicia Defensa do Monte,Manuel Francisco Gutiérrez DX,defensadomonte.mediorural@xunta.gal,https://www.xunta.gal/es/medio-rural/directorio,Perímetros/partes PLADIGA,ENVIADO,2026-07-22,id 19f88abfa49cc59b Tel 881996391
+4,Galicia secretaría CMR,Secretaría conselleira,secretaria.cmr@xunta.gal,,Institucional,ENVIADO,2026-07-22,CC
+4,Galicia SGT,Marta Forés Lojo,sxt.medio-rural@xunta.gal,,Reenvío institucional,ENVIADO,2026-07-22,id 19f88abfdd49c81a
+4,Galicia coordinación medios,Medios,coordinacion-medios.medio-rural@xunta.gal,,NO en directorio 2026,ENVIADO,2026-07-22,id 19f88a97f99a730a; no insistir
+4,Extremadura INFOEX DG,José Antonio Bayón,dgpeiiff.prs@juntaex.es,https://www.infoex.info/,Perímetros/partes INFOEX,ENVIADO,2026-07-22,ids 19f88a97f28b0537 + 19f88ac2386f2122; X @PLANINFOEX
+4,Extremadura Medio Ambiente marpat,DGMA,dgma.marpat@juntaex.es,,Reenvío cartografía/datos,ENVIADO,2026-07-22,id 19f88a97e92f5be5
 5,INIA lab incendios,CIFOR/ICIFOR,incendio@inia.es,https://www.inia.es,Validación ROS combustibles,RESPONDIDO,2026-07-16,"Javier Madrigal: sin datos; asesoría solo con contrato CSIC de pago. No insistir gratis."
 5,INIA Guijarro,Investigadora,guijarro@inia.es,,Solo si encaja línea; preferir incendio@,HOLD,,Publicado en directorios
 5,UCLM Moreno,Grupo Fuego,JoseM.Moreno@uclm.es,https://blog.uclm.es/grupofuego/,Colaboración proyecto propio CLM,PENDIENTE,,
 5,UCLM Heras,Grupo Fuego,Jorge.Heras@uclm.es,,CC Moreno,PENDIENTE,,
 5,UCLM Sánchez,Grupo Fuego,juanmanuel.sanchez@uclm.es,,CC,OPCIONAL,,
 5,UdL MasterFUEGO,Coordinación máster,etseafiv.coordmfuego@udl.cat,https://www.masterfuegoforestal.udl.cat,Red máster incendios,PENDIENTE,,
-5,UCO Molina,Ing. Forestal fuego,jrmolina@uco.es,https://www.uco.es/idep/gestion-del-fuego,FirEUrisk modelos,PENDIENTE,,
+5,UCO Molina,Ing. Forestal fuego,jrmolina@uco.es,https://www.uco.es/idep/gestion-del-fuego,FirEUrisk modelos,ENVIADO,2026-07-22,id 19f88a7d0b8315cf; Andalucía academia
 5,CTFC Pau Brunet Navarro,Investigador / FIRE-RES adjunto,pau.brunet@ctfc.cat,https://www.ctfc.cat/es/personal24_det.php?id=19,Feedback WFRM; living labs; reenvío partners; validación,RESPONDIDO,2026-07-16,"Redirige a admin CLM: preparan propuesta WFRM con stakeholders CLM. Pedir intro o contactar GEACAM/JCCM en ese marco."
 5,CTFC secretaría,Centro forestal Cat,secretaria@ctfc.cat,https://www.ctfc.cat,CC institucional si hace falta,PENDIENTE,,Tel +34 973481752
 5,FIRE-RES CTFC,Proyecto UE buzón,fire-res@ctfc.cat,https://fire-res.eu/contact-us/,CC opcional con Pau,PENDIENTE,,
 5,Pau Costa Foundation,Red profesional,info@paucostafoundation.org,https://www.paucostafoundation.org,Red WFRM formación,PENDIENTE,,
-5,USC I+D grupos,Gestión grupos,imaisd@usc.gal,,Pedir IP incendios,OPCIONAL,,
+5,USC I+D grupos,Gestión grupos,imaisd@usc.gal,,Pedir IP incendios,ENVIADO,2026-07-22,id 19f88a9b82734dbb
+5,USC Amiama máster montes,Coordinación,carlos.amiama@usc.gal,,Reenvío docentes incendios Galicia,ENVIADO,2026-07-22,id 19f88a9b815df888
 6,Firelogue,Red UE,info@firelogue.eu,https://firelogue.eu,Partners WFRM,OPCIONAL,,
 6,Firelogue civil protection,WG,civil-protection@firelogue.eu,,WG PC,OPCIONAL,,
 6,Firelogue environ,WG,environ@firelogue.eu,,WG environment,OPCIONAL,,
@@ -52,9 +58,9 @@ prioridad,org,rol,email,canal_web,que_pedir,estado,fecha_envio,notas
 4,Aragón INFOAR,Incendios forestales,incendios@aragon.es,https://www.aragon.es,Perímetros/anclas AR,PENDIENTE,,Nuevo
 4,Aragón gestión forestal,DG Gestión Forestal,gestionforestal@aragon.es,,CC INFOAR,PENDIENTE,,
 
-4,CyL CDF Centro Defensa Fuego,Formaci�n e investigaci�n incendios CyL,centrofuego@jcyl.es,https://medioambiente.jcyl.es/web/es/medio-natural/centro-para-defensa-contra.html,Reenv�o a servicio incendios / datos si liberables,PENDIENTE,,Le�n Tel 987840603
-4,CyL INFORCYL open data,Partes incendios activos CSV,,https://jcyl.opendatasoft.com/explore/dataset/incendios-forestales/custom/,Descargar partes ha/fechas campa�a,WEB,,Sin email
+4,CyL CDF Centro Defensa Fuego,Formaci�n e investigaci�n incendios CyL,centrofuego@jcyl.es,https://medioambiente.jcyl.es/web/es/medio-natural/centro-para-defensa-contra.html,Reenv�o a servicio incendios / datos si liberables,PENDIENTE,,Le�n Tel 987840603
+4,CyL INFORCYL open data,Partes incendios activos CSV,,https://jcyl.opendatasoft.com/explore/dataset/incendios-forestales/custom/,Descargar partes ha/fechas campa�a,WEB,,Sin email
 4,CyL INFORCYL mapa,Incendios activos tiempo real,,https://servicios.jcyl.es/incyl/incyl,Contexto ops no raw GIS,WEB,,
-4,ULE Fern�ndez-Manso,M�ster FUEGO / teledetecci�n fuego,aaferm@unileon.es,https://eiaf.unileon.es,No es ops; posible reenv�o o datos investigaci�n,PENDIENTE,,alt alfonso.manso@unileon.es
-4,Protecci�n Civil estatal (no CyL),DGPC nacional,dgpce@proteccioncivil.es,https://www.proteccioncivil.es/,NO prioritario CyL,NO,,No es buz�n INFOCAL
+4,ULE Fern�ndez-Manso,M�ster FUEGO / teledetecci�n fuego,aaferm@unileon.es,https://eiaf.unileon.es,No es ops; posible reenv�o o datos investigaci�n,PENDIENTE,,alt alfonso.manso@unileon.es
+4,Protecci�n Civil estatal (no CyL),DGPC nacional,dgpce@proteccioncivil.es,https://www.proteccioncivil.es/,NO prioritario CyL,NO,,No es buz�n INFOCAL
 4,CyL Transparencia formal,Derecho acceso info ambiental,tramite web,https://gobiernoabierto.jcyl.es/web/es/transparencia/derecho-informacion-publica.html,Perimetro+ficha Llamas de Cabrera 2025-08-08 Leon,PENDIENTE_ENVIAR,,Ver docs/SOLICITUD_TRANSPARENCIA_CYL.md

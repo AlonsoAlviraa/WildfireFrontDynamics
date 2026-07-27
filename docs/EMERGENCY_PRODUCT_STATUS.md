@@ -11,7 +11,7 @@ python scripts/smoke_emergency_products.py
 
 | Run | Verdict |
 |-----|---------|
-| v27b T=3 IoU 0.2249 Δ+0.0751 | **NO_PROMOTE → KILL** (`docs/G1_KILL_FEATURES_TEMPORAL.json`) |
+| v27b T=3 IoU 0.2249 Δ+0.0751 | **NO_PROMOTE → KILL** (`docs/archive/G1_KILL_FEATURES_TEMPORAL.json`) |
 | Emergency ML primary | **`clm_v28`** |
 | NDWS | research baseline only |
 
