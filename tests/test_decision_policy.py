@@ -91,6 +91,11 @@ def test_policy_in_audit_and_service():
 def test_get_policy_unknown_falls_back():
     pol = get_policy("does_not_exist_xyz")
     assert pol.id == "default" or "unknown" in (pol.notes or "").lower()
+    # Fail-closed: unknown id must not silently loosen to open default posture
+    assert pol.require_ops_for_go is True
+    assert pol.allow_ml_only_hold is False
+    assert pol.allow_ml_live_in_fusion is False
+    assert "fail-closed" in (pol.notes or "").lower() or "unknown" in (pol.notes or "").lower()
 
 
 def test_policy_catalog_ml_live_fields():

@@ -398,6 +398,7 @@ def test_promote_eligible_real_like_and_lab_synthetic_flag(tmp_path: Path):
                 str(tmp_path / "ML_PRODUCT_SCORECARD.json"),
                 "--write-docs-scorecard",
                 "--apply-policy",
+                "--confirm-human-signoff",
                 "--allow-lab-synthetic",
             ]
         )
@@ -417,6 +418,7 @@ def test_promote_eligible_real_like_and_lab_synthetic_flag(tmp_path: Path):
     assert pol_after["policies"]["field_ops"]["allow_ml_live_in_fusion"] is False
     rec = json.loads((tmp_path / "rec.json").read_text(encoding="utf-8"))
     assert rec["policy"]["field_ops_always_false"] is True
+    assert rec["checklist_status"] == "policy_applied_research_open_human_signed"
 
 
 def test_promote_accepts_real_scorecard_shape(tmp_path: Path):

@@ -295,6 +295,7 @@ def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
                 "--product-scorecard",
                 str(tmp_path / "prod2.json"),
                 "--apply-policy",
+                "--confirm-human-signoff",
                 "--allow-lab-synthetic",  # offline fixture — lab only
             ]
         )

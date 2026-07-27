@@ -46,8 +46,9 @@ Sueños máximos (techo del producto): **[`docs/SUENOS_MAXIMOS.md`](docs/SUENOS_
 
 | Métrica | Valor |
 |---------|------:|
-| ML ensemble CLM v34 · IoU holdout | **0.8963** |
-| Mejora vs copy | **+0.2545** |
+| ML U1 TEST honest (lab) | mean IoU ~**0.86** · sel@80 ~**0.90** · ECE ~**0.15** |
+| Catalog holdout IoU (provenance only) | **0.8963** — not live certainty · not ROS |
+| Mejora vs copy (catálogo) | **+0.2545** |
 | Packs open CEMS | **4** (hasta ~**5300 ha**) |
 | Decision Card | GO / HOLD / **ABSTAIN** según fuentes |
 | “99.9999%” | Solo: no emitir GO silencioso bajo tests — **no** acierto del fuego |

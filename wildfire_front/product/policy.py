@@ -115,7 +115,12 @@ def get_policy(
     catalog_path: Path | str | None = None,
     overrides: Mapping[str, Any] | None = None,
 ) -> DecisionPolicy:
-    """Resolve a named policy; unknown id falls back to default with notes."""
+    """Resolve a named policy; unknown id uses fail-closed posture (not loose default).
+
+    Unknown ids no longer silently apply open ``default`` thresholds (ML-only HOLD,
+    low GO mins). Instead we keep id=default for catalog compatibility but clamp
+    to ops-required / no ML-only HOLD / no live fusion, and annotate notes.
+    """
     cat = load_policy_catalog(catalog_path)
     default_id = str(cat.get("default_policy") or "default")
     pid = (policy_id or default_id).strip() or default_id
@@ -124,12 +129,16 @@ def get_policy(
     if not isinstance(raw, dict):
         raw = policies.get(default_id) or LEGACY_DEFAULT.to_dict()
         pol = _policy_from_mapping(raw if isinstance(raw, dict) else {}, fallback_id=default_id)
-        # preserve requested id in notes if missing
+        # Fail-closed: unknown policy_id must not silently loosen organism posture.
         if pid not in policies:
             pol = DecisionPolicy(
                 **{
                     **asdict(pol),
-                    "notes": (pol.notes or "") + f" [unknown policy_id={pid!r}; using {pol.id}]",
+                    "require_ops_for_go": True,
+                    "allow_ml_only_hold": False,
+                    "allow_ml_live_in_fusion": False,
+                    "notes": (pol.notes or "")
+                    + f" [unknown policy_id={pid!r}; fail-closed clamp on {pol.id}]",
                 }
             )
     else:

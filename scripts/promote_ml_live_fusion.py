@@ -391,6 +391,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Also set research_open.allow_ml_live_in_fusion=true (never field_ops)",
     )
     p.add_argument(
+        "--confirm-human-signoff",
+        action="store_true",
+        help=(
+            "Required with --apply-policy: attests a human reviewed fail_cases/ECE "
+            "checklist before flipping research_open live fusion."
+        ),
+    )
+    p.add_argument(
         "--force-draft",
         action="store_true",
         help="Write draft promote record even if not eligible (status=refused)",
@@ -433,7 +441,15 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     policy_applied = False
-    if eligible and args.apply_policy:
+    if args.apply_policy and not bool(args.confirm_human_signoff):
+        print(
+            "ERROR: --apply-policy requires --confirm-human-signoff "
+            "(human checklist / ECE / fail_cases review). "
+            "Without signoff, write a promote record only (eligible_pending_human_signoff).",
+            file=sys.stderr,
+        )
+        return 2
+    if eligible and args.apply_policy and bool(args.confirm_human_signoff):
         try:
             apply_research_open_policy()
             policy_applied = True
@@ -459,11 +475,10 @@ def main(argv: list[str] | None = None) -> int:
         record["checklist_status"] = "refused"
         record["refusal_reasons"] = fails
     else:
-        record["checklist_status"] = (
-            "eligible_pending_human_signoff"
-            if not policy_applied
-            else "policy_applied_research_open_pending_signoff"
-        )
+        if policy_applied:
+            record["checklist_status"] = "policy_applied_research_open_human_signed"
+        else:
+            record["checklist_status"] = "eligible_pending_human_signoff"
 
     out_rec = Path(args.promote_record)
     out_rec.parent.mkdir(parents=True, exist_ok=True)

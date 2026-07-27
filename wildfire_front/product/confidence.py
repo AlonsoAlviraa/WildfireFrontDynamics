@@ -648,9 +648,12 @@ def build_decision_card(
         policy = get_policy(policy_id or "default")
 
     # Thread live policy fields; kwargs can enable fusion (OR with policy).
+    # field_ops is hard-off: never allow live ML fusion via CLI/kwargs override.
     allow_fusion = bool(allow_ml_live_in_fusion) or bool(
         getattr(policy, "allow_ml_live_in_fusion", False)
     )
+    if str(getattr(policy, "id", "") or "") == "field_ops":
+        allow_fusion = False
     ml_live_max_weight = float(getattr(policy, "ml_live_max_weight", 0.25))
     ml_live_abstain_below = float(getattr(policy, "ml_live_abstain_below", 0.35))
     ml_live_veto = bool(getattr(policy, "ml_live_veto_on_abstain", False))
@@ -808,7 +811,10 @@ def build_decision_card(
             "hold_ml_only_min": policy.hold_ml_only_min,
             "allow_ml_only_hold": policy.allow_ml_only_hold,
             "allow_open_only_hold": policy.allow_open_only_hold,
+            # Catalog bit only (policy JSON / DecisionPolicy field).
             "allow_ml_live_in_fusion": bool(getattr(policy, "allow_ml_live_in_fusion", False)),
+            # Effective fusion after kwargs OR + field_ops hard clamp.
+            "effective_allow_ml_live_in_fusion": bool(allow_fusion),
             "ml_live_max_weight": float(getattr(policy, "ml_live_max_weight", 0.25)),
             "ml_live_abstain_below": float(getattr(policy, "ml_live_abstain_below", 0.35)),
             "ml_live_veto_on_abstain": bool(getattr(policy, "ml_live_veto_on_abstain", False)),
