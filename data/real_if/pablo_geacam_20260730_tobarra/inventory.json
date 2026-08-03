@@ -1,0 +1,59 @@
+{
+  "schema": "wfd_pablo_drop_v1",
+  "received_at_utc": "2026-07-30T14:19:51+00:00",
+  "downloaded_at_utc": "2026-07-30T16:00:00+00:00",
+  "from": "pablo.arroyobretano@geacam.com",
+  "gmail_message_ids": ["19fb36562e96e3e0", "19fb366e1ac158f6"],
+  "thread_subject": "Re: Petición de información TFG",
+  "fire_id": "tobarra_20240802",
+  "incident_code": "2024020124",
+  "summary_es": "Muestra Tobarra: 2 KMZ perímetro activo multi-hora + 7 mapas INFOCAM/ARGOS. Cardoso sin material extra. Ofrece perímetros multi-IF con tiempo. Cartografía operativa UNAP como vía de datos.",
+  "cardoso_extra_material": false,
+  "offers": {
+    "perimeters_multi_if": "yes_with_time",
+    "cartografia_operativa_unap": "yes_extract_yourself",
+    "vp_table": "not_provided_this_mail"
+  },
+  "kmz_perimeters": [
+    {
+      "file": "2024020124_TOBARRA_20240802_1830.kmz",
+      "time_local_inferred": "2024-08-02T18:30:00",
+      "name": "Perímetro activo",
+      "sup_ha": 21.489832,
+      "n_vertices": 34,
+      "crs": "WGS84",
+      "centroid_approx": [-1.709, 38.633]
+    },
+    {
+      "file": "2024020124_TOBARRA_20240802_2143.kmz",
+      "time_local_inferred": "2024-08-02T21:43:00",
+      "name": "Perímetro activo",
+      "sup_ha": 37.075054,
+      "n_vertices": 50,
+      "crs": "WGS84",
+      "centroid_approx": [-1.709, 38.633]
+    }
+  ],
+  "area_growth": {
+    "delta_ha": 15.585222,
+    "delta_minutes": 193,
+    "mean_ha_per_hour": 4.84,
+    "note": "Polygon area growth only — not front ROS m/min"
+  },
+  "maps_jpg": [
+    "photo_2024-08-03_11-00-08.jpg",
+    "photo_2024-08-03_11-00-42.jpg",
+    "photo_2024-08-03_11-00-50.jpg",
+    "photo_2024-08-03_11-02-07.jpg",
+    "photo_2024-08-03_11-02-13.jpg",
+    "photo_2024-08-03_11-03-35.jpg",
+    "photo_2024-08-03_11-03-41.jpg"
+  ],
+  "map_notes": {
+    "pre_analisis_1711": "02/08/2024 17:11; meteo T35 HR10 wind W21 gust40; detection 16:42",
+    "argos_2133": "02/08/2024 21:33; ARGOS/GeoManiobra; ~5 km/h arrow; SE1/SE2 notes"
+  },
+  "o2_status": "PARTIAL_GO_TOBARRA_PROXY",
+  "o1_cardoso": "still_blocked",
+  "local_path": "data/real_if/pablo_geacam_20260730_tobarra"
+}
