@@ -60,9 +60,18 @@ def fetch_aemet_daily(
     req.add_header("api_key", api_key)
     req.add_header("Accept", "application/json")
 
+    def _decode_body(body: bytes) -> str:
+        # AEMET datos often ISO-8859-1 (accents in station names)
+        for encoding in ("utf-8", "iso-8859-1", "cp1252"):
+            try:
+                return body.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+        return body.decode("utf-8", errors="replace")
+
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            meta = json.loads(resp.read().decode("utf-8"))
+            meta = json.loads(_decode_body(resp.read()))
     except Exception as e:
         print(f"[ERROR] API request failed: {e}", file=sys.stderr)
         sys.exit(1)
@@ -87,7 +96,7 @@ def fetch_aemet_daily(
 
     try:
         with urllib.request.urlopen(req2, timeout=60) as resp:
-            raw_data = json.loads(resp.read().decode("utf-8"))
+            raw_data = json.loads(_decode_body(resp.read()))
     except Exception as e:
         print(f"[ERROR] Data fetch failed: {e}", file=sys.stderr)
         sys.exit(1)

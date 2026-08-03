@@ -64,13 +64,31 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 ## Qué está hecho vs bloqueado
 
-| Hecho | Bloqueado (externo) |
+| Hecho | Bloqueado (externo / humano) |
 |-------|---------------------|
-| ML v34, ops, 4 packs CEMS | 2ª ancla INFOCAM |
-| Decision Card + Metrics Hub | Perímetro nacional oficial |
-| FDC en incident update | Piloto con cliente real |
-| API mínima POST /v1/decide | Auth / 99.9% uptime (sueño) |
-| **Acta forense + radio + replay** | PDF firmado (sueño) |
+| ML v34 U1 honest + ops Tobarra A | **2ª ancla INFOCAM (O1)** — Cardoso |
+| Decision Card + Metrics Hub + policies | Perímetro nacional oficial (O2) |
+| Piloto honesty multi-pack + demo multi-CCAA | **Demo con tercero** + acta 1 pág |
+| FDC en incident + API `/v1/decide` | Auth / 99.9% uptime (sueño) |
+| Acta forense + radio + replay | PDF firmado (sueño) |
+| Graph v2 external-unblock ready | Gmail MCP re-auth (token Testing) |
+
+**Estado canónico:** [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) · scorecard mes: [`SCORECARD_MES_1.md`](SCORECARD_MES_1.md)
+
+## Fuel stack + AEMET Tobarra (PR-α / PR-β)
+
+```powershell
+# PR-α core physics tests
+pytest tests/test_fuel_rothermel_lite.py tests/test_fuel_dem.py tests/test_fuel_map.py `
+  tests/test_fuel_calibration.py tests/test_fuel_sector_weather.py tests/test_fuel_sector_slope_aemet.py -q
+
+# PR-β envelope + AEMET (offline fixtures + optional live key in .env)
+pytest tests/test_aemet_weather.py tests/test_fuel_envelope.py `
+  tests/test_fuel_envelope_scorecard.py tests/test_pr_beta_envelope_aemet.py -q
+python scripts/run_tobarra_aemet_pipeline.py
+```
+
+Plan de aterrizaje: `docs/design/PR_PLAN_FUEL_AEMET_ENVELOPE.md`.
 
 ## Comando mínimo de decisión
 
