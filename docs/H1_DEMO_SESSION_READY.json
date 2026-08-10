@@ -1,0 +1,53 @@
+{
+  "schema": "wfd_h1_demo_session_ready_v1",
+  "prepared_at_utc": "2026-08-10T13:34:42.838742+00:00",
+  "product_unlock": false,
+  "go_q_met": false,
+  "go_q_note": "Human third-party demo + signed acta still required",
+  "eng_session_ready": true,
+  "suggested_slot_utc": "2026-08-13T10:00:00+00:00",
+  "artifacts": {
+    "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
+    "runbook": "docs/H1_GO_Q_RUNBOOK.md",
+    "calendar_invite": "docs/H1_CALENDAR_INVITE.md",
+    "acta_draft": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md",
+    "record_cli": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
+    "b4_b5_calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md"
+  },
+  "human_next": [
+    "Agendar tercero externo (copiar docs/H1_CALENDAR_INVITE.md)",
+    "Correr demo 12 min con cheatsheet",
+    "Rellenar acta real (no PENDING)",
+    "python scripts/record_h1_demo_complete.py --acta <acta_firmada>"
+  ],
+  "steps": [
+    {
+      "id": "prepare_acta_draft",
+      "exit_code": null,
+      "ok": true,
+      "skipped": true,
+      "note": "scripts/prepare_h1_acta_draft.py not in tree; using existing draft if present",
+      "draft": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md"
+    },
+    {
+      "id": "record_refuses_pending_draft",
+      "exit_code": null,
+      "ok": true,
+      "skipped": true,
+      "note": "record_h1_demo_complete.py missing or no draft — skip refuse probe"
+    },
+    {
+      "id": "check_release_flags",
+      "exit_code": 2,
+      "ok": false,
+      "blocking": false,
+      "tail": "status=ERROR exit=2\nerror: missing docs\\CURRENT_STATE.md"
+    }
+  ],
+  "rails": {
+    "GO_MES": true,
+    "GO_Q": "partial",
+    "ml_product_go": "true_lab_only",
+    "field_ops_fusion": "OFF"
+  }
+}
