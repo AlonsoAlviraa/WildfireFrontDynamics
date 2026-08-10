@@ -1,0 +1,42 @@
+{
+  "schema": "wfd_ml_product_go_stamp_v1",
+  "created_utc": "2026-08-07T09:10:02.121552+00:00",
+  "ml_product_go": true,
+  "field_ops_allow_ml_live_in_fusion": false,
+  "GO_MES": true,
+  "GO_MES_plus": false,
+  "GO_Q": "partial",
+  "product_id": "clm_ensemble_v34",
+  "alignment_note": "B2 2026-08-10: GO_MES aligned to docs/CURRENT_STATE.md (mínimo true). GO_MES+ false (O5/O2/demo). ml_product_go=lab only; fusion OFF.",
+  "evidence": {
+    "u1_test_honest": true,
+    "U1a": true,
+    "U1b": true,
+    "allow_ml_live_in_fusion_recommended": true,
+    "mean_iou_test": 0.8568865373678947,
+    "ece_patch_conf": 0.15280955026564416,
+    "selective_iou_80": 0.903428533834858,
+    "n_patches": 200,
+    "calibrator": "models/clm_ensemble/uncertainty_calibration_v1.json",
+    "calibrator_fit_split": "val",
+    "scorecard": "outputs/ml_eval/scorecards/ml_scorecard_u1_test.json",
+    "product_scorecard": "docs/ML_PRODUCT_SCORECARD.json",
+    "promote_record": "docs/ML_U1_PROMOTE_RECORD.json"
+  },
+  "rails": {
+    "lab_product": true,
+    "field_ops_fusion": "OFF",
+    "iou_is_not_ros": true,
+    "tobarra_keep_reopen": false,
+    "catalog_0_8963_provenance_only": true
+  },
+  "not_claims": [
+    "not field tactical dispatch",
+    "not ROS / Vp",
+    "not GO_MES+ (2nd grade A / O2 / H1 demo still open)",
+    "not GO_Q full (H1 demo+acta tercero pending)",
+    "not Tobarra KEEP reopen"
+  ],
+  "human_promote_authorized": "2026-08-05",
+  "refreshed_eval_utc": "2026-08-07T09:10:02.121552+00:00"
+}

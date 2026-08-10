@@ -77,11 +77,47 @@ coverage.xml
 Thumbs.db
 desktop.ini
 
+# ─── Agent / AI noise (B3) ───────────────────────────────────
+_FINAL_*/
+_OUT_*/
+_tmp*/
+_scratch*/
+*.agent-out.*
+.grok/sessions/
+# Research dumps stay under outputs/ (already ignored) or docs/archive/
+
+# ─── Large external data caches (keep tree, ignore blobs) ────
+data/external/**
+!data/external/**/README.md
+data/weather_era5/**
+!data/weather_era5/**/README.md
+data/weather_openmeteo/**
+!data/weather_openmeteo/**/README.md
+data/fire_intel/**/*.zip
+data/fire_intel/**/*.tif
+data/fire_intel/**/*.tiff
+
 # ─── Temp / Logs ─────────────────────────────────────────────
 *.log
 *.tmp
 *.bak
 *.npz
+
+# ─── Agent / migration session noise (never commit) ──────────
+_*
+_json_parts/
+.migration_*
+.spread_predictor_result.json
+kaggle_job/_push_*/
+scripts/_poll_*.py
+scripts/_parse_*.py
+scripts/_emit_*.py
+_FINAL_*.json
+_OUT_*.json
+_EMIT_*.json
+_PURE_*.json
+_RESPONSE_*.json
+_OUTBOX*.json
 
 # ─── Local caches / form-fill scratch (never product) ────────
 data/open_if/**/wfs_cache/
@@ -130,3 +166,8 @@ models/__pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# CDS credentials (never commit)
+.cdsapirc
+**/.cdsapirc
+
