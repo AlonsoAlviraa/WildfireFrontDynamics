@@ -177,19 +177,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         dry = {"skipped": True, "ok": True}
 
-    # 3) Prove record refuses PENDING draft (optional)
+    # 3) Prove record refuses PENDING draft (required for eng_session_ready when possible)
     record_script = ROOT / "scripts" / "record_h1_demo_complete.py"
+    refuse_verified = False
     if record_script.is_file() and DRAFT.is_file():
-        rcode, _ = _run(
+        rcode, rout = _run(
             [sys.executable, str(record_script), "--acta", str(DRAFT)]
         )
         refuse_ok = rcode == 2
+        refuse_verified = refuse_ok
         steps.append(
             {
                 "id": "record_refuses_pending_draft",
                 "exit_code": rcode,
                 "ok": refuse_ok,
+                "blocking": True,
                 "note": "exit 2 expected — must not mutate GO_Q from draft",
+                "tail": "\n".join(rout.strip().splitlines()[-4:]) if rout.strip() else None,
             }
         )
     else:
@@ -197,9 +201,13 @@ def main(argv: list[str] | None = None) -> int:
             {
                 "id": "record_refuses_pending_draft",
                 "exit_code": None,
-                "ok": True,
+                "ok": False,
                 "skipped": True,
-                "note": "record_h1_demo_complete.py missing or no draft — skip refuse probe",
+                "blocking": True,
+                "note": (
+                    "record_h1_demo_complete.py missing or no draft — "
+                    "eng_session_ready stays false until refuse-PENDING is verifiable"
+                ),
             }
         )
 
@@ -221,18 +229,11 @@ def main(argv: list[str] | None = None) -> int:
     INVITE_MD.parent.mkdir(parents=True, exist_ok=True)
     INVITE_MD.write_text(invite, encoding="utf-8")
 
-    # Session pack readiness = invite + rails docs present. Does not flip GO_Q.
+    # eng_session_ready requires measured refuse-PENDING (exit 2). Does not flip GO_Q.
     dry_ok = dry.get("skipped") or dry.get("ok")
-    blocking_steps_ok = all(
-        s.get("ok")
-        for s in steps
-        if s.get("blocking", True) is True
-        and s["id"] not in {"check_release_flags", "dry_run_demo_third_party"}
-        and not s.get("skipped")
-    )
     eng_ready = bool(
         dry_ok
-        and blocking_steps_ok
+        and refuse_verified
         and INVITE_MD.is_file()
         and (CHEATSHEET.is_file() or RUNBOOK.is_file())
     )

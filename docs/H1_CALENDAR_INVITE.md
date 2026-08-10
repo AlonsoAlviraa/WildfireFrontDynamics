@@ -11,7 +11,7 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
 
 ## Cuándo (propuesta)
-**Propuesta eng:** 2026-08-13 10:00–10:15 (UTC) — reprogramar con el tercero. Prepared UTC: 2026-08-10T13:34:42.838742+00:00
+**Propuesta eng:** 2026-08-13 10:00–10:15 (UTC) — reprogramar con el tercero. Prepared UTC: 2026-08-10T13:42:31.496441+00:00
 
 ## Duración
 12–15 min (+ 5 min Q&A opcional)

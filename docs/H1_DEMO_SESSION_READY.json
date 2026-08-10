@@ -1,6 +1,6 @@
 {
   "schema": "wfd_h1_demo_session_ready_v1",
-  "prepared_at_utc": "2026-08-10T13:34:42.838742+00:00",
+  "prepared_at_utc": "2026-08-10T13:42:31.496441+00:00",
   "product_unlock": false,
   "go_q_met": false,
   "go_q_note": "Human third-party demo + signed acta still required",
@@ -31,10 +31,11 @@
     },
     {
       "id": "record_refuses_pending_draft",
-      "exit_code": null,
+      "exit_code": 2,
       "ok": true,
-      "skipped": true,
-      "note": "record_h1_demo_complete.py missing or no draft — skip refuse probe"
+      "blocking": true,
+      "note": "exit 2 expected — must not mutate GO_Q from draft",
+      "tail": "  \"exit_code\": 2,\n  \"go_q_met\": false,\n  \"note\": \"Status NOT updated\"\n}"
     },
     {
       "id": "check_release_flags",

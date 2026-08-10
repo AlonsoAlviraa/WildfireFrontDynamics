@@ -12,12 +12,13 @@
    - `GO_MES=true` · `GO_Q=partial` hasta firma  
    - `field_ops` ML fusion **OFF** · `ml_product_go=true` (**lab only**, ≠ field fusion)  
    - ABSTAIN / HOLD = feature, no fallo  
-7b. **Prep one-shot eng (recomendado):**
+2. **Prep one-shot eng (recomendado):**
    ```powershell
    python scripts/prepare_h1_demo_session.py
    # → docs/H1_DEMO_SESSION_READY.json + docs/H1_CALENDAR_INVITE.md
+   # proves record_h1_demo_complete refuses PENDING draft (exit 2)
    ```
-2. **Modo operario** (30 s — tablero + 4 actos):
+3. **Modo operario** (30 s — tablero + 4 actos):
    ```powershell
    $env:PYTHONPATH="."
    python -m wildfire_front operator
@@ -27,22 +28,19 @@
    # … 2, 3, 4
    ```
    Esperado: semáforo **AMARILLO** (GO_Q partial) · checklist eng 7/7 · **no** reclamar GO_Q complete.  
-3. **Ensayo eng path H3** (una vez, más pesado):
+4. **Ensayo eng path H3** (una vez, más pesado; optional if script present):
    ```powershell
    python scripts/run_h3_dry_run_path.py
    # o: make h3-dry-run
    # o: wildfire-front dry-run-h3
    ```
    Esperado: `h3_eng_path_ok=true`, `h3_human_attestation_pending=true`, `go_q_met=false`.
-4. **Cheatsheet 12 min:** `docs/CHEATSHEET_DEMO_12MIN.md`  
-5. **Acta borrador:**
-   ```powershell
-   python scripts/prepare_h1_acta_draft.py
-   ```
-   → `docs/actas/ACTA_DEMO_PENDING_HUMAN.md` (blanks para tercero).  
-6. **Pack listo:** `outputs/demo_third_party/` + Reliability Report  
+5. **Cheatsheet 12 min:** `docs/CHEATSHEET_DEMO_12MIN.md`  
+6. **Acta borrador:** use `docs/actas/ACTA_DEMO_PENDING_HUMAN.md` (blanks para tercero).  
+   Optional helper if present: `python scripts/prepare_h1_acta_draft.py`  
+7. **Pack listo:** `outputs/demo_third_party/` + Reliability Report  
    `docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md`  
-7. **Agendar** persona **externa** al repo (emergencias / uni / partner).  
+8. **Agendar** persona **externa** al repo (emergencias / uni / partner).  
    Sin tercero real **no hay H1**.
 
 ---
