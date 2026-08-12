@@ -1,1 +1,1 @@
-TEMP_LOAD_FROM_DISK
+LOAD_FROM_/workspace/wfd-cli-fix/cli.py
