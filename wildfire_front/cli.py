@@ -1,1 +1,0 @@
-@/workspace/wfd-cli-fix/cli.py
