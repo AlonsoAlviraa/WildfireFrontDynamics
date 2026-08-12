@@ -78,9 +78,10 @@ def test_operator_do_act_1_smoke():
     assert p.returncode == 0, p.stderr + p.stdout
     combined = p.stdout + p.stderr
     assert "build_demo_multi_ccaa" in combined
-    assert "[demo-multi-ccaa]" in combined or (
-        ROOT / "outputs" / "demo_multi_ccaa" / "index.html"
-    ).is_file()
+    assert (
+        "[demo-multi-ccaa]" in combined
+        or (ROOT / "outputs" / "demo_multi_ccaa" / "index.html").is_file()
+    )
     # #18 rails unchanged by act 1 (hub helpers stay honest)
     r = rails_snapshot()
     assert r["go_q_met"] is False
