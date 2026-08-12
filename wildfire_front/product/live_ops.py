@@ -24,6 +24,15 @@ from wildfire_front.product.decide_service import (
     UntrustedInlineMetricsError,
     decide_from_request,
 )
+from wildfire_front.product.path_sandbox import (
+    as_path,
+    exists_file,
+    join_fixed,
+    read_json,
+    realpath,
+    resolve_under,
+    write_json,
+)
 
 LIVE_OPS_SCHEMA = "wfd_live_ops_v1"
 
@@ -74,86 +83,7 @@ def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
 
 def _root_real(base: Path | None) -> str:
     """Canonical absolute root string (no trailing sep)."""
-    return os.path.realpath(str(Path(base or REPO_ROOT)))
-
-
-def _is_under_real(candidate_real: str, root_real: str) -> bool:
-    """True if candidate is root or a path under root (CodeQL-friendly).
-
-    Uses ``os.path.commonpath`` + realpath prefix — recognized sanitizer guard
-    for ``py/path-injection``.
-    """
-    try:
-        common = os.path.commonpath([root_real, candidate_real])
-    except ValueError:
-        return False
-    if common != root_real:
-        return False
-    if candidate_real == root_real:
-        return True
-    # Boundary: next char must be path separator (avoid /repo vs /repo_evil)
-    sep = os.sep
-    # Also accept '/' on Windows for mixed paths after realpath
-    return candidate_real.startswith(root_real + sep) or candidate_real.startswith(
-        root_real + "/"
-    )
-
-
-def _sanitize_under(
-    user_path: str | Path,
-    *,
-    base: Path | None = None,
-    must_exist: bool = True,
-    must_be_dir: bool | None = True,
-) -> Path:
-    """Resolve ``user_path`` under ``base`` and return a clean Path.
-
-    Rejects empty, null bytes, ``..`` tokens, and any path that escapes base
-    after ``os.path.realpath``. Uses **inline** ``commonpath`` (CodeQL
-    ``py/path-injection`` sanitizer) before any filesystem sink.
-    """
-    root_real = _root_real(base)
-    if user_path is None or str(user_path).strip() == "":
-        raise PathNotAllowedError("path required")
-    raw = str(user_path).strip().replace("\\", "/")
-    if "\x00" in raw:
-        raise PathNotAllowedError("null byte in path")
-    parts = [p for p in raw.split("/") if p not in ("", ".")]
-    if any(p == ".." for p in parts):
-        raise PathNotAllowedError("path traversal rejected")
-    # Join under root when relative; absolute still must land under root after realpath
-    if os.path.isabs(str(user_path)):
-        joined = str(user_path)
-    else:
-        joined = os.path.join(root_real, *parts) if parts else root_real
-    candidate_real = os.path.realpath(joined)
-    # Inline commonpath guard — CodeQL recognizes this pattern as a sanitizer.
-    try:
-        if os.path.commonpath([root_real, candidate_real]) != root_real:
-            raise PathNotAllowedError(f"path outside allowlist: {user_path}")
-    except ValueError as exc:
-        raise PathNotAllowedError(f"path outside allowlist: {user_path}") from exc
-    under_sep = candidate_real.startswith(root_real + os.sep) or candidate_real.startswith(
-        root_real + "/"
-    )
-    if candidate_real != root_real and not under_sep:
-        raise PathNotAllowedError(f"path outside allowlist: {user_path}")
-    # Existence checks on the verified realpath string only
-    if must_exist and not os.path.exists(candidate_real):  # noqa: PTH110 — intentional realpath sink
-        raise PathNotAllowedError(f"path not found: {user_path}")
-    if must_be_dir is True and not os.path.isdir(candidate_real):  # noqa: PTH112
-        raise PathNotAllowedError(f"path is not a directory: {user_path}")
-    if must_be_dir is False and not os.path.isfile(candidate_real):  # noqa: PTH113
-        raise PathNotAllowedError(f"path is not a file: {user_path}")
-    # Rebuild Path only from verified realpath string (taint barrier)
-    return Path(os.fsdecode(os.fsencode(candidate_real)))
-
-
-def _is_under(path: Path, root: Path) -> bool:
-    try:
-        return _is_under_real(os.path.realpath(str(path)), os.path.realpath(str(root)))
-    except (ValueError, OSError):
-        return False
+    return realpath(base or REPO_ROOT)
 
 
 def resolve_work_dir(
@@ -167,14 +97,42 @@ def resolve_work_dir(
     """
     if work_dir is None or str(work_dir).strip() == "":
         raise PathNotAllowedError("work_dir required")
-    return _sanitize_under(work_dir, base=base, must_exist=True, must_be_dir=True)
+    return as_path(
+        resolve_under(
+            work_dir,
+            [_root_real(base)],
+            must_exist=True,
+            must_be_dir=True,
+        )
+    )
+
+
+def _sanitize_under(
+    user_path: str | Path,
+    *,
+    base: Path | None = None,
+    must_exist: bool = True,
+    must_be_dir: bool | None = True,
+) -> Path:
+    """Resolve ``user_path`` under ``base`` (wrapper for tests / callers)."""
+    return as_path(
+        resolve_under(
+            user_path,
+            [_root_real(base)],
+            must_exist=must_exist,
+            must_be_dir=must_be_dir if must_be_dir is not False else None,
+            must_be_file=True if must_be_dir is False else None,
+        )
+    )
 
 
 def _rel_to_base(path: Path, base: Path) -> str:
     try:
-        root_real = os.path.realpath(str(base))
-        path_real = os.path.realpath(str(path))
-        if not _is_under_real(path_real, root_real):
+        root_real = realpath(base)
+        path_real = realpath(path)
+        from wildfire_front.product.path_sandbox import is_under
+
+        if not is_under(path_real, root_real):
             return os.path.basename(path_real)
         rel = os.path.relpath(path_real, root_real)
         return rel.replace("\\", "/")
@@ -182,42 +140,18 @@ def _rel_to_base(path: Path, base: Path) -> str:
         return os.path.basename(str(path))
 
 
-def _fixed_child(parent: Path, *parts: str) -> Path:
-    """Join fixed (non-user) child segments under an already-sanitized parent.
+def _fixed_child(parent: Path | str, *parts: str) -> Path:
+    """Join fixed (non-user) child segments under an already-sanitized parent."""
+    return as_path(join_fixed(parent, *parts))
 
-    Child names are hardcoded constants only — never user input.
-    """
-    parent_real = os.path.realpath(str(parent))
-    for part in parts:
-        if not part or part in (".", "..") or "/" in part or "\\" in part or "\x00" in part:
-            raise PathNotAllowedError(f"invalid child segment: {part!r}")
-    joined = os.path.join(parent_real, *parts)
-    child_real = os.path.realpath(joined)
-    # Inline commonpath sanitizer for CodeQL
+
+def _read_json_file(path: Path | str) -> dict[str, Any] | None:
+    """Read JSON from an allowlisted/fixed path via path_sandbox."""
     try:
-        if os.path.commonpath([parent_real, child_real]) != parent_real:
-            raise PathNotAllowedError("child escaped parent")
-    except ValueError as exc:
-        raise PathNotAllowedError("child escaped parent") from exc
-    return Path(os.fsdecode(os.fsencode(child_real)))
-
-
-def _read_json_file(path: Path) -> dict[str, Any] | None:
-    # path must already be sanitized / fixed-child under allowlist
-    real = os.path.realpath(str(path))
-    root_hint = os.path.dirname(real)
-    try:
-        if os.path.commonpath([root_hint, real]) != root_hint and real != root_hint:
+        if not exists_file(path):
             return None
-    except ValueError:
-        return None
-    if not os.path.isfile(real):
-        return None
-    try:
-        # codeql[py/path-injection]: path is allowlisted via resolve_work_dir/_fixed_child
-        with open(real, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError):
+        data = read_json(realpath(path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError, PathNotAllowedError):
         return None
     return data if isinstance(data, dict) else None
 
@@ -382,8 +316,7 @@ def handle_decide(
             "event_id": card.get("event_id"),
             "system_reliability_pass": card.get("system_reliability_pass"),
             "latency_ms": card.get("latency_ms"),
-            "policy_id": (card.get("policy") or {}).get("id")
-            or req["policy_id"],
+            "policy_id": (card.get("policy") or {}).get("id") or req["policy_id"],
             "field_ops_ml_live_fusion": "OFF",
             "reasons_head": list((card.get("reasons") or [])[:4]),
             "outbox_decision": outbox_decision,
@@ -413,20 +346,14 @@ def handle_export_acta(
     wd = resolve_work_dir(req.get("work_dir"), base=root)
     outbox = _fixed_child(wd, "outbox")
     card_path = _fixed_child(outbox, "fire_decision_card.json")
-    outbox_s = str(outbox)
-    card_s = str(card_path)
-    wd_s = str(wd)
-    # Re-validate fixed children under root before any FS sink (CodeQL barrier)
-    try:
-        if os.path.commonpath([str(root), card_s]) != str(root):
-            raise PathNotAllowedError("card path outside root")
-    except ValueError as exc:
-        raise PathNotAllowedError("card path outside root") from exc
-    if not os.path.isfile(card_s):
+    outbox_s = realpath(outbox)
+    card_s = realpath(card_path)
+    wd_s = realpath(wd)
+    if not exists_file(card_s):
         # Fall back to decide then export
         decide_body = {
             "work_dir": wd_s,
-            "event_id": str(req.get("event_id") or wd.name),
+            "event_id": str(req.get("event_id") or Path(wd_s).name),
             "policy_id": "field_ops",
         }
         decided = handle_decide(decide_body, base=root)
@@ -443,17 +370,13 @@ def handle_export_acta(
                 "honesty_rails": honesty_rails(),
             }
         card = decided.get("result") or {}
-        # Persist card so outbox is usable next time
+        # Persist card so outbox is usable next time (fixed basename only)
         os.makedirs(outbox_s, exist_ok=True)
-        # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, "w", encoding="utf-8") as fh:
-            json.dump(card, fh, indent=2, default=str)
+        write_json(outbox_s, "fire_decision_card.json", card)
     else:
-        # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, encoding="utf-8") as fh:
-            card = json.load(fh)
+        card = _read_json_file(card_s) or {}
 
-    out_dir = Path(outbox_s)  # already under sanitized work_dir
+    out_dir = as_path(outbox_s)  # already under sanitized work_dir
     paths = write_forensic_bundle(
         out_dir,
         card if isinstance(card, dict) else {},
@@ -507,27 +430,15 @@ def handle_replay_third_party(
     try:
         if sources_raw:
             # sources is a file, not a dir — resolve under base without is_dir check
-            resolved = _sanitize_under(
-                sources_raw, base=root, must_exist=True, must_be_dir=False
-            )
-            resolved_s = str(resolved)
-            try:
-                if os.path.commonpath([str(root), resolved_s]) != str(root):
-                    raise PathNotAllowedError("sources outside allowlist")
-            except ValueError as exc:
-                raise PathNotAllowedError("sources outside allowlist") from exc
-            # codeql[py/path-injection]: resolved via _sanitize_under + commonpath
-            with open(resolved_s, encoding="utf-8") as fh:
-                src = json.load(fh)
+            resolved = _sanitize_under(sources_raw, base=root, must_exist=True, must_be_dir=False)
+            src = read_json(realpath(resolved))
             if not isinstance(src, dict):
                 raise PathNotAllowedError("sources must be a JSON object")
             result = replay_decision(src, base=root)
             target_rel = _rel_to_base(resolved, root)
         elif bundle_raw:
             # Allow pack dir under repo (may not be a work_dir)
-            resolved = _sanitize_under(
-                bundle_raw, base=root, must_exist=True, must_be_dir=True
-            )
+            resolved = _sanitize_under(bundle_raw, base=root, must_exist=True, must_be_dir=True)
             result = load_and_replay_bundle(resolved, base=root)
             target_rel = _rel_to_base(resolved, root)
         elif work_raw:
@@ -587,10 +498,7 @@ def handle_replay_third_party(
             "decision_match": result.get("match_decision"),
             "expected": result.get("expected_decision"),
             "got": result.get("got_decision"),
-            "note": (
-                "replay_ok = forensic consistency offline — "
-                "not cryptographic authenticity"
-            ),
+            "note": ("replay_ok = forensic consistency offline — not cryptographic authenticity"),
         },
         "honesty_rails": honesty_rails(),
     }

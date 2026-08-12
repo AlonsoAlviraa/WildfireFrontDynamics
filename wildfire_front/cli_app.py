@@ -216,7 +216,9 @@ def _parse_bbox(raw: str | None) -> tuple[float, float, float, float] | None:
     return (w, s, e, n)
 
 
-def _bbox_from_center(lat: float, lon: float, radius_km: float) -> tuple[float, float, float, float]:
+def _bbox_from_center(
+    lat: float, lon: float, radius_km: float
+) -> tuple[float, float, float, float]:
     import math
 
     dlat = radius_km / 111.0
@@ -290,7 +292,9 @@ def run_app(args: argparse.Namespace) -> int:
             return 2
         center = (float(lon), float(lat))
         if bbox is None:
-            bbox = _bbox_from_center(float(lat), float(lon), float(getattr(args, "radius_km", 50) or 50.0))
+            bbox = _bbox_from_center(
+                float(lat), float(lon), float(getattr(args, "radius_km", 50) or 50.0)
+            )
 
     # Default offline for demos; --live enables network; --no-live is explicit offline
     live = bool(getattr(args, "live", False)) and not bool(getattr(args, "no_live", False))
@@ -319,9 +323,7 @@ def run_app(args: argparse.Namespace) -> int:
             return 2
         work_dir = Path(hit["work_dir"])
 
-    pack_on = bool(getattr(args, "all_fires", False)) or bool(
-        getattr(args, "pack_fires", False)
-    )
+    pack_on = bool(getattr(args, "all_fires", False)) or bool(getattr(args, "pack_fires", False))
     pack_cap = int(getattr(args, "pack_cap", 8) or 8)
     if pack_cap < 1:
         pack_cap = 1
@@ -407,19 +409,27 @@ def run_app(args: argparse.Namespace) -> int:
         print(f"  decision card: {'yes' if payload.get('decision_card') else 'no'}")
         print(f"  ops metrics:  {'yes' if payload.get('ops_metrics') else 'no'}")
         print(f"  map layers:   {len(payload.get('layer_summary') or [])}  ·  connectivity={conn}")
-        print(f"  fires:        {payload.get('fire_count', 0)} en catálogo  ·  selected={payload.get('selected_fire_id')}")
+        print(
+            f"  fires:        {payload.get('fire_count', 0)} en catálogo  ·  selected={payload.get('selected_fire_id')}"
+        )
         print(f"  actions:      {len(payload.get('product_actions') or [])} CTAs en consola")
-        print(f"  ui-mode:      {payload.get('ui_mode', 'simple')}  ·  glosario={len(payload.get('glossary') or [])}")
+        print(
+            f"  ui-mode:      {payload.get('ui_mode', 'simple')}  ·  glosario={len(payload.get('glossary') or [])}"
+        )
         pack = payload.get("pack") or {}
         if pack.get("enabled"):
-            print(f"  pack:         {pack.get('n')} IF  ·  cap={pack.get('cap')}  ·  truncated={pack.get('truncated')}")
+            print(
+                f"  pack:         {pack.get('n')} IF  ·  cap={pack.get('cap')}  ·  truncated={pack.get('truncated')}"
+            )
         bridge = payload.get("bridge_decide") or {}
         if bridge.get("enabled"):
             print(f"  bridge:       {bridge.get('url')}  (live card; offline fallback embed)")
         lo = payload.get("live_ops") or {}
         if lo.get("enabled"):
             print("  live ops:     ON  ·  POST /live/v1/{status,decide,export-acta}")
-        print(f"  rails:        fusion={(payload.get('rails') or {}).get('field_ops_ml_live_fusion')}")
+        print(
+            f"  rails:        fusion={(payload.get('rails') or {}).get('field_ops_ml_live_fusion')}"
+        )
         print(f"  HTML:         {paths['html']}")
         print(f"  JSON:         {paths['json']}")
         print("")
@@ -458,9 +468,7 @@ def run_app(args: argparse.Namespace) -> int:
     if do_serve:
         bridge_cfg = payload.get("bridge_decide") or {}
         bridge_upstream = (
-            str(bridge_cfg.get("url") or "").strip()
-            if bridge_cfg.get("enabled")
-            else None
+            str(bridge_cfg.get("url") or "").strip() if bridge_cfg.get("enabled") else None
         )
         return _serve_static_spa(
             paths["html"],
@@ -699,16 +707,22 @@ class _SafeSPARequestHandler:
                     )
                     with urllib.request.urlopen(req, timeout=8) as resp:
                         data = resp.read()
-                        ctype = resp.headers.get(
-                            "Content-Type", "application/json; charset=utf-8"
+                        # Never forward raw Content-Type (HTTP response splitting);
+                        # always use fixed whitelist via _send_bytes default/mapper.
+                        raw_ct = resp.headers.get("Content-Type") or ""
+                        # Strip CR/LF and parameters; map in _send_bytes
+                        safe_ct = raw_ct.split(";")[0].strip().replace("\r", "").replace("\n", "")
+                        if not safe_ct:
+                            safe_ct = "application/json"
+                        self._send_bytes(
+                            int(resp.status),
+                            data,
+                            content_type=safe_ct,
                         )
-                        self._send_bytes(int(resp.status), data, content_type=ctype)
                 except urllib.error.HTTPError as exc:
                     data = exc.read() if hasattr(exc, "read") else b""
                     if not data:
-                        data = (
-                            f'{{"error":"upstream_http","status":{exc.code}}}'.encode()
-                        )
+                        data = f'{{"error":"upstream_http","status":{exc.code}}}'.encode()
                     self._send_bytes(int(exc.code), data)
                 except Exception as exc:
                     msg = str(exc).replace('"', "'")[:200]
@@ -733,10 +747,16 @@ class _SafeSPARequestHandler:
                 if target is None:
                     self.send_error(403, "Forbidden: path outside SPA output dir")
                     return
-                import os as _os
+                from wildfire_front.product.path_sandbox import (
+                    PathNotAllowedError,
+                    read_bytes,
+                    realpath,
+                )
 
-                t_real = _os.path.realpath(str(target))
-                if not _os.path.isfile(t_real):
+                try:
+                    t_real = realpath(target)
+                    data = read_bytes(t_real, [root_res])
+                except (OSError, PathNotAllowedError):
                     self.send_error(404, "Not found")
                     return
                 # Fixed content-type from suffix only (no free-form header injection)
@@ -754,12 +774,6 @@ class _SafeSPARequestHandler:
                     ".gif": "image/gif",
                     ".webp": "image/webp",
                 }.get(suf, "application/octet-stream")
-                try:
-                    with open(t_real, "rb") as fh:
-                        data = fh.read()
-                except OSError:
-                    self.send_error(404, "Not found")
-                    return
                 self._send_bytes(200, data, content_type=ctype)
 
             def do_POST(self) -> None:  # noqa: N802
@@ -775,9 +789,7 @@ class _SafeSPARequestHandler:
                         self._send_bytes(413, b'{"error":"body_too_large"}')
                         return
                     raw = self.rfile.read(length) if length > 0 else b"{}"
-                    self._proxy_to_upstream(
-                        method="POST", upstream_path="/v1/decide", body=raw
-                    )
+                    self._proxy_to_upstream(method="POST", upstream_path="/v1/decide", body=raw)
                     return
                 self.send_error(405, "Method not allowed")
 
@@ -920,8 +932,7 @@ def resolve_safe_spa_path(root: Path, request_path: str) -> Path | None:
     if common != root_real:
         return None
     if cand_real != root_real and not (
-        cand_real.startswith(root_real + os.sep)
-        or cand_real.startswith(root_real + "/")
+        cand_real.startswith(root_real + os.sep) or cand_real.startswith(root_real + "/")
     ):
         return None
     return Path(cand_real)

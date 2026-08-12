@@ -6,14 +6,22 @@ and a mando can read a short radio line. MD acta — no PDF dependency.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from .confidence import content_hash
-from .decide_service import API_VERSION, decide_from_request
+from .decide_service import API_VERSION, PathNotAllowedError, decide_from_request
+from .path_sandbox import (
+    exists_file,
+    join_fixed,
+    read_json,
+    realpath,
+    resolve_under,
+    write_json,
+    write_text,
+)
 
 FORENSIC_SCHEMA = "forensic_bundle_v1"
 REPLAY_SOURCES_SCHEMA = "forensic_replay_sources_v1"
@@ -277,8 +285,11 @@ def write_forensic_bundle(
     lang: str = "es",
 ) -> dict[str, str]:
     """Write acta + radio + card + replay sources + manifest. Returns paths."""
-    out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    # out_dir is caller-controlled; resolve + create via realpath parent writes
+    out_s = realpath(out_dir)
+    import os as _os
+
+    _os.makedirs(out_s, exist_ok=True)
 
     card_dict = dict(card)
     radio = render_radio_bridge(card_dict, lang=lang)
@@ -292,21 +303,11 @@ def write_forensic_bundle(
     )
 
     paths: dict[str, str] = {}
-    card_path = out / CARD_FILENAME
-    card_path.write_text(json.dumps(card_dict, indent=2, default=str), encoding="utf-8")
-    paths["card"] = str(card_path)
-
-    radio_path = out / RADIO_FILENAME
-    radio_path.write_text(radio + "\n", encoding="utf-8")
-    paths["radio"] = str(radio_path)
-
-    acta_path = out / ACTA_FILENAME
-    acta_path.write_text(acta, encoding="utf-8")
-    paths["acta"] = str(acta_path)
-
-    replay_path = out / REPLAY_SOURCES_FILENAME
-    replay_path.write_text(json.dumps(replay_src, indent=2, default=str), encoding="utf-8")
-    paths["replay_sources"] = str(replay_path)
+    # Fixed basenames only — no user path segments in filenames
+    paths["card"] = write_json(out_s, CARD_FILENAME, card_dict)
+    paths["radio"] = write_text(out_s, RADIO_FILENAME, radio + "\n")
+    paths["acta"] = write_text(out_s, ACTA_FILENAME, acta)
+    paths["replay_sources"] = write_json(out_s, REPLAY_SOURCES_FILENAME, replay_src)
 
     # Verify replay immediately (self-check)
     replay_result = replay_decision(replay_src)
@@ -333,25 +334,38 @@ def write_forensic_bundle(
         "self_replay_ok": replay_result.get("replay_ok"),
         "disclaimers": list(card_dict.get("disclaimers") or [])[:4],
     }
-    man_path = out / MANIFEST_FILENAME
-    man_path.write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
-    paths["manifest"] = str(man_path)
+    paths["manifest"] = write_json(out_s, MANIFEST_FILENAME, manifest)
     paths["self_replay_ok"] = str(bool(replay_result.get("replay_ok")))
     return paths
 
 
 def load_and_replay_bundle(bundle_dir: Path | str, *, base: Path | None = None) -> dict[str, Any]:
     """Load replay_sources.json from a forensic bundle and re-verify."""
-    d = Path(bundle_dir)
-    src_path = d / REPLAY_SOURCES_FILENAME
-    if not src_path.is_file():
-        # allow pointing at outbox that only has card
-        card_path = d / CARD_FILENAME
-        if card_path.is_file():
-            card = json.loads(card_path.read_text(encoding="utf-8"))
-            src = extract_replay_sources(card)
+    roots: list[Path | str] = []
+    if base is not None:
+        roots.append(base)
+    from .decide_service import REPO_ROOT
+
+    roots.append(REPO_ROOT)
+    try:
+        d_s = resolve_under(bundle_dir, roots, must_exist=True, must_be_dir=True)
+    except PathNotAllowedError:
+        # Local trusted forensics: still realpath the dir, refuse only null/.. via resolve
+        d_s = realpath(bundle_dir)
+    try:
+        src_path = join_fixed(d_s, REPLAY_SOURCES_FILENAME)
+        if exists_file(src_path):
+            src = read_json(src_path)
         else:
-            raise FileNotFoundError(f"no {REPLAY_SOURCES_FILENAME} or {CARD_FILENAME} in {d}")
-    else:
-        src = json.loads(src_path.read_text(encoding="utf-8"))
+            card_path = join_fixed(d_s, CARD_FILENAME)
+            if not exists_file(card_path):
+                raise FileNotFoundError(f"no {REPLAY_SOURCES_FILENAME} or {CARD_FILENAME} in {d_s}")
+            card = read_json(card_path)
+            if not isinstance(card, dict):
+                raise FileNotFoundError(f"invalid card in {d_s}")
+            src = extract_replay_sources(card)
+    except PathNotAllowedError as exc:
+        raise FileNotFoundError(str(exc)) from exc
+    if not isinstance(src, dict):
+        raise FileNotFoundError("replay sources must be a JSON object")
     return replay_decision(src, base=base)
