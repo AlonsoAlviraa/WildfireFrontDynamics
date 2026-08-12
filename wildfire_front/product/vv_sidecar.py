@@ -80,7 +80,8 @@ def _harden_eng_stub_metrics(metrics: Any) -> dict[str, Any]:
 
 def scorecard_summary(card: Mapping[str, Any], *, path: Path | None = None) -> dict[str, Any]:
     """Compact decide/API surface: rails + eng_stub only (no field metrics)."""
-    rails = card.get("rails") if isinstance(card.get("rails"), Mapping) else {}
+    raw_rails = card.get("rails")
+    rails: Mapping[str, Any] = raw_rails if isinstance(raw_rails, Mapping) else {}
     summary: dict[str, Any] = {
         "schema": card.get("schema") or VV_SCORECARD_SCHEMA,
         "status": card.get("status") or VV_STATUS_ENG_STUB,
@@ -194,9 +195,11 @@ def write_vv_scorecard(
         if not card.get("eng_stub"):
             raise VvSidecarError("scorecard must set eng_stub=true (no field claims)")
     # Harden rails/non-claims/metrics on every write
+    raw_rails = card.get("rails")
+    incoming_rails: dict[str, Any] = dict(raw_rails) if isinstance(raw_rails, dict) else {}
     card["rails"] = {
         **DEFAULT_RAILS,
-        **(card.get("rails") if isinstance(card.get("rails"), dict) else {}),
+        **incoming_rails,
         "GO_Q": "partial",
         "field_ops_fusion": "OFF",
     }
