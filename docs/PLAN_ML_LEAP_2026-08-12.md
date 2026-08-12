@@ -5,6 +5,7 @@
 **Quién:** Alonso (datos/promote) · Data Steward · ML Lab · Research · eng A/B solo donde paths toquen docs/CI  
 **SSOT gates:** `docs/CURRENT_STATE.md` · `docs/ML_PRODUCT_GO_STATUS.json` · `docs/ML_PRODUCT_SCORECARD.json`  
 **Claims:** `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md`  
+**E1b:** `docs/ML_LEAP_SELECTIVE_FNR.md`  
 **Companions:** `docs/B4_B5_UNBLOCK_CALENDAR.md` · `docs/DATA_ANCHOR_SSOT.md` · `docs/BOTTLENECKS_B1_B6_STATUS.md`
 
 ## Verdict
@@ -55,7 +56,7 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 **Done-when:**
 - [x] Lista P0/P1/P2 en docs (Hellín PDF+KMZ, Cardoso/2º IF, GeoTIFF ≥3 scenes, rights) — `docs/ML_LEAP_REQUEST_DATA.md`
 - [x] Checklist cite→promote Hellín (H1–H7); status sigue `pending_external` hasta Alonso
-- [ ] `check_release_flags` PASS; no flip anchors sin OK escrito
+- [x] `check_release_flags` PASS; no flip anchors sin OK escrito
 
 **Non-goals:** FOI send · Hellín `confirmed` sin cite · retrain
 
@@ -83,9 +84,9 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 **Branch:** `docs/ml-leap-e1b-selective-fnr`
 
 **Done-when:**
-- [ ] Method note: curves @50/80/90 + Δ vs random; FNR@budget → GO/HOLD/ABSTAIN (not dispatch)
-- [ ] Claim board L1–L8 enforced in PR body
-- [ ] No new architecture / no retrain
+- [x] Method note: curves @50/80/90 + Δ vs random; FNR@budget → GO/HOLD/ABSTAIN (not dispatch) — `docs/ML_LEAP_SELECTIVE_FNR.md`
+- [x] Claim board L1–L8 enforced in PR body
+- [x] No new architecture / no retrain
 
 ---
 
@@ -133,8 +134,8 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 
 ## Definition of Done (ML LEAP phase 1)
 
-- [ ] REQUEST_DATA pack + Hellín checklist in `docs/`
-- [ ] E1 one-shot documented; frozen-cal TEST path clear
-- [ ] Selective/FNR method note + claim board in `docs/`
-- [ ] No gate flips; FREEZE intact
-- [ ] Phase 2 (M1) explicitly blocked until new IF / lift
+- [x] REQUEST_DATA pack + Hellín checklist in `docs/`
+- [x] E1 one-shot documented; frozen-cal TEST path clear
+- [x] Selective/FNR method note + claim board in `docs/`
+- [x] No gate flips; FREEZE intact
+- [x] Phase 2 (M1) explicitly blocked until new IF / lift

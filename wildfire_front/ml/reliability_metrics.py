@@ -226,3 +226,81 @@ def overconfidence_gap(
         return float("nan")
     acc = float((y >= 0.5).mean())
     return float(conf.mean() - acc)
+
+
+def patch_miss_rate_at_coverage(
+    ious: Sequence[float] | np.ndarray,
+    confidences: Sequence[float] | np.ndarray,
+    *,
+    coverage: float = 0.8,
+    tau: float = 0.5,
+) -> dict[str, float]:
+    """Among top-``coverage`` patches by confidence, fraction with IoU < ``tau``.
+
+    Patch-level called-set miss. **Not** pixel FNR and **not** a peer CRC claim
+    (claim board L6 stays inventable-only until a dedicated scorecard).
+    """
+    iou = np.asarray(ious, dtype=np.float64).ravel()
+    conf = np.asarray(confidences, dtype=np.float64).ravel()
+    if iou.size == 0 or iou.size != conf.size:
+        return {
+            "miss_rate": float("nan"),
+            "n_keep": 0.0,
+            "n_miss": 0.0,
+            "coverage_actual": 0.0,
+            "tau": float(tau),
+        }
+    cov = float(coverage)
+    if cov <= 0.0:
+        return {
+            "miss_rate": float("nan"),
+            "n_keep": 0.0,
+            "n_miss": 0.0,
+            "coverage_actual": 0.0,
+            "tau": float(tau),
+        }
+    n_keep = int(iou.size) if cov >= 1.0 else max(1, int(np.ceil(cov * iou.size)))
+    keep = np.argsort(-conf)[:n_keep]
+    miss = iou[keep] < float(tau)
+    n_miss = int(miss.sum())
+    return {
+        "miss_rate": float(n_miss / n_keep),
+        "n_keep": float(n_keep),
+        "n_miss": float(n_miss),
+        "coverage_actual": float(n_keep / iou.size),
+        "tau": float(tau),
+    }
+
+
+def fnr_proxy_at_budget(
+    ious: Sequence[float] | np.ndarray,
+    confidences: Sequence[float] | np.ndarray,
+    *,
+    budget: float = 0.2,
+    tau: float = 0.5,
+) -> dict[str, float]:
+    """Abstain lowest-confidence ``budget`` fraction; miss rate on the called set.
+
+    ``budget`` = Decision Card ABSTAIN tail. ``coverage = 1 - budget`` is the
+    GO/HOLD candidate set. Lab proxy only — not tactical dispatch, not L6.
+    """
+    b = float(budget)
+    if b >= 1.0:
+        return {
+            "fnr_proxy": float("nan"),
+            "miss_rate": float("nan"),
+            "n_keep": 0.0,
+            "n_miss": 0.0,
+            "coverage_actual": 0.0,
+            "budget": b,
+            "coverage": 0.0,
+            "tau": float(tau),
+        }
+    cov = max(0.0, 1.0 - b)
+    miss = patch_miss_rate_at_coverage(ious, confidences, coverage=cov, tau=tau)
+    return {
+        **miss,
+        "fnr_proxy": miss["miss_rate"],
+        "budget": b,
+        "coverage": cov,
+    }

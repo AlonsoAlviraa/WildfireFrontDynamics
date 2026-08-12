@@ -8,7 +8,7 @@
 > **30d plan:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
 > **Mes2 PR3:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md` · handoff `docs/HANDOFF_MES2_PR3_HUMANOS_2026-08-12.md`  
 > **Mes 3 (12 sep–11 oct):** `docs/PLAN_MES3_AGENTES_A_B_2026-09-12.md` · handoff `docs/HANDOFF_MES3_HUMANOS_2026-09-12.md`  
-> **ML leap:** `docs/PLAN_ML_LEAP_2026-08-12.md` · D0 `docs/ML_LEAP_REQUEST_DATA.md` · E1 `docs/ML_LEAP_EVAL_ONESHOT.md` · claims `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md`  
+> **ML leap:** `docs/PLAN_ML_LEAP_2026-08-12.md` · D0 `docs/ML_LEAP_REQUEST_DATA.md` · E1 `docs/ML_LEAP_EVAL_ONESHOT.md` · E1b `docs/ML_LEAP_SELECTIVE_FNR.md` · claims `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md`  
 
 > **Product:** decision support for wildfires — **not** tactical dispatch.
 
@@ -62,8 +62,9 @@
 | Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
 | ML leap program | **Filed** — `PLAN_ML_LEAP_2026-08-12.md` (FREEZE intact; no v35) |
-| ML leap D0 REQUEST_DATA | **In flight** — P0/P1/P2 + Hellín H1–H7; no promote |
-| ML leap E1 eval oneshot | **Doc shipped with D0** — frozen cal TEST path; SKIP ≠ green |
+| ML leap D0 REQUEST_DATA | **Shipped** docs (#42) — P0/P1/P2 + Hellín H1–H7; no promote |
+| ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |
+| ML leap E1b selective/FNR | **Filed** — `ML_LEAP_SELECTIVE_FNR.md` (method; @50/@90 not run; no L6) |
 
 ## Bottlenecks snapshot (B1–B6)
 

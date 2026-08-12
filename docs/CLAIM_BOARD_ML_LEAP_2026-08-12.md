@@ -1,6 +1,7 @@
 # Claim board — ML LEAP (2026-08-12)
 
 **Plan:** `docs/PLAN_ML_LEAP_2026-08-12.md`  
+**E1b method:** `docs/ML_LEAP_SELECTIVE_FNR.md` (coverage @50/80/90 · FNR@budget proxy · not dispatch)  
 **Rails:** FREEZE_ML · IoU ≠ ROS · fusion OFF · no invent benchmarks · decision-support ≠ despacho táctico
 
 | ID | Claim | Kind | Board status | Sellable? |
