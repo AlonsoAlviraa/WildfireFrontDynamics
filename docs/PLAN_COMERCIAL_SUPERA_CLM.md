@@ -1,5 +1,11 @@
 # Plan largo — superar “solo CLM” y poder vender
 
+> **Glosario (2026-08-12):** **`VENTA_GO` ≠ `GO_Q`**.  
+> - **`VENTA_GO`** = empaque dual-track E1–E6 / scorecard `demo_sellable` (packaging).  
+> - **`GO_Q`** = gate de producto (**partial** hasta demo tercero + acta firmada).  
+> - **`VENTA_GO=true` no autoriza outbound, LinkedIn, web ni “field sell-ready”.**  
+> - field_ops ML fusion **OFF** · FREEZE_ML · no inventar métricas.
+
 > **Método:** loop-engineering · dual-track (A CLM + B open) · métricas honestas  
 > **Inicio ejecución:** 2026-07-17  
 > **Principio:** no se “vence” a CLM en IoU inventando datos; se **supera el producto vendible** en ejes que el mercado paga y CLM-solo no cubre.
@@ -10,9 +16,9 @@
 
 **CLM hoy (fuerte):**
 - Secuencias LWIR reales + máscaras
-- Ensemble ML v34 IoU **0.8963** Δ **+0.2545** (holdout)
+- Ensemble ML v34 IoU **0.8963** Δ **+0.2545** (holdout) — provenance only, ≠ ROS
 - Ops ROS local Tobarra (ancla A)
-- Dependencia: Heligrafics/Pablo, 1 ancla confirmed
+- Dependencia: Heligrafics/Pablo, anclas confirmadas según SSOT
 
 **“Mejor para vender” = score multi-eje ≥ CLM-solo en 4/6 y sin regresión en honestidad:**
 
@@ -26,9 +32,9 @@
 | **E6 ML transfer** | 15% | v34 fuerte | Mantener / no regresar | no tocar holdout |
 
 **No se reclama:** “nuestro IoU es mejor que CLM en Cardoso” usando CEMS.  
-**Sí se reclama:** “producto dual: (1) frente térmico CLM cuando hay dron, (2) perímetro/timeline open-data en IF grandes sin NDA, listo para demo comercial”.
+**Sí se reclama:** “producto dual: (1) frente térmico CLM cuando hay dron, (2) perímetro/timeline open-data en IF grandes sin NDA, listo para **ensayo** comercial”.
 
-### Gate VENTA_GO
+### Gate VENTA_GO (packaging only — not GO_Q)
 
 ```
 VENTA_GO =
@@ -39,7 +45,9 @@ VENTA_GO =
   (scorecard comparativo publicado)
 ```
 
-### Gate VENTA_GO+ (stretch)
+**Does not imply:** GO_Q complete · field_ops fusion ON · outbound cleared · silent-GO ≤1e-6.
+
+### Gate VENTA_GO+ (stretch packaging)
 
 ```
 VENTA_GO+ = VENTA_GO AND
@@ -48,13 +56,15 @@ VENTA_GO+ = VENTA_GO AND
   (pricing/pilot offer 1 página)
 ```
 
+Still **≠ GO_Q**.
+
 ---
 
 ## 2. Arquitectura de producto vendible
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  WildfireFrontDynamics — Dual Product (sellable)        │
+│  WildfireFrontDynamics — Dual Product (sellable pack)   │
 ├──────────────────────┬──────────────────────────────────┤
 │  A · Thermal Front   │  B · Open Perimeter Intelligence │
 │  (CLM / Heligrafics) │  (CEMS / EFFIS / public)         │
@@ -66,6 +76,7 @@ VENTA_GO+ = VENTA_GO AND
            │
            ▼
    Demo comercial unificada + scorecard + one-pager
+   (outbound still needs Claims + Alonso)
 ```
 
 ---
@@ -80,7 +91,7 @@ VENTA_GO+ = VENTA_GO AND
 ### Fase 1 — Empaque de venta (sem 1–2) ← **ahora**
 1. Índice multi-pack open_if  
 2. Scorecard **CLM vs Open** (ejes E1–E6)  
-3. One-pager comercial ES  
+3. One-pager comercial ES (sin claims inventados)  
 4. Demo one-command sellable  
 5. ≥1 activación CEMS adicional (famosa / multi-MONIT)
 
@@ -96,13 +107,13 @@ VENTA_GO+ = VENTA_GO AND
 2. Landing/README “qué compran”  
 3. SLA demo: rebuild pack < 10 min  
 4. Legal: disclaimers CEMS vs táctico  
-5. 3 llamadas / emails a GEACAM, Heligrafics, bomberos autonómicos
+5. 3 llamadas / emails a GEACAM, Heligrafics, bomberos autonómicos (**Alonso send**)
 
 ### Fase 4 — Escala (sem 11–12+)
 1. API mínima `open_if` + `incident` status  
 2. Multi-tenant outbox  
 3. Integración GIS (WMS/export)  
-4. Si datos CLM nuevos → v35 ML  
+4. Si datos CLM nuevos → v35 ML (solo con OK Alonso; default FREEZE)
 
 ---
 
@@ -119,20 +130,23 @@ VENTA_GO+ = VENTA_GO AND
 - Prometer extinguishment / despacho táctico  
 - Decir que CEMS = perímetro catastral nacional  
 - Vender IoU ML como ROS de dron  
+- Equivaler **VENTA_GO** a **GO_Q** / field sell-ready  
+- Silent-GO ≤1e-6 / “cinco nueves” contractuales  
 - Demo que solo funciona en un PC con 200 GB de Dropbox  
 
 ---
 
-## 6. Checklist VENTA_GO (actualizar cada iteración)
+## 6. Checklist VENTA_GO (packaging — actualizar cada iteración)
 
 - [x] Pack open multi-temporal (EMSR578/583/581/632)  
 - [x] Índice multi-IF + comparación CLM (`COMPARE_CLM_VS_OPEN*`)  
-- [x] One-pager comercial (`ONEPAGER_COMERCIAL_ES.md`)  
+- [x] One-pager comercial (`ONEPAGER_COMERCIAL_ES.md`) — hygiene 2026-08-12  
 - [x] Demo 1 comando (`scripts/demo_sellable_product.py`)  
 - [x] ≥3 activaciones (4 packs; max ~5.3k ha EMSR632)  
-- [x] Scorecard E1–E6 → **VENTA_GO = true** (dual ~95 vs CLM-solo ~39, 5/6 ejes)  
+- [x] Scorecard E1–E6 → **VENTA_GO = true** (dual ~95 vs CLM-solo ~39, 5/6 ejes) — **packaging only**  
 
 **Verificación 2026-07-17:** `python scripts/demo_sellable_product.py --skip-build` → `venta_go: true`.  
+**GO_Q (2026-08-12):** sigue **partial** (`go_q_met=false` hasta demo+acta).
 
 ---
 
