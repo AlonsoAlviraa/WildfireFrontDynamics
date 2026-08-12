@@ -1,17 +1,18 @@
 # CURRENT_STATE — WildfireFrontDynamics
 
 > **SSOT for release flags** (`scripts/check_release_flags.py`)  
-> **As of:** 2026-08-12 (Mes2 post-PR2 · eng refresh PR3 docs)  
+> **As of:** 2026-08-12 (Mes2 PR3-A shipped · Mes3 plan filed)  
 > **Companion stamp:** `docs/ML_PRODUCT_GO_STATUS.json`  
 > **Bottlenecks:** `docs/BOTTLENECKS_B1_B6_STATUS.md`  
 > **Anchors SSOT:** `docs/DATA_ANCHOR_SSOT.md` + `data/infocam_anchors.json`  
 > **30d plan:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
 > **Mes2 PR3:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md` · handoff `docs/HANDOFF_MES2_PR3_HUMANOS_2026-08-12.md`  
+> **Mes 3 (12 sep–11 oct):** `docs/PLAN_MES3_AGENTES_A_B_2026-09-12.md` · handoff `docs/HANDOFF_MES3_HUMANOS_2026-09-12.md`  
 > **Product:** decision support for wildfires — **not** tactical dispatch.
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 PR1–PR2 eng shipped (#31/#32/#34/#35).**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · Mes3 plan filed.**
 
 ## Gates
 
@@ -55,8 +56,9 @@
 | Mes2 PR1-B decision-log + ACK sidecar | **Shipped** (#31) — `decision_log.py` allowlisted work_dir |
 | Mes2 PR2-A decision-log UI + ACK | **Shipped** (#35) — SPA wire to real sidecar |
 | Mes2 PR2-B V&V scorecard stub | **Shipped** (#34) — `vv_sidecar` eng_stub, no field claims |
-| Mes2 PR3-A H1 / split-conf polish | **Next** (Agent A) — not shipped |
-| Mes2 PR3-B sector ROS eng + tests | **Next** (Agent B) — not shipped; physics path exists, eng default polish pending |
+| Mes2 PR3-A H1 / split-conf polish | **Shipped** (#38) |
+| Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
+| Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
 
 ## Bottlenecks snapshot (B1–B6)
 
