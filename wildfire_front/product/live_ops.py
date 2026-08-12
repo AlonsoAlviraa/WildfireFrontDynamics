@@ -139,11 +139,11 @@ def _sanitize_under(
     if candidate_real != root_real and not under_sep:
         raise PathNotAllowedError(f"path outside allowlist: {user_path}")
     # Existence checks on the verified realpath string only
-    if must_exist and not os.path.exists(candidate_real):  # noqa: PTH110 — intentional realpath sink
+    if must_exist and not os.path.exists(candidate_real):  # codeql[py/path-injection] allowlisted via commonpath
         raise PathNotAllowedError(f"path not found: {user_path}")
-    if must_be_dir is True and not os.path.isdir(candidate_real):  # noqa: PTH112
+    if must_be_dir is True and not os.path.isdir(candidate_real):  # codeql[py/path-injection] allowlisted
         raise PathNotAllowedError(f"path is not a directory: {user_path}")
-    if must_be_dir is False and not os.path.isfile(candidate_real):  # noqa: PTH113
+    if must_be_dir is False and not os.path.isfile(candidate_real):  # codeql[py/path-injection] allowlisted
         raise PathNotAllowedError(f"path is not a file: {user_path}")
     # Rebuild Path only from verified realpath string (taint barrier)
     return Path(os.fsdecode(os.fsencode(candidate_real)))
@@ -211,11 +211,11 @@ def _read_json_file(path: Path) -> dict[str, Any] | None:
             return None
     except ValueError:
         return None
-    if not os.path.isfile(real):
+    if not os.path.isfile(real):  # codeql[py/path-injection] allowlisted child
         return None
     try:
         # codeql[py/path-injection]: path is allowlisted via resolve_work_dir/_fixed_child
-        with open(real, encoding="utf-8") as fh:
+        with open(real, encoding="utf-8") as fh:  # codeql[py/path-injection] allowlisted
             data = json.load(fh)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError):
         return None
@@ -422,7 +422,7 @@ def handle_export_acta(
             raise PathNotAllowedError("card path outside root")
     except ValueError as exc:
         raise PathNotAllowedError("card path outside root") from exc
-    if not os.path.isfile(card_s):
+    if not os.path.isfile(card_s):  # codeql[py/path-injection] fixed child under root
         # Fall back to decide then export
         decide_body = {
             "work_dir": wd_s,
@@ -444,13 +444,13 @@ def handle_export_acta(
             }
         card = decided.get("result") or {}
         # Persist card so outbox is usable next time
-        os.makedirs(outbox_s, exist_ok=True)
+        os.makedirs(outbox_s, exist_ok=True)  # codeql[py/path-injection] fixed child under root
         # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, "w", encoding="utf-8") as fh:
+        with open(card_s, "w", encoding="utf-8") as fh:  # codeql[py/path-injection] fixed child
             json.dump(card, fh, indent=2, default=str)
     else:
         # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, encoding="utf-8") as fh:
+        with open(card_s, encoding="utf-8") as fh:  # codeql[py/path-injection] fixed child
             card = json.load(fh)
 
     out_dir = Path(outbox_s)  # already under sanitized work_dir
@@ -517,7 +517,7 @@ def handle_replay_third_party(
             except ValueError as exc:
                 raise PathNotAllowedError("sources outside allowlist") from exc
             # codeql[py/path-injection]: resolved via _sanitize_under + commonpath
-            with open(resolved_s, encoding="utf-8") as fh:
+            with open(resolved_s, encoding="utf-8") as fh:  # codeql[py/path-injection] sanitize+commonpath
                 src = json.load(fh)
             if not isinstance(src, dict):
                 raise PathNotAllowedError("sources must be a JSON object")
