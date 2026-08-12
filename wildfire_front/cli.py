@@ -66,6 +66,11 @@ examples:
   # Machine-readable
   wildfire-front incident status --work-dir outputs/incidents/IF1 --json
 
+  # Decision Card → forensic acta
+  wildfire-front decide --work-dir outputs/incidents/IF1 \
+    --output outputs/incidents/IF1/outbox/fire_decision_card.json
+  wildfire-front export-acta --work-dir outputs/incidents/IF1
+
 notes:
   · Thermal mask ≠ official fire perimeter
   · 15/30/60 envelope is extrapolated guidance, NOT tactical dispatch
@@ -134,13 +139,26 @@ def run_geotiff_ingest(
     output.mkdir(parents=True, exist_ok=True)
     write_ingest_manifest(result.records, output / "ingest_manifest.csv")
     if not result.observations:
-        raise ValueError("no accepted observations; inspect ingest_manifest.csv")
+        manifest = output / "ingest_manifest.csv"
+        raise ValueError(
+            f"no accepted observations; inspect {manifest} for reject reasons. "
+            "Example: wildfire-front ingest-geotiff "
+            "--images artifacts/tobarra_reprojected_lwir "
+            "--masks artifacts/tobarra_lwir_masks "
+            "--sensor-id lwir_drone --estimated-error-m 2 "
+            "--event-id tobarra_20240802 --output outputs/tobarra"
+        )
     resolution = next(
         (item.resolution_m for item in result.observations if item.resolution_m is not None),
         None,
     )
     if resolution is None:
-        raise ValueError("accepted observations do not have metric resolution")
+        raise ValueError(
+            "accepted observations do not have metric resolution; "
+            "GeoTIFFs must use a projected CRS in metres "
+            "(see docs/GEOTIFF_INPUT_CONTRACT.md). "
+            "Example: gdalwarp -t_srs EPSG:25830 in.tif out_projected.tif"
+        )
 
     arrival_resolution = float(resolution)
     try:
@@ -224,7 +242,7 @@ def run_geotiff_ingest(
     return summary
 
 
-# ── argparse builders ────────────────────────────────────────────────────────
+# ─ argparse builders ──────────────────────────────────────────────────────────
 
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
@@ -267,7 +285,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
-    # ── demo ──────────────────────────────────────────────────────────────
+    # ─ demo ───────────────────────────────────────────────────────────────────
     demo = commands.add_parser(
         "demo",
         help="Synthetic end-to-end demo with ground truth",
@@ -286,7 +304,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(demo)
 
-    # ── ingest-geotiff ────────────────────────────────────────────────────
+    # ─ ingest-geotiff ─────────────────────────────────────────────────────────
     ingest = commands.add_parser(
         "ingest-geotiff",
         help="Batch-ingest a folder of georeferenced thermal GeoTIFFs",
@@ -354,10 +372,10 @@ def build_parser() -> argparse.ArgumentParser:
     isp.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
     _add_global_flags(ingest)
 
-    # ── incident ──────────────────────────────────────────────────────────
+    # ─ incident ───────────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
 
-    # ── decide (Fire Decision Card) ─────────────────────────────────────
+    # ─ decide (Fire Decision Card) ────────────────────────────────────────────
     decide = commands.add_parser(
         "decide",
         help="Build Fire Decision Card (GO/HOLD/ABSTAIN + metrics fusion)",
@@ -436,7 +454,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(decide)
 
-    # ── serve-decide (minimal HTTP API) ────────────────────────────────
+    # ─ serve-decide (minimal HTTP API) ────────────────────────────────────────
     serve = commands.add_parser(
         "serve-decide",
         help="Minimal HTTP API for Fire Decision Card (POST /v1/decide)",
@@ -465,13 +483,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(serve)
 
-    # ── export-acta (forensic bundle) ──────────────────────────────────
+    # ─ export-acta (forensic bundle) ──────────────────────────────────────────
     acta = commands.add_parser(
         "export-acta",
         help="Write forensic acta + radio-bridge + replay sources from a Decision Card",
         description=(
             "Paid-value audit package: fire_decision_acta.md, fire_decision_radio.txt, "
             "replay_sources.json, forensic_manifest.json. Not a court PDF."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "example:\n"
+            "  wildfire-front decide --work-dir outputs/incidents/IF1 \\\n"
+            "    --output outputs/incidents/IF1/outbox/fire_decision_card.json\n"
+            "  wildfire-front export-acta --work-dir outputs/incidents/IF1\n"
         ),
     )
     acta.add_argument(
@@ -500,7 +525,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(acta)
 
-    # ── replay-decide (forensic verify) ────────────────────────────────
+    # ─ replay-decide (forensic verify) ────────────────────────────────────────
     replay = commands.add_parser(
         "replay-decide",
         help="Rebuild Decision Card from forensic sources and verify hashes",
@@ -508,6 +533,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Forensic replay: load replay_sources.json (or card) and verify "
             "output_hash + decision match. Empty mismatch → replay_ok=false."
         ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=("example:\n  wildfire-front replay-decide --work-dir outputs/incidents/IF1\n"),
     )
     replay.add_argument(
         "--bundle",
@@ -673,7 +700,15 @@ def main(argv: Sequence[str] | None = None) -> None:
             if card_path is None and work is not None:
                 card_path = Path(work) / "outbox" / "fire_decision_card.json"
             if card_path is None or not Path(card_path).is_file():
-                raise SystemExit("export-acta requires --card path or --work-dir with outbox card")
+                print_error(
+                    "export-acta requires --card PATH or --work-dir with "
+                    "outbox/fire_decision_card.json",
+                    hint=(
+                        "run decide first, then: "
+                        "wildfire-front export-acta --work-dir outputs/incidents/IF1"
+                    ),
+                )
+                raise SystemExit(2)
             card = _json.loads(Path(card_path).read_text(encoding="utf-8"))
             out_dir = getattr(args, "output", None)
             if out_dir is None:
@@ -707,7 +742,13 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if bundle is None and work is not None:
                     bundle = Path(work) / "outbox"
                 if bundle is None:
-                    raise SystemExit("replay-decide requires --bundle, --sources, or --work-dir")
+                    print_error(
+                        "replay-decide requires --bundle, --sources, or --work-dir",
+                        hint=(
+                            "example: wildfire-front replay-decide --work-dir outputs/incidents/IF1"
+                        ),
+                    )
+                    raise SystemExit(2)
                 result = load_and_replay_bundle(bundle, base=Path.cwd())
             if as_json:
                 # omit full nested card if quiet? keep full for audit
