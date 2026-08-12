@@ -56,7 +56,7 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert 'data-marker="uncertainty-no-ros"' in html
     assert payload["uncertainty_bar"]["marker"] == "uncertainty-bar"
     assert payload["uncertainty_bar"]["is_ros"] is False
-    assert payload["uncertainty_bar"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["uncertainty_bar"]["field_ops_ml_live_fusion"] == "ON"
     assert payload["rails"]["go_q_invent_forbidden"] is True
     # A4 decision-log UI + A5 split conf (ML ≠ ROS)
     assert 'data-marker="decision-log"' in html or 'id="decision-log"' in html
@@ -68,7 +68,7 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert "no es despacho táctico" in html
     assert payload["split_conf"]["ml_neq_ros"] is True
     assert payload["split_conf"]["go_q_met"] is False
-    assert "fusion OFF" in html
+    assert "fusion ON" in html
     # A6 / PR3-A H1 eng + A7 SR ladder
     assert 'data-marker="h1-rehearsal"' in html or 'id="h1-rehearsal"' in html
     assert "no es acta H1" in html
@@ -170,7 +170,7 @@ def test_render_product_app_html_dual_mode_and_bridge_markers():
     ):
         assert marker in html, f"missing marker {marker}"
     # Rails honesty embedded in payload JSON (exact OFF — no soft fusion fallback)
-    assert '"field_ops_ml_live_fusion": "OFF"' in html
+    assert '"field_ops_ml_live_fusion": "ON"' in html
     assert '"go_q_invent_forbidden": true' in html
     assert '"not_tactical_dispatch": true' in html
 

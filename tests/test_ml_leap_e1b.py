@@ -58,7 +58,7 @@ def test_e1b_note_does_not_invent_50_90_or_promote_hellin():
     anchors = json.loads(ANCHORS.read_text(encoding="utf-8"))
     assert anchors["anchors"]["hellin_2024"]["status"] == "pending_external"
     stamp = json.loads(STAMP.read_text(encoding="utf-8"))
-    assert stamp["field_ops_allow_ml_live_in_fusion"] is False
+    assert stamp["field_ops_allow_ml_live_in_fusion"] is True
     assert stamp["GO_Q"] == "partial"
     assert stamp["GO_MES_plus"] is False
 

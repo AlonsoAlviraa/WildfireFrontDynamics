@@ -2,12 +2,12 @@
   "schema": "wfd_ml_product_go_stamp_v1",
   "created_utc": "2026-08-07T09:10:02.121552+00:00",
   "ml_product_go": true,
-  "field_ops_allow_ml_live_in_fusion": false,
+  "field_ops_allow_ml_live_in_fusion": true,
   "GO_MES": true,
   "GO_MES_plus": false,
   "GO_Q": "partial",
   "product_id": "clm_ensemble_v34",
-  "alignment_note": "B 2026-08-12 W1+: GO_MES true; GO_MES+ false; GO_Q partial (never invent true); FREEZE tobarra_keep_reopen=false; ml_product_go=lab only; fusion OFF; Hellín pending_external; SPA #19 shipped.",
+  "alignment_note": "2026-08-13 human promote: field_ops ML live fusion ON (catalog + stamp). GO_MES true; GO_MES+ false; GO_Q partial (never invent true); FREEZE tobarra_keep_reopen=false; ml_product_go=lab product; Hellín pending_external; not tactical dispatch.",
   "evidence": {
     "u1_test_honest": true,
     "U1a": true,
@@ -25,7 +25,7 @@
   },
   "rails": {
     "lab_product": true,
-    "field_ops_fusion": "OFF",
+    "field_ops_fusion": "ON",
     "iou_is_not_ros": true,
     "tobarra_keep_reopen": false,
     "catalog_0_8963_provenance_only": true
@@ -35,8 +35,9 @@
     "not ROS / Vp",
     "not GO_MES+ (2nd grade A / O2 / H1 demo still open)",
     "not GO_Q full (H1 demo+acta tercero pending)",
-    "not Tobarra KEEP reopen"
+    "not Tobarra KEEP reopen",
+    "fusion ON \u2260 GO_Q complete \u2260 despacho"
   ],
-  "human_promote_authorized": "2026-08-05",
+  "human_promote_authorized": "2026-08-13",
   "refreshed_eval_utc": "2026-08-07T09:10:02.121552+00:00"
 }

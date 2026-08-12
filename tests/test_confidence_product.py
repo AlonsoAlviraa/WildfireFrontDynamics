@@ -152,8 +152,8 @@ def test_ok_only_gate_report_does_not_pass():
     assert checks["R4_provenance"] is None
 
 
-def test_field_ops_cli_cannot_enable_ml_live_fusion():
-    """field_ops hard-clamps live fusion even if kwargs/CLI pass allow=True."""
+def test_cli_kwargs_cannot_unlock_default_fusion():
+    """kwargs/CLI cannot enable live fusion when the catalog policy forbids it."""
     live = {
         "available": True,
         "confidence": 0.9,
@@ -163,7 +163,7 @@ def test_field_ops_cli_cannot_enable_ml_live_fusion():
     }
     card = build_decision_card(
         "fo_no_or",
-        policy_id="field_ops",
+        policy_id="default",
         ml_live_metrics=live,
         allow_ml_live_in_fusion=True,
     )
@@ -171,13 +171,42 @@ def test_field_ops_cli_cannot_enable_ml_live_fusion():
     snap = (card.audit or {}).get("policy_snapshot") or {}
     assert snap.get("allow_ml_live_in_fusion") is False
     assert snap.get("effective_allow_ml_live_in_fusion") is False
-    # Live source may be present but fusion weight must be zero when fusion disallowed
     live_src = next(
         (s for s in (card.sources or []) if "live" in str(s.get("id", "")).lower()),
         None,
     )
     if live_src is not None:
         assert float(live_src.get("weight") or 0.0) == 0.0
+
+
+def test_field_ops_catalog_allows_ml_live_fusion():
+    """Human promote: field_ops catalog true → live ML may take fusion weight."""
+    live = {
+        "schema": "ml_live_metrics_v1",
+        "available": True,
+        "confidence": 0.9,
+        "actionable": True,
+        "abstain": False,
+        "mean_entropy": 0.1,
+        "member_disagreement": 0.05,
+        "mean_margin": 0.4,
+    }
+    card = build_decision_card(
+        "fo_yes_or",
+        policy_id="field_ops",
+        ml_live_metrics=live,
+        allow_ml_live_in_fusion=False,
+    )
+    assert card.metrics.get("allow_ml_live_in_fusion") is True
+    snap = (card.audit or {}).get("policy_snapshot") or {}
+    assert snap.get("allow_ml_live_in_fusion") is True
+    assert snap.get("effective_allow_ml_live_in_fusion") is True
+    live_src = next(
+        (s for s in (card.sources or []) if "live" in str(s.get("id", "")).lower()),
+        None,
+    )
+    assert live_src is not None
+    assert float(live_src.get("weight") or 0.0) > 0.0
 
 
 def test_field_ops_fail_closed_without_gates():

@@ -32,7 +32,7 @@ def test_uncertainty_bar_conf_only_no_invented_scores():
     assert empty["confidence_pred"] is None
     assert empty["invents_scores"] is False
     assert empty["is_ros"] is False
-    assert empty["field_ops_ml_live_fusion"] == "OFF"
+    assert empty["field_ops_ml_live_fusion"] == "ON"
     assert empty["go_q_invent_forbidden"] is True
     assert "no es ROS" in empty["note"]
     assert empty["note"] == UNCERTAINTY_BAR_NOTE
@@ -62,7 +62,7 @@ def test_sr_ladder_non_claims_and_fusion_off():
     ladder = build_sr_ladder(decision="ABSTAIN")
     assert ladder["marker"] == "sr-ladder"
     assert ladder["active_id"] == "S0"
-    assert ladder["field_ops_ml_live_fusion"] == "OFF"
+    assert ladder["field_ops_ml_live_fusion"] == "ON"
     assert ladder["go_q_invent_forbidden"] is True
     ids = {lv["id"] for lv in ladder["levels"]}
     assert ids == {"S0", "S1", "S2", "S3"}
@@ -75,7 +75,7 @@ def test_sr_ladder_non_claims_and_fusion_off():
     # Card GO still must not sell field GO (clamped)
     go = build_sr_ladder(decision="GO")
     assert go["active_id"] == "S2"
-    assert "field GO" in go["note"] or "fusion OFF" in go["note"]
+    assert "field GO" in go["note"] or "fusion ON" in go["note"]
 
 
 def test_h1_eng_rehearsal_never_sets_go_q_met():
@@ -83,7 +83,7 @@ def test_h1_eng_rehearsal_never_sets_go_q_met():
     assert block["marker"] == "h1-rehearsal"
     assert block["go_q_met"] is False
     assert block["product_unlock"] is False
-    assert block["field_ops_ml_live_fusion"] == "OFF"
+    assert block["field_ops_ml_live_fusion"] == "ON"
     assert block["go_q_invent_forbidden"] is True
     assert block["eng_only"] is True
     assert block["not_third_party_acta"] is True
@@ -101,7 +101,7 @@ def test_split_conf_ml_neq_ros_no_invent():
     assert empty["ml_neq_ros"] is True
     assert empty["iou_is_not_ros"] is True
     assert empty["invents_scores"] is False
-    assert empty["field_ops_ml_live_fusion"] == "OFF"
+    assert empty["field_ops_ml_live_fusion"] == "ON"
     assert empty["go_q_invent_forbidden"] is True
     assert empty["go_q_met"] is False
     assert empty["banner"] == SPLIT_CONF_BANNER
@@ -141,7 +141,7 @@ def test_decision_log_empty_no_invented_id():
     assert stub["mode"] == "stub"
     assert stub["go_q_met"] is False
     assert stub["ack_ui_only"] is True
-    assert stub["field_ops_ml_live_fusion"] == "OFF"
+    assert stub["field_ops_ml_live_fusion"] == "ON"
     assert stub["id"] is None
     assert stub["decision_id"] is None
     assert stub["acked"] is False
@@ -193,7 +193,7 @@ def test_decision_log_real_sidecar_via_append(tmp_path: Path):
     assert side["confidence_pred"] == entry["confidence_pred"]
     assert side["path_rel"] == "decision_log.jsonl"
     assert side["go_q_met"] is False
-    assert side["field_ops_ml_live_fusion"] == "OFF"
+    assert side["field_ops_ml_live_fusion"] == "ON"
     assert side["acked"] is False
     assert side["ack_ui_only"] is False
     assert side["n_entries"] == 1
@@ -221,7 +221,7 @@ def test_vv_scorecard_empty_no_invented_field_scores():
     assert stub["marker"] == "vv-scorecard"
     assert stub["mode"] == "sin_sidecar"
     assert stub["go_q_met"] is False
-    assert stub["field_ops_ml_live_fusion"] == "OFF"
+    assert stub["field_ops_ml_live_fusion"] == "ON"
     assert stub["field_iou"] is None
     assert stub["field_ros"] is None
     assert stub["field_grade"] is None
@@ -246,7 +246,7 @@ def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
     assert side["event_id"] == "IF_VV"
     assert side["go_q_met"] is False
     assert side["go_q"] == "partial"
-    assert side["field_ops_fusion"] == "OFF"
+    assert side["field_ops_fusion"] == "ON"
     assert side["field_iou"] is None
     assert side["field_ros"] is None
     assert side["field_grade"] is None
@@ -265,7 +265,7 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     payload = build_product_app_payload(live=False, scan=False)
     ub = payload["uncertainty_bar"]
     assert ub["marker"] == "uncertainty-bar"
-    assert ub["field_ops_ml_live_fusion"] == "OFF"
+    assert ub["field_ops_ml_live_fusion"] == "ON"
     assert ub["go_q_invent_forbidden"] is True
     assert ub["invents_scores"] is False
     assert ub["is_ros"] is False
@@ -278,11 +278,11 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     sc = payload["split_conf"]
     assert sc["marker"] == "split-conf"
     assert sc["ml_neq_ros"] is True
-    assert sc["field_ops_ml_live_fusion"] == "OFF"
+    assert sc["field_ops_ml_live_fusion"] == "ON"
     assert sc["go_q_met"] is False
     assert "Conf. ML ≠ Conf. ROS" in sc["banner"]
     assert payload["sr_ladder"]["marker"] == "sr-ladder"
-    assert payload["sr_ladder"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["sr_ladder"]["field_ops_ml_live_fusion"] == "ON"
     assert payload["decision_log"]["go_q_met"] is False
     assert payload["decision_log"]["marker"] == "decision-log"
     vv = payload["vv_scorecard"]
@@ -291,7 +291,7 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert vv["field_iou"] is None
     assert vv["field_ros"] is None
     assert vv["invents_field_scores"] is False
-    assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "OFF"
+    assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "ON"
     assert payload["rails"]["go_q_invent_forbidden"] is True
 
     html = render_product_app_html(payload)
@@ -316,8 +316,8 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert "runDlogAck" in html or "ack_decision" in html
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
-    assert "fusion OFF" in html
-    assert '"field_ops_ml_live_fusion": "OFF"' in html
+    assert "fusion ON" in html
+    assert '"field_ops_ml_live_fusion": "ON"' in html
     assert "go_q_invent_forbidden" in html
     assert "liveUnavailableFallback" in html
 

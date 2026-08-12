@@ -14,7 +14,7 @@
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · Mes3 plan filed.**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab) · field_ops ML fusion ON · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · CLI/front #43 · V&V UI #45 · Mes3 plan filed.**
 
 ## Gates
 
@@ -22,7 +22,7 @@
 |------|--------|
 | **GO_MES** | **true** |
 | **ml_product_go** | **true** |
-| **field_ops ML fusion** | **OFF** |
+| **field_ops ML fusion** | **ON** |
 | **GO_Q** | **partial** |
 | **GO_MES+** | **false** |
 
@@ -32,13 +32,13 @@
 |------|------|
 | GO_MES | Mínimo mes (B2 aligned). Stamp `GO_MES=true`. |
 | ml_product_go | Lab product only (`clm_ensemble_v34`). **≠** field fusion. |
-| field_ops ML fusion | Non-negotiable **OFF** until human promote + evidence. |
+| field_ops ML fusion | **ON** (human promote 2026-08-13). Live ML may enter Decision Card under `field_ops` (max weight 0.20, abstain_below 0.45). **≠** despacho táctico. GO_Q sigue partial. |
 | GO_Q | Stack eng-ready; stays **partial** until third-party demo + signed acta (`record_h1_demo_complete.py`). Never invent GO_Q true from PENDING draft. |
 | GO_MES+ | Still open: 2nd grade A ops (B4) / O2 nacional (B5) / H1 demo. |
 
 ## Rails (non-negotiable)
 
-- **field_ops ML fusion OFF** — `field_ops_allow_ml_live_in_fusion=false` in stamp; do not promote live ML into field fusion without human signoff.
+- **field_ops ML fusion ON** — `field_ops_allow_ml_live_in_fusion=true` (human 2026-08-13). Still **not** tactical dispatch; ABSTAIN/HOLD remain features; IoU ≠ ROS.
 - **FREEZE_ML_AND_REQUEST_DATA** — Tobarra KEEP reopen = **false** (B6 process KILL). No thrash retrain; pitch sealed LOFO ~0.79; request data instead.
 - **GO_Q = partial** until real third-party demo + signed acta. Eng prep (`prepare_h1_demo_session.py`) may set `eng_session_ready=true` while `go_q_met=false`.
 - **Hellín / 2nd grade A** — only `tobarra_20240802` is `confirmed` in `data/infocam_anchors.json`. Hellín stays `pending_external` until cite + human promote (`docs/DATA_ANCHOR_SSOT.md`).
@@ -62,6 +62,7 @@
 | Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
 | Mes3 W1-A V&V UI read | **Shipped** — SPA `vv-scorecard` read-only #34; empty honest; no field scores |
+| field_ops ML live fusion | **ON** — human promote 2026-08-13 (catalog + stamp; ≠ despacho; GO_Q partial) |
 | ML leap program | **Filed** — `PLAN_ML_LEAP_2026-08-12.md` (FREEZE intact; no v35) |
 | ML leap D0 REQUEST_DATA | **Shipped** docs (#42) — P0/P1/P2 + Hellín H1–H7; no promote |
 | ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |
@@ -81,7 +82,7 @@
 ## Explicit non-claims
 
 - Not tactical dispatch / not “apagamos incendios con IA”
-- Not field_ops ML fusion ON
+- field_ops ML fusion **ON** ≠ GO_Q complete ≠ despacho táctico
 - Not GO_Q complete without demo+acta tercero
 - Not GO_MES+ without 2nd grade A + O2 path honesty + H1
 - Not Tobarra KEEP reopen without new data/signal

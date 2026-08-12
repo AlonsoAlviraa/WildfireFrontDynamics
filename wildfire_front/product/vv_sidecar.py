@@ -33,7 +33,7 @@ NON_CLAIMS: tuple[str, ...] = (
 
 DEFAULT_RAILS: dict[str, Any] = {
     "GO_Q": "partial",
-    "field_ops_fusion": "OFF",
+    "field_ops_fusion": "ON",
     "ml_product_go": "lab_only",
     "FREEZE_ML_AND_REQUEST_DATA": True,
 }
@@ -93,7 +93,7 @@ def scorecard_summary(card: Mapping[str, Any], *, path: Path | None = None) -> d
             "field_ops_fusion": rails.get("field_ops_fusion", DEFAULT_RAILS["field_ops_fusion"]),
         },
         "metrics_field_null": True,
-        "note": "eng_stub only · not field-validated · not GO_Q complete · fusion OFF",
+        "note": "eng_stub only · not field-validated · not GO_Q complete · fusion ON",
     }
     if path is not None:
         summary["path"] = str(path)
@@ -128,9 +128,9 @@ def build_vv_scorecard_stub(
                 "detail": "GO_Q remains partial until human acta",
             },
             {
-                "id": "rails_fusion_off",
+                "id": "rails_fusion_on",
                 "ok": True,
-                "detail": "field_ops ML fusion OFF",
+                "detail": "field_ops ML fusion ON",
             },
             {
                 "id": "no_field_metrics",
@@ -201,7 +201,7 @@ def write_vv_scorecard(
         **DEFAULT_RAILS,
         **incoming_rails,
         "GO_Q": "partial",
-        "field_ops_fusion": "OFF",
+        "field_ops_fusion": "ON",
     }
     claims = list(card.get("non_claims") or [])
     for c in NON_CLAIMS:

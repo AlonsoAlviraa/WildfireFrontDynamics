@@ -151,3 +151,9 @@ def get_policy(
                 data[k] = v
         pol = DecisionPolicy(**data)
     return pol
+
+
+def field_ops_ml_live_fusion_rail() -> str:
+    """Product rail ON/OFF from ``field_ops`` catalog. Fail-closed OFF."""
+    pol = get_policy("field_ops")
+    return "ON" if bool(getattr(pol, "allow_ml_live_in_fusion", False)) else "OFF"

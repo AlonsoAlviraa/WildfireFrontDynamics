@@ -25,7 +25,7 @@ def test_live_repo_flags_pass():
     assert report["n_fail"] == 0
     by_id = {c["id"]: c for c in report["checks"]}
     for required in (
-        "field_ops_fusion_off",
+        "field_ops_fusion_on",
         "go_q_stamp_not_complete",
         "go_q_current_state_partial",
         "go_mes_plus_false",
@@ -42,7 +42,7 @@ def test_stamp_schema_keys_exist():
     stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
     assert "ml_product_go" in stamp
     assert "field_ops_allow_ml_live_in_fusion" in stamp
-    assert stamp.get("field_ops_allow_ml_live_in_fusion") is False
+    assert stamp.get("field_ops_allow_ml_live_in_fusion") is True
     assert stamp.get("GO_Q") == "partial"
     assert stamp.get("GO_MES") is True
     assert stamp.get("GO_MES_plus") is False
@@ -52,7 +52,7 @@ def test_stamp_schema_keys_exist():
 def test_current_state_go_q_partial_token():
     md = (ROOT / "docs" / "CURRENT_STATE.md").read_text(encoding="utf-8")
     assert "| **GO_Q** | **partial** |" in md
-    assert "| **field_ops ML fusion** | **OFF** |" in md
+    assert "| **field_ops ML fusion** | **ON** |" in md
     assert "| **GO_MES+** | **false** |" in md
 
 
@@ -79,13 +79,13 @@ def test_evaluate_fails_when_go_q_true(tmp_path: Path):
     assert goq["ok"] is False
 
 
-def test_evaluate_fails_when_fusion_on(tmp_path: Path):
+def test_evaluate_fails_when_fusion_off(tmp_path: Path):
     stamp = json.loads((ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json").read_text(encoding="utf-8"))
-    stamp["field_ops_allow_ml_live_in_fusion"] = True
-    stamp["rails"] = {**(stamp.get("rails") or {}), "field_ops_fusion": "ON"}
+    stamp["field_ops_allow_ml_live_in_fusion"] = False
+    stamp["rails"] = {**(stamp.get("rails") or {}), "field_ops_fusion": "OFF"}
     st = tmp_path / "stamp.json"
     st.write_text(json.dumps(stamp), encoding="utf-8")
     report = evaluate(current_state_path=ROOT / "docs" / "CURRENT_STATE.md", stamp_path=st)
     assert report["exit_code"] == 1
-    fusion = next(c for c in report["checks"] if c["id"] == "field_ops_fusion_off")
+    fusion = next(c for c in report["checks"] if c["id"] == "field_ops_fusion_on")
     assert fusion["ok"] is False

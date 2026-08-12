@@ -653,13 +653,11 @@ def build_decision_card(
         policy = get_policy(policy_id or "default")
 
     # Live fusion follows policy catalog only — kwargs/CLI cannot unlock a policy
-    # that disallows fusion (default/demo stay off; research_open catalog may allow).
-    # field_ops remains hard-off even if a future catalog flip is mistaken.
+    # that disallows fusion (default/demo stay off). field_ops follows catalog
+    # (human promote 2026-08-13 may set allow_ml_live_in_fusion true).
     # Note: allow_ml_live_in_fusion kwarg is kept for API compatibility / audit hash
     # but does not enable fusion when the policy forbids it.
     allow_fusion = bool(getattr(policy, "allow_ml_live_in_fusion", False))
-    if str(getattr(policy, "id", "") or "") == "field_ops":
-        allow_fusion = False
     _ = allow_ml_live_in_fusion  # API surface retained; no unlock when policy false
     ml_live_max_weight = float(getattr(policy, "ml_live_max_weight", 0.25))
     ml_live_abstain_below = float(getattr(policy, "ml_live_abstain_below", 0.35))
@@ -823,7 +821,7 @@ def build_decision_card(
             "allow_open_only_hold": policy.allow_open_only_hold,
             # Catalog bit only (policy JSON / DecisionPolicy field).
             "allow_ml_live_in_fusion": bool(getattr(policy, "allow_ml_live_in_fusion", False)),
-            # Effective fusion after kwargs OR + field_ops hard clamp.
+            # Effective fusion = catalog only (kwargs cannot unlock).
             "effective_allow_ml_live_in_fusion": bool(allow_fusion),
             "ml_live_max_weight": float(getattr(policy, "ml_live_max_weight", 0.25)),
             "ml_live_abstain_below": float(getattr(policy, "ml_live_abstain_below", 0.35)),

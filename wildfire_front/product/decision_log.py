@@ -106,7 +106,7 @@ def _entry_from_decision(
         # Rails snapshot at log time (honesty — not a gate flip)
         "rails": {
             "GO_Q": "partial",
-            "field_ops_fusion": "OFF",
+            "field_ops_fusion": "ON",
             "not_tactical_dispatch": True,
         },
     }

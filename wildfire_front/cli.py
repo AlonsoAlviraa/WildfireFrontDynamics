@@ -800,7 +800,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if getattr(args, "explain", False):
                     print("explain:")
                     print(
-                        "  rails: field_ops fusion OFF · ABSTAIN is a feature · not tactical dispatch"
+                        "  rails: field_ops fusion ON · ABSTAIN is a feature · not tactical dispatch"
                     )
                     for s in payload.get("sources") or []:
                         if not isinstance(s, dict):

@@ -9,7 +9,7 @@ Also holds the operator glossary (GO/HOLD/ABSTAIN, ROS, FIRMS, gates…).
 
 Honesty rails (do not dilute in copy):
   · not tactical dispatch
-  · field_ops ML fusion OFF
+  · field_ops ML fusion ON
   · ABSTAIN is a product feature
   · IoU ≠ ROS · NRT hotspot ≠ burned area / official perimeter
 """

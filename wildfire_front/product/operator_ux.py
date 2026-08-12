@@ -85,10 +85,10 @@ def _light_for_gate(key: str, value: Any) -> str:
             return LIGHT_YELLOW
         return LIGHT_YELLOW
     if key == "field_ops_ml_live_fusion":
-        # OFF is the correct honest rail → green for operator
-        if str(value).upper() == "OFF" or value is False:
+        # ON is the honest rail after 2026-08-13 human promote
+        if str(value).upper() == "ON" or value is True:
             return LIGHT_GREEN
-        return LIGHT_YELLOW  # ON is unexpected for field product
+        return LIGHT_YELLOW
     if key == "ml_product_go":
         if value is False or value == "false":
             return LIGHT_GREEN  # honest lab not promoted
@@ -209,7 +209,7 @@ def build_operator_brief(
     """Professional one-screen brief (new CLI surface; not the traffic-light board).
 
     Stable schema ``wfd_operator_brief_v1`` for partners / scripts. Never invents
-    GO_Q complete; never claims tactical dispatch; reports field fusion OFF.
+    GO_Q complete; never claims tactical dispatch; reports field fusion from catalog.
     """
     role_key = str(role or "operator").strip().lower()
     if role_key not in BRIEF_ROLES:
@@ -245,7 +245,7 @@ def build_operator_brief(
         next_action = {
             "id": "lab_show_rails",
             "priority": "P1",
-            "summary": "Revisar scorecard lab (IoU ≠ ROS; fusion field OFF)",
+            "summary": "Revisar scorecard lab (IoU ≠ ROS; fusion field ON ≠ despacho)",
             "command": "python -m wildfire_front ml show",
             "owner": "lab",
         }

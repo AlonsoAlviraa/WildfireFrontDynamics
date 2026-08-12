@@ -496,13 +496,13 @@ def _shell() -> str:
           <button type="button" class="btn sm" id="btn-dlog-ack" title="ACK sidecar (loopback --serve)">ACK</button>
           <span class="dlog-meta" id="dlog-ack-state">ack: —</span>
         </div>
-        <div class="dlog-note" id="dlog-note">fusion OFF · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS</div>
+        <div class="dlog-note" id="dlog-note">fusion ON · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS</div>
       </div>
 
       <div class="vv-scorecard" id="vv-scorecard" data-marker="vv-scorecard" aria-label="V&amp;V eng sidecar">
         <b>V&amp;V eng (lectura)</b>
         <div class="vv-status" id="vv-status">sin sidecar vv_scorecard.json</div>
-        <div class="vv-meta" id="vv-rails">GO_Q partial · fusion OFF · go_q_met=false</div>
+        <div class="vv-meta" id="vv-rails">GO_Q partial · fusion ON · go_q_met=false</div>
         <div class="vv-meta" id="vv-metrics">field IoU/ROS/grade: — (eng_stub · no inventar)</div>
         <div class="vv-note" id="vv-note">lectura #34 · no scores de campo · no es despacho táctico</div>
       </div>
@@ -529,7 +529,7 @@ def _shell() -> str:
           <div class="h1-cmd" id="h1-serve-cmd">—</div>
           <button type="button" class="btn sm" id="btn-h1-copy-cmd" title="Copiar comando H1 eng">Copiar cmd</button>
         </div>
-        <div class="h1-note" id="h1-note">fusion OFF · eng dry-run · acta H1 es humana · no inventa GO_Q</div>
+        <div class="h1-note" id="h1-note">fusion ON · eng dry-run · acta H1 es humana · no inventa GO_Q</div>
       </div>
 
       <div class="sr-ladder" id="sr-ladder" data-marker="sr-ladder" aria-label="Escala SR">
@@ -844,7 +844,7 @@ async function runLiveAct(kind) {
           'Sin Live Ops (HTTP ' + code + ')'
         );
       }
-      recordAct(label, url, 'Live error · fusion OFF', String(err).slice(0, 200));
+      recordAct(label, url, 'Live error · fusion ON', String(err).slice(0, 200));
       toast(label + ' error');
       return true;
     }
@@ -897,7 +897,7 @@ async function runLiveAct(kind) {
     recordAct(
       label + ' LIVE',
       url,
-      'Live Ops · fusion OFF · no shell',
+      'Live Ops · fusion ON · no shell',
       resultLine || JSON.stringify(s).slice(0, 180),
       extra
     );
@@ -948,7 +948,7 @@ function paintDecisionLog() {
       : '';
     const gq = 'go_q_met=' + String(dlog.go_q_met === true);
     dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + conf
-      + ' · fusion OFF · ' + gq + ' · ' + (dlog.note || '');
+      + ' · fusion ON · ' + gq + ' · ' + (dlog.note || '');
   }
   if (st) {
     if (dlog.acked || (dlog.ack && dlog.ack.acked)) {
@@ -962,7 +962,7 @@ function paintDecisionLog() {
     }
   }
   if (noteEl) {
-    noteEl.textContent = 'fusion OFF · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS';
+    noteEl.textContent = 'fusion ON · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS';
   }
 }
 async function runDlogAck() {
@@ -1270,7 +1270,7 @@ function renderH1Eng() {
   }
   if (noteEl) {
     noteEl.textContent = (h1.non_claims || []).slice(0, 3).join(' · ')
-      || 'fusion OFF · go_q_met=false · acta H1 es humana · no inventa GO_Q';
+      || 'fusion ON · go_q_met=false · acta H1 es humana · no inventa GO_Q';
   }
 }
 const btnH1Copy = document.getElementById('btn-h1-copy-cmd');
@@ -1545,7 +1545,7 @@ renderOpsKv();
 
 const railsEl = document.getElementById('rails');
 [
-  ['Fusion OFF', rails.field_ops_ml_live_fusion === 'OFF' || rails.field_ops_ml_live_fusion === false],
+  ['Fusion ON', rails.field_ops_ml_live_fusion === 'ON' || rails.field_ops_ml_live_fusion === true],
   ['No despacho', !!rails.not_tactical_dispatch],
   ['NRT ≠ perímetro', !!rails.nrt_not_official_perimeter],
 ].forEach(([label, on]) => {
@@ -1697,7 +1697,7 @@ async function refreshCardBridge() {
         plain: SHORT[String(card.decision || '').toUpperCase()] || '',
       });
       renderDecisionTab();
-      recordAct('Bridge', url, 'Card live (same-origin proxy o bridge) — fusion OFF');
+      recordAct('Bridge', url, 'Card live (same-origin proxy o bridge) — fusion ON');
       toast('Card actualizada');
     }
   } catch (e) {

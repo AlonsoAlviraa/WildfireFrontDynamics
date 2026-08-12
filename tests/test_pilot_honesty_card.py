@@ -125,7 +125,7 @@ def test_open_metrics_never_contain_ros_keys(tmp_path: Path):
             assert f'"{k}"' not in blob
 
 
-def test_field_ops_fusion_false_and_hold_or_abstain(tmp_path: Path):
+def test_field_ops_fusion_on_and_hold_or_abstain(tmp_path: Path):
     mod = _load_pilot_mod()
     out = tmp_path / "pilot_field"
     summary = mod.run_pilot(
@@ -134,9 +134,9 @@ def test_field_ops_fusion_false_and_hold_or_abstain(tmp_path: Path):
         out_dir=out,
         generated_at=GEN_AT,
     )
-    assert summary.get("field_ops_allow_ml_live_in_fusion") is False
+    assert summary.get("field_ops_allow_ml_live_in_fusion") is True
     for s in summary.get("sites") or []:
-        assert s.get("field_ops_allow_ml_live_in_fusion") is False
+        assert s.get("field_ops_allow_ml_live_in_fusion") is True
         contrast = s.get("contrast_field_ops") or {}
         dec = contrast.get("decision")
         assert dec in {"HOLD", "ABSTAIN"}
@@ -146,9 +146,9 @@ def test_field_ops_fusion_false_and_hold_or_abstain(tmp_path: Path):
             )
         )
         snap = (card_fo.get("audit") or {}).get("policy_snapshot") or {}
-        assert snap.get("allow_ml_live_in_fusion") is False
+        assert snap.get("allow_ml_live_in_fusion") is True
         metrics = card_fo.get("metrics") or {}
-        assert metrics.get("allow_ml_live_in_fusion") is False
+        assert metrics.get("allow_ml_live_in_fusion") is True
         # T8b: research GO → field ABSTAIN must cite a documented non-GO path
         # (fail-closed reliability, action threshold, or require_ops) — not any "ops" substring.
         if s.get("decision") == "GO" and dec == "ABSTAIN":
