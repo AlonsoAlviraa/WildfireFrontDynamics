@@ -160,6 +160,22 @@ body.mode-advanced .simp{display:none!important}
 }
 .decision .one{margin:4px 0 0;font-size:12px;color:var(--muted)}
 .decision .pct{margin-top:4px;font-size:12px;font-weight:600;color:var(--cyan);font-variant-numeric:tabular-nums}
+/* Uncertainty bar (UI only): existing conf bands — never invent scores; IoU ≠ ROS */
+.unc-bar{margin-top:8px}
+.unc-bar .unc-track{
+  height:8px;border-radius:999px;background:var(--line);overflow:hidden;
+  border:1px solid var(--line2);
+}
+.unc-bar .unc-fill{
+  height:100%;width:0;background:linear-gradient(90deg,var(--abstain),var(--hold),var(--go));
+  transition:width .2s ease;
+}
+.unc-bar .unc-meta{
+  display:flex;justify-content:space-between;gap:8px;margin-top:4px;
+  font:10px/1.2 var(--mono);color:var(--muted);letter-spacing:.02em;
+}
+.unc-bar .unc-note{color:var(--faint);font-size:10px;margin-top:4px;line-height:1.25}
+.unc-bar .unc-note b{color:var(--hold);font-weight:600}
 
 .kpis{
   display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
@@ -383,6 +399,14 @@ def _shell() -> str:
         <div class="word" id="hero-word">—</div>
         <p class="one" id="hero-plain"></p>
         <div class="pct" id="hero-conf"></div>
+        <div class="unc-bar" id="uncertainty-bar" data-marker="uncertainty-bar" aria-label="Banda de incertidumbre (no es ROS)">
+          <div class="unc-track" role="presentation"><div class="unc-fill" id="unc-fill"></div></div>
+          <div class="unc-meta">
+            <span id="unc-label">Conf. predicción</span>
+            <span id="unc-band">—</span>
+          </div>
+          <div class="unc-note" id="unc-note"><b>no es ROS</b> · IoU ≠ ROS · banda de calidad existente, sin inventar scores</div>
+        </div>
       </div>
 
       <div class="kpis" id="brief-kv"></div>
@@ -912,9 +936,25 @@ function applyHero(h) {
   document.getElementById('hero-word').textContent = word;
   document.getElementById('hero-plain').textContent = SHORT[word] || (hero.plain || '');
   const confEl = document.getElementById('hero-conf');
+  const fill = document.getElementById('unc-fill');
+  const bandEl = document.getElementById('unc-band');
+  const labelEl = document.getElementById('unc-label');
+  let conf = null;
   if (hero.confidence_pred != null && !Number.isNaN(+hero.confidence_pred)) {
-    confEl.textContent = Math.round(+hero.confidence_pred * 100) + '%';
+    conf = Math.max(0, Math.min(1, +hero.confidence_pred));
+    confEl.textContent = Math.round(conf * 100) + '%';
   } else confEl.textContent = '';
+  // Existing bands only (label from card / heuristic) — never invent numeric ROS.
+  let band = String(hero.confidence_label || hero.confidence_pred_label || '').trim();
+  if (!band && conf != null) {
+    if (conf < 0.34) band = 'baja';
+    else if (conf < 0.67) band = 'media';
+    else band = 'alta';
+  }
+  if (!band) band = 'sin conf';
+  if (fill) fill.style.width = (conf != null ? Math.round(conf * 100) : 0) + '%';
+  if (bandEl) bandEl.textContent = 'banda ' + band;
+  if (labelEl) labelEl.textContent = 'Conf. predicción (no es ROS)';
 }
 
 function renderOpsKv() {

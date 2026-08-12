@@ -99,10 +99,7 @@ def resolve_work_dir(
     if any(p == ".." for p in parts):
         raise PathNotAllowedError("path traversal rejected")
     p = Path(work_dir)
-    if p.is_absolute():
-        resolved = p.resolve()
-    else:
-        resolved = (root / p).resolve()
+    resolved = p.resolve() if p.is_absolute() else (root / p).resolve()
     if not _is_under(resolved, root):
         raise PathNotAllowedError(f"work_dir outside allowlist: {work_dir}")
     if not resolved.exists():

@@ -49,6 +49,10 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert "role-seg" in html
     assert "last-act" in html
     assert "Último acto" in html
+    # A3 uncertainty bar (UI only; no invent scores; IoU ≠ ROS)
+    assert 'id="uncertainty-bar"' in html or 'data-marker="uncertainty-bar"' in html
+    assert "no es ROS" in html
+    assert "IoU" in html and "ROS" in html
 
 
 def test_write_and_reopen_html_intact(tmp_path: Path):
@@ -86,7 +90,10 @@ def test_html_helpers_split_markers():
     assert "role-seg" in shell
     assert "last-act" in shell
     assert "Último acto" in shell
+    assert "uncertainty-bar" in shell
+    assert "no es ROS" in shell
     assert "function toast" in js or "toast(" in js
+    assert "unc-fill" in js or "uncertainty" in js
     assert "selectFire" in js
     # Bridge same-origin proxy path handling (when --serve + bridge)
     assert "bridgeDecideUrl" in js

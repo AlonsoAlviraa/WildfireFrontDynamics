@@ -437,71 +437,73 @@ def build_product_app_payload(
         else f"python -m wildfire_front app --role {role_key} --open"
     )
 
-    # Optional multi-fire pack (client-side IF switch without re-running Python)
+    # Optional multi-fire pack (client-side IF switch without re-running Python).
+    # When pack requested but catalog empty: still emit structure (enabled=False).
     pack_block: dict[str, Any] | None = None
     want_pack = bool(pack_fires) or bool(pack_fire_ids)
-    if want_pack and catalog:
+    if want_pack:
         cap = max(1, min(int(pack_cap or MAX_PACK_FIRES), MAX_PACK_FIRES))
-        id_filter = set(pack_fire_ids) if pack_fire_ids else None
-        candidates: list[dict[str, Any]] = []
-        # Prefer selected first, then catalog order
-        ordered = sorted(
-            catalog,
-            key=lambda f: (0 if f.get("selected") else 1, str(f.get("id") or "")),
-        )
-        for f in ordered:
-            if id_filter is not None and f.get("id") not in id_filter:
-                continue
-            candidates.append(f)
-            if len(candidates) >= cap:
-                break
         entries: dict[str, Any] = {}
         truncated = False
         skipped_oversize = 0
-        for f in candidates:
-            try:
-                entry = _build_pack_entry(
-                    fire_row=f,
-                    repo_root=repo_root,
-                    brief=brief,
-                    live=False,  # pack is offline-stable
-                    day_range=int(day_range or 1),
-                    fixture_csv=fixture_csv,
-                )
-            except Exception:
-                continue
-            fid = str(f.get("id"))
-            probe = json.dumps({**entries, fid: entry}, ensure_ascii=False)
-            if len(probe) > MAX_PACK_JSON_CHARS:
-                # Hard rail: never accept an entry that pushes (or alone exceeds) the cap
-                truncated = True
-                if not entries:
-                    # Oversized first entry: try ultra-slim (no geojson features)
-                    slim_map = dict(entry.get("map") or {})
-                    layers = []
-                    for lyr in list(slim_map.get("layers") or [])[:2]:
-                        if isinstance(lyr, dict):
-                            layers.append(
-                                {
-                                    "id": lyr.get("id"),
-                                    "name": lyr.get("name"),
-                                    "source": lyr.get("source"),
-                                    "geojson": None,
-                                }
-                            )
-                    slim_map["layers"] = layers
-                    entry_slim = {**entry, "map": slim_map}
-                    probe2 = json.dumps({fid: entry_slim}, ensure_ascii=False)
-                    if len(probe2) <= MAX_PACK_JSON_CHARS:
-                        entries[fid] = entry_slim
-                    else:
-                        skipped_oversize += 1
-                    # continue scanning other fires only if still empty after skip
-                    if not entries:
-                        continue
+        if catalog:
+            id_filter = set(pack_fire_ids) if pack_fire_ids else None
+            candidates: list[dict[str, Any]] = []
+            # Prefer selected first, then catalog order
+            ordered = sorted(
+                catalog,
+                key=lambda f: (0 if f.get("selected") else 1, str(f.get("id") or "")),
+            )
+            for f in ordered:
+                if id_filter is not None and f.get("id") not in id_filter:
+                    continue
+                candidates.append(f)
+                if len(candidates) >= cap:
                     break
-                break
-            entries[fid] = entry
+            for f in candidates:
+                try:
+                    entry = _build_pack_entry(
+                        fire_row=f,
+                        repo_root=repo_root,
+                        brief=brief,
+                        live=False,  # pack is offline-stable
+                        day_range=int(day_range or 1),
+                        fixture_csv=fixture_csv,
+                    )
+                except Exception:
+                    continue
+                fid = str(f.get("id"))
+                probe = json.dumps({**entries, fid: entry}, ensure_ascii=False)
+                if len(probe) > MAX_PACK_JSON_CHARS:
+                    # Hard rail: never accept an entry that pushes (or alone exceeds) the cap
+                    truncated = True
+                    if not entries:
+                        # Oversized first entry: try ultra-slim (no geojson features)
+                        slim_map = dict(entry.get("map") or {})
+                        layers = []
+                        for lyr in list(slim_map.get("layers") or [])[:2]:
+                            if isinstance(lyr, dict):
+                                layers.append(
+                                    {
+                                        "id": lyr.get("id"),
+                                        "name": lyr.get("name"),
+                                        "source": lyr.get("source"),
+                                        "geojson": None,
+                                    }
+                                )
+                        slim_map["layers"] = layers
+                        entry_slim = {**entry, "map": slim_map}
+                        probe2 = json.dumps({fid: entry_slim}, ensure_ascii=False)
+                        if len(probe2) <= MAX_PACK_JSON_CHARS:
+                            entries[fid] = entry_slim
+                        else:
+                            skipped_oversize += 1
+                        # continue scanning other fires only if still empty after skip
+                        if not entries:
+                            continue
+                        break
+                    break
+                entries[fid] = entry
         pack_block = {
             "enabled": bool(entries),
             "cap": cap,
@@ -515,6 +517,8 @@ def build_product_app_payload(
                 "Selector cambia hero/map en cliente cuando el IF está en el pack. "
                 "IF fuera del pack: estado limpio (BRIEF) + copiar rebuild — no se "
                 "muestra el mapa del IF anterior."
+                if entries
+                else "Pack solicitado pero catálogo vacío o sin entradas empaquetables."
             ),
             "by_id": entries,
         }
