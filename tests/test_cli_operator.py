@@ -44,6 +44,7 @@ def test_operator_hub_exit_0():
     # Guard against accidental GO_Q flip / fusion ON in hub text
     assert "go_q_met          True" not in out
     assert "fusion  ON" not in out and "fusion ON" not in out
+    assert "go_q complete" not in out.lower()
 
 
 def test_operator_checklist_exit_0_and_no_go_q_claim():
@@ -54,6 +55,7 @@ def test_operator_checklist_exit_0_and_no_go_q_claim():
     assert data["semaforo"] == "AMARILLO"
     assert "GO_Q complete" not in p.stdout.lower()
     assert data["rails"]["GO_Q"] == "partial"
+    assert data["rails"]["field_ops_fusion"] == "OFF"
 
 
 def test_teach_and_show_exit_0():
@@ -87,6 +89,14 @@ def test_operator_do_act_1_smoke():
     assert r["go_q_met"] is False
     assert r["GO_Q_semaforo"] == "AMARILLO"
     assert r["field_ops_fusion"] == "OFF"
+
+
+def test_operator_unknown_subcommand_exits_2():
+    """Unknown operator subcommand must fail closed (argparse exit 2), not silent 0."""
+    p = _run(["operator", "not-a-real-act"])
+    assert p.returncode == 2
+    combined = (p.stderr + p.stdout).lower()
+    assert "invalid choice" in combined or "choose from" in combined or "error" in combined
 
 
 def test_demo_third_party_rehearsal_keeps_go_q_false():

@@ -1,15 +1,14 @@
-"""Tests for B2 release flags SSOT checker."""
+"""Tests for B2 release flags SSOT checker (Agent B owns)."""
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys_path_insert = str(ROOT / "scripts")
-
-import sys
 
 if sys_path_insert not in sys.path:
     sys.path.insert(0, sys_path_insert)
@@ -29,6 +28,14 @@ def test_live_repo_flags_pass_or_report_clearly():
         assert any(
             c["id"] == "field_ops_fusion_off" and c["ok"] for c in report["checks"]
         )
+        # GO_Q must stay partial (never invent complete)
+        assert any(
+            c["id"] == "go_q_stamp_not_complete" and c["ok"] for c in report["checks"]
+        )
+        assert any(
+            c["id"] == "go_q_current_state_partial" and c["ok"]
+            for c in report["checks"]
+        )
 
 
 def test_stamp_schema_keys_exist():
@@ -39,3 +46,12 @@ def test_stamp_schema_keys_exist():
     assert "ml_product_go" in stamp
     assert "field_ops_allow_ml_live_in_fusion" in stamp
     assert stamp.get("field_ops_allow_ml_live_in_fusion") is False
+    assert stamp.get("GO_Q") == "partial"
+    assert stamp.get("GO_MES") is True
+    assert stamp.get("GO_MES_plus") is False
+
+
+def test_current_state_go_q_partial_token():
+    md = (ROOT / "docs" / "CURRENT_STATE.md").read_text(encoding="utf-8")
+    assert "| **GO_Q** | **partial** |" in md
+    assert "fusion OFF" in md or "| **field_ops ML fusion** | **OFF** |" in md

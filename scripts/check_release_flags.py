@@ -183,6 +183,59 @@ def evaluate() -> dict[str, Any]:
     if not checks[-1]["ok"]:
         hard_fail = True
 
+    # GO_Q hard rail: eng must never invent complete/true; stamp + CURRENT_STATE partial only.
+    # Human acta is the only path to GO_Q true (scripts/record_h1_demo_complete.py).
+    stamp_goq = stamp.get("GO_Q")
+    stamp_goq_s = str(stamp_goq).strip().lower() if stamp_goq is not None else ""
+    goq_stamp_ok = stamp_goq_s in {"partial", "false", "0", "no"} and stamp_goq_s not in {
+        "true",
+        "complete",
+        "full",
+        "yes",
+        "1",
+    }
+    # Explicit true/complete is always hard-fail (even if typed oddly)
+    if stamp_goq is True or stamp_goq_s in {"true", "complete", "full", "yes", "1"}:
+        goq_stamp_ok = False
+    checks.append(
+        {
+            "id": "go_q_stamp_not_complete",
+            "ok": goq_stamp_ok,
+            "detail": f"stamp GO_Q={stamp_goq!r} (must stay partial until human acta)",
+        }
+    )
+    if not goq_stamp_ok:
+        hard_fail = True
+
+    cs_goq = gates.get("GO_Q")
+    if cs_goq is not None:
+        cs_goq_l = cs_goq.strip().lower()
+        goq_cs_ok = cs_goq_l == "partial"
+        checks.append(
+            {
+                "id": "go_q_current_state_partial",
+                "ok": goq_cs_ok,
+                "detail": f"CURRENT_STATE GO_Q={cs_goq!r} (must be partial; never invent true)",
+            }
+        )
+        if not goq_cs_ok:
+            hard_fail = True
+
+    if "GO_Q partial" not in md and "GO_Q** | **partial" not in md.replace(" ", ""):
+        # soft narrative: one-line or table already covered; still require partial token
+        narrative_goq = "partial" in md.lower() and "go_q" in md.lower()
+    else:
+        narrative_goq = True
+    checks.append(
+        {
+            "id": "narrative_go_q_partial",
+            "ok": narrative_goq,
+            "detail": "CURRENT_STATE narrative must keep GO_Q partial visible",
+        }
+    )
+    if not narrative_goq:
+        hard_fail = True
+
     status = "FAIL" if hard_fail else "PASS"
     return {
         "status": status,
@@ -194,6 +247,7 @@ def evaluate() -> dict[str, Any]:
         "invariants": {
             "field_ops_fusion": "OFF",
             "ml_product_go_means": "lab_only_not_field_fusion",
+            "go_q": "partial_until_human_acta",
             "tobarra_keep_reopen": False,
         },
         "checks": checks,
