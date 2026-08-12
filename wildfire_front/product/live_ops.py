@@ -94,9 +94,7 @@ def _is_under_real(candidate_real: str, root_real: str) -> bool:
     # Boundary: next char must be path separator (avoid /repo vs /repo_evil)
     sep = os.sep
     # Also accept '/' on Windows for mixed paths after realpath
-    return candidate_real.startswith(root_real + sep) or candidate_real.startswith(
-        root_real + "/"
-    )
+    return candidate_real.startswith(root_real + sep) or candidate_real.startswith(root_real + "/")
 
 
 def _sanitize_under(
@@ -374,8 +372,7 @@ def handle_decide(
             "event_id": card.get("event_id"),
             "system_reliability_pass": card.get("system_reliability_pass"),
             "latency_ms": card.get("latency_ms"),
-            "policy_id": (card.get("policy") or {}).get("id")
-            or req["policy_id"],
+            "policy_id": (card.get("policy") or {}).get("id") or req["policy_id"],
             "field_ops_ml_live_fusion": "OFF",
             "reasons_head": list((card.get("reasons") or [])[:4]),
             "outbox_decision": outbox_decision,
@@ -497,9 +494,7 @@ def handle_replay_third_party(
     try:
         if sources_raw:
             # sources is a file, not a dir — resolve under base without is_dir check
-            resolved = _sanitize_under(
-                sources_raw, base=root, must_exist=True, must_be_dir=False
-            )
+            resolved = _sanitize_under(sources_raw, base=root, must_exist=True, must_be_dir=False)
             path = os.path.realpath(str(resolved))
             root_s = os.path.realpath(str(root))
             base = root_s if root_s.endswith(os.sep) else root_s + os.sep
@@ -513,9 +508,7 @@ def handle_replay_third_party(
             target_rel = _rel_to_base(resolved, root)
         elif bundle_raw:
             # Allow pack dir under repo (may not be a work_dir)
-            resolved = _sanitize_under(
-                bundle_raw, base=root, must_exist=True, must_be_dir=True
-            )
+            resolved = _sanitize_under(bundle_raw, base=root, must_exist=True, must_be_dir=True)
             result = load_and_replay_bundle(resolved, base=root)
             target_rel = _rel_to_base(resolved, root)
         elif work_raw:
@@ -575,10 +568,7 @@ def handle_replay_third_party(
             "decision_match": result.get("match_decision"),
             "expected": result.get("expected_decision"),
             "got": result.get("got_decision"),
-            "note": (
-                "replay_ok = forensic consistency offline — "
-                "not cryptographic authenticity"
-            ),
+            "note": ("replay_ok = forensic consistency offline — not cryptographic authenticity"),
         },
         "honesty_rails": honesty_rails(),
     }
