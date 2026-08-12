@@ -325,7 +325,7 @@ def run_demo_third_party(
     print("demo-third-party rehearsal written:")
     print(f"  out: {_rel(out, root)}")
     print(f"  decision: {card.get('decision')}")
-    print(f"  go_q_met: False · semáforo: AMARILLO")
+    print("  go_q_met: False · semáforo: AMARILLO")
     if replay_result is not None:
         print(f"  replay_ok: {replay_result.get('replay_ok')} (not third-party attestation)")
     print(f"  summary: {_rel(out / 'REHEARSAL_SUMMARY.json', root)}")
