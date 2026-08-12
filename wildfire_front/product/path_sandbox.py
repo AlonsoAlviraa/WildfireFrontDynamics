@@ -213,10 +213,7 @@ def read_json(path: str | Path, roots: Sequence[str | Path] | None = None) -> An
 
 def ensure_dir(path: str | Path, roots: Sequence[str | Path] | None = None) -> str:
     """Create directory after optional allowlist resolve; return realpath."""
-    if roots is not None:
-        p = resolve_under(path, roots)
-    else:
-        p = realpath(path)
+    p = resolve_under(path, roots) if roots is not None else realpath(path)
     _validated_makedirs(p)
     return p
 
