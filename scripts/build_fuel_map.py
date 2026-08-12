@@ -54,9 +54,8 @@ def main() -> int:
             local_path=args.dem,
             cache_dir=dem_cache if dem_cache.is_dir() else None,
             allow_download=bool(args.allow_dem_download),
-            allow_synthetic=bool(args.allow_synthetic) or (
-                args.dem is None and not args.allow_dem_download
-            ),
+            allow_synthetic=bool(args.allow_synthetic)
+            or (args.dem is None and not args.allow_dem_download),
         )
         ref_shape = dem.elevation_m.shape
         ref_transform = dem.transform

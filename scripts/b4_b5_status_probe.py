@@ -4,6 +4,7 @@
 Writes docs/B4_B5_STATUS.json from existing scorecards + outreach report when present.
 Missing sources → null/unknown (not hardcoded grades).
 """
+
 from __future__ import annotations
 
 import json
