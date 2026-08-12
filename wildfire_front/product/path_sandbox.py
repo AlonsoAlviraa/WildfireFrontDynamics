@@ -57,33 +57,27 @@ def is_under(candidate: str, root: str) -> bool:
 
 
 def _validated_exists(path: str) -> bool:
-    # codeql[py/path-injection]
-    return os.path.exists(path)
+    return os.path.exists(path)  # codeql[py/path-injection]
 
 
 def _validated_isdir(path: str) -> bool:
-    # codeql[py/path-injection]
-    return os.path.isdir(path)
+    return os.path.isdir(path)  # codeql[py/path-injection]
 
 
 def _validated_isfile(path: str) -> bool:
-    # codeql[py/path-injection]
-    return os.path.isfile(path)
+    return os.path.isfile(path)  # codeql[py/path-injection]
 
 
 def _validated_makedirs(path: str) -> None:
-    # codeql[py/path-injection]
-    os.makedirs(path, exist_ok=True)
+    os.makedirs(path, exist_ok=True)  # codeql[py/path-injection]
 
 
 def _validated_open_text(path: str, mode: str = "r") -> TextIO:
-    # codeql[py/path-injection]
-    return open(path, mode, encoding="utf-8")  # noqa: SIM115
+    return open(path, mode, encoding="utf-8")  # type: ignore[return-value]  # codeql[py/path-injection]  # noqa: SIM115
 
 
 def _validated_open_bin(path: str, mode: str = "rb") -> BinaryIO:
-    # codeql[py/path-injection]
-    return open(path, mode)  # noqa: SIM115
+    return open(path, mode)  # type: ignore[return-value]  # codeql[py/path-injection]  # noqa: SIM115
 
 
 def resolve_under(
