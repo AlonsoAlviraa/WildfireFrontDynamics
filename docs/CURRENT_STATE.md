@@ -8,6 +8,7 @@
 > **30d plan:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
 > **Mes2 PR3:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md` · handoff `docs/HANDOFF_MES2_PR3_HUMANOS_2026-08-12.md`  
 > **Mes 3 (12 sep–11 oct):** `docs/PLAN_MES3_AGENTES_A_B_2026-09-12.md` · handoff `docs/HANDOFF_MES3_HUMANOS_2026-09-12.md`  
+> **ML leap:** `docs/PLAN_ML_LEAP_2026-08-12.md` · claims `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md` (FREEZE: data→eval→model)  
 > **Product:** decision support for wildfires — **not** tactical dispatch.
 
 ## One-line truth
@@ -59,6 +60,7 @@
 | Mes2 PR3-A H1 / split-conf polish | **Shipped** (#38) |
 | Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
+| ML leap program | **Filed** — `PLAN_ML_LEAP_2026-08-12.md` (data→eval→model; FREEZE intact; no v35 yet) |
 
 ## Bottlenecks snapshot (B1–B6)
 
