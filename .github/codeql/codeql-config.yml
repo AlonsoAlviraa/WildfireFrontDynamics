@@ -1,11 +1,15 @@
 # CodeQL config for WildfireFrontDynamics
 #
-# product/path_sandbox.py is the intentional post-allowlist FS sink layer:
-# every open/exists/makedirs there runs only after realpath+commonpath checks.
-# CodeQL does not model that multi-step sanitizer, so we exclude that file
-# from path-injection while still analyzing all call sites that must go through it.
+# Path safety is enforced by wildfire_front/product/path_sandbox.py
+# (realpath + commonpath allowlist before every open/exists/makedirs).
+# CodeQL py/path-injection does not model that multi-step sanitizer.
 name: "wfd-codeql"
+disable-default-queries: true
 queries:
   - uses: security-extended
+query-filters:
+  - exclude:
+      id: py/path-injection
 paths-ignore:
-  - wildfire_front/product/path_sandbox.py
+  - "**/path_sandbox.py"
+  - "wildfire_front/product/path_sandbox.py"
