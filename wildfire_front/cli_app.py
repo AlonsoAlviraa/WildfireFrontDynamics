@@ -278,6 +278,7 @@ def run_app(args: argparse.Namespace) -> int:
             print("  Live Ops: python -m wildfire_front app --serve --fire ID")
             print("  rails: fusion OFF · GO_Q invent forbidden · no despacho táctico")
             print("  sin --serve: botones SPA copian CLI (liveUnavailableFallback)")
+            print("  V&V SPA: lectura vv_scorecard.json · sin scores de campo")
             print("")
         return 0
 

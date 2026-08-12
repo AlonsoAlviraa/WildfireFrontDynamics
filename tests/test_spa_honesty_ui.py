@@ -16,6 +16,7 @@ from wildfire_front.product.spa_honesty_ui import (
     build_sr_ladder,
     build_uncertainty_bar_view,
     load_decision_log_surface,
+    load_vv_scorecard_surface,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -159,8 +160,8 @@ def test_decision_log_empty_no_invented_id():
 
 def test_decision_log_real_sidecar_via_append(tmp_path: Path):
     """Drive real #31 append_decision → SPA surface reads decision_log.jsonl."""
-    from wildfire_front.product.decision_log import append_decision
     from wildfire_front.product.decide_service import decide_from_request
+    from wildfire_front.product.decision_log import append_decision
 
     work = tmp_path / "inc_real"
     work.mkdir()
@@ -214,6 +215,52 @@ def test_decision_log_real_sidecar_via_append(tmp_path: Path):
     assert not_side["decision_id"] is None
 
 
+def test_vv_scorecard_empty_no_invented_field_scores():
+    """Mes3 W1-A: no work_dir / missing file → honest empty, null field metrics."""
+    stub = load_vv_scorecard_surface(work_dir=None)
+    assert stub["marker"] == "vv-scorecard"
+    assert stub["mode"] == "sin_sidecar"
+    assert stub["go_q_met"] is False
+    assert stub["field_ops_ml_live_fusion"] == "OFF"
+    assert stub["field_iou"] is None
+    assert stub["field_ros"] is None
+    assert stub["field_grade"] is None
+    assert stub["metrics_field_null"] is True
+    assert stub["invents_field_scores"] is False
+    assert "sin sidecar" in stub["note"].lower()
+
+
+def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
+    """Drive shipped write_vv_scorecard → SPA surface is read-only eng_stub."""
+    from wildfire_front.product.vv_sidecar import write_vv_scorecard
+
+    work = tmp_path / "inc_vv"
+    work.mkdir()
+    write_vv_scorecard(work, base=tmp_path, include_repo_root=False, event_id="IF_VV")
+    side = load_vv_scorecard_surface(
+        work_dir=work, base=tmp_path, include_repo_root=False
+    )
+    assert side["mode"] == "sidecar_read"
+    assert side["path_rel"] == "vv_scorecard.json"
+    assert side["eng_stub"] is True
+    assert side["event_id"] == "IF_VV"
+    assert side["go_q_met"] is False
+    assert side["go_q"] == "partial"
+    assert side["field_ops_fusion"] == "OFF"
+    assert side["field_iou"] is None
+    assert side["field_ros"] is None
+    assert side["field_grade"] is None
+    assert side["invents_field_scores"] is False
+
+    empty_wd = tmp_path / "inc_no_vv"
+    empty_wd.mkdir()
+    missing = load_vv_scorecard_surface(
+        work_dir=empty_wd, base=tmp_path, include_repo_root=False
+    )
+    assert missing["mode"] == "sin_sidecar"
+    assert missing["field_iou"] is None
+
+
 def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     payload = build_product_app_payload(live=False, scan=False)
     ub = payload["uncertainty_bar"]
@@ -238,6 +285,12 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert payload["sr_ladder"]["field_ops_ml_live_fusion"] == "OFF"
     assert payload["decision_log"]["go_q_met"] is False
     assert payload["decision_log"]["marker"] == "decision-log"
+    vv = payload["vv_scorecard"]
+    assert vv["marker"] == "vv-scorecard"
+    assert vv["go_q_met"] is False
+    assert vv["field_iou"] is None
+    assert vv["field_ros"] is None
+    assert vv["invents_field_scores"] is False
     assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "OFF"
     assert payload["rails"]["go_q_invent_forbidden"] is True
 
@@ -252,6 +305,9 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert "btn-h1-copy-cmd" in html
     assert 'data-marker="sr-ladder"' in html
     assert 'data-marker="decision-log"' in html
+    assert 'data-marker="vv-scorecard"' in html
+    assert "paintVvScorecard" in html
+    assert "eng_stub" in html
     assert 'data-marker="split-conf"' in html
     assert 'data-marker="split-conf-ml"' in html
     assert 'data-marker="split-conf-ros"' in html
@@ -268,8 +324,8 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
 
 def test_payload_reads_real_sidecar_and_html_marker(tmp_path: Path):
     """Product payload path: real append → build_product_app_payload decision_log."""
-    from wildfire_front.product.decision_log import append_decision
     from wildfire_front.product.decide_service import decide_from_request
+    from wildfire_front.product.decision_log import append_decision
 
     # Place work_dir under repo so default allowlist works without custom base
     # Use tmp under REPO outputs-style via base=tmp and build surface helper assert;

@@ -299,6 +299,7 @@ def test_render_operator_front_markers():
         "h1-rehearsal",
         "go_q_met",
         "decision-log",
+        "vv-scorecard",
     ):
         assert marker in html, f"missing front marker {marker}"
 
