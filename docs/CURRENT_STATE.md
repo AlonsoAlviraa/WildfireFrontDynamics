@@ -1,16 +1,17 @@
 # CURRENT_STATE — WildfireFrontDynamics
 
 > **SSOT for release flags** (`scripts/check_release_flags.py`)  
-> **As of:** 2026-08-12 (Agent B W1 honesty · post-SPA land)  
+> **As of:** 2026-08-12 (post Mes2 PR1+PR2 · #31/#32/#34/#35)  
 > **Companion stamp:** `docs/ML_PRODUCT_GO_STATUS.json`  
 > **Bottlenecks:** `docs/BOTTLENECKS_B1_B6_STATUS.md`  
 > **Anchors SSOT:** `docs/DATA_ANCHOR_SSOT.md` + `data/infocam_anchors.json`  
 > **30d plan:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
+> **Mes2 next:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md`  
 > **Product:** decision support for wildfires — **not** tactical dispatch.
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19).**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · decision-log+ACK (#31/#35) · V&V eng stub (#34).**
 
 ## Gates
 
@@ -48,9 +49,16 @@
 |------|--------|
 | SPA Live Ops on clean main | **Shipped** (#19) — supersedes #10 (do not revive secret-bearing base) |
 | Operator hub H1 cheatsheet | **Shipped** (#18); B3 smoke/rails (#22) |
-| Agent A / Agent B 30d plan | **Shipped** docs (#20) |
-| Agent B W1 honesty rails | In flight (this PR) — GO_Q/GO_MES+/FREEZE + Hellín checklist |
-| Decision-log + V&V sidecar | Agent B W2+ (not claimed shipped) |
+| Path sandbox / CodeQL harden | **Shipped** (#24) |
+| H1 rehearsal + SR ladder UI | **Shipped** (#29) |
+| Uncertainty bar + no-ROS copy | **Shipped** (#32) |
+| Decision-log + ACK library | **Shipped** (#31) |
+| Decision-log UI + ACK (SPA) | **Shipped** (#35) |
+| V&V sidecar eng stub | **Shipped** (#34) — lab/eng ≠ field GO |
+| Agent A / Agent B 30d + Mes2 plans | **Shipped** docs (#20 / #30 / #33); next `PLAN_MES2_PR3_AGENTES_A_B.md` |
+| Sector ROS default (physics eng) | **Not shipped** — Mes2 PR3-B |
+| H1 polish / split-conf residual | **Open** — Mes2 PR3-A |
+| FREEZE data-request pack / CI SPA+V&V gates | **Open** — W3–W4 |
 
 ## Bottlenecks snapshot (B1–B6)
 
@@ -73,6 +81,7 @@
 - Not ROS / Vp from catalog IoU
 - Not Hellín confirmed Vp/ha without cite + Alonso promote
 - Not merge of `fix/b2-b3-flags-noise*` / PR #10 secret-bearing base
+- Not V&V `#34` as field-validated GO
 
 ## Verify (B)
 
