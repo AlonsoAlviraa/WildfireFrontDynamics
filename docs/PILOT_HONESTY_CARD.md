@@ -1,6 +1,7 @@
 # Piloto de honestidad — tarjeta de decisión multi-fuente
 Tobarra · Níjar · Caminomorisco
 Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm_ensemble_v34
+**Honesty patch:** 2026-08-12 — §4 alineado a `docs/CURRENT_STATE.md` / stamp (`ml_product_go` lab true · field fusion OFF).
 
 ## 0. Banner de honestidad (producto dual)
 - Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)
@@ -8,6 +9,7 @@ Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm
 - No es orden táctica de despacho
 - U1 TEST honest (scorecard): IoU eval ≈ 0.857 · sel@80 ≈ 0.903 · ECE ≈ 0.153
 - Catalog holdout 0.8963 = provenance only (no es certeza en vivo)
+- `ml_product_go` = **true (lab only)** · **≠** field fusion / GO_Q
 
 ## 1. Tabla de hechos
 | Sitio | Pista | Fuentes | Decisión (research_open) | confianza | ML live | Decisión (field_ops) | Cifra clave | Notas |
@@ -42,8 +44,10 @@ Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm
 ## 4. Límites y no-claims
 - No es multi-CCAA «funciona en toda España»
 - Casco FIRMS ≠ área quemada oficial
-- Sin reentrenamiento en este piloto
-- ml_product_go sigue en false hasta gates de producto
+- Sin reentrenamiento en este piloto (FREEZE_ML_AND_REQUEST_DATA)
+- **`ml_product_go` = true (lab only)** por stamp / CURRENT_STATE — **no** es GO de campo ni field_ops fusion ON
+- GO_Q sigue **partial** hasta demo tercero + acta firmada
+- IoU de catálogo ≠ ROS / Vp
 
 ## 5. Modo presentación (1 página)
 - Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail
@@ -55,4 +59,3 @@ Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm
 - Raíz piloto: `outputs/pilot_honesty_card`
 - Por sitio: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`
 - `facts_table.json` · `pilot_summary.json` · `index.html` · este informe
-
