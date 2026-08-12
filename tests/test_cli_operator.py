@@ -34,8 +34,16 @@ def test_rails_go_q_not_met():
 def test_operator_hub_exit_0():
     p = _run(["operator"])
     assert p.returncode == 0, p.stderr
-    assert "AMARILLO" in p.stdout
-    assert "go_q_met" in p.stdout.lower() or "go_q_met" in p.stdout
+    out = p.stdout
+    assert "AMARILLO" in out
+    # Stable print_hub rails (#18): go_q_met False · field_ops fusion OFF
+    assert "go_q_met" in out
+    assert "go_q_met          False" in out or "go_q_met False" in out.replace(" ", "")
+    assert "field_ops fusion" in out
+    assert "OFF" in out
+    # Guard against accidental GO_Q flip / fusion ON in hub text
+    assert "go_q_met          True" not in out
+    assert "fusion  ON" not in out and "fusion ON" not in out
 
 
 def test_operator_checklist_exit_0_and_no_go_q_claim():
@@ -62,6 +70,23 @@ def test_operator_do_missing_act_exit_2():
     p = _run(["operator", "do"])
     assert p.returncode == 2
     assert "operator do requires" in p.stderr or "hint:" in p.stderr
+
+
+def test_operator_do_act_1_smoke():
+    """Act 1 (Ver) dispatches build_demo_multi_ccaa — local fixtures only, no network."""
+    p = _run(["operator", "do", "--act", "1"])
+    assert p.returncode == 0, p.stderr + p.stdout
+    combined = p.stdout + p.stderr
+    assert "build_demo_multi_ccaa" in combined
+    assert (
+        "[demo-multi-ccaa]" in combined
+        or (ROOT / "outputs" / "demo_multi_ccaa" / "index.html").is_file()
+    )
+    # #18 rails unchanged by act 1 (hub helpers stay honest)
+    r = rails_snapshot()
+    assert r["go_q_met"] is False
+    assert r["GO_Q_semaforo"] == "AMARILLO"
+    assert r["field_ops_fusion"] == "OFF"
 
 
 def test_demo_third_party_rehearsal_keeps_go_q_false():
