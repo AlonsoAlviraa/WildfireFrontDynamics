@@ -44,12 +44,12 @@ Marcar lo **realmente** enseñado (no lo ideal):
 | 1 | Gancho: decisión auditada + abstención como valor | [ ] |
 | 2 | Producto dual: **ops** ≠ **ML lab** (no mezclar ROS y IoU) | [ ] |
 | 3 | **Tobarra** OPS (LWIR + ancla Vp 7 / ha 39, grade A) | [ ] |
-| 4 | **Hellín** 2ª ancla (Vp 50; ROS ops vs ancla; grade B honesto) | [ ] |
+| 4 | **Hellín** 2ª ancla (Vp 50; ROS ops vs ancla; grade B honesto) — solo si SSOT confirmed | [ ] |
 | 5 | Open multi-CCAA (Níjar / Caminomorisco o portal) | [ ] |
 | 6 | Decision Card GO/HOLD/ABSTAIN + contraste `field_ops` vs `research_open` | [ ] |
 | 7 | Fuel / AEMET / envelope **solo contexto** (peso 0 táctico en Card) | [ ] |
 | 8 | Kill list verbal (sin inventar ROS, sin fusión field_ops live) | [ ] |
-| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **OFF**) | [ ] |
+| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **OFF**, GO_Q **partial**) | [ ] |
 | 10 | Ask / next step con el tercero | [ ] |
 
 **Artefactos abiertos en la sesión (paths o capturas):**
@@ -66,22 +66,25 @@ Marcar lo **realmente** enseñado (no lo ideal):
 
 - [ ] Decision support con **audit trail** y abstención (HOLD/ABSTAIN)
 - [ ] Tobarra: ROS ops validable vs ancla INFOCAM **confirmed**
-- [ ] Hellín: 2ª ancla **confirmed**; ratio in-band posible **sin** grade A
+- [ ] Hellín: 2ª ancla solo si **confirmed** en SSOT; ratio in-band posible **sin** grade A
 - [ ] ML CLM v34: métricas de **laboratorio**; no orden de mando
-- [ ] Open multi-CCAA: perímetros institucionales donde existen (REDIAM/RAI/CEMS)
+- [ ] Open multi-CCAA: perímetros institucionales donde existen (REDIAM/RAI/CEMS) — proxy ≠ cadastro nacional
 - [ ] `field_ops`: fusión ML live **OFF** a propósito
 - [ ] Envelope / fuel: **no** claim táctico de despacho
+- [ ] `ml_product_go=true` **lab only** (honesto) — **nunca** como field GO
 
 ### Prohibido (y no se afirmó)
 
 - [ ] No se inventó **ROS / Vp / ha** sin fuente
 - [ ] No se afirmó que **field_ops fusiona ML live**
-- [ ] No se afirmó **`ml_product_go=true`** ni GO de producto ML en campo
+- [ ] No se vendió **`ml_product_go` lab como field GO / fusion ON** (el token lab honest sí es permitido)
 - [ ] No se recalibró **k único** Tobarra(7) + Hellín(50) en silencio
 - [ ] No se presentó hull FIRMS como **área quemada oficial**
-- [ ] No se dijo “apagamos incendios con IA” / “99 % de precisión del fuego”
+- [ ] No se dijo “apagamos incendios con IA” / “99 % de precisión del fuego” / silent-GO ≤1e-6
+- [ ] No se afirmó **GO_Q complete** / `go_q_met=true` sin demo+acta
 - [ ] No se afirmó **GO_MES** solo por O1 PASS
 - [ ] No se usó Cardoso ha/h ni Estrella SITAC Vp como ancla **confirmed**
+- [ ] No se equivalió **VENTA_GO** (packaging) a **GO_Q**
 
 **Incidencias de claim (si alguna se deslizó):**  
 _Ninguna / descripción y corrección verbal:_
@@ -130,6 +133,7 @@ _Ninguna / descripción y corrección verbal:_
 | Doc | Path |
 |-----|------|
 | Guion 30 min | `docs/GUION_DEMO_30MIN_POST_O1.md` |
+| Pitch 60s demo-day | `docs/PITCH_DEMO_DAY_60S.md` |
 | Overlay plan Track B | `docs/PLAN_1_MES_POST_O1_UNLOCK.md` |
 | Scorecard mes | `docs/SCORECARD_MES_1.md` |
 | Honesty card | `docs/PILOT_HONESTY_CARD.md` |
@@ -139,5 +143,6 @@ _Ninguna / descripción y corrección verbal:_
 | Producto dual | `docs/PRODUCTO_DUAL.md` |
 | Anclas | `data/infocam_anchors.json` |
 | Demo portal | `outputs/demo_multi_ccaa/index.html` |
+| CURRENT_STATE (gates) | `docs/CURRENT_STATE.md` |
 
 **Copia rellenada sugerida:** `docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md` (crear carpeta al primer uso).
