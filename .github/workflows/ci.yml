@@ -55,6 +55,7 @@ jobs:
           mypy
           wildfire_front/cli.py
           wildfire_front/cli_incident.py
+          wildfire_front/cli_operator.py
           wildfire_front/cli_report.py
           --ignore-missing-imports
 
