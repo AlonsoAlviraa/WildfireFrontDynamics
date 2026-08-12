@@ -10,7 +10,7 @@ Honesty (non-negotiable)
 * Dual product: Ops ≠ ML; fuse only at Decision Card.
 * No invented tactical ROS/Vp from open packs or FIRMS hulls.
 * Catalog holdout IoU 0.8963 is provenance only — not live certainty.
-* field_ops.allow_ml_live_in_fusion stays false; no fake R1–R4 for GO.
+* field_ops fusion follows catalog (human 2026-08-13 may be ON); no fake R1–R4 for GO.
 """
 
 from __future__ import annotations
@@ -26,6 +26,12 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from wildfire_front.product.policy import field_ops_ml_live_fusion_rail  # noqa: E402
+
+
+def _field_ops_fusion_on() -> bool:
+    return field_ops_ml_live_fusion_rail() == "ON"
 
 DEFAULT_PRODUCT = "clm_ensemble_v34"
 DEFAULT_POLICY = "research_open"
@@ -1016,7 +1022,7 @@ def process_site(
                 "tactical_dispatch": False,
                 "sources_incomplete": True,
             },
-            "field_ops_allow_ml_live_in_fusion": False,
+            "field_ops_allow_ml_live_in_fusion": _field_ops_fusion_on(),
         }
         _write_json(site_out / "site_summary.json", skip_summary)
         return skip_summary
@@ -1180,7 +1186,7 @@ def process_site(
         "live_available": metrics.get("live_available"),
         "live_abstained": bool(live_src.get("abstained")),
         "allow_ml_live_in_fusion": metrics.get("allow_ml_live_in_fusion"),
-        "field_ops_allow_ml_live_in_fusion": False,
+        "field_ops_allow_ml_live_in_fusion": _field_ops_fusion_on(),
         "open_max_area_ha": (open_metrics or {}).get("max_area_ha"),
         "ops_primary_ros_m_min": (ops_metrics or {}).get("primary_ros_m_min"),
         "honesty_flags": honesty_flags,
@@ -1287,7 +1293,7 @@ def run_pilot(
                         "vp_invented": False,
                         "firms_hull_is_official_burned_area": False,
                     },
-                    "field_ops_allow_ml_live_in_fusion": False,
+                    "field_ops_allow_ml_live_in_fusion": _field_ops_fusion_on(),
                 }
             )
 
@@ -1368,7 +1374,7 @@ def run_pilot(
         "n_skipped": sum(1 for s in site_summaries if s.get("skipped")),
         "n_failed": sum(1 for s in site_summaries if s.get("failed")),
         "sites": site_summaries,
-        "field_ops_allow_ml_live_in_fusion": False,
+        "field_ops_allow_ml_live_in_fusion": _field_ops_fusion_on(),
         "u1": {
             "mean_iou_eval": u1.get("mean_iou_eval"),
             "selective_iou_at_80": u1.get("selective_iou_at_80"),

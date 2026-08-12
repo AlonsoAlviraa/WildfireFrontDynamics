@@ -166,9 +166,9 @@ def test_u1_fallback_gates_are_false():
     assert u1["allow_ml_live_in_fusion_recommended"] is False
 
 
-def test_field_ops_does_not_enable_fusion_from_demo(tmp_path: Path):
+def test_field_ops_ml_only_still_abstains_when_fusion_on(tmp_path: Path):
     mod = _load_demo_mod()
-    # Explicit field_ops policy: fusion must stay off even with strong live conf
+    # Catalog fusion ON does not grant ML-only GO (require_ops + no ML-only HOLD)
     summary = mod.run_demo(
         mode="offline",
         scenario="hold",
@@ -176,18 +176,16 @@ def test_field_ops_does_not_enable_fusion_from_demo(tmp_path: Path):
         policy_id="field_ops",
         event_id="field_ops_ml_only",
     )
-    # ML-only under field_ops → ABSTAIN (allow_ml_only_hold false)
     assert summary["decision"] == "ABSTAIN"
     card = json.loads((tmp_path / "decision_card.json").read_text(encoding="utf-8"))
     snap = (card.get("audit") or {}).get("policy_snapshot") or {}
-    assert snap.get("allow_ml_live_in_fusion") is False
+    assert snap.get("allow_ml_live_in_fusion") is True
     metrics = card.get("metrics") or {}
-    assert metrics.get("allow_ml_live_in_fusion") is False
-    # Live may still be available/actionable for audit, but weight 0 and no ML-only HOLD
+    assert metrics.get("allow_ml_live_in_fusion") is True
     live_src = _live_source(card)
     assert live_src.get("available") is True
-    assert live_src.get("actionable") is True  # high conf hold fixture, not abstained
-    assert float(live_src.get("weight") or 0.0) == 0.0
+    assert live_src.get("actionable") is True
+    assert float(live_src.get("weight") or 0.0) > 0.0
     assert metrics.get("live_ok") is True
     assert metrics.get("live_available") is True
 
