@@ -10,7 +10,7 @@
 
 1. **Anclas SSOT** = solo `data/infocam_anchors.json` → ver `docs/DATA_ANCHOR_SSOT.md`.  
    Hoy: **1 confirmed (Tobarra)**. Hellín / Cardoso / … = `pending_external`.
-2. **Cite → promote** (Hellín u otra ancla): checklist en `docs/DATA_ANCHOR_SSOT.md` — **humano Alonso**; agentes no promueven sin cite literal. Tests: `tests/test_data_anchor_honesty.py`.
+2. **Cite → promote** (Hellín u otra ancla): checklist **H1–H7** en `docs/DATA_ANCHOR_SSOT.md` + pack `docs/ML_LEAP_REQUEST_DATA.md` — **humano Alonso**; agentes no promueven sin cite literal. Tests: `tests/test_data_anchor_honesty.py`, `tests/test_ml_leap_request_data.py`.
 3. La tabla “✅ Completos” de abajo es un **inventario histórico** (2026-07-17).  
    **No** garantiza que este clone tenga stacks LWIR bajo `artifacts/`. Verificar on-disk (`build_if_inventory` / listar `.tif`) antes de vender “6 IF completos”.
 4. **O2 nacional** sigue BLOCKED_EXTERNAL; CEMS/REDIAM/RAI = **proxy ≠ cadastro**.
@@ -71,11 +71,12 @@ Fuente canónica: `data/infocam_anchors.json` + `docs/DATA_ANCHOR_SSOT.md`.
 
 ## Prioridades de datos
 
-1. Conseguir Vp/ha **Cardoso** (máximo impacto O1 + narrativa multi-IF) si el hilo vivo lo permite.  
-2. Decidir Hellín: promote con cite literal **o** dejar pending (default).  
-3. Completar máscaras **LA ACOM2** y **Polán** o marcar NO_USE.  
-4. CyL silencio: respetar hold (no chase agresivo).  
-5. ML: FREEZE — no retrain Tobarra KEEP.
+1. **P0 ML LEAP:** Hellín PDF+KMZ + 2º IF (Cardoso preferido) + rights — `docs/ML_LEAP_REQUEST_DATA.md`.  
+2. Conseguir Vp/ha **Cardoso** si el hilo vivo lo permite (O1 + narrativa multi-IF).  
+3. Hellín: promote **solo** H1–H7 + Alonso; default = `pending_external`.  
+4. Completar máscaras **LA ACOM2** y **Polán** o marcar NO_USE.  
+5. CyL silencio: respetar hold (no chase agresivo).  
+6. ML: FREEZE — no retrain Tobarra KEEP; eval one-shot = `docs/ML_LEAP_EVAL_ONESHOT.md`.
 
 ---
 

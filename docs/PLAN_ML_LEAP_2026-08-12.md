@@ -53,8 +53,8 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 **Branch:** `docs/ml-leap-d0-request-data`
 
 **Done-when:**
-- [ ] Lista P0/P1/P2 en docs (Hellín PDF+KMZ, Cardoso/2º IF, GeoTIFF ≥3 scenes, rights)
-- [ ] Checklist cite→promote Hellín (H1–H7); status sigue `pending_external` hasta Alonso
+- [x] Lista P0/P1/P2 en docs (Hellín PDF+KMZ, Cardoso/2º IF, GeoTIFF ≥3 scenes, rights) — `docs/ML_LEAP_REQUEST_DATA.md`
+- [x] Checklist cite→promote Hellín (H1–H7); status sigue `pending_external` hasta Alonso
 - [ ] `check_release_flags` PASS; no flip anchors sin OK escrito
 
 **Non-goals:** FOI send · Hellín `confirmed` sin cite · retrain
@@ -69,9 +69,9 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 **Branch:** `feat/ml-leap-e1-eval-oneshot`
 
 **Done-when:**
-- [ ] Doc comandos: `check_release_flags` → smoke ML → `eval_ml_uncertainty_u1 --split test` + frozen cal → `validate_ml_scorecard`
-- [ ] Explicit: **no** overwrite `uncertainty_calibration_v1.json` under FREEZE; SKIP-without-weights ≠ honesty green
-- [ ] Compare latest scorecard vs `docs/ML_PRODUCT_SCORECARD.json` (drift note)
+- [x] Doc comandos: `check_release_flags` → smoke ML → `eval_ml_uncertainty_u1 --split test` + frozen cal → `validate_ml_scorecard` — `docs/ML_LEAP_EVAL_ONESHOT.md`
+- [x] Explicit: **no** overwrite `uncertainty_calibration_v1.json` under FREEZE; SKIP-without-weights ≠ honesty green
+- [x] Compare latest scorecard vs `docs/ML_PRODUCT_SCORECARD.json` (drift note template)
 
 **Non-goals:** refit cal on TEST · promote script flip · fusion ON
 

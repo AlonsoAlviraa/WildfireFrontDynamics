@@ -29,18 +29,18 @@ Until Alonso promotes with a **literal cite**: **keep Hellín pending**. Prefer 
 
 ## Cite → promote checklist (docs only; human gate)
 
-Use this checklist **before** any PR that changes `data/infocam_anchors.json` for a pending fire. Agents may prepare the PR body; **human merges only after all boxes**.
+Use this checklist **before** any PR that changes `data/infocam_anchors.json` for a pending fire. Agents may prepare the PR body; **human merges only after all boxes**.  
+Hellín IDs **H1–H7** (ML LEAP D0): see also `docs/ML_LEAP_REQUEST_DATA.md`.
 
-### Required evidence
+### Required evidence (H1–H7)
 
-1. **Literal cite** — quote or scan reference from INFOCAM / Observatorio / official parte (date, fire name, Vp and/or ha). No “approx” / hearsay / slide screenshots without numbers.
-2. **Units match schema** — `vp_m_min` in m/min, `area_ha` in ha; nulls only while pending.
-3. **fire_id stable** — same key as inventory (`hellin_2024`, not a new alias).
-4. **source string** — non-empty, attributable (who / which bulletin).
-5. **status flip** — only `pending_external` → `confirmed` in the same PR that fills `vp_m_min` / `area_ha` / `source`.
-6. **QA clean** — if fire has QA flag (e.g. Retuerta), resolve or explicitly waive in PR body; default = do not promote.
-7. **CURRENT_STATE** — after promote, update 2nd grade A / GO_MES+ notes honestly (Agent B ownership); do **not** set GO_Q true.
-8. **No ML retrain** — FREEZE_ML: promote anchor ≠ reopen Tobarra KEEP retrain.
+1. **H1 Literal cite** — quote or scan from INFOCAM / Observatorio / official parte (date, fire name, Vp and/or ha). No “approx” / hearsay / slide screenshots without numbers.
+2. **H2 Units match schema** — `vp_m_min` in m/min, `area_ha` in ha; nulls only while pending.
+3. **H3 fire_id stable** — same key as inventory (`hellin_2024`, not a new alias).
+4. **H4 source string** — non-empty, attributable (who / which bulletin).
+5. **H5 status flip** — only `pending_external` → `confirmed` in the same PR that fills `vp_m_min` / `area_ha` / `source`.
+6. **H6 Alonso OK** — written on PR / acta; agents do not merge promote. QA clean if flagged (e.g. Retuerta).
+7. **H7 No ML retrain** — FREEZE_ML: promote ≠ reopen Tobarra KEEP. After promote, update CURRENT_STATE 2nd grade A honestly; **do not** set GO_Q true.
 
 ### Forbidden shortcuts
 
