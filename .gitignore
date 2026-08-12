@@ -4,6 +4,20 @@
 *.pem
 *.key
 
+# --- Mailbox / outreach / filled FOI (never commit) ---
+docs/GMAIL_REPLIES*.md
+docs/GMAIL_AUDIT_*.md
+docs/**/*gmail*live*
+docs/OUTREACH_SEND_REPORT*.md
+docs/OUTREACH_DRAFTS*.md
+docs/OUTREACH_PT_FR*.md
+docs/CONTACTOS_OUTREACH.csv
+docs/CONTACTOS_EMERGENCIAS_DATOS.md
+docs/PLAN_PROGRAMACION_EMAILS*.md
+**/*RELLENADA*
+**/*RELLENADA*.*
+
+
 # ─── Binaries / Model weights ────────────────────────────────
 *.pt
 *.pth
