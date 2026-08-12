@@ -602,7 +602,7 @@ class _SafeSPARequestHandler:
                     msg = str(exc).replace('"', "'")[:120]
                     self._send_bytes(
                         400,
-                        f'{{"error":"invalid_json","detail":"{msg}"}}'.encode("utf-8"),
+                        f'{{"error":"invalid_json","detail":"{msg}"}}'.encode(),
                     )
                     return None, None
 
@@ -631,7 +631,7 @@ class _SafeSPARequestHandler:
                     base=self.live_base_dir,
                     method=method,
                 )
-                data = json.dumps(payload, indent=2, default=str).encode("utf-8")
+                data = json.dumps(payload, indent=2, default=str).encode()
                 self._send_bytes(status, data)
                 return True
 
@@ -662,18 +662,14 @@ class _SafeSPARequestHandler:
                     data = exc.read() if hasattr(exc, "read") else b""
                     if not data:
                         data = (
-                            f'{{"error":"upstream_http","status":{exc.code}}}'.encode(
-                                "utf-8"
-                            )
+                            f'{{"error":"upstream_http","status":{exc.code}}}'.encode()
                         )
                     self._send_bytes(int(exc.code), data)
                 except Exception as exc:
                     msg = str(exc).replace('"', "'")[:200]
                     self._send_bytes(
                         502,
-                        f'{{"error":"bridge_upstream_unreachable","detail":"{msg}"}}'.encode(
-                            "utf-8"
-                        ),
+                        f'{{"error":"bridge_upstream_unreachable","detail":"{msg}"}}'.encode(),
                     )
 
             def do_GET(self) -> None:  # noqa: N802
