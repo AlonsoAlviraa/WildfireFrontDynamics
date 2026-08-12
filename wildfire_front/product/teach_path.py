@@ -1,1 +1,1 @@
-PLACEHOLDER_LOAD_FROM_/tmp/wildfire_front_product_teach_path.py.body
+PLACEHOLDER_WILL_REPLACE
