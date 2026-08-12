@@ -104,6 +104,83 @@ def build_uncertainty_bar_view(
     }
 
 
+SPLIT_CONF_BANNER = "Conf. ML ≠ Conf. ROS · no es despacho táctico"
+SPLIT_CONF_ML_HINT = "calidad de card · no es ROS"
+SPLIT_CONF_ROS_HINT = "métrica ops si existe · IoU ≠ ROS · sin inventar"
+
+
+def build_split_conf_view(
+    *,
+    confidence_pred: float | int | None = None,
+    confidence_label: str | None = None,
+    ops_metrics: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Mes2 PR3-A: split ML vs ROS confidence from existing fields only.
+
+    Never invents ROS scores, never maps IoU→ROS, never sets fusion ON / GO_Q.
+    Missing ops → honest ``sin conf ROS``.
+    """
+    ml_bar = build_uncertainty_bar_view(
+        confidence_pred=confidence_pred,
+        confidence_label=confidence_label,
+    )
+    ops = ops_metrics if isinstance(ops_metrics, dict) else {}
+    ros_num: float | None = None
+    ros_grade: str | None = None
+    raw_ros = ops.get("ros_confidence")
+    if raw_ros is not None:
+        try:
+            c = float(raw_ros)
+        except (TypeError, ValueError):
+            c = float("nan")
+        if math.isfinite(c):
+            ros_num = max(0.0, min(1.0, c))
+    if ros_num is None and ops.get("quality_grade"):
+        ros_grade = str(ops.get("quality_grade"))
+
+    if ros_num is not None:
+        ros_display = f"{int(round(ros_num * 100.0))}% (ops)"
+        ros_empty = False
+    elif ros_grade:
+        ros_display = f"grade {ros_grade} (ops · no ML)"
+        ros_empty = False
+    else:
+        ros_display = "— (sin conf ROS)"
+        ros_empty = True
+
+    ml_display = (
+        f"{ml_bar['fill_pct']}% · {ml_bar['band']}" if not ml_bar["empty"] else "—"
+    )
+
+    return {
+        "schema": "wfd_split_conf_ui_v1",
+        "marker": "split-conf",
+        "banner": SPLIT_CONF_BANNER,
+        "ml": {
+            "label": "Conf. ML / predicción",
+            "display": ml_display,
+            "hint": SPLIT_CONF_ML_HINT,
+            "confidence_pred": ml_bar["confidence_pred"],
+            "is_ros": False,
+        },
+        "ros": {
+            "label": "Conf. ROS / ops",
+            "display": ros_display,
+            "hint": SPLIT_CONF_ROS_HINT,
+            "ros_confidence": ros_num,
+            "quality_grade": ros_grade,
+            "empty": ros_empty,
+        },
+        "ml_neq_ros": True,
+        "iou_is_not_ros": True,
+        "invents_scores": False,
+        "field_ops_ml_live_fusion": "OFF",
+        "go_q_invent_forbidden": True,
+        "go_q_met": False,
+        "note": "Conf. ML ≠ Conf. ROS · IoU ≠ ROS · no es despacho táctico · fusion OFF",
+    }
+
+
 def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:
     """Support/recommendation ladder for SPA (UI markers + non-claims)."""
     dec = (decision or "ABSTAIN").strip().upper()
@@ -220,6 +297,9 @@ def build_h1_eng_rehearsal(
             "No es acta H1 con tercero",
             "No fusion ON · no despacho táctico",
         ],
+        "eng_only": True,
+        "not_third_party_acta": True,
+        "go_q_invent_forbidden": True,
         "field_ops_ml_live_fusion": "OFF",
     }
 

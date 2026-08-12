@@ -45,9 +45,10 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 2. `app --serve --fire _sla_measure` (or `--demo-day`).
 3. In browser: **Estado → Decidir → Acta** (Último acto shows result / path).
 4. Offline path: open static SPA, same buttons → CLI copied, not invented GO_Q.
-5. SPA panel **Ensayo H1 eng** (`data-marker="h1-rehearsal"`) shows `go_q_met=false` always on this product surface — eng dry-run ≠ third-party acta.
-6. SPA **Escala SR** (`data-marker="sr-ladder"`) is support/recommendation only — Claims Guardian non-claims (no field GO sell).
-7. Cheatsheet: `docs/CHEATSHEET_DEMO_12MIN.md`.
+5. SPA panel **Ensayo H1 eng** (`data-marker="h1-rehearsal"`) shows `go_q_met=false` always on this product surface — eng dry-run ≠ third-party acta (Copiar cmd for serve/offline).
+6. SPA **split-conf** (`data-marker="split-conf"`): **Conf. ML ≠ Conf. ROS** — no inventar conf ROS; IoU ≠ ROS; no es despacho táctico.
+7. SPA **Escala SR** (`data-marker="sr-ladder"`) is support/recommendation only — Claims Guardian non-claims (no field GO sell).
+8. Cheatsheet: `docs/CHEATSHEET_DEMO_12MIN.md`.
 
 ## Honesty rails (UI)
 

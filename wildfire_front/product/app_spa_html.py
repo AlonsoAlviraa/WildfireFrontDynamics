@@ -232,6 +232,11 @@ body.mode-advanced .simp{display:none!important}
 .decision-log .dlog-note{font-size:9px;color:var(--faint);margin-top:4px}
 /* A5 split conf: ML conf ≠ ROS conf */
 .split-conf{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.split-conf .sc-banner{
+  grid-column:1 / -1;font-size:9px;color:var(--hold);line-height:1.3;
+}
+.h1-rehearsal .h1-cmd-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.h1-rehearsal .h1-cmd-row .h1-cmd{flex:1;min-width:0}
 .split-conf .sc-box{
   border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;background:var(--panel);
 }
@@ -487,24 +492,28 @@ def _shell() -> str:
       </div>
 
       <div class="split-conf" id="split-conf" data-marker="split-conf" aria-label="Confianza ML vs ROS">
-        <div class="sc-box ml">
+        <div class="sc-banner" id="sc-banner" data-marker="split-conf-banner">Conf. ML ≠ Conf. ROS · no es despacho táctico</div>
+        <div class="sc-box ml" data-marker="split-conf-ml">
           <div class="sc-k">Conf. ML / predicción</div>
           <div class="sc-v" id="sc-ml">—</div>
           <div class="sc-h">calidad de card · <b>no es ROS</b></div>
         </div>
-        <div class="sc-box ros">
+        <div class="sc-box ros" data-marker="split-conf-ros">
           <div class="sc-k">Conf. ROS / ops</div>
           <div class="sc-v" id="sc-ros">—</div>
-          <div class="sc-h">métrica ops si existe · IoU ≠ ROS</div>
+          <div class="sc-h">métrica ops si existe · IoU ≠ ROS · sin inventar</div>
         </div>
       </div>
 
       <div class="h1-rehearsal" id="h1-rehearsal" data-marker="h1-rehearsal" aria-label="Ensayo H1 eng">
         <b>Ensayo H1 eng (12 min)</b>
-        <div class="h1-flag" id="h1-goq-flag">go_q_met=false · no es demo tercero</div>
+        <div class="h1-flag" id="h1-goq-flag">go_q_met=false · no es demo tercero · no es acta H1</div>
         <ol id="h1-steps"></ol>
-        <div class="h1-cmd" id="h1-serve-cmd">—</div>
-        <div class="h1-note" id="h1-note">fusion OFF · eng dry-run · acta H1 es humana</div>
+        <div class="h1-cmd-row">
+          <div class="h1-cmd" id="h1-serve-cmd">—</div>
+          <button type="button" class="btn sm" id="btn-h1-copy-cmd" title="Copiar comando H1 eng">Copiar cmd</button>
+        </div>
+        <div class="h1-note" id="h1-note">fusion OFF · eng dry-run · acta H1 es humana · no inventa GO_Q</div>
       </div>
 
       <div class="sr-ladder" id="sr-ladder" data-marker="sr-ladder" aria-label="Escala SR">
@@ -600,6 +609,7 @@ let hero = P.hero || {};
 const rails = P.rails || {};
 const h1Eng = P.h1_eng_rehearsal || {};
 const srLadder = P.sr_ladder || {};
+const splitConf = P.split_conf || {};
 let decisionLog = P.decision_log || {};
 let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
@@ -1153,27 +1163,33 @@ function applyHero(h) {
     // Keep bold **no es ROS** emphasis for honesty pin (Mes2 PR1-A)
     noteEl.innerHTML = '<b>no es ROS</b> · IoU ≠ ROS · banda de calidad existente, sin inventar scores';
   }
-  // A5 split conf UI: ML conf ≠ ROS conf labels
+  // A5 / PR3-A split conf: prefer server split_conf (existing fields only)
   const scMl = document.getElementById('sc-ml');
   const scRos = document.getElementById('sc-ros');
+  const scBan = document.getElementById('sc-banner');
+  const sc = splitConf || {};
+  if (scBan && sc.banner) scBan.textContent = sc.banner;
   if (scMl) {
-    scMl.textContent = conf != null
-      ? (Math.round(conf * 100) + '% · ' + band)
-      : '—';
+    if (sc.ml && sc.ml.display) scMl.textContent = sc.ml.display;
+    else scMl.textContent = conf != null ? (Math.round(conf * 100) + '% · ' + band) : '—';
   }
   if (scRos) {
-    let rosConf = null;
-    if (ops && ops.ros_confidence != null && !Number.isNaN(+ops.ros_confidence)) {
-      rosConf = +ops.ros_confidence;
-    } else if (ops && ops.quality_grade) {
-      rosConf = String(ops.quality_grade);
-    }
-    if (typeof rosConf === 'number') {
-      scRos.textContent = Math.round(rosConf * 100) + '% (ops)';
-    } else if (rosConf) {
-      scRos.textContent = 'grade ' + rosConf + ' (ops · no ML)';
+    if (sc.ros && sc.ros.display) {
+      scRos.textContent = sc.ros.display;
     } else {
-      scRos.textContent = '— (sin conf ROS)';
+      let rosConf = null;
+      if (ops && ops.ros_confidence != null && !Number.isNaN(+ops.ros_confidence)) {
+        rosConf = +ops.ros_confidence;
+      } else if (ops && ops.quality_grade) {
+        rosConf = String(ops.quality_grade);
+      }
+      if (typeof rosConf === 'number') {
+        scRos.textContent = Math.round(rosConf * 100) + '% (ops)';
+      } else if (rosConf) {
+        scRos.textContent = 'grade ' + rosConf + ' (ops · no ML)';
+      } else {
+        scRos.textContent = '— (sin conf ROS)';
+      }
     }
   }
   // A4/A8/PR2-A decision-log surface (real #31 sidecar or honest empty)
@@ -1190,7 +1206,7 @@ function renderH1Eng() {
   const h1 = h1Eng || {};
   if (flag) {
     flag.textContent = 'go_q_met=' + String(h1.go_q_met === true ? true : false)
-      + ' · eng dry-run · no es demo tercero';
+      + ' · eng dry-run · no es demo tercero · no es acta H1';
   }
   if (stepsEl) {
     stepsEl.innerHTML = '';
@@ -1210,8 +1226,18 @@ function renderH1Eng() {
   }
   if (noteEl) {
     noteEl.textContent = (h1.non_claims || []).slice(0, 3).join(' · ')
-      || 'fusion OFF · go_q_met=false · acta H1 es humana';
+      || 'fusion OFF · go_q_met=false · acta H1 es humana · no inventa GO_Q';
   }
+}
+const btnH1Copy = document.getElementById('btn-h1-copy-cmd');
+if (btnH1Copy) {
+  btnH1Copy.onclick = () => {
+    const cmd = (h1Eng && (liveOpsOn() ? h1Eng.serve_cmd : h1Eng.offline_cmd))
+      || (liveOpsOn()
+        ? 'python -m wildfire_front app --serve'
+        : 'python -m wildfire_front app --open');
+    copyText(cmd, 'H1 cmd copiado', { act: 'H1 eng', hint: 'eng dry-run · no acta tercero' });
+  };
 }
 
 function renderSrLadder() {

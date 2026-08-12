@@ -61,10 +61,20 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     # A4 decision-log UI + A5 split conf (ML ≠ ROS)
     assert 'data-marker="decision-log"' in html or 'id="decision-log"' in html
     assert 'data-marker="split-conf"' in html or 'id="split-conf"' in html
+    assert 'data-marker="split-conf-ml"' in html
+    assert 'data-marker="split-conf-ros"' in html
     assert "Conf. ML" in html or "sc-ml" in html
+    assert "Conf. ML ≠ Conf. ROS" in html
+    assert "no es despacho táctico" in html
+    assert payload["split_conf"]["ml_neq_ros"] is True
+    assert payload["split_conf"]["go_q_met"] is False
     assert "fusion OFF" in html
-    # A6 H1 eng + A7 SR ladder
+    # A6 / PR3-A H1 eng + A7 SR ladder
     assert 'data-marker="h1-rehearsal"' in html or 'id="h1-rehearsal"' in html
+    assert "no es acta H1" in html
+    assert "btn-h1-copy-cmd" in html
+    assert payload["h1_eng_rehearsal"]["go_q_met"] is False
+    assert payload["h1_eng_rehearsal"]["not_third_party_acta"] is True
     assert 'data-marker="sr-ladder"' in html or 'id="sr-ladder"' in html
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
@@ -110,7 +120,12 @@ def test_html_helpers_split_markers():
     assert "uncertainty-no-ros" in shell
     assert "decision-log" in shell
     assert "split-conf" in shell
+    assert "split-conf-ml" in shell
+    assert "split-conf-ros" in shell
+    assert "Conf. ML ≠ Conf. ROS" in shell
     assert "h1-rehearsal" in shell
+    assert "no es acta H1" in shell
+    assert "btn-h1-copy-cmd" in shell
     assert "sr-ladder" in shell
     assert "function toast" in js or "toast(" in js
     assert "unc-fill" in js or "uncertainty" in js

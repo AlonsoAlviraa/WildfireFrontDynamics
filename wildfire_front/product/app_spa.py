@@ -36,6 +36,7 @@ from wildfire_front.product.operator_ux import (
 from wildfire_front.product.plain_language import build_plain_language_payload
 from wildfire_front.product.spa_honesty_ui import (
     build_h1_eng_rehearsal,
+    build_split_conf_view,
     build_sr_ladder,
     build_uncertainty_bar_view,
     load_decision_log_surface,
@@ -624,6 +625,18 @@ def build_product_app_payload(
                 (hero or {}).get("confidence_label")
                 or (decision or {}).get("confidence_pred_label")
             ),
+        ),
+        "split_conf": build_split_conf_view(
+            confidence_pred=(
+                (hero or {}).get("confidence_pred")
+                if (hero or {}).get("confidence_pred") is not None
+                else (decision or {}).get("confidence_pred")
+            ),
+            confidence_label=(
+                (hero or {}).get("confidence_label")
+                or (decision or {}).get("confidence_pred_label")
+            ),
+            ops_metrics=ops if isinstance(ops, dict) else None,
         ),
         "h1_eng_rehearsal": build_h1_eng_rehearsal(
             repo_root=repo_root,
