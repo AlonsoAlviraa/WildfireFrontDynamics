@@ -8,12 +8,22 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 from .confidence import DecisionCard, build_decision_card
+from .path_sandbox import (
+    PathNotAllowedError,
+    as_path,
+    exists_file,
+    join_fixed,
+    read_json,
+    realpath,
+    resolve_under,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 API_VERSION = "decide_api_v1"
@@ -26,10 +36,6 @@ MAX_BODY_BYTES = 1_048_576  # 1 MiB
 CLIENT_RELIABILITY_CHANNELS = frozenset({"test", "unit_test", "pytest"})
 
 
-class PathNotAllowedError(ValueError):
-    """Raised when work_dir/open_pack resolves outside the allowlist."""
-
-
 class UntrustedInlineMetricsError(ValueError):
     """Raised when an untrusted channel supplies inline ops/open metrics dicts.
 
@@ -40,9 +46,10 @@ class UntrustedInlineMetricsError(ValueError):
 
 def _is_under(path: Path, root: Path) -> bool:
     try:
-        path.resolve().relative_to(root.resolve())
-        return True
-    except (ValueError, OSError):
+        from .path_sandbox import is_under
+
+        return is_under(realpath(path), realpath(root))
+    except (ValueError, OSError, PathNotAllowedError):
         return False
 
 
@@ -67,7 +74,7 @@ def _allow_roots(
         if r is None:
             continue
         try:
-            rr = Path(r).resolve()
+            rr = as_path(realpath(r))
         except OSError:
             continue
         if rr not in roots:
@@ -75,7 +82,7 @@ def _allow_roots(
     if roots:
         return roots
     if include_repo_root:
-        return [REPO_ROOT.resolve()]
+        return [as_path(realpath(REPO_ROOT))]
     # Untrusted isolation with no base: empty roots → every path fails closed.
     return []
 
@@ -94,79 +101,64 @@ def _as_path(
     """
     if value is None or value == "":
         return None
-    p = Path(value)
-    roots = [
-        Path(r).resolve()
-        for r in (allow_roots or _allow_roots(base, include_repo_root=include_repo_root))
-    ]
+    roots = list(allow_roots or _allow_roots(base, include_repo_root=include_repo_root))
     if not roots:
         raise PathNotAllowedError(
             f"path allowlist empty (untrusted channel requires base_dir; refusing: {value})"
         )
-    base_r = Path(base).resolve() if base is not None else roots[0]
-
-    if p.is_absolute():
+    # Prefer base as first root when present
+    ordered: list[Path] = []
+    if base is not None:
         try:
-            resolved = p.resolve()
-        except OSError as exc:
-            raise PathNotAllowedError(f"path not resolvable: {value}") from exc
-    else:
-        # Prefer base; if missing, try each allow root (repo-relative packs).
-        candidates: list[Path] = []
-        for root in [base_r, *roots]:
-            cand = root / p
-            if cand not in candidates:
-                candidates.append(cand)
-        resolved = None
-        first_in_allow: Path | None = None
-        for cand in candidates:
-            try:
-                cr = cand.resolve()
-            except OSError:
-                continue
-            if not any(_is_under(cr, root) for root in roots):
-                continue
-            if first_in_allow is None:
-                first_in_allow = cr
-            if cr.exists():
-                resolved = cr
-                break
-        if resolved is None:
-            resolved = first_in_allow
-        if resolved is None:
-            raise PathNotAllowedError(f"path not under allowlist: {value}")
-
-    if resolved is None or not any(_is_under(resolved, root) for root in roots):
-        raise PathNotAllowedError(
-            f"path not under allowlist (base/REPO_ROOT): {value} → {resolved}"
-        )
-    return resolved
+            br = as_path(realpath(base))
+            ordered.append(br)
+        except OSError:
+            pass
+    for r in roots:
+        if r not in ordered:
+            ordered.append(r)
+    resolved = resolve_under(value, ordered)
+    return as_path(resolved)
 
 
 def load_ml_metrics_v34(*, base: Path | None = None) -> dict[str, Any] | None:
+    roots = _allow_roots(base or REPO_ROOT, include_repo_root=True)
     try:
-        man = _as_path("models/clm_ensemble/manifest.json", base=base or REPO_ROOT)
+        man = resolve_under(
+            "models/clm_ensemble/manifest.json",
+            roots,
+            must_exist=True,
+            must_be_file=True,
+        )
     except PathNotAllowedError:
-        man = None
-    if man is None or not man.is_file():
-        man = REPO_ROOT / "models" / "clm_ensemble" / "manifest.json"
-    if not man.is_file():
-        return None
+        try:
+            man = join_fixed(
+                realpath(REPO_ROOT),
+                "models",
+                "clm_ensemble",
+                "manifest.json",
+            )
+            if not exists_file(man):
+                return None
+        except PathNotAllowedError:
+            return None
     try:
-        data = json.loads(man.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        data = read_json(man)
+    except (OSError, json.JSONDecodeError, PathNotAllowedError, TypeError):
+        return None
+    if not isinstance(data, dict):
         return None
     metrics = data.get("metrics")
     return dict(metrics) if isinstance(metrics, dict) else None
 
 
-def _load_json_obj(path: Path) -> dict[str, Any] | None:
-    """Load a JSON object from path; None on missing/invalid."""
-    if not path.is_file():
-        return None
+def _load_json_obj(path: Path | str) -> dict[str, Any] | None:
+    """Load a JSON object from an already-allowlisted path; None on missing/invalid."""
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        if not exists_file(path):
+            return None
+        data = read_json(path)
+    except (OSError, json.JSONDecodeError, PathNotAllowedError, TypeError):
         return None
     return data if isinstance(data, dict) else None
 
@@ -200,28 +192,32 @@ def _resolve_n_timeline_steps(
     metrics_o2: Mapping[str, Any] | None,
 ) -> int:
     """Timeline steps from real perimeters only — never progressive/PSB."""
-    timeline = pack / "timeline_perimeters.geojson"
-    if timeline.is_file():
-        try:
-            data = json.loads(timeline.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            data = None
-        if isinstance(data, dict):
-            feats = data.get("features")
-            if isinstance(feats, list):
-                return len(feats)
-            return 0
+    pack_s = realpath(pack)
+    try:
+        timeline = join_fixed(pack_s, "timeline_perimeters.geojson")
+        if exists_file(timeline):
+            data = read_json(timeline)
+            if isinstance(data, dict):
+                feats = data.get("features")
+                if isinstance(feats, list):
+                    return len(feats)
+                return 0
+    except (OSError, json.JSONDecodeError, PathNotAllowedError, TypeError):
+        pass
     for src in (scorecard, metrics_o2):
         if isinstance(src, Mapping) and isinstance(src.get("n_timeline_steps"), int):
             return int(src["n_timeline_steps"])
-    perimeter_candidates = (
-        pack / "vectors" / "perimeter_rediam.geojson",
-        pack / "vectors" / "perimeter_rai.geojson",
-        pack / "vectors" / "perimeter_official.geojson",
-        pack / "vectors" / "perimeter.geojson",
-    )
-    if any(p.is_file() for p in perimeter_candidates):
-        return 1
+    for parts in (
+        ("vectors", "perimeter_rediam.geojson"),
+        ("vectors", "perimeter_rai.geojson"),
+        ("vectors", "perimeter_official.geojson"),
+        ("vectors", "perimeter.geojson"),
+    ):
+        try:
+            if exists_file(join_fixed(pack_s, *parts)):
+                return 1
+        except PathNotAllowedError:
+            continue
     return 0
 
 
@@ -407,47 +403,66 @@ def load_open_metrics_from_pack(
     if pack is None:
         return None
 
-    # 1) Legacy CEMS
-    pista = pack / "scorecard_pista_b.json"
-    if pista.is_file():
-        sc = _load_json_obj(pista)
-        if sc is None:
+    pack_s = realpath(pack)
+
+    def _fixed_json(name: str) -> dict[str, Any] | None:
+        try:
+            p = join_fixed(pack_s, name)
+            return _load_json_obj(p)
+        except PathNotAllowedError:
             return None
+
+    # 1) Legacy CEMS
+    sc = _fixed_json("scorecard_pista_b.json")
+    if sc is not None:
         return _legacy_pista_b_to_open_metrics(pack, sc)
 
     # 2) Named industrial — check BOTH files before choosing either
-    and_sc = pack / "scorecard_and_industrial.json"
-    ext_sc = pack / "scorecard_ext_industrial.json"
-    and_ok = and_sc.is_file()
-    ext_ok = ext_sc.is_file()
+    and_sc = _fixed_json("scorecard_and_industrial.json")
+    ext_sc = _fixed_json("scorecard_ext_industrial.json")
+    and_ok = and_sc is not None
+    ext_ok = ext_sc is not None
     if and_ok and ext_ok:
         return None  # ambiguous malformed pack (fail honest)
-    if and_ok:
-        sc = _load_json_obj(and_sc)
-        if sc is None:
-            return None
+    if and_ok and and_sc is not None:
         return industrial_scorecard_to_open_metrics(
-            pack, sc, source_scorecard="scorecard_and_industrial.json", kind="AND"
+            pack, and_sc, source_scorecard="scorecard_and_industrial.json", kind="AND"
         )
-    if ext_ok:
-        sc = _load_json_obj(ext_sc)
-        if sc is None:
-            return None
+    if ext_ok and ext_sc is not None:
         return industrial_scorecard_to_open_metrics(
-            pack, sc, source_scorecard="scorecard_ext_industrial.json", kind="EXT"
+            pack, ext_sc, source_scorecard="scorecard_ext_industrial.json", kind="EXT"
         )
 
     # 3) Glob other industrial names (only when neither named file exists)
-    matches = sorted(pack.glob("scorecard_*_industrial.json"))
-    if len(matches) == 0:
+    # Glob only under allowlisted pack realpath (basename re-validated).
+    import glob as _glob
+
+    pattern = os.path.join(pack_s, "scorecard_*_industrial.json")
+    matches = sorted(_glob.glob(pattern))
+    safe_matches: list[str] = []
+    for m in matches:
+        try:
+            mr = realpath(m)
+            bn = os.path.basename(mr)
+            if not (bn.startswith("scorecard_") and bn.endswith("_industrial.json")):
+                continue
+            fixed = join_fixed(pack_s, bn)
+            if exists_file(fixed):
+                safe_matches.append(fixed)
+        except (OSError, PathNotAllowedError):
+            continue
+    if len(safe_matches) == 0:
         return None
-    if len(matches) >= 2:
+    if len(safe_matches) >= 2:
         return None  # ambiguous_industrial_scorecards
-    sc = _load_json_obj(matches[0])
+    sc = _load_json_obj(safe_matches[0])
     if sc is None:
         return None
     return industrial_scorecard_to_open_metrics(
-        pack, sc, source_scorecard=matches[0].name, kind="OTHER"
+        pack,
+        sc,
+        source_scorecard=os.path.basename(safe_matches[0]),
+        kind="OTHER",
     )
 
 
@@ -714,64 +729,57 @@ def load_ops_metrics_from_work_dir(
     wd = _as_path(work_dir, base=base, include_repo_root=include_repo_root)
     if wd is None:
         return None
+    wd_s = realpath(wd)
+
+    def _outbox_json(*names: str) -> dict[str, Any] | None:
+        try:
+            return _load_json_obj(join_fixed(wd_s, *names))
+        except PathNotAllowedError:
+            return None
+
     # A) Prefer full decision card already written (complete = finite ROS)
-    fdc = wd / "outbox" / "fire_decision_card.json"
-    if fdc.is_file():
-        try:
-            card = json.loads(fdc.read_text(encoding="utf-8"))
-            ops = (card.get("metrics") or {}).get("ops")
-            if isinstance(ops, dict) and ops:
-                ros_a = _finite_float(ops.get("primary_ros_m_min"))
-                if ros_a is None:
-                    ros_a = _finite_float(ops.get("speed_median_m_min"))
-                if ros_a is not None:
-                    out_a = dict(ops)
-                    out_a["primary_ros_m_min"] = ros_a
-                    return out_a
-        except (OSError, json.JSONDecodeError):
-            pass
+    card = _outbox_json("outbox", "fire_decision_card.json")
+    if isinstance(card, dict):
+        ops = (card.get("metrics") or {}).get("ops")
+        if isinstance(ops, dict) and ops:
+            ros_a = _finite_float(ops.get("primary_ros_m_min"))
+            if ros_a is None:
+                ros_a = _finite_float(ops.get("speed_median_m_min"))
+            if ros_a is not None:
+                out_a = dict(ops)
+                out_a["primary_ros_m_min"] = ros_a
+                return out_a
     # B) incident_state — fall through on parse error or missing ROS
-    st_path = wd / "outbox" / "incident_state.json"
-    if st_path.is_file():
-        try:
-            st = json.loads(st_path.read_text(encoding="utf-8"))
-            if isinstance(st, dict):
-                ros_b = _finite_float(st.get("primary_ros_m_min"))
-                if ros_b is not None:
-                    return {
-                        "quality_grade": st.get("quality_grade"),
-                        "primary_ros_m_min": ros_b,
-                        "n_frames_staged": st.get("n_frames_staged") or st.get("n_frames_seen"),
-                        "area_ha_max": st.get("area_ha_max"),
-                        "speed_vs_ref_ratio": st.get("speed_vs_ref_ratio"),
-                    }
-        except (OSError, json.JSONDecodeError):
-            pass
+    st = _outbox_json("outbox", "incident_state.json")
+    if isinstance(st, dict):
+        ros_b = _finite_float(st.get("primary_ros_m_min"))
+        if ros_b is not None:
+            return {
+                "quality_grade": st.get("quality_grade"),
+                "primary_ros_m_min": ros_b,
+                "n_frames_staged": st.get("n_frames_staged") or st.get("n_frames_seen"),
+                "area_ha_max": st.get("area_ha_max"),
+                "speed_vs_ref_ratio": st.get("speed_vs_ref_ratio"),
+            }
     # C) outbox operational_metrics — fall through on parse error or missing ROS
-    ops_path = wd / "outbox" / "operational_metrics.json"
-    if ops_path.is_file():
-        try:
-            ops = json.loads(ops_path.read_text(encoding="utf-8"))
-            if isinstance(ops, dict):
-                ros_c = _finite_float(ops.get("speed_median_m_min"))
-                if ros_c is None:
-                    ros_c = _finite_float(ops.get("primary_ros_m_min"))
-                if ros_c is not None:
-                    return {
-                        "quality_grade": ops.get("quality_grade"),
-                        "primary_ros_m_min": ros_c,
-                        "n_frames_staged": ops.get("n_frames_staged")
-                        or ops.get("speed_n_observable"),
-                        "area_ha_max": ops.get("area_ha_max"),
-                        "speed_vs_ref_ratio": ops.get("speed_vs_ref_ratio"),
-                    }
-        except (OSError, json.JSONDecodeError):
-            pass
+    ops = _outbox_json("outbox", "operational_metrics.json")
+    if isinstance(ops, dict):
+        ros_c = _finite_float(ops.get("speed_median_m_min"))
+        if ros_c is None:
+            ros_c = _finite_float(ops.get("primary_ros_m_min"))
+        if ros_c is not None:
+            return {
+                "quality_grade": ops.get("quality_grade"),
+                "primary_ros_m_min": ros_c,
+                "n_frames_staged": ops.get("n_frames_staged") or ops.get("speed_n_observable"),
+                "area_ha_max": ops.get("area_ha_max"),
+                "speed_vs_ref_ratio": ops.get("speed_vs_ref_ratio"),
+            }
 
     # D/E/F) temporal window root layout
-    ops_root = _load_json_obj(wd / "operational_metrics.json")
-    fd_root = _load_json_obj(wd / "front_dynamics.json")
-    summary_raw = _load_json_obj(wd / "summary.json")
+    ops_root = _outbox_json("operational_metrics.json")
+    fd_root = _outbox_json("front_dynamics.json")
+    summary_raw = _outbox_json("summary.json")
     summary_metrics: dict[str, Any] | None = None
     if isinstance(summary_raw, dict):
         nested = summary_raw.get("metrics")
@@ -823,11 +831,11 @@ def load_ml_live_metrics(
     if isinstance(value, Mapping):
         return _normalize_ml_live_payload(value)
     path = _as_path(value, base=base, include_repo_root=include_repo_root)
-    if path is None or not path.is_file():
+    if path is None or not exists_file(path):
         return None
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        data = read_json(realpath(path))
+    except (OSError, json.JSONDecodeError, PathNotAllowedError, TypeError):
         return None
     if not isinstance(data, dict):
         return None
@@ -915,10 +923,9 @@ def _opt_bool_strict(value: Any) -> bool | None:
 def _is_docs_reliability_path(path: Path) -> bool:
     """True if path sits under repository docs/ (never a field unlock key)."""
     try:
-        docs_root = (REPO_ROOT / "docs").resolve()
-        path.resolve().relative_to(docs_root)
-        return True
-    except (ValueError, OSError):
+        docs_root = realpath(join_fixed(realpath(REPO_ROOT), "docs"))
+        return _is_under(as_path(realpath(path)), as_path(docs_root))
+    except (ValueError, OSError, PathNotAllowedError):
         return False
 
 
@@ -943,13 +950,13 @@ def load_reliability_gate_mapping(
             return None
         return dict(value)
     path = _as_path(value, base=base, include_repo_root=include_repo_root)
-    if path is None or not path.is_file():
+    if path is None or not exists_file(path):
         return None
     if reject_docs and _is_docs_reliability_path(path):
         raise PathNotAllowedError(f"reliability_gate under docs/ is not a field unlock key: {path}")
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        data = read_json(realpath(path))
+    except (OSError, json.JSONDecodeError, PathNotAllowedError, TypeError):
         return None
     return data if isinstance(data, dict) else None
 

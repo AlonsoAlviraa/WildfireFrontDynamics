@@ -216,7 +216,9 @@ def _parse_bbox(raw: str | None) -> tuple[float, float, float, float] | None:
     return (w, s, e, n)
 
 
-def _bbox_from_center(lat: float, lon: float, radius_km: float) -> tuple[float, float, float, float]:
+def _bbox_from_center(
+    lat: float, lon: float, radius_km: float
+) -> tuple[float, float, float, float]:
     import math
 
     dlat = radius_km / 111.0
@@ -290,7 +292,9 @@ def run_app(args: argparse.Namespace) -> int:
             return 2
         center = (float(lon), float(lat))
         if bbox is None:
-            bbox = _bbox_from_center(float(lat), float(lon), float(getattr(args, "radius_km", 50) or 50.0))
+            bbox = _bbox_from_center(
+                float(lat), float(lon), float(getattr(args, "radius_km", 50) or 50.0)
+            )
 
     # Default offline for demos; --live enables network; --no-live is explicit offline
     live = bool(getattr(args, "live", False)) and not bool(getattr(args, "no_live", False))
@@ -319,9 +323,7 @@ def run_app(args: argparse.Namespace) -> int:
             return 2
         work_dir = Path(hit["work_dir"])
 
-    pack_on = bool(getattr(args, "all_fires", False)) or bool(
-        getattr(args, "pack_fires", False)
-    )
+    pack_on = bool(getattr(args, "all_fires", False)) or bool(getattr(args, "pack_fires", False))
     pack_cap = int(getattr(args, "pack_cap", 8) or 8)
     if pack_cap < 1:
         pack_cap = 1
@@ -407,19 +409,27 @@ def run_app(args: argparse.Namespace) -> int:
         print(f"  decision card: {'yes' if payload.get('decision_card') else 'no'}")
         print(f"  ops metrics:  {'yes' if payload.get('ops_metrics') else 'no'}")
         print(f"  map layers:   {len(payload.get('layer_summary') or [])}  ·  connectivity={conn}")
-        print(f"  fires:        {payload.get('fire_count', 0)} en catálogo  ·  selected={payload.get('selected_fire_id')}")
+        print(
+            f"  fires:        {payload.get('fire_count', 0)} en catálogo  ·  selected={payload.get('selected_fire_id')}"
+        )
         print(f"  actions:      {len(payload.get('product_actions') or [])} CTAs en consola")
-        print(f"  ui-mode:      {payload.get('ui_mode', 'simple')}  ·  glosario={len(payload.get('glossary') or [])}")
+        print(
+            f"  ui-mode:      {payload.get('ui_mode', 'simple')}  ·  glosario={len(payload.get('glossary') or [])}"
+        )
         pack = payload.get("pack") or {}
         if pack.get("enabled"):
-            print(f"  pack:         {pack.get('n')} IF  ·  cap={pack.get('cap')}  ·  truncated={pack.get('truncated')}")
+            print(
+                f"  pack:         {pack.get('n')} IF  ·  cap={pack.get('cap')}  ·  truncated={pack.get('truncated')}"
+            )
         bridge = payload.get("bridge_decide") or {}
         if bridge.get("enabled"):
             print(f"  bridge:       {bridge.get('url')}  (live card; offline fallback embed)")
         lo = payload.get("live_ops") or {}
         if lo.get("enabled"):
             print("  live ops:     ON  ·  POST /live/v1/{status,decide,export-acta}")
-        print(f"  rails:        fusion={(payload.get('rails') or {}).get('field_ops_ml_live_fusion')}")
+        print(
+            f"  rails:        fusion={(payload.get('rails') or {}).get('field_ops_ml_live_fusion')}"
+        )
         print(f"  HTML:         {paths['html']}")
         print(f"  JSON:         {paths['json']}")
         print("")
@@ -458,9 +468,7 @@ def run_app(args: argparse.Namespace) -> int:
     if do_serve:
         bridge_cfg = payload.get("bridge_decide") or {}
         bridge_upstream = (
-            str(bridge_cfg.get("url") or "").strip()
-            if bridge_cfg.get("enabled")
-            else None
+            str(bridge_cfg.get("url") or "").strip() if bridge_cfg.get("enabled") else None
         )
         return _serve_static_spa(
             paths["html"],
@@ -510,7 +518,6 @@ class _SafeSPARequestHandler:
     ):
         import http.server
         import json
-        import mimetypes
         import urllib.error
         import urllib.parse
         import urllib.request
@@ -545,6 +552,8 @@ class _SafeSPARequestHandler:
 
             def _safe_path(self) -> Path | None:
                 # Reject URL tricks; only serve files under root_res
+                import os as _os
+
                 parsed = urllib.parse.urlparse(self.path)
                 raw = urllib.parse.unquote(parsed.path or "/")
                 # Normalize separators and strip leading slash
@@ -552,17 +561,28 @@ class _SafeSPARequestHandler:
                 if rel == "" or rel.endswith("/"):
                     rel = (rel + "index.html") if rel else "index.html"
                 # Block null bytes and parent traversal tokens before resolve
-                if "\x00" in rel or any(p == ".." for p in rel.split("/")):
+                parts = [p for p in rel.split("/") if p not in ("", ".")]
+                if "\x00" in rel or any(p == ".." for p in parts):
                     return None
                 # Bridge / live API paths are not static files
                 if rel.startswith("bridge/") or rel.startswith("live/"):
                     return None
-                candidate = (root_res / rel).resolve()
+                root_real = _os.path.realpath(str(root_res))
+                joined = _os.path.join(root_real, *parts) if parts else root_real
+                cand_real = _os.path.realpath(joined)
                 try:
-                    candidate.relative_to(root_res)
+                    common = _os.path.commonpath([root_real, cand_real])
                 except ValueError:
                     return None
-                return candidate
+                if common != root_real:
+                    return None
+                if cand_real != root_real and not (
+                    cand_real.startswith(root_real + _os.sep)
+                    or cand_real.startswith(root_real + "/")
+                ):
+                    return None
+                # Rebuild from verified realpath only (breaks path-injection taint)
+                return Path(cand_real)
 
             def _send_bytes(
                 self,
@@ -571,8 +591,41 @@ class _SafeSPARequestHandler:
                 *,
                 content_type: str = "application/json; charset=utf-8",
             ) -> None:
+                # Whitelist content-types (no CR/LF — HTTP response splitting)
+                allowed_ct = {
+                    "application/json; charset=utf-8",
+                    "application/json",
+                    "text/html; charset=utf-8",
+                    "text/plain; charset=utf-8",
+                    "application/octet-stream",
+                    "text/css",
+                    "application/javascript",
+                    "image/png",
+                    "image/jpeg",
+                    "image/svg+xml",
+                    "image/gif",
+                    "image/webp",
+                    "font/woff",
+                    "font/woff2",
+                }
+                ct = str(content_type or "application/octet-stream")
+                if "\r" in ct or "\n" in ct or ct not in allowed_ct:
+                    # Map common mimetypes to safe fixed strings
+                    low = ct.split(";")[0].strip().lower()
+                    ct = {
+                        "text/html": "text/html; charset=utf-8",
+                        "application/json": "application/json; charset=utf-8",
+                        "text/plain": "text/plain; charset=utf-8",
+                        "text/css": "text/css",
+                        "application/javascript": "application/javascript",
+                        "image/png": "image/png",
+                        "image/jpeg": "image/jpeg",
+                        "image/svg+xml": "image/svg+xml",
+                        "image/gif": "image/gif",
+                        "image/webp": "image/webp",
+                    }.get(low, "application/octet-stream")
                 self.send_response(status)
-                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Type", ct)
                 self.send_header("Content-Length", str(len(data)))
                 self.send_header("X-Content-Type-Options", "nosniff")
                 self.send_header("Cache-Control", "no-store")
@@ -654,16 +707,22 @@ class _SafeSPARequestHandler:
                     )
                     with urllib.request.urlopen(req, timeout=8) as resp:
                         data = resp.read()
-                        ctype = resp.headers.get(
-                            "Content-Type", "application/json; charset=utf-8"
+                        # Never forward raw Content-Type (HTTP response splitting);
+                        # always use fixed whitelist via _send_bytes default/mapper.
+                        raw_ct = resp.headers.get("Content-Type") or ""
+                        # Strip CR/LF and parameters; map in _send_bytes
+                        safe_ct = raw_ct.split(";")[0].strip().replace("\r", "").replace("\n", "")
+                        if not safe_ct:
+                            safe_ct = "application/json"
+                        self._send_bytes(
+                            int(resp.status),
+                            data,
+                            content_type=safe_ct,
                         )
-                        self._send_bytes(int(resp.status), data, content_type=ctype)
                 except urllib.error.HTTPError as exc:
                     data = exc.read() if hasattr(exc, "read") else b""
                     if not data:
-                        data = (
-                            f'{{"error":"upstream_http","status":{exc.code}}}'.encode()
-                        )
+                        data = f'{{"error":"upstream_http","status":{exc.code}}}'.encode()
                     self._send_bytes(int(exc.code), data)
                 except Exception as exc:
                     msg = str(exc).replace('"', "'")[:200]
@@ -688,19 +747,33 @@ class _SafeSPARequestHandler:
                 if target is None:
                     self.send_error(403, "Forbidden: path outside SPA output dir")
                     return
-                if not target.is_file():
-                    self.send_error(404, "Not found")
-                    return
-                ctype = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-                if target.suffix.lower() == ".html":
-                    ctype = "text/html; charset=utf-8"
-                elif target.suffix.lower() == ".json":
-                    ctype = "application/json; charset=utf-8"
+                from wildfire_front.product.path_sandbox import (
+                    PathNotAllowedError,
+                    read_bytes,
+                    realpath,
+                )
+
                 try:
-                    data = target.read_bytes()
-                except OSError:
+                    t_real = realpath(target)
+                    data = read_bytes(t_real, [root_res])
+                except (OSError, PathNotAllowedError):
                     self.send_error(404, "Not found")
                     return
+                # Fixed content-type from suffix only (no free-form header injection)
+                suf = Path(t_real).suffix.lower()
+                ctype = {
+                    ".html": "text/html; charset=utf-8",
+                    ".htm": "text/html; charset=utf-8",
+                    ".json": "application/json; charset=utf-8",
+                    ".css": "text/css",
+                    ".js": "application/javascript",
+                    ".png": "image/png",
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".svg": "image/svg+xml",
+                    ".gif": "image/gif",
+                    ".webp": "image/webp",
+                }.get(suf, "application/octet-stream")
                 self._send_bytes(200, data, content_type=ctype)
 
             def do_POST(self) -> None:  # noqa: N802
@@ -716,9 +789,7 @@ class _SafeSPARequestHandler:
                         self._send_bytes(413, b'{"error":"body_too_large"}')
                         return
                     raw = self.rfile.read(length) if length > 0 else b"{}"
-                    self._proxy_to_upstream(
-                        method="POST", upstream_path="/v1/decide", body=raw
-                    )
+                    self._proxy_to_upstream(method="POST", upstream_path="/v1/decide", body=raw)
                     return
                 self.send_error(405, "Method not allowed")
 
@@ -736,7 +807,10 @@ class _SafeSPARequestHandler:
                 if target is None:
                     self.send_error(403, "Forbidden")
                     return
-                if not target.is_file():
+                import os as _os
+
+                t_real = _os.path.realpath(str(target))
+                if not _os.path.isfile(t_real):
                     self.send_error(404, "Not found")
                     return
                 self.send_response(200)
@@ -838,18 +912,27 @@ def _serve_static_spa(
 
 def resolve_safe_spa_path(root: Path, request_path: str) -> Path | None:
     """Public helper for tests: resolve request path under root or None if escape."""
+    import os
     import urllib.parse
 
-    root_res = Path(root).resolve()
+    root_real = os.path.realpath(str(root))
     raw = urllib.parse.unquote(str(request_path or "/"))
     rel = raw.lstrip("/").replace("\\", "/")
     if rel == "" or rel.endswith("/"):
         rel = (rel + "index.html") if rel else "index.html"
-    if "\x00" in rel or any(p == ".." for p in rel.split("/")):
+    parts = [p for p in rel.split("/") if p not in ("", ".")]
+    if "\x00" in rel or any(p == ".." for p in parts):
         return None
-    candidate = (root_res / rel).resolve()
+    joined = os.path.join(root_real, *parts) if parts else root_real
+    cand_real = os.path.realpath(joined)
     try:
-        candidate.relative_to(root_res)
+        common = os.path.commonpath([root_real, cand_real])
     except ValueError:
         return None
-    return candidate
+    if common != root_real:
+        return None
+    if cand_real != root_real and not (
+        cand_real.startswith(root_real + os.sep) or cand_real.startswith(root_real + "/")
+    ):
+        return None
+    return Path(cand_real)

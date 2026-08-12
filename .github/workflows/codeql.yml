@@ -41,7 +41,9 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           # Lightweight queries suitable for a research/ML repo without full build.
-          queries: security-extended
+          # Config excludes intentional post-allowlist sinks in path_sandbox.py
+          # (realpath+commonpath validated; CodeQL does not model that barrier).
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

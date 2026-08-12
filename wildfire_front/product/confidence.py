@@ -493,12 +493,18 @@ def _load_reliability_gate_report(
         return None
     if isinstance(source, Mapping):
         return dict(source)
-    path = Path(source)
-    if not path.is_file():
-        return None
+    # Path loads go through path_sandbox (realpath + commonpath + open).
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        from .path_sandbox import exists_file, read_json, realpath
+
+        p = realpath(source)
+        if not exists_file(p):
+            return None
+        data = read_json(p)
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return None
+    except Exception:
+        # PathNotAllowedError and friends
         return None
     return data if isinstance(data, dict) else None
 

@@ -14,6 +14,7 @@ Endpoints (served only when live ops enabled on the SPA HTTP server):
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,16 @@ from wildfire_front.product.decide_service import (
     PathNotAllowedError,
     UntrustedInlineMetricsError,
     decide_from_request,
+)
+from wildfire_front.product.path_sandbox import (
+    as_path,
+    ensure_dir,
+    exists_file,
+    join_fixed,
+    read_json,
+    realpath,
+    resolve_under,
+    write_json,
 )
 
 LIVE_OPS_SCHEMA = "wfd_live_ops_v1"
@@ -71,12 +82,9 @@ def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
     }
 
 
-def _is_under(path: Path, root: Path) -> bool:
-    try:
-        path.resolve().relative_to(root.resolve())
-        return True
-    except (ValueError, OSError):
-        return False
+def _root_real(base: Path | None) -> str:
+    """Canonical absolute root string (no trailing sep)."""
+    return realpath(base or REPO_ROOT)
 
 
 def resolve_work_dir(
@@ -88,40 +96,63 @@ def resolve_work_dir(
 
     Rejects empty, ``..`` segments, null bytes, and paths that escape base.
     """
-    root = Path(base or REPO_ROOT).resolve()
     if work_dir is None or str(work_dir).strip() == "":
         raise PathNotAllowedError("work_dir required")
-    raw = str(work_dir).strip().replace("\\", "/")
-    if "\x00" in raw:
-        raise PathNotAllowedError("null byte in work_dir")
-    # Reject parent traversal tokens before resolve (Windows + posix)
-    parts = [p for p in raw.replace("\\", "/").split("/") if p not in ("", ".")]
-    if any(p == ".." for p in parts):
-        raise PathNotAllowedError("path traversal rejected")
-    p = Path(work_dir)
-    resolved = p.resolve() if p.is_absolute() else (root / p).resolve()
-    if not _is_under(resolved, root):
-        raise PathNotAllowedError(f"work_dir outside allowlist: {work_dir}")
-    if not resolved.exists():
-        raise PathNotAllowedError(f"work_dir not found: {work_dir}")
-    if not resolved.is_dir():
-        raise PathNotAllowedError(f"work_dir is not a directory: {work_dir}")
-    return resolved
+    return as_path(
+        resolve_under(
+            work_dir,
+            [_root_real(base)],
+            must_exist=True,
+            must_be_dir=True,
+        )
+    )
+
+
+def _sanitize_under(
+    user_path: str | Path,
+    *,
+    base: Path | None = None,
+    must_exist: bool = True,
+    must_be_dir: bool | None = True,
+) -> Path:
+    """Resolve ``user_path`` under ``base`` (wrapper for tests / callers)."""
+    return as_path(
+        resolve_under(
+            user_path,
+            [_root_real(base)],
+            must_exist=must_exist,
+            must_be_dir=must_be_dir if must_be_dir is not False else None,
+            must_be_file=True if must_be_dir is False else None,
+        )
+    )
 
 
 def _rel_to_base(path: Path, base: Path) -> str:
     try:
-        return str(path.resolve().relative_to(base.resolve())).replace("\\", "/")
-    except ValueError:
-        return str(path).replace("\\", "/")
+        root_real = realpath(base)
+        path_real = realpath(path)
+        from wildfire_front.product.path_sandbox import is_under
+
+        if not is_under(path_real, root_real):
+            return os.path.basename(path_real)
+        rel = os.path.relpath(path_real, root_real)
+        return rel.replace("\\", "/")
+    except (ValueError, OSError):
+        return os.path.basename(str(path))
 
 
-def _read_json_file(path: Path) -> dict[str, Any] | None:
-    if not path.is_file():
-        return None
+def _fixed_child(parent: Path | str, *parts: str) -> Path:
+    """Join fixed (non-user) child segments under an already-sanitized parent."""
+    return as_path(join_fixed(parent, *parts))
+
+
+def _read_json_file(path: Path | str) -> dict[str, Any] | None:
+    """Read JSON from an allowlisted/fixed path via path_sandbox."""
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        if not exists_file(path):
+            return None
+        data = read_json(realpath(path))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError, PathNotAllowedError):
         return None
     return data if isinstance(data, dict) else None
 
@@ -132,21 +163,23 @@ def _lightweight_incident_status(work_dir: Path) -> dict[str, Any]:
     Reads the same outbox artifacts the SPA / doctor surface care about:
     incident_state, fire_decision_card, operational_metrics.
     """
-    wd = Path(work_dir)
-    outbox = wd / "outbox"
-    state = _read_json_file(outbox / "incident_state.json")
-    card = _read_json_file(outbox / "fire_decision_card.json") or _read_json_file(
-        wd / "fire_decision_card.json"
+    # work_dir is already allowlisted via resolve_work_dir
+    wd_real = os.path.realpath(str(work_dir))
+    wd = Path(wd_real)
+    outbox = _fixed_child(wd, "outbox")
+    state = _read_json_file(_fixed_child(outbox, "incident_state.json"))
+    card = _read_json_file(_fixed_child(outbox, "fire_decision_card.json")) or _read_json_file(
+        _fixed_child(wd, "fire_decision_card.json")
     )
-    ops = _read_json_file(outbox / "operational_metrics.json") or _read_json_file(
-        wd / "operational_metrics.json"
+    ops = _read_json_file(_fixed_child(outbox, "operational_metrics.json")) or _read_json_file(
+        _fixed_child(wd, "operational_metrics.json")
     )
     report: dict[str, Any] = {
         "product": "incident_runtime_v1",
         "command": "status",
         "source": "live_ops_lightweight",
-        "work_dir": str(wd.resolve()),
-        "outbox": str(outbox.resolve()),
+        "work_dir": wd_real,
+        "outbox": os.path.realpath(str(outbox)),
         "has_state": state is not None,
         "has_decision_card": card is not None,
         "has_ops_metrics": ops is not None,
@@ -265,9 +298,9 @@ def handle_decide(
     if fusion and str(fusion).upper() not in ("OFF", "FALSE", "0", "NO"):
         # Hard rail: never surface fusion ON from live ops
         fusion = "OFF"
-    outbox_card = _read_json_file(wd / "outbox" / "fire_decision_card.json") or _read_json_file(
-        wd / "fire_decision_card.json"
-    )
+    outbox_card = _read_json_file(
+        _fixed_child(_fixed_child(wd, "outbox"), "fire_decision_card.json")
+    ) or _read_json_file(_fixed_child(wd, "fire_decision_card.json"))
     outbox_decision = (outbox_card or {}).get("decision")
     return {
         "ok": True,
@@ -284,8 +317,7 @@ def handle_decide(
             "event_id": card.get("event_id"),
             "system_reliability_pass": card.get("system_reliability_pass"),
             "latency_ms": card.get("latency_ms"),
-            "policy_id": (card.get("policy") or {}).get("id")
-            or req["policy_id"],
+            "policy_id": (card.get("policy") or {}).get("id") or req["policy_id"],
             "field_ops_ml_live_fusion": "OFF",
             "reasons_head": list((card.get("reasons") or [])[:4]),
             "outbox_decision": outbox_decision,
@@ -311,14 +343,18 @@ def handle_export_acta(
     )
 
     req = dict(body or {})
-    root = Path(base or REPO_ROOT).resolve()
+    root = Path(_root_real(base))
     wd = resolve_work_dir(req.get("work_dir"), base=root)
-    card_path = wd / "outbox" / "fire_decision_card.json"
-    if not card_path.is_file():
+    outbox = _fixed_child(wd, "outbox")
+    card_path = _fixed_child(outbox, "fire_decision_card.json")
+    outbox_s = realpath(outbox)
+    card_s = realpath(card_path)
+    wd_s = realpath(wd)
+    if not exists_file(card_s):
         # Fall back to decide then export
         decide_body = {
-            "work_dir": str(wd),
-            "event_id": str(req.get("event_id") or wd.name),
+            "work_dir": wd_s,
+            "event_id": str(req.get("event_id") or Path(wd_s).name),
             "policy_id": "field_ops",
         }
         decided = handle_decide(decide_body, base=root)
@@ -329,27 +365,24 @@ def handle_export_acta(
                 "schema": LIVE_OPS_SCHEMA,
                 "error": "no_decision_card",
                 "detail": (
-                    f"missing {card_path.name} and live decide failed: "
+                    f"missing fire_decision_card.json and live decide failed: "
                     f"{decided.get('error') or decided.get('detail')}"
                 ),
                 "honesty_rails": honesty_rails(),
             }
         card = decided.get("result") or {}
-        # Persist card so outbox is usable next time
-        outbox = wd / "outbox"
-        outbox.mkdir(parents=True, exist_ok=True)
-        card_path.write_text(
-            json.dumps(card, indent=2, default=str), encoding="utf-8"
-        )
+        # Persist card so outbox is usable next time (fixed basename only)
+        ensure_dir(outbox_s)
+        write_json(outbox_s, "fire_decision_card.json", card)
     else:
-        card = json.loads(card_path.read_text(encoding="utf-8"))
+        card = _read_json_file(card_s) or {}
 
-    out_dir = wd / "outbox"
+    out_dir = as_path(outbox_s)  # already under sanitized work_dir
     paths = write_forensic_bundle(
         out_dir,
-        card,
+        card if isinstance(card, dict) else {},
         require_ops_for_go=bool(req.get("require_ops_for_go", False)),
-        operator=req.get("operator"),
+        operator=req.get("operator") if isinstance(req.get("operator"), str) else None,
     )
     acta_preview = render_acta_md(card)[:1200]
     radio_preview = render_radio_bridge(card)[:600]
@@ -390,7 +423,7 @@ def handle_replay_third_party(
     from wildfire_front.product.forensics import load_and_replay_bundle, replay_decision
 
     req = dict(body or {})
-    root = Path(base or REPO_ROOT).resolve()
+    root = Path(_root_real(base))
     bundle_raw = req.get("bundle") or req.get("pack")
     sources_raw = req.get("sources")
     work_raw = req.get("work_dir")
@@ -398,39 +431,25 @@ def handle_replay_third_party(
     try:
         if sources_raw:
             # sources is a file, not a dir — resolve under base without is_dir check
-            raw = str(sources_raw).strip().replace("\\", "/")
-            if "\x00" in raw or any(p == ".." for p in raw.split("/") if p):
-                raise PathNotAllowedError("path traversal rejected")
-            p = Path(sources_raw)
-            resolved = p.resolve() if p.is_absolute() else (root / p).resolve()
-            if not _is_under(resolved, root):
-                raise PathNotAllowedError(f"sources outside allowlist: {sources_raw}")
-            if not resolved.is_file():
-                raise PathNotAllowedError(f"sources not found: {sources_raw}")
-            src = json.loads(resolved.read_text(encoding="utf-8"))
+            resolved = _sanitize_under(sources_raw, base=root, must_exist=True, must_be_dir=False)
+            src = read_json(realpath(resolved))
+            if not isinstance(src, dict):
+                raise PathNotAllowedError("sources must be a JSON object")
             result = replay_decision(src, base=root)
             target_rel = _rel_to_base(resolved, root)
         elif bundle_raw:
             # Allow pack dir under repo (may not be a work_dir)
-            raw = str(bundle_raw).strip().replace("\\", "/")
-            if "\x00" in raw or any(p == ".." for p in raw.split("/") if p):
-                raise PathNotAllowedError("path traversal rejected")
-            p = Path(bundle_raw)
-            resolved = p.resolve() if p.is_absolute() else (root / p).resolve()
-            if not _is_under(resolved, root):
-                raise PathNotAllowedError(f"bundle outside allowlist: {bundle_raw}")
-            if not resolved.is_dir():
-                raise PathNotAllowedError(f"bundle not found: {bundle_raw}")
+            resolved = _sanitize_under(bundle_raw, base=root, must_exist=True, must_be_dir=True)
             result = load_and_replay_bundle(resolved, base=root)
             target_rel = _rel_to_base(resolved, root)
         elif work_raw:
             wd = resolve_work_dir(work_raw, base=root)
-            result = load_and_replay_bundle(wd / "outbox", base=root)
+            result = load_and_replay_bundle(_fixed_child(wd, "outbox"), base=root)
             target_rel = _rel_to_base(wd, root)
         else:
-            # Default third-party pack
-            default = root / "outputs" / "demo_third_party"
-            if not default.is_dir():
+            # Default third-party pack (fixed segments only — not user input)
+            default = _fixed_child(root, "outputs", "demo_third_party")
+            if not os.path.isdir(os.path.realpath(str(default))):
                 return {
                     "ok": False,
                     "act": "replay_third_party",
@@ -480,10 +499,7 @@ def handle_replay_third_party(
             "decision_match": result.get("match_decision"),
             "expected": result.get("expected_decision"),
             "got": result.get("got_decision"),
-            "note": (
-                "replay_ok = forensic consistency offline — "
-                "not cryptographic authenticity"
-            ),
+            "note": ("replay_ok = forensic consistency offline — not cryptographic authenticity"),
         },
         "honesty_rails": honesty_rails(),
     }
