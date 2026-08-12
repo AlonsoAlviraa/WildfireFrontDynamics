@@ -90,7 +90,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["B011"]   # assert False is fine in tests
+"tests/*" = ["B011", "E402"]  # assert False ok; some tests set sys.path first
 "kaggle_job/*" = ["E402"]  # late imports are intentional in training scripts
 "scripts/run_experiment_loop.py" = ["E402"]
 "scripts/batch_process_fires.py" = ["E402"]  # sys.path manipulation before imports
