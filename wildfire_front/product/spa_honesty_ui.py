@@ -1,11 +1,13 @@
-"""SPA honesty UI helpers (Agent A): H1 eng rehearsal, SR ladder, decision-log read.
+"""SPA honesty UI helpers (Agent A): uncertainty bar, H1 eng, SR ladder, decision-log.
 
 Pure payload builders — no fusion ON, never invent GO_Q=true, never invent backend ACK.
+Uncertainty bar is conf-only (existing confidence_pred) — never ROS / never invented scores.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,12 @@ _DECISION_LOG_CANDIDATES = (
 )
 
 _H1_SESSION_REL = Path("docs") / "H1_DEMO_SESSION_READY.json"
+
+# Mes2 PR1-A fixed honesty strings (tests pin exact phrases)
+UNCERTAINTY_BAR_NOTE = (
+    "no es ROS · IoU ≠ ROS · banda de calidad existente, sin inventar scores"
+)
+UNCERTAINTY_BAR_LABEL = "Conf. predicción (no es ROS)"
 
 # Support / recommendation ladder (eng UI only — not field GO sell)
 SR_LADDER_LEVELS: tuple[dict[str, str], ...] = (
@@ -50,6 +58,58 @@ SR_NON_CLAIMS: tuple[str, ...] = (
     "GO_Q partial hasta acta tercero humana",
     "Claims Guardian: no outbound marketing sin clear",
 )
+
+
+def build_uncertainty_bar_view(
+    *,
+    confidence_pred: float | int | None = None,
+    confidence_label: str | None = None,
+) -> dict[str, Any]:
+    """Mes2 PR1-A: pure conf-only uncertainty bar for SPA payload.
+
+    Uses only existing confidence_pred / label from the decision card / hero.
+    Never invents numeric scores, never maps IoU→ROS, never sets fusion ON / GO_Q.
+    Empty conf → honest empty fill + band ``sin conf``.
+    """
+    conf: float | None = None
+    if confidence_pred is not None:
+        try:
+            c = float(confidence_pred)
+        except (TypeError, ValueError):
+            c = float("nan")
+        if math.isfinite(c):
+            conf = max(0.0, min(1.0, c))
+
+    band = str(confidence_label or "").strip()
+    if not band and conf is not None:
+        if conf < 0.34:
+            band = "baja"
+        elif conf < 0.67:
+            band = "media"
+        else:
+            band = "alta"
+    if not band:
+        band = "sin conf"
+
+    fill_pct = int(round(conf * 100.0)) if conf is not None else 0
+
+    return {
+        "schema": "wfd_uncertainty_bar_ui_v1",
+        "marker": "uncertainty-bar",
+        "confidence_pred": conf,
+        "fill_pct": fill_pct,
+        "band": band,
+        "label": UNCERTAINTY_BAR_LABEL,
+        "note": UNCERTAINTY_BAR_NOTE,
+        "emphasis": "no es ROS",
+        "source": "existing_confidence_pred_only",
+        "invents_scores": False,
+        "is_ros": False,
+        "iou_is_not_ros": True,
+        "empty": conf is None,
+        "field_ops_ml_live_fusion": "OFF",
+        "go_q_invent_forbidden": True,
+    }
 
 
 def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:

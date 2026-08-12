@@ -53,6 +53,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 
 - field_ops ML fusion **OFF**
 - Confidence band = **prediction quality**, **no es ROS** · IoU ≠ ROS
+- SPA marker `uncertainty-bar` / payload `uncertainty_bar`: fill from existing `confidence_pred` only (no invented scores, never ROS)
 - Never invent GO_Q / scores / tactical dispatch claims
 - Decision may **ABSTAIN** / **HOLD** (feature)
 
@@ -62,7 +63,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 |------|------|
 | `wildfire_front/product/app_spa.py` | payload builder |
 | `wildfire_front/product/app_spa_html.py` | CSS / shell / JS |
-| `wildfire_front/product/spa_honesty_ui.py` | H1 eng / SR ladder / decision-log UI helpers |
+| `wildfire_front/product/spa_honesty_ui.py` | Uncertainty bar + H1 eng / SR ladder / decision-log UI helpers |
 | `wildfire_front/product/live_ops.py` | Live Ops handlers |
 | `wildfire_front/cli_app.py` | `app` CLI + loopback server |
 | `wildfire_front/map_status/**` | map payload / FIRMS / html map |
