@@ -21,8 +21,10 @@ AddGlobalFlags = Callable[[argparse.ArgumentParser], None]
 # Repo root: wildfire_front/..
 _ROOT = Path(__file__).resolve().parents[1]
 
+
 def _repo_root() -> Path:
     return _ROOT
+
 
 def _rel(path: Path, root: Path | None = None) -> str:
     root = root or _repo_root()
@@ -30,6 +32,7 @@ def _rel(path: Path, root: Path | None = None) -> str:
         return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
     except ValueError:
         return str(path)
+
 
 def rails_snapshot() -> dict[str, Any]:
     """Hard-coded honest product rails for the operator board (not a GO_Q flip)."""
@@ -47,6 +50,7 @@ def rails_snapshot() -> dict[str, Any]:
             "replay_ok_is_not_third_party_authenticity",
         ],
     }
+
 
 def build_checklist(*, root: Path | None = None) -> dict[str, Any]:
     root = root or _repo_root()
@@ -115,6 +119,7 @@ def build_checklist(*, root: Path | None = None) -> dict[str, Any]:
         ],
     }
 
+
 def print_hub(*, as_json: bool = False) -> int:
     checklist = build_checklist()
     rails = checklist["rails"]
@@ -145,6 +150,7 @@ def print_hub(*, as_json: bool = False) -> int:
     print()
     return 0
 
+
 def print_checklist(*, as_json: bool = False) -> int:
     data = build_checklist()
     if as_json:
@@ -165,6 +171,7 @@ def print_checklist(*, as_json: bool = False) -> int:
     print()
     return 0
 
+
 def _run_script(script: Path, args: Sequence[str], *, root: Path) -> int:
     if not script.is_file():
         print(f"error: missing script {_rel(script, root)}", file=sys.stderr)
@@ -176,12 +183,14 @@ def _run_script(script: Path, args: Sequence[str], *, root: Path) -> int:
     proc = subprocess.run(cmd, cwd=str(root), env=env, check=False)
     return int(proc.returncode)
 
+
 def _run_module(args: Sequence[str], *, root: Path) -> int:
     cmd = [sys.executable, "-m", "wildfire_front", *args]
     print(f"> {' '.join(cmd)}", flush=True)
     env = {**os.environ, "PYTHONPATH": str(root)}
     proc = subprocess.run(cmd, cwd=str(root), env=env, check=False)
     return int(proc.returncode)
+
 
 def run_act(
     act: int,
@@ -227,6 +236,7 @@ def run_act(
     print(f"error: unknown act {act} (use 1..4)", file=sys.stderr)
     print("  hint: wildfire-front operator do --act 1", file=sys.stderr)
     return 2
+
 
 def run_demo_third_party(
     *,
@@ -333,6 +343,7 @@ def run_demo_third_party(
         webbrowser.open((out / "fire_decision_acta.md").resolve().as_uri())
     return 0
 
+
 _TEACH_ACTS: dict[int, tuple[str, str]] = {
     1: (
         "Ver",
@@ -351,6 +362,7 @@ _TEACH_ACTS: dict[int, tuple[str, str]] = {
         "Pack + replay_ok. replay_ok = consistencia forense offline, no autenticidad de tercero.",
     ),
 }
+
 
 def print_teach(*, act: int | None = None, as_json: bool = False, run: bool = False) -> int:
     rails = rails_snapshot()
@@ -371,7 +383,9 @@ def print_teach(*, act: int | None = None, as_json: bool = False, run: bool = Fa
     print()
     print("  WildfireFrontDynamics · teach (12 min)")
     print("  " + "─" * 56)
-    print(f"  semáforo GO_Q  AMARILLO · go_q_met={rails['go_q_met']} · fusion={rails['field_ops_fusion']}")
+    print(
+        f"  semáforo GO_Q  AMARILLO · go_q_met={rails['go_q_met']} · fusion={rails['field_ops_fusion']}"
+    )
     print()
     acts = [act] if act is not None else [1, 2, 3, 4]
     for n in acts:
@@ -384,6 +398,7 @@ def print_teach(*, act: int | None = None, as_json: bool = False, run: bool = Fa
         return run_act(act)
     return 0
 
+
 def print_show(*, as_json: bool = False, open_artifacts: bool = False) -> int:
     data = build_checklist()
     artifacts = [
@@ -394,7 +409,7 @@ def print_show(*, as_json: bool = False, open_artifacts: bool = False) -> int:
         "docs/commander/index.html",
     ]
     root = _repo_root()
-    present = []
+    present: list[dict[str, Any]] = []
     for rel in artifacts:
         p = root / rel
         present.append({"path": rel, "exists": p.is_file()})
@@ -434,6 +449,7 @@ def print_show(*, as_json: bool = False, open_artifacts: bool = False) -> int:
             if p.is_file():
                 webbrowser.open(p.resolve().as_uri())
     return 0
+
 
 def register_operator_commands(
     commands: argparse._SubParsersAction,
@@ -520,9 +536,12 @@ def register_operator_commands(
     )
     demo_tp.add_argument("--no-replay", action="store_true")
     demo_tp.add_argument("--skip-build", action="store_true")
-    demo_tp.add_argument("--no-zip", action="store_true", help="Accepted; zip packaging not required")
+    demo_tp.add_argument(
+        "--no-zip", action="store_true", help="Accepted; zip packaging not required"
+    )
     demo_tp.add_argument("--open", action="store_true")
     add_global_flags(demo_tp)
+
 
 def dispatch_operator_command(args: argparse.Namespace) -> bool:
     """Handle operator/teach/show/demo-third-party. Returns True if handled."""
