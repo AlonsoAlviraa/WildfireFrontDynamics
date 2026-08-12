@@ -492,6 +492,113 @@ def _prepare_incremental_ingest(
     return inc_images, inc_masks
 
 
+def _humanize_decision_reason(reason: str) -> str:
+    """E6 — map machine reason tokens to short operator-facing ES/EN notes."""
+    r = str(reason or "").strip()
+    if not r:
+        return r
+    table = {
+        "ops_confidence_ok": "Ops térmico con confianza suficiente para GO (no es orden táctica)",
+        "ops+open_fusion": "Fusión ops + perímetro open por encima del umbral GO",
+        "ops_required_for_go": "Política exige ops térmico para GO → sin ops no hay GO",
+        "open_only_monitoring": "Solo open/CEMS → HOLD de monitorización (sin ROS de frente)",
+        "open_cems_monitoring_only": "Open CEMS disponible → HOLD monitorización",
+        "ml_only_not_field_ros": "Solo ML → HOLD lab (no ROS de campo)",
+        "ml_only_blocked_by_policy": "field_ops: ML-only bloqueado → ABSTAIN",
+        "no_available_sources": "Ninguna fuente disponible → ABSTAIN",
+        "no_sources": "Sin fuentes fusionables",
+        "below_action_threshold": "Confianza por debajo del umbral de acción → ABSTAIN",
+        "field_ops_fail_closed_reliability_unverified": (
+            "field_ops fail-closed: reliability this-run no verificada → GO degradado a ABSTAIN"
+        ),
+        "ml_holdout_research_only_conf_zero": (
+            "IoU holdout es proveniencia de research (no sube confidence_pred)"
+        ),
+        "ml_live_abstained_conf_zero": "ML live abstuvo → conf ML no cuenta para fusión",
+        "ml_live:veto_hold": "Veto ML live: GO → HOLD",
+    }
+    if r in table:
+        return f"{r} — {table[r]}"
+    if r.startswith("policy:"):
+        return f"{r} — perfil de decisión activo"
+    if r.startswith("confidence_pred<"):
+        return f"{r} — confianza fusionada bajo umbral de abstención"
+    if ":holdout_quality=" in r and ":not_fused" in r:
+        return f"{r} — metadata holdout visible, no fusionada como calidad live"
+    if r.startswith("ops_thermal_front:conf="):
+        return f"{r} — peso ops en fusión"
+    if r.startswith("open_cems_perimeter:conf="):
+        return f"{r} — peso open/CEMS en fusión (capado; no cadastre nacional)"
+    if r.startswith("missing:"):
+        return f"{r} — fuente ausente en este card"
+    return r
+
+
+def _uncertainty_band_notes(card_dict: dict[str, Any]) -> list[str]:
+    """E6 / R-UQ1 — short epistemic vs aleatory notes for the MD card."""
+    notes: list[str] = []
+    metrics = card_dict.get("metrics") if isinstance(card_dict.get("metrics"), dict) else {}
+    ops = metrics.get("ops") if isinstance(metrics.get("ops"), dict) else {}
+    conf = card_dict.get("confidence_pred")
+    try:
+        conf_f = float(conf) if conf is not None else None
+    except (TypeError, ValueError):
+        conf_f = None
+
+    # Aleatory (data) proxies from ops metrics when present
+    grade = str(ops.get("quality_grade") or "").upper()
+    n_frames = ops.get("n_frames") or ops.get("n_frames_staged")
+    ros = ops.get("primary_ros_m_min")
+    if grade or n_frames or ros is not None:
+        bits = []
+        if grade:
+            bits.append(f"grade={grade}")
+        if n_frames is not None:
+            bits.append(f"n_frames={n_frames}")
+        if ros is not None:
+            bits.append(f"ROS={ros} m/min")
+        notes.append(
+            "u_data (aleatoria/obs): " + ", ".join(bits) + " — calidad de la observación térmica"
+        )
+    else:
+        notes.append(
+            "u_data (aleatoria/obs): sin métricas ops en card — riesgo de dato alto → favorecer ABSTAIN"
+        )
+
+    # Epistemic proxies: policy + reliability + ML not fused
+    audit = card_dict.get("audit") if isinstance(card_dict.get("audit"), dict) else {}
+    sys_rel = (
+        audit.get("system_reliability") if isinstance(audit.get("system_reliability"), dict) else {}
+    )
+    rel_status = str(
+        sys_rel.get("status") or ("pass" if card_dict.get("system_reliability_pass") else "unknown")
+    )
+    policy_id = (
+        (metrics.get("policy_id") if isinstance(metrics, dict) else None)
+        or audit.get("policy_id")
+        or "—"
+    )
+    notes.append(
+        f"u_model (epistémica/rails): policy={policy_id} · reliability_status={rel_status} · "
+        "ML holdout no fusionado en field_ops"
+    )
+    if conf_f is not None:
+        if conf_f < 0.25:
+            band = "VERY_LOW → map Orion-style reject → ABSTAIN"
+        elif conf_f < 0.45:
+            band = "LOW → HOLD/ABSTAIN según fuentes"
+        elif conf_f < 0.65:
+            band = "MID → HOLD o GO solo con ops + umbral"
+        else:
+            band = "HIGH conf de producto — sigue sin ser orden táctica"
+        notes.append(f"confidence_pred={conf_f:.3f} band: {band}")
+    notes.append(
+        "Mapa UQ: aleatoria alta o solo ML → ABSTAIN; open-only → HOLD; "
+        "ops fuerte + gate this-run → GO posible. Nunca labels EVACUATE/SAFE."
+    )
+    return notes
+
+
 def render_decision_card_md(card_dict: dict[str, Any]) -> str:
     """Human one-pager for the Fire Decision Card in the outbox."""
     dec = card_dict.get("decision") or "—"
@@ -499,14 +606,32 @@ def render_decision_card_md(card_dict: dict[str, Any]) -> str:
     conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
     label = card_dict.get("confidence_pred_label") or "—"
     event = card_dict.get("event_id") or "—"
+    audit = card_dict.get("audit") or {}
+    sys_rel = (
+        audit.get("system_reliability") if isinstance(audit.get("system_reliability"), dict) else {}
+    )
+    rel_status = str(sys_rel.get("status") or "").upper()
+    if not rel_status:
+        rel_status = "PASS" if card_dict.get("system_reliability_pass") else "FAIL/UNKNOWN"
+    policy_id = (
+        (
+            (card_dict.get("metrics") or {}).get("policy_id")
+            if isinstance(card_dict.get("metrics"), dict)
+            else None
+        )
+        or audit.get("policy_id")
+        or "—"
+    )
     lines = [
         f"# Fire Decision Card — {event}",
         "",
         f"**Decision: {dec}** · confidence_pred={conf_s} ({label})",
         "",
-        f"- System reliability gates: "
-        f"{'PASS' if card_dict.get('system_reliability_pass') else 'FAIL'}",
+        f"- Policy: `{policy_id}`",
+        f"- System reliability gates: **{rel_status}** "
+        f"(pass={bool(card_dict.get('system_reliability_pass'))})",
         f"- Built (UTC): {card_dict.get('built_at_utc') or '—'}",
+        "- ML-live fusion (field): **OFF** under field_ops — IoU ≠ ROS",
         "",
         "## Sources",
         "",
@@ -515,16 +640,20 @@ def render_decision_card_md(card_dict: dict[str, Any]) -> str:
         avail = "yes" if s.get("available") else "no"
         conf_src = s.get("confidence")
         conf_src_s = f"{float(conf_src):.3f}" if isinstance(conf_src, (int, float)) else "—"
+        role = s.get("role") or s.get("source_type") or ""
+        role_s = f" · role={role}" if role else ""
         lines.append(
-            f"- **{s.get('id')}**: available={avail} · conf={conf_src_s} · w={s.get('weight')}"
+            f"- **{s.get('id')}**: available={avail} · conf={conf_src_s} · w={s.get('weight')}{role_s}"
         )
-    lines += ["", "## Reasons", ""]
-    for r in (card_dict.get("reasons") or [])[:16]:
-        lines.append(f"- {r}")
+    lines += ["", "## Reasons (legible)", ""]
+    for r in (card_dict.get("reasons") or [])[:20]:
+        lines.append(f"- {_humanize_decision_reason(str(r))}")
+    lines += ["", "## Uncertainty band (Orion-style rails)", ""]
+    for n in _uncertainty_band_notes(card_dict):
+        lines.append(f"- {n}")
     lines += ["", "## Disclaimers", ""]
     for d in card_dict.get("disclaimers") or []:
         lines.append(f"- {d}")
-    audit = card_dict.get("audit") or {}
     lines += [
         "",
         "## Audit",

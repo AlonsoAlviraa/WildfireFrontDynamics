@@ -110,9 +110,7 @@ class TestFitApply:
             apply_calibration(raw_prior, recipe, current_dem_source="synthetic")
         assert ei.value.status == "dem_source_mismatch"
         # force ok
-        cal = apply_calibration(
-            raw_prior, recipe, current_dem_source="synthetic", force=True
-        )
+        cal = apply_calibration(raw_prior, recipe, current_dem_source="synthetic", force=True)
         assert cal.calibration_applied is True
 
     def test_save_load_recipe(self, raw_prior, tmp_path: Path) -> None:
@@ -176,9 +174,7 @@ class TestHybridStability:
             calibration_recipe=recipe,
             dem_source="synthetic",
         )
-        assert h0["sectors"]["head_m_min"] == pytest.approx(
-            h1["sectors"]["head_m_min"], abs=1e-6
-        )
+        assert h0["sectors"]["head_m_min"] == pytest.approx(h1["sectors"]["head_m_min"], abs=1e-6)
         assert h1["physics"]["calibration_applied"] is True
         assert h1["physics_raw"] is not None
 
@@ -205,11 +201,7 @@ class TestCliCalibrationRefuse:
         out.mkdir()
         cmd = [
             sys.executable,
-            str(
-                Path(__file__).resolve().parents[1]
-                / "scripts"
-                / "build_fuel_terrain_stack.py"
-            ),
+            str(Path(__file__).resolve().parents[1] / "scripts" / "build_fuel_terrain_stack.py"),
             "--fire",
             "tobarra",
             "--with-physics",
@@ -261,11 +253,7 @@ class TestCliCalibrationRefuse:
         fuel_cache.mkdir()
         cmd = [
             sys.executable,
-            str(
-                Path(__file__).resolve().parents[1]
-                / "scripts"
-                / "build_fuel_terrain_stack.py"
-            ),
+            str(Path(__file__).resolve().parents[1] / "scripts" / "build_fuel_terrain_stack.py"),
             "--fire",
             "tobarra",
             "--with-physics",

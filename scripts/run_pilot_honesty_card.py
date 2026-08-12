@@ -150,9 +150,7 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 def _write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def _rel_posix(path: Path, base: Path = PROJECT_ROOT) -> str:
@@ -248,11 +246,7 @@ def _source_by_id(card: dict[str, Any], *ids: str) -> dict[str, Any] | None:
 
 def _card_fail_closed_reason(card: dict[str, Any]) -> str:
     reasons = card.get("reasons") or []
-    return (
-        " ".join(str(r) for r in reasons)
-        if isinstance(reasons, list)
-        else str(reasons)
-    )
+    return " ".join(str(r) for r in reasons) if isinstance(reasons, list) else str(reasons)
 
 
 def build_facts_row(
@@ -369,10 +363,7 @@ def render_report(
     lines: list[str] = [
         "# Piloto de honestidad — tarjeta de decisión multi-fuente",
         site_names_joined,
-        (
-            f"Generado: {generated_at} · política: {policy} · "
-            f"producto: {product_id}"
-        ),
+        (f"Generado: {generated_at} · política: {policy} · producto: {product_id}"),
         "",
         "## 0. Banner de honestidad (producto dual)",
         "- Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)",
@@ -382,10 +373,7 @@ def render_report(
             f"- U1 TEST honest ({u1_source}): IoU eval ≈ {_fmt(mean_iou)} · "
             f"sel@80 ≈ {_fmt(sel80)} · ECE ≈ {_fmt(ece)}"
         ),
-        (
-            f"- Catalog holdout {_fmt(catalog_iou, 4)} = provenance only "
-            "(no es certeza en vivo)"
-        ),
+        (f"- Catalog holdout {_fmt(catalog_iou, 4)} = provenance only (no es certeza en vivo)"),
         "",
         "## 1. Tabla de hechos",
         (
@@ -419,9 +407,7 @@ def render_report(
             if summ.get("confidence_pred") is not None
             else r.get("confidence_pred")
         )
-        live_v = (
-            summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
-        )
+        live_v = summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
         kn = r.get("key_number_label")
         kn_es = _key_number_label_es(kn)
         lines.append(f"### {r.get('display_name')} ({r.get('track')})")
@@ -451,10 +437,7 @@ def render_report(
     lines.extend(
         [
             "## 3. Contraste de políticas",
-            (
-                "- research_open: laboratorio / amigable con open (HOLD); "
-                "fusión live experimental"
-            ),
+            ("- research_open: laboratorio / amigable con open (HOLD); fusión live experimental"),
             (
                 "- field_ops: require_ops_for_go; fusión live OFF; ABSTAIN fail-closed "
                 "(cierre seguro) si GO sin fiabilidad verificada "
@@ -469,16 +452,12 @@ def render_report(
             "- ml_product_go sigue en false hasta gates de producto",
             "",
             "## 5. Modo presentación (1 página)",
-            (
-                "- Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail"
-            ),
+            ("- Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail"),
             (
                 "- research_open puede ir a GO experimental; field_ops se calla "
                 "(ABSTAIN/HOLD) — fusión OFF"
             ),
-            (
-                "- Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada"
-            ),
+            ("- Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada"),
             (
                 f"- Holdout catálogo {_fmt(catalog_iou, 4)} = provenance only, "
                 "no certeza del incendio"
@@ -490,12 +469,9 @@ def render_report(
     art_root = (pilot_manifest or {}).get("out_dir") or "outputs/pilot_honesty_card"
     lines.append(f"- Raíz piloto: `{art_root}`")
     lines.append(
-        "- Por sitio: `decision_card.json`, `decision_card_field_ops.json`, "
-        "`site_summary.json`"
+        "- Por sitio: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`"
     )
-    lines.append(
-        "- `facts_table.json` · `pilot_summary.json` · `index.html` · este informe"
-    )
+    lines.append("- `facts_table.json` · `pilot_summary.json` · `index.html` · este informe")
     lines.append("")
 
     body = "\n".join(lines)
@@ -503,13 +479,10 @@ def render_report(
     words = body.split()
     if len(nonempty) > REPORT_MAX_NONEMPTY_LINES:
         raise ValueError(
-            f"report budget exceeded: nonempty_lines={len(nonempty)} > "
-            f"{REPORT_MAX_NONEMPTY_LINES}"
+            f"report budget exceeded: nonempty_lines={len(nonempty)} > {REPORT_MAX_NONEMPTY_LINES}"
         )
     if len(words) > REPORT_MAX_WORDS:
-        raise ValueError(
-            f"report budget exceeded: words={len(words)} > {REPORT_MAX_WORDS}"
-        )
+        raise ValueError(f"report budget exceeded: words={len(words)} > {REPORT_MAX_WORDS}")
     return body
 
 
@@ -588,9 +561,7 @@ def render_pilot_portal_html(
             if summ.get("confidence_pred") is not None
             else r.get("confidence_pred")
         )
-        live_ok = (
-            summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
-        )
+        live_ok = summ.get("live_ok") if summ.get("live_ok") is not None else r.get("live_ok")
         kn = r.get("key_number_label") or "—"
         kn_es = _key_number_label_es(kn)
         kv = r.get("key_number_value")
@@ -670,9 +641,7 @@ def render_pilot_portal_html(
 </div>"""
         )
 
-    sites_joined = " · ".join(
-        str(r.get("display_name") or r.get("site_id") or "") for r in rows
-    )
+    sites_joined = " · ".join(str(r.get("display_name") or r.get("site_id") or "") for r in rows)
 
     return f"""<!DOCTYPE html>
 <html lang="es">
@@ -989,9 +958,7 @@ def process_site(
         missing.append(f"open_pack={open_pack.as_posix()}")
 
     if missing and not allow_missing_pack:
-        raise FileNotFoundError(
-            f"site {site_id} missing paths: {', '.join(missing)}"
-        )
+        raise FileNotFoundError(f"site {site_id} missing paths: {', '.join(missing)}")
 
     if missing and allow_missing_pack:
         skip_summary = {
@@ -1025,9 +992,7 @@ def process_site(
     # the repo tree still resolves (design §3.3.1).
     open_metrics = None
     if open_pack is not None and open_pack.exists():
-        open_metrics = load_open_metrics_from_pack(
-            open_pack, base=base, include_repo_root=True
-        )
+        open_metrics = load_open_metrics_from_pack(open_pack, base=base, include_repo_root=True)
         if open_metrics is None and not allow_missing_pack:
             raise FileNotFoundError(
                 f"site {site_id}: open_pack present but open metrics unresolved: {open_pack}"
@@ -1035,9 +1000,7 @@ def process_site(
 
     ops_metrics = None
     if work_dir is not None and work_dir.exists():
-        ops_metrics = load_ops_metrics_from_work_dir(
-            work_dir, base=base, include_repo_root=True
-        )
+        ops_metrics = load_ops_metrics_from_work_dir(work_dir, base=base, include_repo_root=True)
         if ops_metrics is None and not allow_missing_pack and sources_requested["ops"]:
             raise FileNotFoundError(
                 f"site {site_id}: work_dir present but ops metrics unresolved "
@@ -1111,11 +1074,7 @@ def process_site(
     if isinstance(nested, dict):
         live_metrics = nested
     else:
-        live_metrics = {
-            k: ml_doc[k]
-            for k in ML_LIVE_KEYS
-            if k in ml_doc
-        } or None
+        live_metrics = {k: ml_doc[k] for k in ML_LIVE_KEYS if k in ml_doc} or None
 
     sources_payload = {
         "open": allowlist_open(open_metrics),
@@ -1225,9 +1184,7 @@ def run_pilot(
     u1 = demo_mod.load_u1_honesty_snapshot()
     gen_at = generated_at or datetime.now(UTC).isoformat()
 
-    catalog, catalog_source = load_catalog(
-        sites_config=sites_config, fixture_root=fixture_root
-    )
+    catalog, catalog_source = load_catalog(sites_config=sites_config, fixture_root=fixture_root)
     base = resolve_path_base(
         fixture_root=fixture_root,
         catalog=catalog,
@@ -1307,9 +1264,7 @@ def run_pilot(
                     "live_available": None,
                     "live_abstained": None,
                     "allow_ml_live_in_fusion": None,
-                    "decision_field_ops": (summary.get("contrast_field_ops") or {}).get(
-                        "decision"
-                    ),
+                    "decision_field_ops": (summary.get("contrast_field_ops") or {}).get("decision"),
                     "key_number_label": "—",
                     "key_number_value": None,
                     "key_number_source": "—",
@@ -1360,11 +1315,7 @@ def run_pilot(
         "policy_id": policy_id,
         "product_id": product_id,
         "n_sites": len(site_summaries),
-        "n_ok": sum(
-            1
-            for s in site_summaries
-            if not s.get("skipped") and not s.get("failed")
-        ),
+        "n_ok": sum(1 for s in site_summaries if not s.get("skipped") and not s.get("failed")),
         "n_skipped": sum(1 for s in site_summaries if s.get("skipped")),
         "n_failed": sum(1 for s in site_summaries if s.get("failed")),
         "sites": site_summaries,
@@ -1449,8 +1400,7 @@ def run_pilot(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Pilot honesty Decision Cards for multi-source packs "
-            "(offline fixtures by default)."
+            "Pilot honesty Decision Cards for multi-source packs (offline fixtures by default)."
         )
     )
     parser.add_argument(

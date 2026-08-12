@@ -1,7 +1,31 @@
-"""Ensemble uncertainty diagnostics + optional logistic calibrator (Head A).
+"""Ensemble uncertainty diagnostics + Head A logistic calibrator (conf stage).
 
-Diagnostics are pure functions of member probability stacks — no weights needed for tests.
-Head A features (design freeze): mean_entropy, member_disagreement, mean_margin.
+Product ROI role (clm_ensemble_v34 lab ML rail)
+----------------------------------------------
+This module owns **conf / abstain math only** for the product pipeline::
+
+    Head A features → LogisticCalibrator → conf → rank/reject thr → scorecard
+
+``predict_proba`` / ``predict_proba_from_features`` / ``predict_proba_rows`` and
+``decide_abstain`` / ``abstain_mask`` / ``resolve_reject_thr`` are the conf/reject
+math paths. Orchestration, dual-product rails, multi-fire honesty, and dead-path
+refuse live in ``protocol_rails`` + ``product_facade`` — do **not** re-encode
+them here. Batch conf for lab scorecards is
+``lab_reject_calibration.confidences_from_features`` (thin over
+``predict_proba_rows``).
+
+Dual-product rails (architecture, not retrain)
+----------------------------------------------
+* **lab_ml** (this path) vs **field_ops** — IoU ≠ ROS; never emit ops ROS claims.
+* ``ml_product_go`` **true** (human promote 2026-08-05; never auto-flips);
+  field_ops ML live fusion stays **OFF** (lab GO ≠ field fusion).
+* Rank and thr-abstain share one protocol: VAL-only thr selection; default freeze
+  surface is **iter1_reject_only** (``ITER1_LOCKED_REJECT_THR`` ≈ 0.795).
+* Multi-fire honesty / dead thrash: see ``protocol_rails`` (not re-defined here).
+
+Diagnostics are pure functions of member probability stacks — no weights needed
+for tests. Head A features (design freeze): mean_entropy, member_disagreement,
+mean_margin. No model retrain here.
 """
 
 from __future__ import annotations
@@ -11,9 +35,23 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Final, Literal
 
 import numpy as np
+
+from wildfire_front.ml.protocol_rails import (
+    DEFAULT_PRODUCT_ID as _PR_PRODUCT_ID,
+)
+from wildfire_front.ml.protocol_rails import (
+    LAB_ML_BANNER as _PR_BANNER,
+)
+from wildfire_front.ml.protocol_rails import (
+    LOCKED_REJECT_THR_DEFAULT,
+    RECOMMENDED_LAB_SURFACE_DEFAULT,
+    assert_not_forbidden_thrash,
+    dual_product_rails_dict,
+    multi_fire_honesty_dict,
+)
 
 HEAD_A_FEATURE_NAMES: tuple[str, ...] = (
     "mean_entropy",
@@ -22,7 +60,18 @@ HEAD_A_FEATURE_NAMES: tuple[str, ...] = (
 )
 
 CALIBRATION_SCHEMA = "ml_uncertainty_calibration_v1"
+
+# Artifact / fixture default thr (legacy product path — often abstain≈0 on v34 band).
 DEFAULT_ABSTAIN_THRESHOLD = 0.35
+LEGACY_PRODUCT_ABSTAIN_THR: Final = DEFAULT_ABSTAIN_THRESHOLD
+
+# Frozen lab surface aliases (canonical values live in protocol_rails).
+ITER1_LOCKED_REJECT_THR: Final = float(LOCKED_REJECT_THR_DEFAULT)
+RECOMMENDED_LAB_SURFACE: Final = str(RECOMMENDED_LAB_SURFACE_DEFAULT)
+DEFAULT_PRODUCT_ID: Final = str(_PR_PRODUCT_ID)
+LAB_ML_BANNER: Final = str(_PR_BANNER)
+
+RejectSurfaceName = Literal["iter1_reject_only", "legacy", "artifact", "locked"]
 
 
 @dataclass(frozen=True)
@@ -184,34 +233,46 @@ class LogisticCalibrator:
             z = z / self.temperature
         return float(logistic_sigmoid(z))
 
-    def predict_proba(self, diag: dict[str, float]) -> float:
-        x = features_from_diagnostics(diag)
+    def _identity_heuristic_proba(self, diag: dict[str, float]) -> float:
+        return float(
+            np.clip(
+                0.5
+                + 0.4 * float(diag.get("mean_margin", 0.0))
+                - 0.2 * float(diag.get("mean_entropy", 0.0))
+                - 0.3 * float(diag.get("member_disagreement", 0.0)),
+                0.0,
+                1.0,
+            )
+        )
+
+    def predict_proba_from_features(self, x: np.ndarray) -> float:
+        """Single-patch conf from Head A feature row — shared with batch path.
+
+        This is the **canonical** scalar conf implementation. Callers must not
+        re-encode logistic weights / Platt / temperature outside this method
+        (or :func:`predict_proba_rows`).
+        """
+        x = np.asarray(x, dtype=np.float64).ravel()
         expected = x.size + 1
         if self.weights.size == 0:
-            # Identity: neutral conf; product path should force abstain when using identity.
+            # Identity: neutral conf; product path forces abstain via decide_abstain.
             if self.allow_identity_heuristic:
-                return float(
-                    np.clip(
-                        0.5
-                        + 0.4 * float(diag.get("mean_margin", 0.0))
-                        - 0.2 * float(diag.get("mean_entropy", 0.0))
-                        - 0.3 * float(diag.get("member_disagreement", 0.0)),
-                        0.0,
-                        1.0,
-                    )
+                return self._identity_heuristic_proba(
+                    {
+                        "mean_entropy": float(x[0]) if x.size > 0 else 0.0,
+                        "member_disagreement": float(x[1]) if x.size > 1 else 0.0,
+                        "mean_margin": float(x[2]) if x.size > 2 else 0.0,
+                    }
                 )
             return 0.5
         if self.weights.size != expected:
             if self.allow_identity_heuristic:
-                return float(
-                    np.clip(
-                        0.5
-                        + 0.4 * float(diag.get("mean_margin", 0.0))
-                        - 0.2 * float(diag.get("mean_entropy", 0.0))
-                        - 0.3 * float(diag.get("member_disagreement", 0.0)),
-                        0.0,
-                        1.0,
-                    )
+                return self._identity_heuristic_proba(
+                    {
+                        "mean_entropy": float(x[0]) if x.size > 0 else 0.0,
+                        "member_disagreement": float(x[1]) if x.size > 1 else 0.0,
+                        "mean_margin": float(x[2]) if x.size > 2 else 0.0,
+                    }
                 )
             raise ValueError(
                 f"calibrator weight length {self.weights.size} != n_features+1={expected}; "
@@ -219,6 +280,50 @@ class LogisticCalibrator:
             )
         z = float(np.dot(self.weights[:-1], x) + self.weights[-1])
         return self._apply_posthoc(z)
+
+    def predict_proba(self, diag: dict[str, float]) -> float:
+        """Patch conf from diagnostics dict (Head A features → logistic)."""
+        if self.weights.size == 0 and self.allow_identity_heuristic:
+            return self._identity_heuristic_proba(diag)
+        if self.weights.size == 0:
+            return 0.5
+        x = features_from_diagnostics(diag)
+        # Wrong weight length: preserve diagnostic-keyed heuristic when allowed.
+        if self.weights.size != x.size + 1:
+            if self.allow_identity_heuristic:
+                return self._identity_heuristic_proba(diag)
+            raise ValueError(
+                f"calibrator weight length {self.weights.size} != n_features+1={x.size + 1}; "
+                "refusing silent heuristic (set allow_identity_heuristic=True for research only)"
+            )
+        return self.predict_proba_from_features(x)
+
+    def decide_abstain(
+        self,
+        conf: float,
+        *,
+        thr: float | None = None,
+        surface: RejectSurfaceName = "iter1_reject_only",
+    ) -> bool:
+        """Single abstain decision for this calibrator (thr + identity)."""
+        return decide_abstain(
+            conf,
+            thr=thr,
+            cal=self,
+            surface=surface,
+            force_identity_abstain=True,
+        )
+
+    def conf_and_abstain(
+        self,
+        diag: dict[str, float],
+        *,
+        thr: float | None = None,
+        surface: RejectSurfaceName = "iter1_reject_only",
+    ) -> tuple[float, bool]:
+        """Conf + abstain from diagnostics — single product-path entry."""
+        conf = float(self.predict_proba(diag))
+        return conf, self.decide_abstain(conf, thr=thr, surface=surface)
 
     def with_temperature(self, temperature: float) -> LogisticCalibrator:
         """Copy with temperature scaling (clears Platt)."""
@@ -374,16 +479,117 @@ def save_calibrator(
     return p
 
 
+def refuse_dead_conf_path(path_id: str) -> None:
+    """Refuse closed thrash hooks — thin alias of protocol_rails (no local list)."""
+    assert_not_forbidden_thrash(path_id)
+
+
+def product_rails_snapshot() -> dict[str, Any]:
+    """Dual-product rails for prediction docs — from protocol_rails (not re-encoded)."""
+    rails = dual_product_rails_dict()
+    rails.setdefault("product_rail", "lab_ml")
+    rails.setdefault("ops_rail", "field_ops")
+    rails.setdefault("legacy_abstain_thr", LEGACY_PRODUCT_ABSTAIN_THR)
+    rails.setdefault("val_only_threshold_selection", True)
+    rails.setdefault("tobarra_keep_reopen_forbidden", True)
+    rails.setdefault("banner", LAB_ML_BANNER)
+    return rails
+
+
+def multi_fire_honesty_snapshot() -> dict[str, Any]:
+    """Multi-fire honesty tags — from protocol_rails (Tobarra hard, W3 external)."""
+    raw = multi_fire_honesty_dict()
+    out: dict[str, Any] = {}
+    for k, v in raw.items():
+        out[k] = dict(v) if isinstance(v, dict) else v
+    return out
+
+
+def resolve_reject_thr(
+    *,
+    thr: float | None = None,
+    cal: LogisticCalibrator | None = None,
+    surface: RejectSurfaceName = "iter1_reject_only",
+) -> float:
+    """Resolve conf thr for abstain / reject (shared rank+reject protocol).
+
+    * Explicit ``thr`` always wins.
+    * ``iter1_reject_only`` / ``locked`` → frozen VAL thr (**product default**).
+    * ``legacy`` → 0.35 (pre-iter1 product band; often never rejects on v34).
+    * ``artifact`` → calibrator ``abstain_threshold`` else legacy 0.35 (opt-in only).
+    """
+    if thr is not None:
+        return float(thr)
+    surf = str(surface).strip().lower()
+    if surf in ("iter1_reject_only", "locked", "iter1_freeze", "frozen"):
+        return float(ITER1_LOCKED_REJECT_THR)
+    if surf == "legacy":
+        return float(LEGACY_PRODUCT_ABSTAIN_THR)
+    # artifact only when explicitly requested (not the live product default)
+    if cal is not None:
+        return float(getattr(cal, "abstain_threshold", DEFAULT_ABSTAIN_THRESHOLD))
+    return float(DEFAULT_ABSTAIN_THRESHOLD)
+
+
+def decide_abstain(
+    conf: float,
+    *,
+    thr: float | None = None,
+    cal: LogisticCalibrator | None = None,
+    surface: RejectSurfaceName = "iter1_reject_only",
+    force_identity_abstain: bool = True,
+) -> bool:
+    """Single thr-based abstain decision (shared by live predict + lab reject).
+
+    Ranking and thr-reject must use the same conf thr semantics: abstain when
+    ``conf < thr``. Default surface is **iter1_reject_only** (not legacy 0.35).
+    Identity calibrator always abstains on the product path.
+    """
+    thr_eff = resolve_reject_thr(thr=thr, cal=cal, surface=surface)
+    if force_identity_abstain and cal is not None and bool(getattr(cal, "is_identity", False)):
+        return True
+    return float(conf) < float(thr_eff)
+
+
+def abstain_mask(
+    conf: np.ndarray | Sequence[float],
+    *,
+    thr: float | None = None,
+    cal: LogisticCalibrator | None = None,
+    surface: RejectSurfaceName = "iter1_reject_only",
+) -> np.ndarray:
+    """Batch abstain mask (True = abstain) at resolved thr.
+
+    Default surface is **iter1_reject_only** (product freeze) so lab rank/reject
+    boards share one thr without re-encoding 0.795 in callers.
+    """
+    conf_a = np.asarray(conf, dtype=np.float64).ravel()
+    thr_eff = resolve_reject_thr(thr=thr, cal=cal, surface=surface)
+    return conf_a < float(thr_eff)
+
+
 def build_ml_prediction_document(
     pred: SpreadPrediction,
     *,
     mask_summary: dict[str, Any] | None = None,
+    reject_thr: float | None = None,
+    surface: RejectSurfaceName = "iter1_reject_only",
+    include_multi_fire: bool = True,
 ) -> dict[str, Any]:
-    """Outbox / predict_spread JSON — live metrics only; no ROS fields."""
+    """Outbox / predict_spread JSON — live metrics only; no ROS fields.
+
+    Dual-product rails come from protocol_rails: lab_ml, IoU ≠ ROS, fusion OFF,
+    ``ml_product_go=true`` (human-promoted; ≠ field fusion). Rank/reject thr
+    metadata uses the shared protocol (VAL-only selection; default freeze
+    surface iter1_reject_only, thr ≈ 0.795).
+    """
     live = pred.to_ml_live_metrics()
+    thr_eff = resolve_reject_thr(thr=reject_thr, surface=surface)
+    rails = product_rails_snapshot()
     doc: dict[str, Any] = {
         "schema": "ml_prediction_v1",
         "product_id": pred.product_id,
+        "product_rail": "lab_ml",
         "abstain": bool(pred.abstain),
         "confidence": float(pred.confidence),
         "diagnostics": {
@@ -395,7 +601,35 @@ def build_ml_prediction_document(
         "ml_live_metrics": live,
         "calibrator_id": pred.calibrator_id,
         "protocol": pred.protocol,
+        "rails": rails,
+        "surface": {
+            "kind": "reject",
+            "protocol": "head_a_rank_reject_v1",
+            "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+            "thr": float(thr_eff),
+            "thr_source": (
+                "iter1_freeze"
+                if str(surface) in ("iter1_reject_only", "locked", "iter1_freeze", "frozen")
+                else ("legacy" if str(surface) == "legacy" else "artifact")
+            ),
+            "thr_split": "val",
+            "val_only": True,
+            "frozen": str(surface) in ("iter1_reject_only", "locked", "iter1_freeze", "frozen"),
+            "lab_only": True,
+            "iou_is_not_ros": True,
+        },
+        "claim_surface": {
+            "kind": "lab_ml_live",
+            "not_tactical": True,
+            "not_field_ops": True,
+            "not_ros": True,
+            "product_rail": "lab_ml",
+            "lab_ml_only": True,
+            "iou_is_not_ros": True,
+        },
     }
+    if include_multi_fire:
+        doc["multi_fire"] = multi_fire_honesty_snapshot()
     if mask_summary is not None:
         doc["mask_summary"] = mask_summary
     return doc
@@ -405,19 +639,14 @@ def predict_proba_rows(
     cal: LogisticCalibrator,
     feature_rows: Sequence[np.ndarray],
 ) -> list[float]:
-    """Batch confidences from feature rows (3-D Head A vectors)."""
+    """Batch confidences from feature rows (3-D Head A vectors).
+
+    Canonical list/batch path — delegates to
+    :meth:`LogisticCalibrator.predict_proba_from_features` (no parallel math).
+    """
     out: list[float] = []
     for row in feature_rows:
-        x = np.asarray(row, dtype=np.float64).ravel()
-        if cal.is_identity:
-            out.append(0.5)
-            continue
-        if cal.weights.size != x.size + 1:
-            raise ValueError(
-                f"calibrator weight length {cal.weights.size} != n_features+1={x.size + 1}"
-            )
-        z = float(np.dot(cal.weights[:-1], x) + cal.weights[-1])
-        out.append(cal._apply_posthoc(z))
+        out.append(float(cal.predict_proba_from_features(row)))
     return out
 
 

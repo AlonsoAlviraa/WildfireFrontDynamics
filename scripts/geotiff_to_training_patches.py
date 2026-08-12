@@ -32,6 +32,10 @@ Usage
 
 Optionally supply DEM / NDVI / FSM GeoTIFFs and custom weather data for
 physically richer channel construction.
+
+E2-P2 spatial re-emit (``--schema spatial_v1``) delegates to
+``scripts/reemit_spatial_v1_patches.py`` so DEM/weather/fuel honesty stays
+centralized. Prefer that script for full spatial_v1 LOFO packs.
 """
 
 from __future__ import annotations
@@ -61,12 +65,39 @@ def export_patches(
     weather_data: dict[str, float] | None = None,
     max_patches: int | None = None,
     fire_name: str | None = None,
+    *,
+    schema: str = "legacy17",
+    weather_dir: Path | None = None,
+    fuel_path: Path | None = None,
+    dry_run: bool = False,
 ) -> dict[str, object]:
     """Materialize GeoTIFF pairs into ``.npz`` training patches.
 
     Returns a summary dict with counts and provenance, also written as
     ``manifest.json`` inside ``output_dir``.
+
+    For ``schema in {spatial_v1, physics14_spatial}`` delegates to the E2-P2
+    re-emit path (honest GAP if DEM/weather missing).
     """
+
+    if schema in ("spatial_v1", "physics14_spatial"):
+        from reemit_spatial_v1_patches import export_patches_spatial_v1  # noqa: WPS433
+
+        return export_patches_spatial_v1(  # type: ignore[return-value]
+            images_dir=images_dir,
+            masks_dir=masks_dir,
+            output_dir=output_dir,
+            dem_path=dem_path,
+            weather_dir=weather_dir,
+            fuel_path=fuel_path,
+            ndvi_path=ndvi_path,
+            weather_scalars=weather_data,
+            source_id=fire_name or images_dir.parent.name,
+            patch_size=patch_size,
+            sequence_length=sequence_length,
+            max_patches=max_patches,
+            dry_run=dry_run,
+        )
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -117,6 +148,7 @@ def export_patches(
         "patch_size": patch_size,
         "num_samples_matched": len(dataset.samples),
         "num_patches": len(written),
+        "feature_schema": schema,
         "patches": written,
     }
     manifest_path = output_dir / "manifest.json"
@@ -156,7 +188,27 @@ def main() -> int:
     )
     parser.add_argument("--max-patches", type=int, default=None)
     parser.add_argument("--fire-name", type=str, default=None)
+    parser.add_argument(
+        "--schema",
+        type=str,
+        default="legacy17",
+        choices=["legacy17", "spatial_v1", "physics14_spatial"],
+        help="legacy17 default; spatial_v1/physics14_spatial = E2-P2 re-emit",
+    )
+    parser.add_argument(
+        "--weather-dir",
+        type=Path,
+        default=None,
+        help="Dir of weather rasters for spatial_v1 (tmin/tmax/… .tif)",
+    )
+    parser.add_argument("--fuel-path", type=Path, default=None)
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+
+    # Ensure scripts/ is importable for reemit_spatial_v1_patches
+    scripts_dir = Path(__file__).resolve().parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
 
     manifest = export_patches(
         images_dir=args.images_dir,
@@ -170,10 +222,18 @@ def main() -> int:
         weather_data=_parse_weather(args.weather),
         max_patches=args.max_patches,
         fire_name=args.fire_name,
+        schema=args.schema,
+        weather_dir=args.weather_dir,
+        fuel_path=args.fuel_path,
+        dry_run=bool(args.dry_run),
     )
-    print(f"[OK] {manifest['num_patches']} patches written to {args.output_dir}")
-    print(f"     fire={manifest['fire_name']} samples={manifest['num_samples_matched']}")
-    return 0
+    n = manifest.get("num_patches", manifest.get("n_patches", 0))
+    print(f"[OK] schema={args.schema} patches={n} → {args.output_dir}")
+    if manifest.get("gaps"):
+        print(f"     gaps={manifest['gaps']}")
+    if "fire_name" in manifest:
+        print(f"     fire={manifest['fire_name']} samples={manifest.get('num_samples_matched')}")
+    return 0 if manifest.get("ok", True) and not manifest.get("blocked") else 2
 
 
 if __name__ == "__main__":

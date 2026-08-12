@@ -1,0 +1,20 @@
+{
+    "machine_shape":  "NvidiaTeslaT4",
+    "id":  "alonsoalviraaaa/wfd-metrics-lift-recipe-t1-fix",
+    "enable_gpu":  true,
+    "kernel_type":  "script",
+    "kernel_sources":  [
+
+                       ],
+    "dataset_sources":  [
+                            "alonsoalviraaaa/wfd-lofo-v1-core3"
+                        ],
+    "competition_sources":  [
+
+                            ],
+    "is_private":  true,
+    "enable_internet":  true,
+    "language":  "python",
+    "title":  "WFD Metrics Lift Recipe T1 Fix",
+    "code_file":  "run_metrics_lift_lofo_recipe_t1_fix.py"
+}

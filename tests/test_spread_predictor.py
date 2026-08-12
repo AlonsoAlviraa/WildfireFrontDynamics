@@ -192,10 +192,21 @@ class TestSpreadPredictor:
             "speed_median_m_min",
         ):
             assert forbidden not in blob
-        # Artifact abstain_threshold is honored when abstain_below omitted
-        cal_hi = LogisticCalibrator(
-            weights=np.array([-2.5, -3.0, 4.0, 0.2], dtype=np.float64),
-            abstain_threshold=0.99,
+        # Product default surface freezes VAL iter1 reject thr via product_facade.
+        from wildfire_front.ml.product_facade import (
+            ITER1_LOCKED_REJECT_THR,
+            RECOMMENDED_LAB_SURFACE,
+            apply_thr_reject,
         )
-        unc_hi = predictor.predict_with_uncertainty(seq, fire, calibrator=cal_hi)
+
+        assert RECOMMENDED_LAB_SURFACE == "iter1_reject_only"
+        assert abs(float(ITER1_LOCKED_REJECT_THR) - 0.795) < 1e-9
+        thr_surface = apply_thr_reject(
+            np.asarray([float(unc.confidence)], dtype=np.float64),
+            thr=float(ITER1_LOCKED_REJECT_THR),
+        )
+        assert thr_surface["surface"] == RECOMMENDED_LAB_SURFACE
+        assert bool(unc.abstain) == (not bool(thr_surface["keep"][0]))
+        # Explicit abstain_below still wins over frozen default.
+        unc_hi = predictor.predict_with_uncertainty(seq, fire, calibrator=cal, abstain_below=0.99)
         assert unc_hi.abstain is True  # conf almost always < 0.99

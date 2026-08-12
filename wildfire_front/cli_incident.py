@@ -245,11 +245,12 @@ def register_incident_subcommands(
     """Attach ``incident`` command and its subparsers to the root CLI."""
     incident = commands.add_parser(
         "incident",
-        help="Live incident runtime (watch / update / status / doctor)",
+        help="Live incident runtime (watch / update / status / doctor; bare → hub)",
         description=(
             "incident_runtime_v1 — stage LWIR frames as they land, recompute "
             "observed front + ROS + emergency envelope, publish operator outbox.\n\n"
-            "NOT validated tactical dispatch. Geometry-first observed products only."
+            "NOT validated tactical dispatch. Geometry-first observed products only.\n"
+            "Bare `incident` (no SUBCOMMAND) prints a field hub (exit 0) — not an error."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -258,9 +259,20 @@ def register_incident_subcommands(
             "  update   Process inbox once → outbox\n"
             "  watch    Poll inbox and update continuously\n"
             "  status   Read last outbox state without processing\n"
+            "\n"
+            "examples:\n"
+            "  wildfire-front incident\n"
+            "  wildfire-front incident doctor --inbox D:/drops\n"
+            "  wildfire-front incident update --inbox D:/drops --work-dir outputs/incidents/IF1\n"
+            "  wildfire-front incident status --work-dir outputs/incidents/IF1\n"
         ),
     )
-    inc_subs = incident.add_subparsers(dest="incident_command", required=True, metavar="SUBCOMMAND")
+    # Parent flags so `incident --json` works without a subcommand (hub path).
+    add_global_flags(incident)
+    # Bare `incident` → field hub (required=False).
+    inc_subs = incident.add_subparsers(
+        dest="incident_command", required=False, metavar="SUBCOMMAND"
+    )
 
     doc = inc_subs.add_parser(
         "doctor",

@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-metrics-lift-lofo-e3a",
+  "title": "WFD Metrics Lift LOFO E3a Hellin Train Pool",
+  "code_file": "run_metrics_lift_lofo_e3a.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-v2-e3a"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

@@ -249,11 +249,21 @@ pre.cmd {{
 
   <section class="grid">
     <div class="card wide">
-      <h2>Un solo comando para recrear la demo</h2>
+      <h2>Modo operario (única puerta de entrada)</h2>
 <pre class="cmd">cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
-$env:PYTHONPATH = "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics"
-python scripts\\show_all.py</pre>
-      <p class="sub">Abre este portal, el hub de métricas y los mapas. Sin memorizar 40 scripts.</p>
+$env:PYTHONPATH = "."
+python -m wildfire_front operator
+python -m wildfire_front operator do --all
+python -m wildfire_front operator checklist</pre>
+      <p class="sub">Semáforo VERDE/AMARILLO/ROJO · 4 actos · qué falta para GO_Q. Alias: <code>operador</code> / <code>ops</code>. ABSTAIN ≠ bug. Log: OPERATOR_UX_LOOP_LOG.md</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card wide">
+      <h2>Portal / hub completo (opcional, pesado)</h2>
+<pre class="cmd">python scripts\\show_all.py</pre>
+      <p class="sub">Regenera este portal, métricas y commander. No es el camino del operario.</p>
     </div>
   </section>
 
@@ -300,11 +310,12 @@ python scripts\\show_all.py</pre>
 
   <section class="grid">
     <div class="card wide">
-      <h2>Cómo enseñarlo (3 pasos)</h2>
+      <h2>Cómo enseñarlo (4 actos operario)</h2>
       <ol class="steps">
-        <li><b>ABSTAIN vacío</b> — <code>python -m wildfire_front decide</code> → el sistema se calla sin datos.</li>
-        <li><b>Mapa open grande</b> — abrir EMSR632 (~5k ha) sin NDA.</li>
-        <li><b>Incidente → Decision Card en outbox</b> — tras <code>incident update</code> lee <code>fire_decision_card.md</code> (GO/HOLD/ABSTAIN).</li>
+        <li><b>Ver</b> — <code>python -m wildfire_front operator do --act 1</code> multi-CCAA.</li>
+        <li><b>Callarse</b> — <code>operator do --act 2</code> · ABSTAIN es feature (no bug).</li>
+        <li><b>Decidir</b> — <code>operator do --act 3</code> · Decision Card en lenguaje normal.</li>
+        <li><b>Probar</b> — <code>operator do --act 4</code> o <code>do --all</code> · pack + replay; GO_Q sigue humano.</li>
       </ol>
     </div>
   </section>
@@ -313,13 +324,14 @@ python scripts\\show_all.py</pre>
     <div class="card">
       <h2>Docs cortos (solo estos)</h2>
       <ul>
-        <li><a href="commander/index.html"><b>WFD COMMAND</b></a> — app sala de mando</li>
+        <li><a href="OPERATOR_UX_LOOP_LOG.md"><b>Operator UX loop</b></a> — camino operario</li>
+        <li><a href="CHEATSHEET_DEMO_12MIN.md">Cheatsheet 12 min</a></li>
         <li><a href="START_HERE.md">START_HERE.md</a> — lectura 2 min</li>
+        <li><a href="commander/index.html">WFD COMMAND</a> — app sala de mando</li>
         <li><a href="ONEPAGER_COMERCIAL_ES.md">One-pager venta</a></li>
-        <li><a href="SUENOS_MAXIMOS.md">Sueños máximos</a> — techo de resultados y funciones</li>
-        <li><a href="GUIA_COMANDOS_RECREAR_TODO.md">Comandos completos</a></li>
+        <li><a href="H1_GO_Q_RUNBOOK.md">H1 / GO_Q runbook</a></li>
+        <li><a href="GUIA_COMANDOS_RECREAR_TODO.md">Comandos completos (lab)</a></li>
         <li><a href="PLAN_3_MESES.md">Plan 3 meses</a></li>
-        <li><a href="PRODUCT_REDESIGN_PAID_VALUE.md">Por qué se paga</a></li>
       </ul>
     </div>
     <div class="card">
@@ -360,7 +372,30 @@ python scripts\\show_all.py</pre>
 
 No es “otro mapa de Copernicus”. Es **cuándo confiar y cuándo callarse**.
 
-## Abre esto
+## Operario (un solo comando)
+
+Si no conoces el código, **solo necesitas esto**:
+
+```powershell
+cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
+$env:PYTHONPATH = "."
+python -m wildfire_front operator
+# alias ES: python -m wildfire_front operador
+```
+
+Verás un **semáforo** (VERDE / AMARILLO / ROJO), los **4 pasos** y **qué falta para GO_Q**.
+
+```powershell
+python -m wildfire_front operator do --all
+python -m wildfire_front operator checklist
+python -m wildfire_front operator explain-abstain
+# make operator · make operator-path · make operator-checklist
+```
+
+> **ABSTAIN no es un bug.** **GO_Q** no lo cierra el eng (hace falta H1: demo+acta con tercero).
+> Log UX: `docs/OPERATOR_UX_LOOP_LOG.md`
+
+## Portal (opcional, pesado)
 
 ```powershell
 cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
@@ -382,22 +417,23 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 | Doc | Para qué |
 |------|----------|
-| `docs/PORTAL.html` | **Ver todo** |
+| `docs/OPERATOR_UX_LOOP_LOG.md` | Loop UX operario |
+| `docs/CHEATSHEET_DEMO_12MIN.md` | Demo 12 min |
+| `docs/PORTAL.html` | Ver todo (generado) |
 | `docs/START_HERE.md` | Este resumen |
 | `docs/ONEPAGER_COMERCIAL_ES.md` | Venta |
-| `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos largos |
-| `docs/PLAN_3_MESES.md` | Roadmap realista |
-| `docs/SUENOS_MAXIMOS.md` | Techo de resultados y funciones |
+| `docs/H1_GO_Q_RUNBOOK.md` | Cierre GO_Q (humano) |
+| `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos lab |
+| `docs/PLAN_3_MESES.md` | Roadmap |
 
 ## Qué está hecho vs bloqueado
 
-| Hecho | Bloqueado (externo) |
-|-------|---------------------|
-| ML v34, ops, 4 packs CEMS | 2ª ancla INFOCAM |
-| Decision Card + Metrics Hub | Perímetro nacional oficial |
-| FDC en incident update | Piloto con cliente real |
+| Hecho | Bloqueado (externo / humano) |
+|-------|------------------------------|
+| Operator UX + 4 actos + Decision Card | H1 demo tercero → GO_Q |
+| ML v34 lab, ops, packs open | 2ª ancla / perímetro nacional (parcial) |
+| Pack third-party + replay | Piloto cliente real |
 | API mínima POST /v1/decide | Auth / 99.9% uptime (sueño) |
-| **Acta forense + radio + replay** | PDF firmado (sueño) |
 
 ## Comando mínimo de decisión
 
@@ -425,6 +461,8 @@ python -m wildfire_front decide --use-ml-v34 --policy field_ops
 python -m wildfire_front serve-decide --port 8765
 ```
 """
+    # Never clobber a richer hand-edited START_HERE that already has operator mode
+    # unless we are generating a consistent operator-first template (this file).
     (ROOT / "docs" / "START_HERE.md").write_text(start, encoding="utf-8")
     print(
         json.dumps({"ok": True, "portal": str(out), "start_here": "docs/START_HERE.md"}, indent=2)

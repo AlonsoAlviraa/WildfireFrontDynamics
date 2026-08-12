@@ -1,0 +1,21 @@
+{
+  "source": "esa_worldcover",
+  "scheme": "worldcover",
+  "bbox_wgs84": [
+    -4.334266317027763,
+    39.450307755246136,
+    -4.276920361869241,
+    39.50457630379232
+  ],
+  "tiles": [
+    "N39W006"
+  ],
+  "hrefs": [
+    "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N39W006_Map.tif"
+  ],
+  "crs": "EPSG:32630",
+  "cell_size_m": 25.0,
+  "sha256": "45ea49b2bdb33eedbf26ec9fa42656d24415d1d7715bcbfde3f83822dc9d34a4",
+  "fetched_at": "2026-08-06T20:35:27.810486+00:00",
+  "crosswalk": "WORLDCOVER_TO_FUEL engineering prior"
+}

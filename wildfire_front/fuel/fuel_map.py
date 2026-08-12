@@ -11,18 +11,19 @@ Honesty: WorldCover→fuel is an **engineering crosswalk**, not UCO40/Vega field
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import math
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
 from .models import (
-    FUEL_CATALOG,
     crosswalk_tables,
     fuel_from_landcover,
     get_fuel,
@@ -143,9 +144,7 @@ def worldcover_public_href(tile_id: str) -> str:
 def _grid_for_bbox(bbox_wgs84: Sequence[float], *, target_crs: str, cell_size_m: float):
     rasterio, from_bounds, transform_bounds, _, _ = _require_rasterio()
     w, s, e, n = (float(x) for x in bbox_wgs84)
-    left, bottom, right, top = transform_bounds(
-        "EPSG:4326", target_crs, w, s, e, n, densify_pts=21
-    )
+    left, bottom, right, top = transform_bounds("EPSG:4326", target_crs, w, s, e, n, densify_pts=21)
     width = max(2, int(math.ceil((right - left) / cell_size_m)))
     height = max(2, int(math.ceil((top - bottom) / cell_size_m)))
     transform = from_bounds(left, bottom, right, top, width, height)
@@ -284,10 +283,8 @@ def download_worldcover_window(
         prod.source = "esa_worldcover"
         prod.cache_path = str(cache_path.resolve())
         prod.notes.append("loaded_from_cache")
-        try:
+        with contextlib.suppress(OSError):
             prod.sha256 = _sha256_file(cache_path)
-        except OSError:
-            pass
         return prod
 
     tiles = worldcover_tiles_for_bbox(bbox_wgs84)
@@ -362,7 +359,7 @@ def download_worldcover_window(
         "crs": target_crs,
         "cell_size_m": cell_size_m,
         "sha256": sha,
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "fetched_at": datetime.now(UTC).isoformat(),
         "crosswalk": "WORLDCOVER_TO_FUEL engineering prior",
     }
     (cache_path.parent / "fuel_map_manifest.json").write_text(
@@ -399,7 +396,7 @@ def synthetic_fuel_map(
     bbox_wgs84: Sequence[float] = TOBARRA_BBOX_WGS84,
 ) -> FuelMapProduct:
     """Legacy synthetic mosaic (CLC-like codes)."""
-    rng = np.random.default_rng(seed)
+    np.random.default_rng(seed)
     y = np.linspace(0, 1, n_rows)
     x = np.linspace(0, 1, n_cols)
     xx, yy = np.meshgrid(x, y)

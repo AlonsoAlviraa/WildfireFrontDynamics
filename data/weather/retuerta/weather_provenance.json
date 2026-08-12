@@ -1,0 +1,37 @@
+{
+  "schema": "wfd_dem_lapse_weather_v1",
+  "created_utc": "2026-08-06T22:28:13.708261+00:00",
+  "source_id": "retuerta_2025",
+  "provenance": "dem_lapse_v1",
+  "not_reanalysis": true,
+  "dem_path": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/dem/retuerta/glo30_window.tif",
+  "scalar_anchors": {
+    "temp": 32.0,
+    "humidity": 25.0,
+    "wind_speed": 5.0,
+    "wind_dir": 90.0,
+    "precip": 0.0
+  },
+  "params": {
+    "lapse_c_per_m": 0.0065,
+    "rh_per_km": 4.0,
+    "wind_slope_k": 0.35,
+    "precip_oro_max": 0.5
+  },
+  "fields": {
+    "tmin": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/tmin.tif",
+    "tmax": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/tmax.tif",
+    "humidity": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/humidity.tif",
+    "wind_speed": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/wind_speed.tif",
+    "wind_dir": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/wind_dir.tif",
+    "precip": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/retuerta/precip.tif"
+  },
+  "honesty": {
+    "weather_provenance": "dem_lapse_v1",
+    "not_reanalysis": true,
+    "not_aemet_gridded": true,
+    "not_era5": true,
+    "spatial_variance_from_dem": true,
+    "scalar_anchors_fire_day": true
+  }
+}

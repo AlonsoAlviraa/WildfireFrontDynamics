@@ -7,7 +7,27 @@ C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
 ```
 
 **Shell recomendado:** PowerShell o `cmd`.  
-**Siempre empieza así:**
+
+## Antes de todo: modo operario (única puerta)
+
+Si no vas a reconstruir el repo entero, **empieza aquí** (no en scripts sueltos):
+
+```powershell
+cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
+$env:PYTHONPATH = "."
+python -m wildfire_front operator
+python -m wildfire_front operator do --all
+python -m wildfire_front operator checklist
+```
+
+- Semáforo + 4 actos + qué falta para **GO_Q**  
+- Log UX: `docs/OPERATOR_UX_LOOP_LOG.md` · cheatsheet: `docs/CHEATSHEET_DEMO_12MIN.md`  
+- Make: `make operator` · `make operator-path` · `make operator-checklist`  
+- **ABSTAIN ≠ bug.** GO_Q no se cierra con eng (hace falta H1 humano).
+
+El resto de esta guía es **laboratorio / recrear todo** (eng).
+
+**Siempre empieza así (lab):**
 
 ```powershell
 cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics

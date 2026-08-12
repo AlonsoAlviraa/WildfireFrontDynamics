@@ -6,6 +6,7 @@ Human-readable by default; pass ``--json`` for machine-readable output.
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 from collections.abc import Sequence
 from pathlib import Path
@@ -14,10 +15,15 @@ from typing import Any
 import numpy as np
 
 from . import __version__
+from .cli_app import register_app_commands, run_app
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
+from .cli_map import register_map_commands, run_map
+from .cli_ml import register_ml_commands, run_ml
+from .cli_multihorizon import register_multihorizon_commands, run_multihorizon
 from .cli_report import (
     enrich_incident_summary,
+    ensure_utf8_stdio,
     print_demo_report,
     print_doctor_report,
     print_error,
@@ -26,6 +32,15 @@ from .cli_report import (
     print_json,
     print_status_report,
     print_watch_line,
+    safe_write,
+)
+from .cli_teach import (
+    register_teach_commands,
+    run_demo_third_party,
+    run_dry_run_h3,
+    run_operator,
+    run_show,
+    run_teach,
 )
 from .evaluation import front_distance_metrics
 from .geometry_speed import estimate_geometry_speeds, summarize_geometry_speeds
@@ -46,6 +61,28 @@ examples:
   # Synthetic demo with ground truth
   wildfire-front demo --output outputs/demo
 
+  # Modo operario (única puerta de entrada; default sin COMMAND)
+  wildfire-front
+  wildfire-front operator
+  wildfire-front operador
+  wildfire-front ensayo
+  wildfire-front next
+  wildfire-front operator do --all
+  wildfire-front operator checklist
+
+  # Teach path (4 actos) + gates snapshot + third-party pack
+  wildfire-front teach
+  wildfire-front show
+  wildfire-front demo-third-party
+  wildfire-front dry-run-h3
+  wildfire-front decide --policy field_ops --explain
+
+  # ML lab product (not field_ops fusion · IoU ≠ ROS)
+  wildfire-front ml list
+  wildfire-front ml show
+  wildfire-front ml doctor
+  wildfire-front ml card --mode offline --scenario hold
+
   # Batch GeoTIFF ingest (ops products)
   wildfire-front ingest-geotiff \\
     --images artifacts/tobarra_reprojected_lwir \\
@@ -53,6 +90,18 @@ examples:
     --sensor-id lwir_drone --estimated-error-m 2 \\
     --event-id tobarra_20240802 --output outputs/tobarra \\
     --operational --scientific-clean
+
+  # Discoverability + professional brief + map + product SPA
+  wildfire-front help
+  wildfire-front commands
+  wildfire-front brief                 # one-screen operational brief
+  wildfire-front brief --role lab --json
+  wildfire-front map --work-dir outputs/incidents/_sla_measure --no-live
+  wildfire-front map --lat 40.9 --lon -3.1 --radius-km 40   # + FIRMS NRT if network
+  wildfire-front app                   # dark ops SPA (brief + Leaflet)
+  wildfire-front app --work-dir outputs/incidents/_sla_measure --open
+  wildfire-front doctor              # ML lab pre-flight (offline OK)
+  wildfire-front doctor --inbox D:/drops --masks D:/masks   # field incident doctor
 
   # Field: pre-flight check
   wildfire-front incident doctor --inbox D:/drops --masks D:/masks
@@ -67,10 +116,19 @@ examples:
   wildfire-front incident status --work-dir outputs/incidents/IF1 --json
 
 notes:
+  · Grupos: Operario (default · brief · app · ensayo · next) · Lab (ml) · Campo (incident · decide) · Eng (teach · show)
+  · Sin COMMAND → modo operario (semáforo + 4 actos + GO_Q). Alias: operador · ops · ensayo · next
+  · brief / resumen → resumen profesional + next action (JSON wfd_operator_brief_v1); no es el tablero
+  · map → mapa Leaflet estado del incendio (local + FIRMS NRT); hotspots ≠ perímetro oficial
+  · app → SPA ops oscura (Leaflet + dashboard); builders brief + map_status; docs/APP.md
+  · help / commands → mapa de comandos (no uses solo 'doctor' sin --inbox para incident)
+  · doctor (top-level) → ML lab pre-flight por defecto; con --inbox → incident doctor
+  · bare ml / bare incident → hubs (exit 0); version|ver|about → --version
+  · status / estado → tablero operario (incident status requiere: incident status --work-dir …)
   · Thermal mask ≠ official fire perimeter
   · 15/30/60 envelope is extrapolated guidance, NOT tactical dispatch
   · Filenames must include parseable timestamps for real LWIR frames
-  · Docs: docs/INCIDENT_RUNTIME_V1.md
+  · Docs: docs/START_HERE.md · docs/APP.md · docs/OPERATOR_CLI_CHANGES.md · docs/OPERATOR_UX_LOOP_LOG.md
 """
 
 
@@ -254,7 +312,9 @@ def build_parser() -> argparse.ArgumentParser:
         description=(
             "Wildfire Front Dynamics — reconstruct observed fire fronts from "
             "thermal GeoTIFF sequences, estimate ROS with abstention, and publish "
-            "operator packs. Not validated tactical dispatch."
+            "operator packs. Not validated tactical dispatch.\n\n"
+            "Start here:  (no COMMAND) → operator board  ·  brief → resumen  ·  "
+            "app → SPA ops  ·  map → estado espacial NRT  ·  help → role map  ·  doctor → pre-flight"
         ),
         epilog=_EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -357,13 +417,142 @@ def build_parser() -> argparse.ArgumentParser:
     # ── incident ──────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
 
+    # ── ml lab product surface (list/show/predict/card/doctor) ─────────────
+    register_ml_commands(commands, add_global_flags=_add_global_flags)
+
+    # ── multi-horizon field_ops (1/3/5/12/24 h) — not ML next-day ──────────
+    register_multihorizon_commands(commands, add_global_flags=_add_global_flags)
+
+    # ── fire-status map (local GeoJSON + optional FIRMS NRT) ─────────────
+    register_map_commands(commands, add_global_flags=_add_global_flags)
+
+    # ── product SPA (Leaflet + dashboard; brief + map_status) ────────────
+    register_app_commands(commands, add_global_flags=_add_global_flags)
+
+    # ── teach / show / demo-third-party (product teach surface v7) ────────
+    register_teach_commands(commands, add_global_flags=_add_global_flags)
+
+    # ── commands / help map (discoverability) ──────────────────────────
+    cmds = commands.add_parser(
+        "commands",
+        help="Command map by role (operator / field / lab / decision / eng)",
+        description=(
+            "Print a role-grouped map of CLI entry points. "
+            "Use when you know the product exists but not which COMMAND. "
+            "Alias: help · cmds · ayuda."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  wildfire-front help\n"
+            "  wildfire-front commands\n"
+            "  wildfire-front commands --json\n"
+        ),
+    )
+    _add_global_flags(cmds)
+
+    # ── brief / resumen (professional one-screen summary) ─────────────
+    brief = commands.add_parser(
+        "brief",
+        help="Professional one-screen operational brief (role playbook + next action)",
+        description=(
+            "Executive / partner-facing brief: gates, honesty rails, next action, "
+            "and a recommended command sequence for a role.\n"
+            "Not the traffic-light operator board — use ``operator`` for that.\n"
+            "Rails: field_ops ML fusion OFF · IoU ≠ ROS · not tactical dispatch.\n"
+            "Aliases: resumen · summary · briefing."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  wildfire-front brief\n"
+            "  wildfire-front brief --role field\n"
+            "  wildfire-front brief --role lab --json\n"
+            "  wildfire-front resumen --role decision\n"
+        ),
+    )
+    brief.add_argument(
+        "--role",
+        choices=("operator", "field", "lab", "decision"),
+        default="operator",
+        help="Audience playbook (default: operator)",
+    )
+    _add_global_flags(brief)
+
+    # ── doctor hub (ML default; incident with --inbox) ─────────────────
+    doctor = commands.add_parser(
+        "doctor",
+        help="Pre-flight hub: ML lab (default) or incident (needs --inbox)",
+        description=(
+            "Top-level pre-flight without tribal knowledge of subcommands.\n"
+            "  · without --inbox → ML lab doctor (offline structure OK)\n"
+            "  · with --inbox    → incident doctor (field drop-zone checks)\n"
+            "Also: wildfire-front ml doctor · wildfire-front incident doctor"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  wildfire-front doctor\n"
+            "  wildfire-front doctor --json\n"
+            "  wildfire-front doctor --inbox D:/drops --masks D:/masks\n"
+            "  wildfire-front doctor --target hub\n"
+        ),
+    )
+    doctor.add_argument(
+        "--target",
+        choices=("auto", "ml", "incident", "hub"),
+        default="auto",
+        help=(
+            "auto: ml without --inbox, incident with --inbox; "
+            "ml/incident force path; hub = routes only (exit 0)"
+        ),
+    )
+    doctor.add_argument(
+        "--inbox",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Field drop zone (implies incident doctor when target=auto)",
+    )
+    doctor.add_argument(
+        "--work-dir",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Optional incident work-dir (incident doctor only)",
+    )
+    doctor.add_argument(
+        "--masks",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Optional masks dir for incident doctor",
+    )
+    doctor.add_argument(
+        "--event-id",
+        default="incident",
+        help="Event id for incident doctor (default: incident)",
+    )
+    _add_global_flags(doctor)
+
     # ── decide (Fire Decision Card) ─────────────────────────────────────
     decide = commands.add_parser(
         "decide",
         help="Build Fire Decision Card (GO/HOLD/ABSTAIN + metrics fusion)",
         description=(
             "Fuse optional ML / ops / open-CEMS metrics into a decision card "
-            "with confidence and audit hashes. Empty sources → ABSTAIN."
+            "with confidence and audit hashes. Empty sources → ABSTAIN. "
+            "Default policy is 'default' (not field_ops silence rails). "
+            "For field: --policy field_ops."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  wildfire-front decide --policy field_ops\n"
+            "  wildfire-front decide --policy field_ops --explain\n"
+            "  wildfire-front decide --list-policies\n"
+            "  wildfire-front decide --work-dir outputs/incidents/IF1 --policy field_ops\n"
+            "  wildfire-front decide --use-ml-v34 --policy research_open --explain\n"
         ),
     )
     decide.add_argument("--event-id", default="decision", help="Event id for the card")
@@ -405,7 +594,10 @@ def build_parser() -> argparse.ArgumentParser:
     decide.add_argument(
         "--allow-ml-live-in-fusion",
         action="store_true",
-        help="Allow live ML weight in multi-source fusion (default off until U1)",
+        help=(
+            "Opt-in: allow live ML weight in THIS decide call only "
+            "(does NOT rewrite field_ops policy file; field_ops fusion stays OFF)"
+        ),
     )
     decide.add_argument(
         "--ml-live-untrusted",
@@ -433,6 +625,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="Write card JSON to this path",
+    )
+    decide.add_argument(
+        "--explain",
+        action="store_true",
+        help=(
+            "Teaching mode: expand sources/weights/reasons/disclaimers "
+            "(no-op with --json; JSON remains pure card payload)"
+        ),
     )
     _add_global_flags(decide)
 
@@ -540,14 +740,642 @@ def _emit(payload: dict[str, Any] | None, *, as_json: bool, human_fn, **human_kw
     human_fn(**human_kw)
 
 
+# Spanish / short aliases → canonical commands (operator UX)
+_COMMAND_ALIASES: dict[str, str] = {
+    "operador": "operator",
+    "ops": "operator",
+    "estado": "operator",
+    "semaforo": "operator",
+    "ayuda": "commands",
+    "resumen": "brief",
+    "summary": "brief",
+    "briefing": "brief",
+    "spa": "app",
+    "console": "app",
+}
+
+# Multi-token expansions (demo rehearsal / next-step verbs)
+_COMMAND_EXPANSIONS: dict[str, list[str]] = {
+    "ensayo": ["operator", "do", "--all"],
+    "path": ["operator", "do", "--all"],
+    "next": ["operator", "next"],
+    "go_q": ["operator", "next"],
+    "go-q": ["operator", "next"],
+    "checklist": ["operator", "checklist"],
+    # Discoverability (users type "help" / "cmds" before finding --help)
+    "help": ["commands"],
+    "cmds": ["commands"],
+    "command": ["commands"],
+}
+
+# Users type these as COMMAND instead of --version
+_VERSION_TOKENS: frozenset[str] = frozenset({"version", "ver", "about"})
+
+_ML_SUBCOMMAND_NAMES: tuple[str, ...] = (
+    "list",
+    "show",
+    "predict",
+    "card",
+    "doctor",
+    "cases",
+    "curve",
+    "freeze",
+    "smoke",
+    "lofo",
+    "lift",
+    "next",
+)
+
+_INCIDENT_SUBCOMMAND_NAMES: tuple[str, ...] = ("doctor", "update", "watch", "status")
+
+
+def _has_flag(argv: list[str], *names: str) -> bool:
+    """True if any of ``--flag`` or ``--flag=value`` appears in argv."""
+    for a in argv:
+        for n in names:
+            if a == n or a.startswith(f"{n}="):
+                return True
+    return False
+
+
+def _rewrite_argv(raw: list[str]) -> list[str]:
+    """Cold-start default, aliases, expansions, and status/doctor footguns."""
+    if not raw:
+        return ["operator"]
+    head = str(raw[0])
+    rest = list(raw[1:])
+
+    # status: bare → operator board; with --work-dir → incident status
+    if head == "status":
+        if _has_flag(rest, "--work-dir"):
+            return ["incident", "status", *rest]
+        return ["operator", *rest]
+
+    if head in _COMMAND_EXPANSIONS:
+        return [*_COMMAND_EXPANSIONS[head], *rest]
+    if head in _COMMAND_ALIASES:
+        return [_COMMAND_ALIASES[head], *rest]
+    return raw
+
+# Canonical top-level commands (keep in sync with build_parser registrations)
+_TOP_LEVEL_COMMANDS: frozenset[str] = frozenset(
+    {
+        "demo",
+        "ingest-geotiff",
+        "incident",
+        "ml",
+        "multihorizon",
+        "teach",
+        "show",
+        "demo-third-party",
+        "dry-run-h3",
+        "operator",
+        "commands",
+        "brief",
+        "map",
+        "app",
+        "doctor",
+        "decide",
+        "serve-decide",
+        "export-acta",
+        "replay-decide",
+    }
+)
+
+
+def build_commands_map() -> dict[str, Any]:
+    """Role-grouped CLI map for ``commands`` / ``help`` (discoverability)."""
+    return {
+        "schema": "wfd_cli_commands_v1",
+        "entry": "python -m wildfire_front",
+        "default": "operator (when no COMMAND)",
+        "groups": [
+            {
+                "id": "operator",
+                "title": "Operario (única puerta · <30 s)",
+                "commands": [
+                    {"cmd": "(none) / operator / operador / ops / status / estado", "why": "tablero semáforo + 4 actos + GO_Q"},
+                    {"cmd": "brief / resumen / summary", "why": "resumen profesional + next action + JSON v1"},
+                    {"cmd": "app / spa / console [--work-dir] [--open] [--serve] [--ui-mode simple|advanced]", "why": "SPA industrial C2: dual-mode Fácil|Pro · Estado/Decidir/Acta · opcional HTTP local"},
+                    {"cmd": "ensayo", "why": "4 actos compactos (do --all)"},
+                    {"cmd": "next / go_q", "why": "qué falta para GO_Q (humano)"},
+                    {"cmd": "checklist", "why": "checklist 7 ítems eng"},
+                    {"cmd": "operator do --act 1|2|3|4", "why": "un acto encapsulado"},
+                    {"cmd": "operator explain-abstain", "why": "ABSTAIN ≠ bug"},
+                ],
+            },
+            {
+                "id": "preflight",
+                "title": "Doctor / pre-flight",
+                "commands": [
+                    {"cmd": "doctor", "why": "ML lab pre-flight (offline OK)"},
+                    {"cmd": "doctor --inbox DIR", "why": "field incident doctor"},
+                    {"cmd": "ml doctor", "why": "lab weights / catalog / rails"},
+                    {"cmd": "incident doctor --inbox DIR", "why": "timestamps / CRS / masks"},
+                    {"cmd": "brief --role field|lab|decision", "why": "playbook profesional por rol"},
+                ],
+            },
+            {
+                "id": "field",
+                "title": "Campo (incident runtime)",
+                "commands": [
+                    {"cmd": "incident update --inbox … --work-dir …", "why": "procesar inbox una vez"},
+                    {"cmd": "incident watch --inbox … --work-dir …", "why": "loop en vivo"},
+                    {"cmd": "incident status --work-dir …", "why": "leer outbox (NO es 'status' suelto)"},
+                    {"cmd": "map --work-dir … [--no-live]", "why": "mapa estado (local + FIRMS NRT opcional)"},
+                    {"cmd": "app --work-dir … --open", "why": "SPA mapa + Decision Card + brief (demo sala)"},
+                    {"cmd": "ingest-geotiff --images … --sensor-id … --estimated-error-m …", "why": "batch térmico"},
+                ],
+            },
+            {
+                "id": "decision",
+                "title": "Decision Card",
+                "commands": [
+                    {"cmd": "decide --policy field_ops", "why": "GO/HOLD/ABSTAIN (field silence rails)"},
+                    {"cmd": "decide --list-policies", "why": "políticas disponibles"},
+                    {"cmd": "export-acta --card … | --work-dir …", "why": "acta + radio + replay sources"},
+                    {"cmd": "replay-decide --bundle … | --work-dir …", "why": "verificar hashes forenses"},
+                    {"cmd": "serve-decide --port 8765", "why": "HTTP local POST /v1/decide"},
+                ],
+            },
+            {
+                "id": "lab",
+                "title": "ML lab (≠ field fusion · IoU ≠ ROS)",
+                "commands": [
+                    {"cmd": "ml list / show / doctor", "why": "catálogo + scorecard + pre-flight"},
+                    {"cmd": "ml cases / curve / freeze / smoke / lofo / next", "why": "teaching + freeze surface"},
+                    {"cmd": "ml predict --list-products", "why": "productos listos (weights)"},
+                    {"cmd": "ml card --mode offline --scenario hold", "why": "demo Decision Card offline"},
+                ],
+            },
+            {
+                "id": "eng",
+                "title": "Eng / teach",
+                "commands": [
+                    {"cmd": "teach / show", "why": "4 actos docs + gates snapshot"},
+                    {"cmd": "demo-third-party / dry-run-h3", "why": "pack + replay / H3 eng path"},
+                    {"cmd": "demo", "why": "sintético E2E"},
+                    {"cmd": "multihorizon …", "why": "forecast 1/3/5/12/24 h (field_ops, not ML next-day)"},
+                ],
+            },
+        ],
+        "common_footguns": [
+            {
+                "tried": "help / doctor / status",
+                "instead": "help→commands · doctor→ml lab pre-flight · status→operator board",
+            },
+            {
+                "tried": "ml / incident sin SUBCOMMAND",
+                "instead": "bare → hub (exit 0); o ml list / incident doctor --inbox …",
+            },
+            {
+                "tried": "version (como COMMAND)",
+                "instead": "wildfire-front --version  ·  o alias: version / ver / about",
+            },
+            {
+                "tried": "incident status (sin --work-dir)",
+                "instead": "incident status --work-dir outputs/incidents/IF1",
+            },
+            {
+                "tried": "decide vacío parece roto",
+                "instead": "ABSTAIN es feature; operator explain-abstain · --policy field_ops",
+            },
+            {
+                "tried": "export-acta / replay-decide sin paths",
+                "instead": "--card / --bundle / --work-dir con outbox",
+            },
+        ],
+        "docs": [
+            "docs/START_HERE.md",
+            "docs/OPERATOR_UX_LOOP_LOG.md",
+            "docs/OPERATOR_CLI_CHANGES.md",
+        ],
+    }
+
+
+def format_commands_map_human(payload: dict[str, Any] | None = None) -> str:
+    """Human command map for ``wildfire-front commands`` / ``help``."""
+    data = payload or build_commands_map()
+    lines = [
+        "╔══════════════════════════════════════════════════════════╗",
+        "║  WFD · mapa de comandos (por rol)                        ║",
+        "╚══════════════════════════════════════════════════════════╝",
+        "",
+        f"  Entrada:  {data.get('entry')}",
+        f"  Default:  {data.get('default')}",
+        "",
+    ]
+    for g in data.get("groups") or []:
+        lines.append(f"── {g.get('title')} ──")
+        for row in g.get("commands") or []:
+            cmd = str(row.get("cmd") or "")
+            why = str(row.get("why") or "")
+            lines.append(f"  {cmd}")
+            if why:
+                lines.append(f"      → {why}")
+        lines.append("")
+    lines.append("── Footguns frecuentes ──")
+    for f in data.get("common_footguns") or []:
+        lines.append(f"  · {f.get('tried')}")
+        lines.append(f"      → {f.get('instead')}")
+    lines.append("")
+    lines.append("  Más: wildfire-front COMMAND --help · docs/START_HERE.md")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _suggest_close(token: str, choices: Sequence[str], *, n: int = 3) -> list[str]:
+    """Typo suggestions (difflib); empty if nothing close enough."""
+    t = str(token or "").strip()
+    if not t:
+        return []
+    # Include common aliases in the pool for better Spanish/short matches
+    pool = sorted({*choices, *_COMMAND_ALIASES.keys(), *_COMMAND_EXPANSIONS.keys()})
+    return difflib.get_close_matches(t, pool, n=n, cutoff=0.55)
+
+
+def _print_unknown_command_hint(token: str) -> None:
+    """Friendly hint only for *unknown* top-level COMMANDs (not missing flags)."""
+    import sys as _sys
+
+    sugg = _suggest_close(token, sorted(_TOP_LEVEL_COMMANDS))
+    sugg_line = ""
+    if sugg:
+        sugg_line = f"  ¿Quisiste decir?: {' · '.join(sugg)}\n"
+
+    print(
+        "\n"
+        f"Comando desconocido: {token!r}\n"
+        f"{sugg_line}"
+        "  python -m wildfire_front                 # tablero operario (default)\n"
+        "  python -m wildfire_front help            # mapa de comandos\n"
+        "  python -m wildfire_front ensayo          # 4 actos compactos\n"
+        "  python -m wildfire_front doctor          # pre-flight ML lab\n"
+        "  python -m wildfire_front next            # qué falta para GO_Q\n"
+        "  python -m wildfire_front --version       # versión (también: version / ver)\n"
+        "Docs: docs/START_HERE.md · docs/OPERATOR_UX_LOOP_LOG.md\n",
+        file=_sys.stderr,
+    )
+
+
+def _print_operator_hint() -> None:
+    """Backward-compatible name: unknown-command operator path hint."""
+    _print_unknown_command_hint("?")
+
+
+def _print_contextual_argparse_hint(raw: list[str]) -> None:
+    """Extra hints for known commands with missing args (not operator-mode spam)."""
+    import sys as _sys
+
+    if not raw:
+        return
+    head = str(raw[0])
+    rest = [str(x) for x in raw[1:]]
+    blob = " ".join(rest).lower()
+
+    if head == "incident":
+        if not rest or rest[0] in ("-h", "--help"):
+            return
+        sub = rest[0] if rest else ""
+        if sub.startswith("-"):
+            return
+        if sub == "doctor" and "--inbox" not in blob:
+            print(
+                "\n"
+                "hint: incident doctor needs a drop zone:\n"
+                "  wildfire-front incident doctor --inbox DIR [--masks DIR]\n"
+                "  or:  wildfire-front doctor --inbox DIR\n",
+                file=_sys.stderr,
+            )
+        elif sub == "status" and "--work-dir" not in blob:
+            print(
+                "\n"
+                "hint: incident status needs a workspace (not bare 'status'):\n"
+                "  wildfire-front incident status --work-dir outputs/incidents/IF1\n"
+                "  bare 'status' / 'estado' → operator board (not field outbox)\n",
+                file=_sys.stderr,
+            )
+        elif sub in ("update", "watch") and ("--inbox" not in blob or "--work-dir" not in blob):
+            print(
+                "\n"
+                "hint: incident update/watch need both paths:\n"
+                "  wildfire-front incident update --inbox DIR --work-dir DIR [--force]\n"
+                "  wildfire-front incident watch  --inbox DIR --work-dir DIR\n",
+                file=_sys.stderr,
+            )
+        elif sub not in _INCIDENT_SUBCOMMAND_NAMES:
+            close = _suggest_close(sub, _INCIDENT_SUBCOMMAND_NAMES)
+            extra = f"  ¿Quisiste decir?: {' · '.join(close)}\n" if close else ""
+            print(
+                "\n"
+                "hint: incident subcommands: doctor | update | watch | status\n"
+                f"{extra}"
+                "  bare 'incident' → field hub\n"
+                "  wildfire-front incident --help\n",
+                file=_sys.stderr,
+            )
+    elif head == "doctor" and "--inbox" not in blob and any(
+        t in blob for t in ("incident",)
+    ):
+        print(
+            "\n"
+            "hint: field doctor needs --inbox:\n"
+            "  wildfire-front doctor --inbox DIR\n",
+            file=_sys.stderr,
+        )
+    elif head == "ml":
+        if not rest or str(rest[0]).startswith("-"):
+            return
+        sub = rest[0]
+        if sub not in _ML_SUBCOMMAND_NAMES:
+            close = _suggest_close(sub, _ML_SUBCOMMAND_NAMES)
+            extra = f"  ¿Quisiste decir?: {' · '.join(close)}\n" if close else ""
+            print(
+                "\n"
+                "hint: ml subcommands: "
+                f"{' '.join(_ML_SUBCOMMAND_NAMES)}\n"
+                f"{extra}"
+                "  bare 'ml' → lab hub (exit 0)\n"
+                "  wildfire-front ml --help\n",
+                file=_sys.stderr,
+            )
+    elif head == "ingest-geotiff":
+        print(
+            "\n"
+            "hint: ingest-geotiff needs images + sensor identity:\n"
+            "  wildfire-front ingest-geotiff \\\n"
+            "    --images DIR --sensor-id lwir_drone --estimated-error-m 2 \\\n"
+            "    [--masks DIR] --output outputs/pack --operational\n"
+            "  See: wildfire-front ingest-geotiff --help\n",
+            file=_sys.stderr,
+        )
+    elif head == "export-acta":
+        print(
+            "\n"
+            "hint: export-acta needs a card path or incident work-dir:\n"
+            "  wildfire-front export-acta --card path/to/fire_decision_card.json\n"
+            "  wildfire-front export-acta --work-dir outputs/incidents/IF1\n",
+            file=_sys.stderr,
+        )
+    elif head == "replay-decide":
+        print(
+            "\n"
+            "hint: replay-decide needs forensic inputs:\n"
+            "  wildfire-front replay-decide --bundle DIR\n"
+            "  wildfire-front replay-decide --sources replay_sources.json\n"
+            "  wildfire-front replay-decide --work-dir outputs/incidents/IF1\n",
+            file=_sys.stderr,
+        )
+
+
+def _is_known_top_level(token: str) -> bool:
+    return (
+        token in _TOP_LEVEL_COMMANDS
+        or token in _COMMAND_ALIASES
+        or token in _COMMAND_EXPANSIONS
+        or token in _VERSION_TOKENS
+        or token == "status"  # smart rewrite (operator vs incident)
+    )
+
+
+def build_incident_hub() -> dict[str, Any]:
+    """Discoverability hub for bare ``incident`` (field runtime)."""
+    return {
+        "schema": "wfd_incident_hub_v1",
+        "banner": "incident_runtime_v1 · NOT tactical dispatch · geometry-first",
+        "subcommands": list(_INCIDENT_SUBCOMMAND_NAMES),
+        "start_here": [
+            {
+                "cmd": "wildfire-front incident doctor --inbox DIR [--masks DIR]",
+                "why": "pre-flight timestamps / CRS / masks",
+            },
+            {
+                "cmd": "wildfire-front incident update --inbox DIR --work-dir DIR",
+                "why": "procesar inbox una vez → outbox",
+            },
+            {
+                "cmd": "wildfire-front incident watch --inbox DIR --work-dir DIR",
+                "why": "loop en vivo (Ctrl+C)",
+            },
+            {
+                "cmd": "wildfire-front incident status --work-dir DIR",
+                "why": "leer outbox (NO es bare 'status')",
+            },
+        ],
+        "aliases_note": (
+            "bare 'status' / 'estado' → operator board; "
+            "field status needs: incident status --work-dir …"
+        ),
+        "also": {
+            "doctor_top": "wildfire-front doctor --inbox DIR",
+            "operator": "wildfire-front  |  wildfire-front operator",
+        },
+    }
+
+
+def format_incident_hub_human(payload: dict[str, Any] | None = None) -> str:
+    data = payload or build_incident_hub()
+    lines = [
+        "╔══════════════════════════════════════════════════════════╗",
+        "║  WFD · incident hub  (campo · no dispatch táctico)       ║",
+        "╚══════════════════════════════════════════════════════════╝",
+        "",
+        f"  {data.get('banner')}",
+        "",
+        "── Empieza aquí ──",
+    ]
+    for row in data.get("start_here") or []:
+        lines.append(f"  {row.get('cmd')}")
+        if row.get("why"):
+            lines.append(f"      → {row['why']}")
+    lines.append("")
+    lines.append(f"  SUBCOMMANDS: {' '.join(data.get('subcommands') or [])}")
+    lines.append(f"  Nota: {data.get('aliases_note')}")
+    also = data.get("also") or {}
+    if also.get("doctor_top"):
+        lines.append(f"  Top doctor: {also['doctor_top']}")
+    if also.get("operator"):
+        lines.append(f"  Operario:   {also['operator']}")
+    lines.append("  Más: wildfire-front incident --help")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def run_incident_hub(args: argparse.Namespace) -> int:
+    """Bare ``incident`` — exit 0 hub."""
+    payload = build_incident_hub()
+    if bool(getattr(args, "json", False)):
+        print_json(payload)
+    else:
+        import sys as _sys
+
+        _sys.stdout.write(format_incident_hub_human(payload))
+    return 0
+
+
+def run_doctor_hub(args: argparse.Namespace) -> int:
+    """Top-level doctor: ML lab by default; incident when --inbox (or target)."""
+    import sys as _sys
+
+    as_json = bool(getattr(args, "json", False))
+    target = str(getattr(args, "target", "auto") or "auto")
+    inbox = getattr(args, "inbox", None)
+
+    if target == "auto":
+        target = "incident" if inbox is not None else "ml"
+
+    if target == "hub":
+        payload = {
+            "schema": "wfd_doctor_hub_v1",
+            "routes": {
+                "ml": "wildfire-front doctor  |  wildfire-front ml doctor",
+                "incident": "wildfire-front doctor --inbox DIR  |  wildfire-front incident doctor --inbox DIR",
+                "operator": "wildfire-front  |  wildfire-front status",
+            },
+            "note": (
+                "Bare 'doctor' = ML lab pre-flight (offline OK). "
+                "Field checks require --inbox. Not tactical dispatch."
+            ),
+        }
+        if as_json:
+            print_json(payload)
+        else:
+            print("WFD · doctor hub (elige un camino)")
+            print("  ML lab (default):  wildfire-front doctor")
+            print("                     wildfire-front ml doctor")
+            print("  Field incident:    wildfire-front doctor --inbox DIR [--masks DIR]")
+            print("                     wildfire-front incident doctor --inbox DIR")
+            print("  Operator board:    wildfire-front  |  wildfire-front status")
+            print("  Nota: mask térmica ≠ perímetro oficial · no dispatch táctico")
+        return 0
+
+    if target == "incident":
+        if inbox is None:
+            print_error(
+                "incident doctor requires --inbox DIR",
+                hint=(
+                    "wildfire-front doctor --inbox D:/drops [--masks D:/masks]\n"
+                    "  or: wildfire-front incident doctor --inbox D:/drops\n"
+                    "  ML lab only: wildfire-front doctor   (or --target ml)"
+                ),
+            )
+            return 2
+        from .incident.doctor import doctor_incident
+
+        report = doctor_incident(
+            inbox=inbox,
+            work_dir=getattr(args, "work_dir", None),
+            masks_dir=getattr(args, "masks", None),
+            event_id=str(getattr(args, "event_id", None) or "incident"),
+        )
+        if as_json:
+            print_json(
+                {
+                    "schema": "wfd_doctor_hub_v1",
+                    "target": "incident",
+                    "report": report,
+                }
+            )
+        else:
+            print("── doctor → incident (field) ──")
+            print_doctor_report(report, as_json=False)
+        return 0 if report.get("ok") else 1
+
+    # target == ml
+    from .cli_ml import build_ml_doctor_report, format_ml_doctor_human
+
+    report = build_ml_doctor_report()
+    if as_json:
+        print_json(
+            {
+                "schema": "wfd_doctor_hub_v1",
+                "target": "ml",
+                "report": report,
+                "also": {
+                    "incident": "wildfire-front doctor --inbox DIR",
+                    "hub": "wildfire-front doctor --target hub",
+                },
+            }
+        )
+    else:
+        if not bool(getattr(args, "quiet", False)):
+            print("── doctor → ML lab (offline OK; not field_ops fusion) ──")
+            print("  field path: wildfire-front doctor --inbox DIR")
+            print("  routes:     wildfire-front doctor --target hub")
+            print("")
+        _sys.stdout.write(format_ml_doctor_human(report))
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> None:
+    # Windows PowerShell default charmap/cp1252 cannot print ╔ ≠ · etc.
+    ensure_utf8_stdio()
+
+    raw_in = list(argv) if argv is not None else None
+    if raw_in is None:
+        import sys as _sys
+
+        raw_in = list(_sys.argv[1:])
+    # Preserve original head for unknown-command hints (before rewrite)
+    original_head = str(raw_in[0]) if raw_in else ""
+
+    # version / ver / about as COMMAND (users rarely type --version first)
+    if original_head in _VERSION_TOKENS:
+        safe_write(f"wildfire-front {__version__}")
+        return
+
+    raw = _rewrite_argv(raw_in)
+
     parser = build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    try:
+        args = parser.parse_args(raw)
+    except SystemExit as exc:
+        # Invalid usage: contextual hints. Operator board only for *unknown* COMMAND.
+        code = exc.code
+        if code not in (0, None) and raw_in and not str(raw_in[0]).startswith("-"):
+            head = original_head
+            if not _is_known_top_level(head):
+                _print_unknown_command_hint(head)
+            else:
+                # Prefer rewritten argv for subcommand context (status→incident, etc.)
+                _print_contextual_argparse_hint(raw)
+        raise
     as_json = bool(getattr(args, "json", False))
     verbose = bool(getattr(args, "verbose", False))
     quiet = bool(getattr(args, "quiet", False))
 
     try:
+        if args.command == "commands":
+            payload = build_commands_map()
+            if as_json:
+                print_json(payload)
+            else:
+                safe_write(format_commands_map_human(payload), end="")
+            return
+
+        if args.command == "brief":
+            from .product.operator_ux import (
+                build_operator_brief,
+                format_operator_brief_human,
+            )
+
+            role = str(getattr(args, "role", "operator") or "operator")
+            payload = build_operator_brief(role=role)
+            if as_json:
+                print_json(payload)
+            else:
+                safe_write(format_operator_brief_human(payload), end="")
+            return
+
+        if args.command == "map":
+            raise SystemExit(run_map(args))
+
+        if args.command == "app":
+            raise SystemExit(run_app(args))
+
+        if args.command == "doctor":
+            raise SystemExit(run_doctor_hub(args))
+
         if args.command == "demo":
             metrics = run_demo(args.output, args.seed, args.position_error_m)
             print_demo_report(args.output, metrics, as_json=as_json)
@@ -636,21 +1464,69 @@ def main(argv: Sequence[str] | None = None) -> None:
                 Path(out).parent.mkdir(parents=True, exist_ok=True)
                 Path(out).write_text(_json.dumps(payload, indent=2, default=str), encoding="utf-8")
             if as_json:
+                # --explain is a no-op with --json (pure card JSON only)
                 print_json(payload)
+            elif getattr(args, "explain", False):
+                from .product.operator_ux import format_abstain_plain
+                from .product.teach_path import format_decide_explain
+
+                if str(payload.get("decision", "")).upper() == "ABSTAIN":
+                    print(format_abstain_plain(payload), end="")
+                print(format_decide_explain(payload), end="")
+                if out:
+                    print(f"wrote: {out}")
             else:
                 print(f"decision: {payload.get('decision')}")
                 conf = payload.get("confidence_pred")
                 conf_s = f"{float(conf):.3f}" if isinstance(conf, (int, float)) else "—"
                 print(f"confidence_pred: {conf_s} ({payload.get('confidence_pred_label')})")
-                print(
-                    f"policy: {payload.get('policy_id') or (payload.get('audit') or {}).get('policy_id')}"
+                policy_id = payload.get("policy_id") or (payload.get("audit") or {}).get(
+                    "policy_id"
                 )
+                print(f"policy: {policy_id}")
+                if not getattr(args, "policy", None) and str(policy_id or "") in (
+                    "default",
+                    "",
+                    "None",
+                ):
+                    print(
+                        "policy note: using 'default' (not field_ops). "
+                        "Field silence rails: --policy field_ops · list: --list-policies"
+                    )
                 print(f"system_reliability_pass: {payload.get('system_reliability_pass')}")
                 print(f"latency_ms: {payload.get('latency_ms')}")
                 print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
+                # Plain language when silent — operator must not think it is broken
+                if str(payload.get("decision", "")).upper() == "ABSTAIN":
+                    print(
+                        "nota: ABSTAIN = el producto se calla a propósito "
+                        "(faltan fuentes). No es un bug. "
+                        "Detalle: python -m wildfire_front operator explain-abstain"
+                    )
                 if out:
                     print(f"wrote: {out}")
             return
+
+        if args.command == "ml":
+            raise SystemExit(run_ml(args))
+
+        if args.command == "multihorizon":
+            raise SystemExit(run_multihorizon(args))
+
+        if args.command == "teach":
+            raise SystemExit(run_teach(args))
+
+        if args.command == "show":
+            raise SystemExit(run_show(args))
+
+        if args.command == "demo-third-party":
+            raise SystemExit(run_demo_third_party(args))
+
+        if args.command == "dry-run-h3":
+            raise SystemExit(run_dry_run_h3(args))
+
+        if args.command == "operator":
+            raise SystemExit(run_operator(args))
 
         if args.command == "serve-decide":
             from .product.api_server import serve as serve_decide_api
@@ -673,7 +1549,21 @@ def main(argv: Sequence[str] | None = None) -> None:
             if card_path is None and work is not None:
                 card_path = Path(work) / "outbox" / "fire_decision_card.json"
             if card_path is None or not Path(card_path).is_file():
-                raise SystemExit("export-acta requires --card path or --work-dir with outbox card")
+                detail = (
+                    f"card not found: {card_path}"
+                    if card_path is not None
+                    else "no --card and no --work-dir"
+                )
+                print_error(
+                    f"export-acta requires a Decision Card ({detail})",
+                    hint=(
+                        "wildfire-front export-acta --card path/to/fire_decision_card.json\n"
+                        "  or: wildfire-front export-acta --work-dir outputs/incidents/IF1\n"
+                        "  first: wildfire-front decide --policy field_ops --output card.json\n"
+                        "  incident outbox card is written by incident update/watch"
+                    ),
+                )
+                raise SystemExit(2)
             card = _json.loads(Path(card_path).read_text(encoding="utf-8"))
             out_dir = getattr(args, "output", None)
             if out_dir is None:
@@ -701,13 +1591,29 @@ def main(argv: Sequence[str] | None = None) -> None:
             sources = getattr(args, "sources", None)
             work = getattr(args, "work_dir", None)
             if sources is not None:
-                src = _json.loads(Path(sources).read_text(encoding="utf-8"))
+                src_path = Path(sources)
+                if not src_path.is_file():
+                    print_error(
+                        f"replay sources not found: {src_path}",
+                        hint="wildfire-front replay-decide --sources path/to/replay_sources.json",
+                    )
+                    raise SystemExit(2)
+                src = _json.loads(src_path.read_text(encoding="utf-8"))
                 result = replay_decision(src, base=Path.cwd())
             else:
                 if bundle is None and work is not None:
                     bundle = Path(work) / "outbox"
                 if bundle is None:
-                    raise SystemExit("replay-decide requires --bundle, --sources, or --work-dir")
+                    print_error(
+                        "replay-decide requires --bundle, --sources, or --work-dir",
+                        hint=(
+                            "wildfire-front replay-decide --bundle DIR\n"
+                            "  wildfire-front replay-decide --sources replay_sources.json\n"
+                            "  wildfire-front replay-decide --work-dir outputs/incidents/IF1\n"
+                            "  first: export-acta writes replay_sources.json next to the card"
+                        ),
+                    )
+                    raise SystemExit(2)
                 result = load_and_replay_bundle(bundle, base=Path.cwd())
             if as_json:
                 # omit full nested card if quiet? keep full for audit
@@ -721,6 +1627,13 @@ def main(argv: Sequence[str] | None = None) -> None:
                 )
                 print(f"output_hash match: {result.get('match_output_hash')}")
                 if not ok:
+                    print_error(
+                        "forensic replay mismatch (replay_ok=false)",
+                        hint=(
+                            "re-export acta from the same card, or inspect "
+                            "match_decision / match_output_hash above"
+                        ),
+                    )
                     raise SystemExit(2)
             return
 
@@ -731,6 +1644,10 @@ def main(argv: Sequence[str] | None = None) -> None:
                 doctor_incident,
                 read_incident_status,
             )
+
+            # Bare `incident` → field hub (exit 0)
+            if getattr(args, "incident_command", None) is None:
+                raise SystemExit(run_incident_hub(args))
 
             if args.incident_command == "doctor":
                 report = doctor_incident(

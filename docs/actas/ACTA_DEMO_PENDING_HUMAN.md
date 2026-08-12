@@ -9,9 +9,9 @@
 
 ---
 
-> **BORRADOR eng** preparado `2026-08-04T11:45:43.654311+00:00` — **NO firmado** · **NO cierra GO_Q**
-> **Commit:** `eb95049` · producto WildfireFrontDynamics
-> **Rails prefill:** GO_MES=`True` · GO_Q=`partial` · ml_product_go=`True` (lab only) · field_ops ML fusion=`OFF`
+> **BORRADOR eng** preparado `2026-08-11T05:10:01.548644+00:00` — **NO firmado** · **NO cierra GO_Q**
+> **Commit:** `757b571` · producto WildfireFrontDynamics
+> **Rails prefill:** GO_MES=`True` · GO_Q=`partial` · ml_product_go=`True` · field_ops ML fusion=`OFF`
 > **Humano:** rellenar Fecha, Presentador, Tercero (externo), checklists, firmas.
 > **Cerrar GO_Q:** tras demo real → `python scripts/record_h1_demo_complete.py --acta PATH`
 > (rechaza placeholders; no inventar tercero).
@@ -27,7 +27,7 @@
 | **Formato** | [ ] presencial · [ ] videollamada · [ ] híbrido |
 | **Lugar / enlace** | |
 | **Producto mostrado** | WildfireFrontDynamics (ops + ML lab + Decision Card) |
-| **Versión / commit / tag** | main @ `eb95049` (borrador eng; confirmar en demo) |
+| **Versión / commit / tag** | main @ `757b571` (borrador eng; confirmar en demo) |
 | **Duración real** | ___ min |
 | **Idioma** | ES / EN |
 

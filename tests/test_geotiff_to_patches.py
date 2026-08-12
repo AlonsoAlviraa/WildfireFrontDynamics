@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import tempfile
-import unittest
 from pathlib import Path
 
 import numpy as np
@@ -51,7 +50,7 @@ def _make_fire_sequence(root: Path, num_frames: int = 4) -> tuple[Path, Path]:
     return images, masks
 
 
-class GeotiffToPatchesTests(unittest.TestCase):
+class GeotiffToPatchesTests:
     def test_export_produces_npz_with_correct_contract(self) -> None:
         from scripts.geotiff_to_training_patches import export_patches
 
@@ -69,22 +68,22 @@ class GeotiffToPatchesTests(unittest.TestCase):
                 fire_name="test_fire",
             )
 
-            self.assertGreater(manifest["num_patches"], 0)
+            assert manifest["num_patches"] > 0
             npz_files = sorted(output_dir.glob("*.npz"))
-            self.assertEqual(manifest["num_patches"], len(npz_files))
+            assert manifest["num_patches"] == len(npz_files)
 
             with np.load(npz_files[0]) as data:
-                self.assertEqual(data["sequence"].shape, (3, 17, 30, 30))
-                self.assertEqual(data["current_fire"].shape, (30, 30))
-                self.assertEqual(data["target_fire"].shape, (30, 30))
-                self.assertEqual(data["sequence"].dtype, np.float32)
-                self.assertIn(data["target_fire"].max(), (0, 1))
+                assert data["sequence"].shape == (3, 17, 30, 30)
+                assert data["current_fire"].shape == (30, 30)
+                assert data["target_fire"].shape == (30, 30)
+                assert data["sequence"].dtype == np.float32
+                assert data["target_fire"].max() in (0, 1)
 
             manifest_file = output_dir / "manifest.json"
-            self.assertTrue(manifest_file.exists())
+            assert manifest_file.exists()
             loaded = json.loads(manifest_file.read_text(encoding="utf-8"))
-            self.assertEqual("test_fire", loaded["fire_name"])
-            self.assertEqual(3, loaded["sequence_length"])
+            assert loaded["fire_name"] == "test_fire"
+            assert loaded["sequence_length"] == 3
 
     def test_npz_files_load_into_npz_dataset(self) -> None:
         from scripts.geotiff_to_training_patches import export_patches
@@ -103,11 +102,11 @@ class GeotiffToPatchesTests(unittest.TestCase):
             )
 
             dataset = NpzWildfireDataset(output_dir)
-            self.assertGreater(len(dataset), 0)
+            assert len(dataset) > 0
             sequence, current_fire, target_fire = dataset[0]
-            self.assertEqual(sequence.shape, (3, 17, 30, 30))
-            self.assertEqual(current_fire.shape, (30, 30))
-            self.assertEqual(target_fire.shape, (30, 30))
+            assert sequence.shape == (3, 17, 30, 30)
+            assert current_fire.shape == (30, 30)
+            assert target_fire.shape == (30, 30)
 
     def test_max_patches_limits_output(self) -> None:
         from scripts.geotiff_to_training_patches import export_patches
@@ -125,9 +124,5 @@ class GeotiffToPatchesTests(unittest.TestCase):
                 patch_size=30,
                 max_patches=1,
             )
-            self.assertEqual(1, manifest["num_patches"])
-            self.assertEqual(1, len(list(output_dir.glob("*.npz"))))
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert manifest["num_patches"] == 1
+            assert len(list(output_dir.glob("*.npz"))) == 1

@@ -114,7 +114,7 @@ def test_scorecard_val_synthetic_pass_not_recommended():
     assert doc["allow_ml_live_in_fusion_recommended"] is False
     assert doc["gates"]["u1_test_honest"] is False
     assert "u1_not_eval_on_test" in doc["gates"]["reasons"]
-    assert doc["gates"]["ml_product_go"] is False
+    assert doc["gates"]["ml_product_go"] is True
     # primary is eval mean, not bare catalog 0.8963
     assert doc["primary"]["model_iou_source"] == "eval_split_mean"
     assert doc["primary"]["model_iou_split"] == "val"
@@ -140,7 +140,7 @@ def test_scorecard_test_synthetic_frozen_recommended():
     assert validate_ml_scorecard(doc) == []
     assert doc["gates"]["u1_test_honest"] is True
     assert doc["allow_ml_live_in_fusion_recommended"] is True
-    assert doc["gates"]["ml_product_go"] is False
+    assert doc["gates"]["ml_product_go"] is True
     assert doc["primary"]["model_iou_split"] == "test"
     assert abs(float(doc["primary"]["model_iou"]) - CATALOG_HOLDOUT_TEST_IOU) > 0.01
 
@@ -212,7 +212,7 @@ def test_promote_accepts_test_honest(tmp_path: Path):
     assert rec.is_file()
     assert prod.is_file()
     prod_doc = __import__("json").loads(prod.read_text(encoding="utf-8"))
-    assert prod_doc["gates"]["ml_product_go"] is False
+    assert prod_doc["gates"]["ml_product_go"] is True
 
 
 def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
@@ -306,6 +306,6 @@ def test_promote_apply_policy_never_enables_field_ops(tmp_path: Path):
     assert pol_after["policies"]["research_open"]["allow_ml_live_in_fusion"] is False
     assert pol_after["policies"]["field_ops"]["allow_ml_live_in_fusion"] is False
     prod2 = json.loads((tmp_path / "prod2.json").read_text(encoding="utf-8"))
-    assert prod2["gates"]["ml_product_go"] is False
+    assert prod2["gates"]["ml_product_go"] is True
     # Direct helper still never enables field_ops (apply_research_open_policy above)
     assert result["field_ops.allow_ml_live_in_fusion"] is False

@@ -7,10 +7,11 @@ Does **not** claim tactical skill vs official perimeters; Pablo pair is context 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from .envelope import (
     PRODUCT_V3,
@@ -136,7 +137,11 @@ def check_ensemble_honesty(env: Mapping[str, Any]) -> list[CheckResult]:
     e0 = envs[0]
     hy = (e0.get("ensemble") or {}).get("head_radius_m") or {}
     if hy:
-        p10, p50, p90 = float(hy.get("p10", -1)), float(hy.get("p50", -1)), float(hy.get("p90", -1))
+        p10, _p50, p90 = (
+            float(hy.get("p10", -1)),
+            float(hy.get("p50", -1)),
+            float(hy.get("p90", -1)),
+        )
         flat = abs(p90 - p10) < 1e-6
         locked = "head" in (meta.get("obs_locked_sectors") or [])
         if flat and locked:
@@ -268,18 +273,18 @@ def build_multi_window_envelopes(
     windows: dict[str, Any] = {}
     fuel_id = _recipe_fuel_id(calibration_recipe, fuel_id)
 
-    common = dict(
-        observed_ros_m_min=observed_ros_m_min,
-        fuel_id=fuel_id,
-        wind_10m_ms=wind_10m_ms,
-        wind_from_deg=wind_from_deg,
-        dead_fmc_pct=dead_fmc_pct,
-        dem_source=dem_source,
-        calibration_recipe=calibration_recipe,
-        weather_scenario_assumed=bool(weather_scenario_assumed),
-        head_bearing_deg=(float(wind_from_deg) + 180.0) % 360.0,
-        fire_id="tobarra_20240802",
-    )
+    common = {
+        "observed_ros_m_min": observed_ros_m_min,
+        "fuel_id": fuel_id,
+        "wind_10m_ms": wind_10m_ms,
+        "wind_from_deg": wind_from_deg,
+        "dead_fmc_pct": dead_fmc_pct,
+        "dem_source": dem_source,
+        "calibration_recipe": calibration_recipe,
+        "weather_scenario_assumed": bool(weather_scenario_assumed),
+        "head_bearing_deg": (float(wind_from_deg) + 180.0) % 360.0,
+        "fire_id": "tobarra_20240802",
+    }
     if weather_source:
         # stamp only for audit on primary window after compute
         pass
@@ -384,7 +389,12 @@ def check_pablo_perimeter_context(
         )
     )
     if envelope and (envelope.get("envelopes") or []):
-        h60 = float((envelope["envelopes"][2] if len(envelope["envelopes"]) > 2 else {}).get("head_radius_m") or 0)
+        h60 = float(
+            (envelope["envelopes"][2] if len(envelope["envelopes"]) > 2 else {}).get(
+                "head_radius_m"
+            )
+            or 0
+        )
         out.append(
             _info(
                 "envelope_vs_pablo_window",
@@ -547,9 +557,7 @@ def build_tobarra_envelope_scorecard(
     checks.extend(check_envelope_structure(primary))
     checks.extend(check_ensemble_honesty(primary))
     checks.extend(
-        check_ros_vs_anchors(
-            primary, observed_ros_m_min=observed_ros_m_min, vp_m_min=vp_m_min
-        )
+        check_ros_vs_anchors(primary, observed_ros_m_min=observed_ros_m_min, vp_m_min=vp_m_min)
     )
     checks.extend(check_multi_window_consistency(windows))
     inv = Path(pablo_inventory) if pablo_inventory else None
@@ -558,7 +566,11 @@ def build_tobarra_envelope_scorecard(
     # Weather honesty stamp
     if weather_scenario is not None:
         src = wx.source
-        if src in {"aemet", "observed"} and wx.weather_scenario_assumed and wx.fields_filled_from_defaults:
+        if (
+            src in {"aemet", "observed"}
+            and wx.weather_scenario_assumed
+            and wx.fields_filled_from_defaults
+        ):
             checks.append(
                 _info(
                     "weather_partial_station",
@@ -598,7 +610,7 @@ def build_tobarra_envelope_scorecard(
 
     return {
         "schema": SCHEMA,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "fire_id": "tobarra_20240802",
         "product": PRODUCT_V3,
         "verdict": summary["verdict"],

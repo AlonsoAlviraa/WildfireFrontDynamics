@@ -1,0 +1,665 @@
+{
+  "schema": "wfd_fire_intel_inventory_v1",
+  "scraped_at_utc": "2026-07-29T20:00:00+00:00",
+  "iteration": 3,
+  "season": 2026,
+  "countries": ["ES", "FR"],
+  "method": "normalize SenseGaps + lanes spain_news_web, france_news_web, x_twitter, satellite_open → write agent final",
+  "honesty": {
+    "no_invented_vp": true,
+    "press_ha_not_egif": true,
+    "press_ha_never_area_ha_official": true,
+    "confirmed_requires_ops_parte": true,
+    "tobarra_is_only_grade_a_gold": true,
+    "tobarra_is_only_t4": true,
+    "open_max_tier": "T2_agency_open",
+    "infocam_estimada_is_not_official": true,
+    "grade_a_requires_confirmed_anchor": true,
+    "GO_MES": false,
+    "GO_MES_reason": "second O1 confirmed anchor still OPEN (La Mierla / Cardoso parte path)"
+  },
+  "national_context": {
+    "ES": {
+      "miteco_avance_1jan_19jul_2026": {
+        "n_siniestros": 5934,
+        "n_conatos": 3948,
+        "n_incendios_ge1ha": 1986,
+        "sup_forestal_total_ha": 65753.71,
+        "sup_arbolada_ha": 13811.73,
+        "n_gif_gt500ha": 21,
+        "source_pdf": "data/fire_intel/raw/miteco_avance_19jul2026.pdf",
+        "url": "https://www.miteco.gob.es/content/dam/miteco/es/biodiversidad/temas/incendios-forestales/19_julio_2026.pdf",
+        "tier": "T2_agency_open",
+        "caveat": "CCAA provisional to 19-jul only; ongoing mega-fires NOT fully included until extinguished"
+      },
+      "press_season_late_jul": {
+        "ha_range": [90000, 152678],
+        "gif_count_press": 32,
+        "as_of": "2026-07-26",
+        "tier": "T1_press",
+        "urls": [
+          "https://www.ecoavant.com/medio-ambiente/incendios-arrasan-ya-mas-152600-hectareas-en-2026-seis-veces-mas-en-2025_17142_102.html"
+        ],
+        "note": "National totals are not per-fire EGIF anchors"
+      },
+      "effis_season_press": {
+        "ha": 123000,
+        "as_of": "2026-07-22",
+        "tier": "T1_press"
+      },
+      "effis_season_rda_proxy": {
+        "ha": 207398,
+        "lta_ha": 95246,
+        "as_of": "2026-07-29",
+        "tier": "T2_agency_open",
+        "caveat": "EFFIS ≥~30 ha forested; not EGIF"
+      }
+    },
+    "FR": {
+      "ha_season_ministry_press": 115000,
+      "evacuated_gironde_landes_press": 250000,
+      "effis_season_rda_proxy": {
+        "ha": 90527,
+        "lta_ha": 14756,
+        "tier": "T2_agency_open",
+        "caveat": "EFFIS ≥~30 ha forested; not French official BA"
+      },
+      "tier": "T1_press",
+      "note": "Ministry season aggregate only — not fire-level official"
+    }
+  },
+  "cems_activations_jul2026": [
+    {
+      "code": "EMSR898",
+      "title": "La Mierla + Selas (Guadalajara)",
+      "country": "ES",
+      "status": "ONGOING",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR898/",
+      "products_zip": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/EMSR898_products.zip",
+      "cems_max_extent_ha_proxy": 31840,
+      "linked_fire_ids": ["es_gu_la_mierla_20260716", "es_gu_selas_202607"],
+      "wfd_use": "open_if pack priority 1 (T2 perimeter proxy only); set la_mierla cems_watch → EMSR898"
+    },
+    {
+      "code": "EMSR900",
+      "title": "Wildfire in Central Spain (Brieva / Villa del Prado / La Atalaya)",
+      "country": "ES",
+      "status": "ONGOING",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR900/",
+      "products_zip": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/EMSR900_products.zip",
+      "cems_max_extent_ha_proxy": 54590,
+      "aois": {
+        "AOI01_Brieva": {"linked": "es_sg_brieva_202607", "ha_proxy": 2900},
+        "AOI02_Villa_del_Prado": {"linked": ["es_to_almorox_202607", "es_md_sierra_oeste_202607"], "ha_proxy_note": "0.7k→2.9k"},
+        "AOI03_La_Atalaya": {"linked": ["es_av_burgohondo_202607", "es_md_sierra_oeste_202607"], "monit04_ha_proxy": 44377}
+      },
+      "linked_fire_ids": [
+        "es_av_burgohondo_202607",
+        "es_md_sierra_oeste_202607",
+        "es_to_almorox_202607",
+        "es_sg_brieva_202607"
+      ],
+      "wfd_use": "open_if pack priority 1; split AOIs in manifest — do not double-count ha"
+    },
+    {
+      "code": "EMSR899",
+      "title": "Wildfire in Saumos, France (Gironde complex)",
+      "country": "FR",
+      "status": "ONGOING",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR899/",
+      "products_zip": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR899/EMSR899_products.zip",
+      "cems_max_extent_ha_proxy": 26090,
+      "linked_fire_ids": ["fr_gironde_bordeaux_202607"],
+      "wfd_use": "open_if pack; Saumos is sector of Gironde mega (merged)"
+    },
+    {
+      "code": "EMSR902",
+      "title": "Wildfire in Biscarrosse, France",
+      "country": "FR",
+      "status": "ONGOING",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR902/",
+      "products_zip": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR902/EMSR902_products.zip",
+      "cems_max_extent_ha_proxy": 2860,
+      "cems_gra_ha_proxy": 2682,
+      "linked_fire_ids": ["fr_landes_biscarrosse_202607"]
+    },
+    {
+      "code": "EMSR896",
+      "title": "Asín / Orés complex (Zaragoza)",
+      "country": "ES",
+      "status": "CLOSED",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR896/",
+      "products_zip": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/EMSR896_products.zip",
+      "cems_gra_ha_proxy": 12133,
+      "linked_fire_ids": ["es_z_ores_202607"]
+    },
+    {
+      "code": "EMSR894",
+      "title": "Fontainebleau forest",
+      "country": "FR",
+      "status": "CLOSED",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR894/",
+      "linked_fire_ids": ["fr_fontainebleau_20260713"]
+    },
+    {
+      "code": "EMSR905",
+      "title": "Plana Baixa / Vall d'Uixó (Castellón)",
+      "country": "ES",
+      "status": "ONGOING",
+      "url": "https://mapping.emergency.copernicus.eu/activations/EMSR905/",
+      "linked_fire_ids": ["es_cs_vall_duixo_espadan_202607"]
+    }
+  ],
+  "tobarra_gap_template": {
+    "fire_id": "tobarra_20240802",
+    "tier": "T4_gold_stack",
+    "has": {
+      "vp_m_min_official": 7.0,
+      "area_ha_official": 39.0,
+      "intensity_behavior": "Media-Alta / Contraviento",
+      "lwir_frames": 35,
+      "masks": 35,
+      "anchor_status": "confirmed",
+      "grade_ops": "A",
+      "perimeter_official_vector": false,
+      "kmz_flight_context": true
+    },
+    "still_missing_even_on_tobarra": ["perimeter_official_national", "tactical_15_30_60_validated"]
+  },
+  "merge_rules": {
+    "avila_madrid_toledo_complex": {
+      "keep_split_ids": [
+        "es_av_burgohondo_202607",
+        "es_md_sierra_oeste_202607",
+        "es_to_almorox_202607"
+      ],
+      "complex_press_ha_band": [66357, 77000],
+      "do_not_double_count": true,
+      "cems": "EMSR900",
+      "interest_nacional": true
+    },
+    "gironde_complex": {
+      "canonical_id": "fr_gironde_bordeaux_202607",
+      "merged_aliases": ["fr_saumos_20260722", "cap_ferret_sector"],
+      "note": "Saumos / Cap Ferret are sectors of same complex, not separate perimeters"
+    }
+  },
+  "completion_matrix": {
+    "open_intel_maxed": true,
+    "ops_gold_maxed": false,
+    "blocks_remaining": [
+      "vp_m_min_official on all mega fires",
+      "area_ha EGIF/official per fire post-extinction",
+      "LWIR multi-frame sequences",
+      "hot masks",
+      "CEMS vector download into outputs/open_if/emsr9xx"
+    ],
+    "next_automation": [
+      "python scripts/build_open_if_pack.py --activation EMSR898",
+      "python scripts/build_open_if_pack.py --activation EMSR900",
+      "python scripts/build_open_if_pack.py --activation EMSR899",
+      "update la_mierla cems_watch.json → EMSR898",
+      "wfd-external-unblock for Cardoso / La Mierla parte"
+    ]
+  },
+  "fires": [
+    {
+      "fire_id": "es_gu_la_mierla_20260716",
+      "name": "La Mierla / Sierra Norte de Guadalajara",
+      "country": "ES",
+      "region": "Castilla-La Mancha",
+      "province_or_dept": "Guadalajara",
+      "detection_utc": "2026-07-16T13:55:00",
+      "status_ops": "stabilizing",
+      "tier": "T2_agency_open",
+      "area_ha_press": 32000,
+      "area_ha_press_range": [30000, 35000],
+      "area_ha_ops_estimate_infocam": 32000,
+      "area_ha_ops_estimate_note": "INFOCAM 'superficie estimada' — not EGIF / not area_ha_official",
+      "area_ha_cems_provisional": 25600,
+      "area_ha_cems_max_extent_proxy": 31840,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR898",
+      "linked_anchor": "guadalajara_la_mierla_20260717",
+      "anchor_status": "pending_external",
+      "interest_nacional": false,
+      "notes": "INFOCAM superficie estimada 32k (not EGIF). EMSR898 CEMS proxy ~25.6–31.8k. Second O1 candidate; pending_external until parte. Cause: harvester suspected.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 1,
+      "source_urls": [
+        "https://x.com/Plan_INFOCAM/status/2080216111883129077",
+        "https://mapping.emergency.copernicus.eu/activations/EMSR898/",
+        "https://www.ecoavant.com/medio-ambiente/incendio-mierla-ya-es-mayor-ano-en-espana-con-32000-hectareas-arrasadas_17117_102.html",
+        "https://elpais.com/espana/2026-07-22/el-incendio-de-guadalajara-entra-en-fase-de-estabilizacion-tras-arrasar-mas-de-32000-hectareas.html",
+        "https://www.rtve.es/noticias/20260722/incendio-guadalajara-segundo-mayor-siglo-espana/17165175.shtml"
+      ]
+    },
+    {
+      "fire_id": "es_av_burgohondo_202607",
+      "name": "Burgohondo / Navaluenga complex (Ávila)",
+      "country": "ES",
+      "region": "Castilla y León",
+      "province_or_dept": "Ávila",
+      "status_ops": "consolidating",
+      "tier": "T2_agency_open",
+      "area_ha_press": 50000,
+      "area_ha_press_range": [45000, 55000],
+      "area_ha_complex_press_band": [66357, 77000],
+      "area_ha_cems_note": "EMSR900 AOI La Atalaya MONIT04 ~44377; activation max_extent ~54590 (all AOIs)",
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "perimeter_km_press": 180,
+      "evacuated_press": 25087,
+      "cems": "EMSR900",
+      "merged_with": ["es_md_sierra_oeste_202607", "es_to_almorox_202607"],
+      "linked_anchor": "avila_burgohondo_202607",
+      "anchor_status": "pending_external",
+      "interest_nacional": true,
+      "notes": "Press ~45–50k standalone; complex MD–AV–TO ~66–77k. EMSR900 La Atalaya. Do not double-count with Sierra Oeste. Interest nacional. Machinery imprudence alleged.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 1,
+      "source_urls": [
+        "https://elpais.com/espana/2026-07-27/mapas-datos-e-imagenes-satelitales-muestran-como-el-viento-transformo-el-incendio-de-avila-y-madrid.html",
+        "https://elpais.com/espana/2026-07-27/claves-de-los-incendios-hectareas-quemadas-desalojos-y-carreteras-cortadas.html",
+        "https://mapping.emergency.copernicus.eu/activations/EMSR900/",
+        "https://x.com/112cyl/status/2082098491010994579"
+      ]
+    },
+    {
+      "fire_id": "es_md_sierra_oeste_202607",
+      "name": "Sierra Oeste Madrid / San Martín de Valdeiglesias",
+      "country": "ES",
+      "region": "Comunidad de Madrid",
+      "province_or_dept": "Madrid",
+      "status_ops": "consolidating",
+      "tier": "T2_agency_open",
+      "area_ha_press": 19000,
+      "area_ha_press_range": [15900, 34000],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 37600,
+      "cems": "EMSR900",
+      "merged_with": "es_av_burgohondo_202607",
+      "linked_anchor": "madrid_sierra_oeste_202607",
+      "anchor_status": "pending_external",
+      "interest_nacional": true,
+      "notes": "Ops merge to single #IFSierraOeste. Press band ~16–25k common; CM portal ~34k upper outlier. Merged with Burgohondo complex for season totals.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 1,
+      "source_urls": [
+        "https://x.com/112cmadrid/status/2080621232408416275",
+        "https://www.comunidad.madrid/seguridad-emergencias-asem-112/incendio-forestal-sierra-oeste-ifsierraoeste-julio-2026",
+        "https://elpais.com/espana/2026-07-27/mapas-datos-e-imagenes-satelitales-muestran-como-el-viento-transformo-el-incendio-de-avila-y-madrid.html",
+        "https://mapping.emergency.copernicus.eu/activations/EMSR900/"
+      ]
+    },
+    {
+      "fire_id": "fr_gironde_bordeaux_202607",
+      "name": "Gironde / Saumos–Arcachon–Bordeaux (Cap Ferret sector)",
+      "country": "FR",
+      "region": "Nouvelle-Aquitaine",
+      "province_or_dept": "Gironde",
+      "status_ops": "stabilized_high_risk",
+      "tier": "T2_agency_open",
+      "area_ha_press": 42000,
+      "area_ha_press_range": [20000, 42000],
+      "area_ha_cems_provisional": 26065,
+      "area_ha_cems_max_extent_proxy": 26090,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 220000,
+      "pyrocumulonimbus_reported": true,
+      "ucpm_activated": true,
+      "cems": "EMSR899",
+      "merged_aliases": ["fr_saumos_20260722", "cap_ferret_sector"],
+      "notes": "Saumos/Cap Ferret merged into this id. Press high-water ~42k; CEMS EMSR899 ~26k proxy. Evac ~220k Gironde. UCPM + pyrocumulonimbus press narrative.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector",
+        "wfd_fr_pipeline"
+      ],
+      "priority_for_wfd": 1,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR899/",
+        "https://x.com/anadolufrancais/status/2082380607858901436",
+        "https://en.wikipedia.org/wiki/2026_France_wildfires"
+      ]
+    },
+    {
+      "fire_id": "es_cs_vall_duixo_espadan_202607",
+      "name": "La Vall d'Uixó / Sierra de Espadán (Castellón)",
+      "country": "ES",
+      "region": "Comunitat Valenciana",
+      "province_or_dept": "Castellón",
+      "status_ops": "active",
+      "tier": "T2_agency_open",
+      "area_ha_press": 10000,
+      "area_ha_press_range": [4300, 10000],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 16000,
+      "cems": "EMSR905",
+      "linked_anchor": "castellon_vall_duixo_202607",
+      "anchor_status": "pending_external",
+      "notes": "Press band ~4.3–10k; >16k evacuated. EMSR905 Plana Baixa.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 2,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR905/",
+        "https://x.com/copecastellon/status/2082377979951251817",
+        "https://elpais.com/espana/2026-07-26/ultima-hora-de-los-incendios-forestales-en-directo.html"
+      ]
+    },
+    {
+      "fire_id": "fr_landes_biscarrosse_202607",
+      "name": "Landes / Biscarrosse",
+      "country": "FR",
+      "region": "Nouvelle-Aquitaine",
+      "province_or_dept": "Landes",
+      "status_ops": "contained_residual_risk",
+      "tier": "T2_agency_open",
+      "area_ha_press": 3500,
+      "area_ha_press_range": [3500, 3600],
+      "area_ha_cems_provisional": 2682,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 37000,
+      "cems": "EMSR902",
+      "notes": "Separate from Gironde accounting. Press ~3.5–3.6k; CEMS GRA ~2.7k. Evac peak ~30–37k.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 2,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR902/",
+        "https://rapidmapping.emergency.copernicus.eu/backend/EMSR902/EMSR902_products.zip"
+      ]
+    },
+    {
+      "fire_id": "es_to_almorox_202607",
+      "name": "Almorox (Toledo) — Madrid complex interface",
+      "country": "ES",
+      "region": "Castilla-La Mancha",
+      "province_or_dept": "Toledo",
+      "status_ops": "consolidating",
+      "tier": "T2_agency_open",
+      "area_ha_press": 1000,
+      "area_ha_press_range": [890, 2000],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR900",
+      "merged_with": "es_md_sierra_oeste_202607",
+      "interest_nacional": true,
+      "notes": "Secondary focus of Sierra Oeste / EMSR900 Villa del Prado AOI. Do not double-count ha.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 2,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR900/",
+        "https://www.infobae.com/espana/2026/07/23/el-incendio-en-almorox-toledo-baja-a-nivel-1-tras-quedar-perimetrado-el-fuego-ha-quemado-1000-hectareas/"
+      ]
+    },
+    {
+      "fire_id": "es_z_ores_202607",
+      "name": "Orés / Cinco Villas (Zaragoza; Luesia in rankings)",
+      "country": "ES",
+      "region": "Aragón",
+      "province_or_dept": "Zaragoza",
+      "status_ops": "controlled",
+      "tier": "T2_agency_open",
+      "area_ha_press": 15400,
+      "area_ha_press_range": [15045, 16000],
+      "area_ha_cems_provisional": 12133,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR896",
+      "notes": "Press provisional 15.4–16k controlled. EMSR896 closed GRA ~12.1k proxy.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 3,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR896/",
+        "https://x.com/salguero_tv/status/2081828880638226880",
+        "https://www.lasexta.com/noticias/sociedad/incendio-ores-avanza-flanco-izquierdo-calcina-15400-hectareas_202607186a5b326e1db8de040995a277.html"
+      ]
+    },
+    {
+      "fire_id": "es_sg_brieva_202607",
+      "name": "Brieva (Segovia)",
+      "country": "ES",
+      "region": "Castilla y León",
+      "province_or_dept": "Segovia",
+      "status_ops": "consolidating",
+      "tier": "T2_agency_open",
+      "area_ha_press": null,
+      "area_ha_cems_provisional": 2900,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR900",
+      "notes": "Press ha null. EMSR900 AOI01 CEMS ~2.9–3.0k proxy only — not the 50k Ávila claim.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "area_ha_press",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 3,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR900/"
+      ]
+    },
+    {
+      "fire_id": "fr_fontainebleau_20260713",
+      "name": "Fontainebleau forest (Seine-et-Marne)",
+      "country": "FR",
+      "region": "Île-de-France",
+      "province_or_dept": "Seine-et-Marne",
+      "status_ops": "contained",
+      "tier": "T2_agency_open",
+      "area_ha_press": 2000,
+      "area_ha_press_range": [1900, 2050],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR894",
+      "notes": "Press ~1.9–2.05k contained mid-Jul. EMSR894 closed pack.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 3,
+      "source_urls": [
+        "https://mapping.emergency.copernicus.eu/activations/EMSR894/",
+        "https://en.wikipedia.org/wiki/2026_France_wildfires"
+      ]
+    },
+    {
+      "fire_id": "es_gu_selas_202607",
+      "name": "Selas (Guadalajara)",
+      "country": "ES",
+      "region": "Castilla-La Mancha",
+      "province_or_dept": "Guadalajara",
+      "status_ops": "extinguished",
+      "tier": "T2_agency_open",
+      "area_ha_press": 2800,
+      "area_ha_press_range": [1700, 2800],
+      "area_ha_cems_provisional": 2502,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "cems": "EMSR898",
+      "notes": "Extinguished 2026-07-27. Press path 1.7→2.8k. EMSR898 AOI02 GRA ~2502.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 4,
+      "source_urls": [
+        "https://www.infobae.com/espana/agencias/2026/07/27/extinguido-el-incendio-forestal-de-selas-guadalajara-que-afecto-a-unas-2800-hectareas/",
+        "https://mapping.emergency.copernicus.eu/activations/EMSR898/"
+      ]
+    },
+    {
+      "fire_id": "fr_aude_herault_20260702",
+      "name": "Aude / Hérault early July Mediterranean wave",
+      "country": "FR",
+      "region": "Occitanie",
+      "status_ops": "unknown",
+      "tier": "T1_press",
+      "area_ha_press": null,
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 3000,
+      "ucpm_activated": true,
+      "notes": "No clean single-fire ha; multi-fire coast totals not assigned here. UCPM#1 wave. Evac package ~3k.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "area_ha_press",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 4,
+      "source_urls": [
+        "https://en.wikipedia.org/wiki/2026_France_wildfires"
+      ]
+    },
+    {
+      "fire_id": "es_te_ejulve_202607",
+      "name": "Ejulve (Teruel; + Cerollera late press)",
+      "country": "ES",
+      "region": "Aragón",
+      "province_or_dept": "Teruel",
+      "status_ops": "controlled",
+      "tier": "T1_press",
+      "area_ha_press": 3000,
+      "area_ha_press_range": [1400, 3000],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "notes": "Updated from early ~1.4k to late provisional ~3k controlled. No CEMS; thin sources.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 5,
+      "source_urls": [
+        "https://x.com/salguero_tv/status/2081828880638226880",
+        "https://www.aragondigital.es/articulo/medio-ambiente/incendios-ejulve-cerollera-quedan-controlados-arrasar-mas-3000-hectareas/20260729095141998793.html"
+      ]
+    },
+    {
+      "fire_id": "fr_cotignac_var_202607",
+      "name": "Cotignac / Pontevès (Var)",
+      "country": "FR",
+      "region": "Provence-Alpes-Côte d'Azur",
+      "province_or_dept": "Var",
+      "status_ops": "contained",
+      "tier": "T1_press",
+      "area_ha_press": 2700,
+      "area_ha_press_range": [2500, 2700],
+      "area_ha_official": null,
+      "vp_m_min_official": null,
+      "evacuated_press": 400,
+      "notes": "Promoted T0→T1_press. Press ~2.5–2.7k contained. No dedicated CEMS.",
+      "gaps_vs_tobarra": [
+        "vp_m_min_official",
+        "area_ha_official",
+        "intensity_behavior",
+        "lwir_geotiff_seq",
+        "masks",
+        "perimeter_official_vector"
+      ],
+      "priority_for_wfd": 5,
+      "source_urls": [
+        "https://en.wikipedia.org/wiki/2026_France_wildfires"
+      ]
+    }
+  ],
+  "top_priority_ids": [
+    "es_gu_la_mierla_20260716",
+    "es_av_burgohondo_202607",
+    "es_md_sierra_oeste_202607",
+    "fr_gironde_bordeaux_202607"
+  ],
+  "summary": "Normalized 14 ES/FR mega-fires (max 20). Tobarra remains only T4 gold (Vp 7.0, ha 39). All mega entries keep area_ha_official and vp_m_min_official null; press ha provisional only. Merged Saumos into Gironde; kept Ávila–Madrid split with complex 66–77k band. Cotignac T0→T1 (~2.7k); Ejulve press ~3k; Selas ~2.8k extinguished. CEMS 898/900/899/902/896/894/905 enable T2 open perimeter proxy only. GO_MES false — second confirmed O1 anchor still open.",
+  "next_action": "Build open_if packs from CEMS API ZIPs for EMSR898 (La Mierla/Selas), EMSR900 (Ávila–Madrid–Brieva), EMSR899 (Gironde); set la_mierla cems_watch→EMSR898; scrape INFOCAM/CyL/CM partes for closed ha — never fill vp_m_min_official without explicit ops parte quote. Human O1: Cardoso + La Mierla Vp/ha.",
+  "data_we_still_lack_everywhere_except_tobarra": [
+    "vp_m_min from operational parte (O1)",
+    "area_ha EGIF / official CCAA or French official BA per fire",
+    "LWIR multi-frame geotiff sequences",
+    "hot masks aligned to LWIR",
+    "official perimeter vector for Hausdorff O2 (CEMS is proxy only)"
+  ],
+  "open_proxy_paths_now": [
+    "CEMS EMSR898/900/899/902/896/894/905 product ZIPs",
+    "MITECO avance PDF (national T2)",
+    "EFFIS RDA / season estimates",
+    "INFOCAM superficie estimada La Mierla (ops estimate, not official)",
+    "FIRMS hotspots"
+  ]
+}

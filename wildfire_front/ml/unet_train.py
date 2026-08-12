@@ -61,6 +61,10 @@ class UNetTrainConfig:
     eval_thresholds: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6)
     primary_threshold: float = 0.5
     init_weights_path: str | None = None
+    # If False, allow partial / channel-mapped warm-start (schema bridge).
+    # Prefer exporting a full spatial state_dict via schema_bridge.export_spatial_init_from_multi_if.
+    init_weights_strict: bool = True
+    device: str | None = None  # "cpu" | "cuda" | None (auto via select_device)
 
 
 def prepare_input(sequence: torch.Tensor, current_fire: torch.Tensor) -> torch.Tensor:
@@ -551,7 +555,14 @@ def run_training(config: UNetTrainConfig) -> dict:
     train_loader, val_loader, test_loader, _, train_ds, val_ds, test_ds = build_dataloaders(config)
     log(f"Dataset sizes -> train={len(train_ds)} val={len(val_ds)} test={len(test_ds)}")
 
-    device, use_amp = select_device()
+    if (config.device or "").lower() == "cpu":
+        device, use_amp = torch.device("cpu"), False
+    elif (config.device or "").lower() == "cuda":
+        device, use_amp = select_device()
+        if device.type != "cuda":
+            log("[WARN] --device cuda requested but CUDA unavailable; using CPU")
+    else:
+        device, use_amp = select_device()
     if device.type == "cuda":
         log(f"GPU: {torch.cuda.get_device_name(0)}")
     else:
@@ -563,9 +574,26 @@ def run_training(config: UNetTrainConfig) -> dict:
     if config.init_weights_path:
         init_path = Path(config.init_weights_path)
         if init_path.is_file():
-            state = torch.load(init_path, map_location=device, weights_only=True)
-            model.load_state_dict(state, strict=True)
-            log(f"Warm-started from {init_path}")
+            state = torch.load(init_path, map_location=device, weights_only=False)
+            # Unwrap common wrappers
+            if isinstance(state, dict):
+                if "model" in state and isinstance(state["model"], dict):
+                    state = state["model"]
+                elif "state_dict" in state and isinstance(state["state_dict"], dict):
+                    state = state["state_dict"]
+                if isinstance(state, dict):
+                    state = {str(k).replace("module.", ""): v for k, v in state.items()}
+            strict = bool(getattr(config, "init_weights_strict", True))
+            incompat = model.load_state_dict(state, strict=strict)
+            if strict:
+                log(f"Warm-started from {init_path} (strict)")
+            else:
+                n_miss = len(getattr(incompat, "missing_keys", []) or [])
+                n_unexp = len(getattr(incompat, "unexpected_keys", []) or [])
+                log(
+                    f"Warm-started from {init_path} (strict=False "
+                    f"missing={n_miss} unexpected={n_unexp})"
+                )
         else:
             log(f"[WARN] init_weights_path missing: {init_path}")
     n_params = count_parameters(model)
@@ -699,7 +727,7 @@ def run_training(config: UNetTrainConfig) -> dict:
                 "copy_baseline_iou": copy_iou,
             }
         )
-        history_file.write_text(json.dumps(history, indent=2))
+        history_file.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
         if score > best_score:
             best_score = score
@@ -749,9 +777,9 @@ def run_training(config: UNetTrainConfig) -> dict:
     }
 
     summary_path = output_dir / "training_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2, default=str))
+    summary_path.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
     (output_dir / "evaluation_metrics.json").write_text(
-        json.dumps(test_results, indent=2, default=str)
+        json.dumps(test_results, indent=2, default=str), encoding="utf-8"
     )
 
     log(f"Copy baseline IoU: {summary['copy_baseline_iou']:.4f}")

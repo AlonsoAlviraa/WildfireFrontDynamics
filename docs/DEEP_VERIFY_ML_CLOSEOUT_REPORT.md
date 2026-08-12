@@ -1,0 +1,63 @@
+# Deep-verify report — ML lab closeout
+
+- **method:** deterministic_stamp_check
+- **checked_utc:** 2026-08-11T05:05:15.960099+00:00
+- **total:** 16
+- **supported:** 16
+- **contradicted:** 0
+- **unverifiable:** 0
+- **decision:** `FREEZE_ML_AND_REQUEST_DATA`
+- **field_ops_fusion:** OFF
+- **go_q_invent:** False (must stay false)
+
+## Claims
+
+- **c1** [OK/supported]: ML closeout decision stamp exists at outputs/ml_eval/lab_loop/ML_CLOSEOUT_DECISION.json
+  - evidence: exists size=7430
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json`
+- **c2** [OK/supported]: ML closeout decision is FREEZE_ML_AND_REQUEST_DATA
+  - evidence: decision='FREEZE_ML_AND_REQUEST_DATA'
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json`
+- **c3** [OK/supported]: ML closeout stamp has met true
+  - evidence: met=True
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json`
+- **c4** [OK/supported]: field_ops_allow_ml_live_in_fusion is false (field fusion OFF)
+  - evidence: rails.field_ops_allow_ml_live_in_fusion=False
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#rails`
+- **c5** [OK/supported]: iou_is_not_ros is true on ML closeout rails
+  - evidence: rails.iou_is_not_ros=True
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#rails`
+- **c6** [OK/supported]: ml_product_go true is lab-only (lab_only rail true, fusion off)
+  - evidence: ml_product_go=True lab_only=True
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#rails`
+- **c7** [OK/supported]: tobarra_keep_reopen is false (KEEP KILL held)
+  - evidence: tobarra_keep_reopen=False
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#rails`
+- **c8** [OK/supported]: Sealed champion is exact_force_ema_long with mean ~0.7878
+  - evidence: config_id='exact_force_ema_long' mean=0.7877704721329809
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#champions_freeze.sealed_product_lofo`
+- **c9** [OK/supported]: Weather era5_long path is present as frozen lab champion (not field fusion)
+  - evidence: weather_keys=['sealed_product_lofo', 'weather_spatial_lab'] weather={'config_id': 'era5_long', 'experiment_id': 'E_spatial_v1_era5_long', 'work_class': 'feature_spatial_v1+weather_era5_land+bridge_init+long', 'feature_schema': 'spatial_v1', 'weather_provenance': 'era5_land_cds_v1', 'mean': 0.5762419848161516}
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#champions_freeze`
+- **c10** [OK/supported]: Kill list blocks Tobarra KEEP reopen and larger U-Net thrash
+  - evidence: kill_blob_snip='open_meteo_as_primary_weather_path multi_fire_spatial_hellin_braz_fill_without_clean_runner_and_qa full_core3_finetune_from_long_without_nonregression_kill same_holdout_ece_or_logistic_refit_thrash to' larger_unet_default=False
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json`
+- **c11** [OK/supported]: GOAL_ML_CLOSEOUT.md defines FREEZE / REQUEST_DATA / CEILING
+  - evidence: goal_doc_exists=True has_freeze=True
+  - source: `docs\GOAL_ML_CLOSEOUT.md`
+- **c12** [OK/supported]: ML_CLOSEOUT_CHECKER.json met true for freeze decision
+  - evidence: checker_met=True decision='FREEZE_ML_AND_REQUEST_DATA'
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_CHECKER.json`
+- **c13** [OK/supported]: CURRENT_STATE documents freeze closeout and fusion OFF
+  - evidence: current_has_freeze_or_request=True fusion_off_mentions=True
+  - source: `docs\CURRENT_STATE.md`
+- **c14** [OK/supported]: Closeout ceiling rules reject unbacked +0.05 sealed claims
+  - evidence: goal/decision mention +0.05 ceiling rules
+  - source: `docs\GOAL_ML_CLOSEOUT.md`
+- **c15** [OK/supported]: ml_product_go true does not authorize field fusion ON
+  - evidence: lab go true with fusion false
+  - source: `outputs\ml_eval\lab_loop\ML_CLOSEOUT_DECISION.json#rails`
+- **c16** [OK/supported]: VERIFY_PACK_ML_CLOSEOUT.md exists
+  - evidence: pack=C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics\docs\VERIFY_PACK_ML_CLOSEOUT.md
+  - source: `docs\VERIFY_PACK_ML_CLOSEOUT.md`
+

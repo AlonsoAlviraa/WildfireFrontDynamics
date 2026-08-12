@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-acom2-curriculum-sib3",
+  "title": "WFD ACOM2 Curriculum Sib3",
+  "code_file": "run_acom2_curriculum_sib3.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-acom2-curriculum-sib3"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

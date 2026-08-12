@@ -5,6 +5,7 @@ Covers collapsed PR-6 + 8 + 9 + 10 without live network.
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import json
 import subprocess
@@ -13,8 +14,6 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-
 from wildfire_front.emergency_products import compute_short_horizon_envelope
 from wildfire_front.fuel.envelope import PRODUCT_V3, compute_hybrid_envelope
 from wildfire_front.fuel.envelope_scorecard import (
@@ -22,11 +21,11 @@ from wildfire_front.fuel.envelope_scorecard import (
     build_tobarra_envelope_scorecard,
 )
 from wildfire_front.fuel.weather import (
-    WeatherScenario,
     merge_weather_drivers,
     weather_scenario_from_aemet_daily,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
 
 _RAW_AEMET = {
     "fecha": "2024-08-02",
@@ -74,7 +73,7 @@ class TestAemetToEnvelope:
         assert heads[0] < heads[1] < heads[2]
         assert abs(heads[0] - 5.71 * 15) < 0.1
         # ensemble head flat under obs lock
-        band = (env.get("ensemble") or {}).get("hybrid") or env.get("ensemble_meta") or {}
+        (env.get("ensemble") or {}).get("hybrid") or env.get("ensemble_meta") or {}
         assert env["ensemble_meta"]["enabled"] is True
         # find flat head in ensemble meta or nested rings
         obs_locked = env["ensemble_meta"].get("obs_locked_sectors") or []
@@ -217,7 +216,5 @@ class TestPipelineScript:
         assert score["counts"]["fail"] == 0
         assert score.get("weather_drivers_merge", {}).get("source") == "aemet"
         # cleanup test artifact
-        try:
+        with contextlib.suppress(OSError):
             out.unlink(missing_ok=True)
-        except OSError:
-            pass

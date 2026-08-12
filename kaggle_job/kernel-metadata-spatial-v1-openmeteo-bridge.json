@@ -1,0 +1,17 @@
+{
+  "id": "alonsoalviraaaa/wfd-spatial-v1-openmeteo-bridge",
+  "title": "WFD Spatial V1 OpenMeteo Bridge",
+  "code_file": "run_spatial_v1_openmeteo_bridge.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-spatial-openmeteo-lofo-20260807",
+    "alonsoalviraaaa/wfd-spatial-bridge-init-weights"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

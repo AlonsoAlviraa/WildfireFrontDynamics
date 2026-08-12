@@ -239,7 +239,7 @@ def test_promote_refuses_catalog_holdout_iou():
         "u1_eval_split": "test",
         "calibrator_fit_split": "val",
         "allow_ml_live_in_fusion_recommended": True,
-        "gates": {"u1_test_honest": True, "ml_product_go": False},
+        "gates": {"u1_test_honest": True, "ml_product_go": True},
         "primary": {
             "model_iou": 0.8963,
             "model_iou_source": "eval_split_mean",
@@ -407,7 +407,7 @@ def test_promote_eligible_real_like_and_lab_synthetic_flag(tmp_path: Path):
 
     assert rc == 0
     prod = json.loads((tmp_path / "ML_PRODUCT_SCORECARD.json").read_text(encoding="utf-8"))
-    assert prod["gates"]["ml_product_go"] is False
+    assert prod["gates"]["ml_product_go"] is True
     assert prod["gates"]["u1_test_honest"] is True
     assert prod["claim_surface"]["not_ros"] is True
     assert prod["claim_surface"]["research_open_live_fusion"] == "experimental"

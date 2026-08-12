@@ -1,5 +1,8 @@
 # Plan de programación — post Sprint 1 (2026-07-24, tarde)
 
+> **Histórico (snapshot 24-jul).** Estado vivo: [`PROJECT_STATUS.md`](PROJECT_STATUS.md) · graph v2: `.grok/graph_engineering/STATE.md`.  
+> Sprint 0–1 y piloto honesty **cerrados**; el cuello de botella desde 29-jul es **O1 + demo tercero**, no CI.
+
 | Campo | Valor |
 |-------|--------|
 | **Fuentes** | Gmail re-leído (inbox + hilos incendios jun–jul 2026); repo `main` @ `573fa7a` |

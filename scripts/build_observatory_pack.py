@@ -74,6 +74,12 @@ DEFAULT_FIRES: list[FireSpec] = [
         masks=ROOT / "artifacts" / "hellin_2024_lwir_masks",
         sensor_id="lwir_drone",
         estimated_error_m=2.0,
+        infocam_vp_m_min=50.0,
+        infocam_area_ha=100.0,
+        notes=(
+            "INFOCAM UNAP boletin 2024-07-20: Vp media 50 m/min, 100 ha* "
+            "(estimada no oficial); confirmed anchor 2026-08-03"
+        ),
     ),
     FireSpec(
         fire_id="la_estrella_acom1_2024",

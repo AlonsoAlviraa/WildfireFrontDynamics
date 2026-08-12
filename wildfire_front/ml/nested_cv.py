@@ -1,11 +1,32 @@
-"""VAL-only nested CV for Head A uncertainty calibration (honest within-VAL metrics).
+"""VAL-only nested CV — calibrator-fit stage of the product facade path.
+
+Product ROI architecture (lab ML rail; no retrain)
+--------------------------------------------------
+Single product path (orchestration in ``product_facade``)::
+
+    features → calibrator (this module: VAL nested fit) → conf
+      → rank/reject thr (``rank_reject_protocol.select_thr_val_only``)
+      → scorecard
+
+Authority split (no parallel thr path)
+--------------------------------------
+* **This module** — VAL nested **calibrator** fit / L2 / logistic ECE diagnostics
+  only (``val_nested_fit``). Never retunes reject thr on TEST / LOFO / external.
+* **rank_reject_protocol.select_thr_val_only** — sole VAL thr selection for
+  reject / CRC-lite (not reimplemented here).
+* **product_facade** — dual rails + default surface freeze **iter1_reject_only**
+  (locked thr ≈ 0.795); ``ml_product_go`` true; field fusion **OFF**; IoU ≠ ROS.
+* Multi-fire honesty first-class (Tobarra hard KILL; W3 external / LOFO
+  report-only with frozen thr/cal).
+* Dead thrash closed: same-holdout ECE retune; Tobarra KEEP reopen of KILL weights.
 
 Protocol rails
 --------------
 * Only callable with ``SplitContext(split='val', action in
   {'fit_uncertainty','calibrate'})``.
-* Never accepts test/lofo context. Nested metrics are lab diagnostics on VAL;
-  fusion promote still requires frozen-calibrator U1 on **TEST**.
+* Never accepts test / lofo / external context for fit. Nested metrics are lab
+  diagnostics on VAL; fusion promote still requires frozen-calibrator U1 on
+  **TEST** (report only).
 
 Two-stage preferred protocol (honesty protocol **b**)
 -----------------------------------------------------
@@ -14,7 +35,8 @@ Two-stage preferred protocol (honesty protocol **b**)
    for Platt/temperature inside nested scoring).
 2. Final calibrator (fit script): logistic on VAL-inner + optional temperature/Platt
    on a **post-nested** VAL outer holdout (or full-VAL logistic if second_stage=none).
-3. Evaluate on TEST frozen (``eval_ml_uncertainty_u1.py``) — never fit on TEST.
+3. Reject thr via ``select_thr_val_only`` (VAL only) or frozen iter1 surface from
+   ``product_facade``; evaluate on TEST / LOFO / W3 frozen — never fit thr/cal there.
 
 ``second_stage`` on nested is retained only as a **label of intended final-fit
 post-hoc**; it does **not** change nested outer scoring (avoids same-outer optimism).
@@ -23,14 +45,46 @@ post-hoc**; it does **not** change nested outer scoring (avoids same-outer optim
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 
+from wildfire_front.ml.product_facade import (
+    DEAD_PATHS as FACADE_DEAD_PATHS,
+)
+from wildfire_front.ml.product_facade import (
+    DEFAULT_MULTI_FIRE,
+    DEFAULT_RAILS,
+    DEFAULT_RANK_REJECT,
+    ITER1_LOCKED_REJECT_THR,
+    RECOMMENDED_LAB_SURFACE,
+    ProductFacadeError,
+    assert_lab_rails,
+    refuse_dead_path,
+)
 from wildfire_front.ml.protocol_rails import (
+    FORBIDDEN_THRASH_PATHS,
+    LAB_ML_BANNER,
+    MULTI_FIRE_HONESTY,
+    THR_TUNE_SPLIT,
     ProtocolRailError,
     SplitContext,
+    assert_not_forbidden_thrash,
     assert_split_context,
+    multi_fire_honesty_dict,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    DEFAULT_REJECT_THR,
+    LOCKED_ITER1_THR,
+    frozen_thr_from_val_selection,
+    protocol_payload,
+    select_thr_val_only,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    lab_rails as protocol_lab_rails,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    multi_fire_honesty as protocol_multi_fire_honesty,
 )
 from wildfire_front.ml.reliability_metrics import (
     ece_patch_conf,
@@ -49,29 +103,224 @@ DEFAULT_L2_GRID: tuple[float, ...] = (1e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1.0)
 DEFAULT_N_FOLDS = 5
 DEFAULT_SEED = 42
 
+# Pipeline module ids (single path — not parallel thr authority).
+_FACADE: Final = "wildfire_front.ml.product_facade"
+_RANK_REJECT: Final = "wildfire_front.ml.rank_reject_protocol"
+_PIPELINE: Final = "features→calibrator→rank/reject→scorecard"
+
+# Nested VAL fit = calibrator hyperparam / ECE authority only (not reject thr).
+NESTED_FIT_AUTHORITY: Final = "val_nested_fit"
+# Reject thr authority is shared protocol (VAL-only); surface freeze is facade.
+THR_SELECT_AUTHORITY: Final = "rank_reject_protocol.select_thr_val_only"
+# Back-compat alias: cal fit + thr both VAL-only; thr math is select_thr_val_only.
+THR_CALIBRATE_SPLIT: Final = THR_TUNE_SPLIT  # always "val"
+LOCKED_REJECT_THR: Final = float(ITER1_LOCKED_REJECT_THR)  # facade / protocol freeze
+RECOMMENDED_SURFACE: Final = str(RECOMMENDED_LAB_SURFACE)  # iter1_reject_only
+ALLOWED_NESTED_ACTIONS: Final[frozenset[str]] = frozenset({"fit_uncertainty", "calibrate"})
+# Splits that may only *report* frozen thr/cal — never nest-fit or retune.
+REPORT_ONLY_SPLITS: Final[frozenset[str]] = frozenset({"test", "lofo", "external"})
+
 HONEST_NESTED_ECE_NOTE = (
     "nested_val_ece_mean is logistic-only ECE on outer folds "
     "(outer never used for that fold's logistic fit; second_stage not fit on outer). "
     "Platt/temperature is fit only post-nested on a VAL outer holdout for the final "
-    "calibrator. Still not TEST; promote requires u1_test_honest on frozen cal."
+    "calibrator. Reject thr is rank_reject_protocol.select_thr_val_only (VAL only) "
+    "or product_facade iter1_reject_only freeze — never retune thr/cal on "
+    "TEST/LOFO/external; promote requires u1_test_honest on frozen cal."
+)
+
+# Explicitly closed via this stage (facade + protocol_rails + nested fit seals).
+NESTED_DEAD_PATHS: Final[frozenset[str]] = (
+    frozenset(FORBIDDEN_THRASH_PATHS)
+    | frozenset(FACADE_DEAD_PATHS)
+    | frozenset(
+        {
+            "same_holdout_ece_retune",
+            "ece_posthoc_same_test",
+            "nested_fit_on_test",
+            "nested_fit_on_lofo",
+            "nested_fit_on_external",
+            "lofo_thr_retune",
+            "test_thr_retune",
+            "tobarra_keep_reopen_kill_weights",
+            "tobarra_keep_reopen_same_recipe",
+            "ml_product_go_auto_flip",
+            "field_ops_fusion_auto_on",
+            "auto_ml_product_go",
+            "field_ops_ml_live_fusion_on",
+        }
+    )
 )
 
 
+def nested_protocol_rails() -> dict[str, Any]:
+    """Canonical dual-product rails via product_facade (nested cal-fit stage).
+
+    Reject thr selection is **not** owned here — see
+    ``rank_reject_protocol.select_thr_val_only`` / ``protocol_payload``.
+    Surface freeze is product_facade ``iter1_reject_only``.
+    """
+    r = assert_lab_rails(DEFAULT_RAILS)
+    base = r.as_dict()
+    thr = float(LOCKED_REJECT_THR)
+    base.update(
+        {
+            "banner": LAB_ML_BANNER,
+            "product_rail": "lab_ml",
+            "ops_rail": "field_ops",
+            "iou_is_not_ros": True,
+            "ml_product_go": True,
+            "field_ops_allow_ml_live_in_fusion": False,
+            "field_ops_ml_live_fusion": "OFF",
+            # Calibrator fit authority (this module); thr select is rank_reject.
+            "calibrate_authority": NESTED_FIT_AUTHORITY,
+            "thr_select_authority": THR_SELECT_AUTHORITY,
+            "thr_calibrate_authority": NESTED_FIT_AUTHORITY,  # cal-fit; thr via select
+            "thr_calibrate_split": THR_CALIBRATE_SPLIT,
+            "val_only_threshold_selection": True,
+            "recommended_lab_surface": RECOMMENDED_SURFACE,
+            "locked_reject_thr": thr,
+            "stop_ece_thrash_on_same_test": True,
+            "tobarra_keep_reopen_forbidden": True,
+            "report_only_splits": sorted(REPORT_ONLY_SPLITS),
+            "dead_paths": sorted(NESTED_DEAD_PATHS),
+            "pipeline": _PIPELINE,
+            "product_facade": _FACADE,
+            "rank_reject_protocol": _RANK_REJECT,
+            "rank_reject": protocol_payload(locked_reject_thr=thr),
+            "rank_reject_config": DEFAULT_RANK_REJECT.as_dict(),
+            "protocol_lab_rails": protocol_lab_rails(),
+            "multi_fire_honesty": {
+                **multi_fire_honesty_dict(),
+                **protocol_multi_fire_honesty(),
+                **DEFAULT_MULTI_FIRE.as_dict(),
+            },
+        }
+    )
+    return base
+
+
+def select_reject_thr_val_only(
+    conf: np.ndarray | Sequence[float],
+    ious: np.ndarray | Sequence[float],
+    *,
+    risk_alpha: float = 0.15,
+    thr_grid: Sequence[float] | None = None,
+) -> dict[str, Any]:
+    """VAL-only reject thr — delegates to rank_reject_protocol (no parallel thr).
+
+    Nested CV does **not** retune thr on outer folds. Call this after a frozen
+    (or final VAL-fit) calibrator produces confidences, or use the product
+    facade surface freeze thr (``LOCKED_REJECT_THR`` / iter1_reject_only).
+    """
+    return select_thr_val_only(
+        np.asarray(conf, dtype=np.float64),
+        np.asarray(ious, dtype=np.float64),
+        risk_alpha=risk_alpha,
+        thr_grid=thr_grid,
+        split="val",
+    )
+
+
+def frozen_reject_thr_from_val(
+    selection: dict[str, Any] | None = None,
+    *,
+    fallback: float | None = None,
+) -> float:
+    """Extract thr from VAL selection or default product_facade iter1 freeze."""
+    fb = float(fallback) if fallback is not None else float(LOCKED_REJECT_THR)
+    if selection is None:
+        return fb
+    return float(frozen_thr_from_val_selection(selection, fallback=fb))
+
+
+def assert_no_nested_retune_on_report_split(split: str) -> None:
+    """Refuse calibrator nested-fit / thr retune on test, LOFO, or external."""
+    s = str(split).strip().lower()
+    if s in REPORT_ONLY_SPLITS:
+        raise ProtocolRailError(
+            f"nested cal-fit / thr retune refused on split={split!r} "
+            f"(calibrate_authority={NESTED_FIT_AUTHORITY!r}; "
+            f"thr_select_authority={THR_SELECT_AUTHORITY!r}; "
+            f"{s} is report-only with frozen thr/cal)"
+        )
+    if s != THR_CALIBRATE_SPLIT:
+        raise ProtocolRailError(
+            f"nested cal-fit requires split={THR_CALIBRATE_SPLIT!r}, got {split!r}"
+        )
+
+
 def assert_val_nested_context(split_context: SplitContext) -> None:
-    """Hard rails: nested fit/eval only on VAL calibrate/fit_uncertainty."""
+    """Hard rails: nested fit/eval only on VAL calibrate/fit_uncertainty.
+
+    Calibrator-fit gate only — reject thr is ``select_thr_val_only`` (VAL) or
+    facade surface freeze. No test/LOFO/external retune; no dead thrash reopen.
+    """
     if not isinstance(split_context, SplitContext):
         raise TypeError("split_context must be a SplitContext instance")
     assert_split_context(split_context)
+    assert_no_nested_retune_on_report_split(str(split_context.split))
     if str(split_context.split) != "val":
         raise ProtocolRailError(
             f"val_nested_fit_eval only allows split=val, got {split_context.split!r} "
-            "(never nested-fit on test/lofo)"
+            "(never nested-fit on test/lofo/external; cal-fit is VAL-only; "
+            "thr is rank_reject_protocol.select_thr_val_only or facade freeze)"
         )
-    if str(split_context.action) not in ("fit_uncertainty", "calibrate"):
+    if str(split_context.action) not in ALLOWED_NESTED_ACTIONS:
         raise ProtocolRailError(
             f"val_nested_fit_eval requires action in "
-            f"{{'fit_uncertainty','calibrate'}}, got {split_context.action!r}"
+            f"{sorted(ALLOWED_NESTED_ACTIONS)!r}, got {split_context.action!r}"
         )
+    # Close dead thrash ids if a caller smuggles them as protocol labels.
+    proto = str(getattr(split_context, "protocol", "") or "")
+    if proto:
+        key = proto.strip().lower().replace("-", "_").replace(" ", "_")
+        if key in NESTED_DEAD_PATHS:
+            try:
+                refuse_dead_path(key)
+            except ProductFacadeError as exc:
+                raise ProtocolRailError(str(exc)) from exc
+            assert_not_forbidden_thrash(key)
+
+
+def _nested_authority_block() -> dict[str, Any]:
+    """Compact authority + facade/protocol surface for metrics / provenance."""
+    mf = MULTI_FIRE_HONESTY
+    facade_mf = DEFAULT_MULTI_FIRE.as_dict()
+    thr = float(LOCKED_REJECT_THR)
+    return {
+        "calibrate_authority": NESTED_FIT_AUTHORITY,
+        "thr_select_authority": THR_SELECT_AUTHORITY,
+        # Back-compat: cal-fit authority name (thr is select_thr_val_only).
+        "thr_calibrate_authority": NESTED_FIT_AUTHORITY,
+        "thr_calibrate_split": THR_CALIBRATE_SPLIT,
+        "val_only": True,
+        "no_test_lofo_retune": True,
+        "second_stage_in_nested_scoring": False,
+        "recommended_lab_surface": RECOMMENDED_SURFACE,
+        "locked_reject_thr": thr,
+        "default_reject_thr": float(DEFAULT_REJECT_THR),
+        "locked_iter1_thr": float(LOCKED_ITER1_THR),
+        "ml_product_go": True,
+        "field_ops_ml_live_fusion": "OFF",
+        "iou_is_not_ros": True,
+        "banner": LAB_ML_BANNER,
+        "pipeline": _PIPELINE,
+        "product_facade": _FACADE,
+        "rank_reject_protocol": _RANK_REJECT,
+        "rank_reject_config": DEFAULT_RANK_REJECT.as_dict(),
+        "dead_paths_closed": True,
+        "multi_fire": {
+            "tobarra_class": (mf.get("tobarra") or {}).get("class")
+            or (facade_mf.get("tobarra") or {}).get("role"),
+            "tobarra_verdict": (mf.get("tobarra") or {}).get("verdict")
+            or facade_mf.get("tobarra_keep_verdict")
+            or "KILL",
+            "w3_role": (mf.get("w3_external") or {}).get("role") or facade_mf.get("w3_role"),
+            "w3_frozen_thr_and_cal": True,
+            "lofo_first_class": True,
+        },
+    }
 
 
 def make_kfold_indices(
@@ -258,6 +507,12 @@ def val_nested_fit_eval(
             "second_stage_in_nested_scoring": False,
             "protocol_note": "empty feature matrix",
             "honesty": HONEST_NESTED_ECE_NOTE,
+            "authority": _nested_authority_block(),
+            "pipeline": _PIPELINE,
+            "product_facade": _FACADE,
+            "rank_reject_protocol": _RANK_REJECT,
+            "recommended_lab_surface": RECOMMENDED_SURFACE,
+            "locked_reject_thr": float(LOCKED_REJECT_THR),
         }
 
     grid = tuple(float(x) for x in (l2_grid if l2_grid is not None else DEFAULT_L2_GRID))
@@ -383,6 +638,14 @@ def val_nested_fit_eval(
         "split": "val",
         "action": str(split_context.action),
         "honesty": HONEST_NESTED_ECE_NOTE,
+        # Unified path: nested VAL cal-fit; thr via select_thr_val_only / facade freeze.
+        "authority": _nested_authority_block(),
+        "rails": nested_protocol_rails(),
+        "pipeline": _PIPELINE,
+        "product_facade": _FACADE,
+        "rank_reject_protocol": _RANK_REJECT,
+        "recommended_lab_surface": RECOMMENDED_SURFACE,
+        "locked_reject_thr": float(LOCKED_REJECT_THR),
     }
 
 
@@ -424,6 +687,12 @@ def val_inner_outer_fit_eval(
             "recommended_l2": float(l2),
             "second_stage": stage,
             "honesty": HONEST_NESTED_ECE_NOTE,
+            "authority": _nested_authority_block(),
+            "pipeline": _PIPELINE,
+            "product_facade": _FACADE,
+            "rank_reject_protocol": _RANK_REJECT,
+            "recommended_lab_surface": RECOMMENDED_SURFACE,
+            "locked_reject_thr": float(LOCKED_REJECT_THR),
         }
     inner_idx, outer_idx = make_holdout_indices(n, inner_frac=inner_frac, seed=seed)
     X_in = [X[i] for i in inner_idx]
@@ -481,6 +750,15 @@ def val_inner_outer_fit_eval(
         "seed": int(seed),
         "second_stage_in_nested_scoring": False,
         "honesty": HONEST_NESTED_ECE_NOTE,
+        "split": "val",
+        "action": str(split_context.action),
+        "authority": _nested_authority_block(),
+        "rails": nested_protocol_rails(),
+        "pipeline": _PIPELINE,
+        "product_facade": _FACADE,
+        "rank_reject_protocol": _RANK_REJECT,
+        "recommended_lab_surface": RECOMMENDED_SURFACE,
+        "locked_reject_thr": float(LOCKED_REJECT_THR),
     }
     confs_for_u1 = confs_log  # U1 nested-style uses logistic confs
     if ious is not None and len(ious) == n:
@@ -513,7 +791,17 @@ def confidences_from_calibrator(
 
 
 def nested_cv_provenance_block(nested: dict[str, Any]) -> dict[str, Any]:
-    """Compact scorecard/calibrator provenance fields for nested CV."""
+    """Compact scorecard/calibrator provenance fields for nested CV.
+
+    Stamps VAL nested **calibrator** fit authority and points thr select at
+    ``rank_reject_protocol.select_thr_val_only`` + product_facade surface freeze
+    so scorecards / LOFO / reject boards cannot claim test/LOFO thr retune or a
+    parallel thr path.
+    """
+    auth = nested.get("authority")
+    if not isinstance(auth, dict):
+        auth = _nested_authority_block()
+    thr = auth.get("locked_reject_thr", LOCKED_REJECT_THR)
     return {
         "k": nested.get("k") or nested.get("n_folds_requested"),
         "mean_ece": nested.get("mean_ece")
@@ -532,4 +820,15 @@ def nested_cv_provenance_block(nested: dict[str, Any]) -> dict[str, Any]:
         "n_patches": nested.get("n_patches"),
         "mode": nested.get("mode", "kfold"),
         "honesty": nested.get("honesty") or HONEST_NESTED_ECE_NOTE,
+        "calibrate_authority": auth.get("calibrate_authority", NESTED_FIT_AUTHORITY),
+        "thr_select_authority": auth.get("thr_select_authority", THR_SELECT_AUTHORITY),
+        "thr_calibrate_authority": auth.get("thr_calibrate_authority", NESTED_FIT_AUTHORITY),
+        "thr_calibrate_split": auth.get("thr_calibrate_split", THR_CALIBRATE_SPLIT),
+        "no_test_lofo_retune": bool(auth.get("no_test_lofo_retune", True)),
+        "recommended_lab_surface": auth.get("recommended_lab_surface", RECOMMENDED_SURFACE),
+        "locked_reject_thr": float(thr) if thr is not None else float(LOCKED_REJECT_THR),
+        "pipeline": auth.get("pipeline", _PIPELINE),
+        "product_facade": auth.get("product_facade", _FACADE),
+        "rank_reject_protocol": auth.get("rank_reject_protocol", _RANK_REJECT),
+        "authority": auth,
     }

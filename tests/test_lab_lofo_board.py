@@ -5,7 +5,7 @@ Architecture contracts (product ROI — no retrain)
 * Single path: product_facade + rank_reject_protocol
   (features → calibrator → rank/reject → scorecard).
 * VAL-only thr; default surface iter1_reject_only.
-* Dual rails lab vs field_ops (IoU ≠ ROS, ml_product_go false, fusion OFF).
+* Dual rails lab vs field_ops (IoU ≠ ROS, ml_product_go true, fusion OFF).
 * Multi-fire honesty LOFO/W3 first-class.
 * Refuse same-holdout ECE thrash + Tobarra KEEP reopen of KILL weights.
 """
@@ -27,8 +27,8 @@ from wildfire_front.ml.lab_lofo_board import (
 from wildfire_front.ml.product_facade import (
     DEAD_PATHS,
     ITER1_LOCKED_REJECT_THR,
-    ProductFacadeError,
     RECOMMENDED_LAB_SURFACE,
+    ProductFacadeError,
     refuse_dead_path,
 )
 from wildfire_front.ml.rank_reject_protocol import (
@@ -45,7 +45,7 @@ _FACADE = "wildfire_front.ml.product_facade"
 def test_collect_and_summarize_from_repo():
     rows = collect_lofo_board(ROOT / "outputs" / "ml_eval" / "lofo_v1")
     if not rows:
-        return
+        pytest.skip("no LOFO board rows on disk (outputs/ml_eval/lofo_v1 empty)")
     assert all("fold" in r for r in rows)
     s = summarize_lofo_board(rows)
     assert s["n_folds"] == len(rows)
@@ -53,18 +53,49 @@ def test_collect_and_summarize_from_repo():
     assert s.get("weakest_fold")
 
 
+def test_core3_vs_expanded_keys_for_metrics_lift():
+    """Core-3 (Cardoso/ACOM1/ACOM2) is G1 primary; Tobarra not in core mean."""
+    from wildfire_front.ml.lab_metrics_lift import (
+        CORE3_FOLDS,
+        collect_candidate_from_root,
+    )
+
+    root = ROOT / "outputs" / "ml_eval" / "lofo_v1"
+    if not root.is_dir():
+        pytest.skip("no lofo_v1")
+    c = collect_candidate_from_root(root)
+    if c["core3"]["n"] < 3:
+        pytest.skip("core-3 incomplete")
+    assert c["core3"]["mean"] is not None
+    assert c["core3"]["min"] is not None
+    # Tobarra must not be required for core3
+    for f in CORE3_FOLDS:
+        assert f in (c["core3"].get("fold_names") or c["folds"])
+    assert "tobarra_20240802" not in (c["core3"].get("fold_names") or [])
+    # expanded may include more non-tobarra folds
+    assert c["expanded"]["n"] >= c["core3"]["n"]
+    assert c["core3"]["min"] is not None
+    weak = min(
+        (c["folds"][f] for f in CORE3_FOLDS if f in c["folds"]),
+        key=lambda r: float(r["model_iou"]),
+    )
+    assert float(weak["model_iou"]) == pytest.approx(c["core3"]["min"])
+    assert weak["fold"] in CORE3_FOLDS
+
+
 def test_build_pack_rails():
     pack = build_lofo_scoreboard(ROOT)
     assert pack["schema"] == "wfd_ml_lofo_board_v1"
     rails = pack["rails"]
-    assert rails["ml_product_go"] is False
+    assert rails["ml_product_go"] is True
     assert rails["field_ops_allow_ml_live_in_fusion"] is False
     assert rails["lofo_is_not_u1_ece"] is True
     assert rails.get("iou_is_not_ros") is True
     assert rails.get("field_ops_ml_live_fusion") == "OFF"
-    assert rails.get("val_only_threshold_tune") is True or rails.get(
-        "val_only_threshold_selection"
-    ) is True
+    assert (
+        rails.get("val_only_threshold_tune") is True
+        or rails.get("val_only_threshold_selection") is True
+    )
     assert rails.get("recommended_lab_surface") == "iter1_reject_only"
     assert rails.get("freeze_iter1_reject") is True
     assert rails.get("tobarra_keep_reopen") is False
@@ -80,7 +111,7 @@ def test_build_pack_rails():
     assert rr.get("pipeline") == _PIPELINE
     assert rr.get("freeze_iter1_reject") is True
     assert rr.get("stop_ece_thrash_on_same_test") is True
-    assert rr.get("ml_product_go") is False
+    assert rr.get("ml_product_go") is True
     assert rr.get("field_ops_allow_ml_live_in_fusion") is False
     assert isinstance(pack.get("frozen_thr_report"), dict)
     # Multi-fire honesty first-class (LOFO / W3 / Tobarra KILL — not ad-hoc)
@@ -95,7 +126,7 @@ def test_build_pack_rails():
     v = pack.get("verdict") or {}
     assert v.get("recommended_lab_surface") == "iter1_reject_only"
     assert v.get("freeze_iter1_reject") is True
-    assert v.get("ml_product_go") is False
+    assert v.get("ml_product_go") is True
     assert v.get("field_ops_fusion") == "OFF"
     assert v.get("pipeline") == _PIPELINE
     if pack["summary"].get("n_folds", 0) >= 1:
@@ -123,7 +154,8 @@ def test_refuse_tobarra_keep_and_ece_thrash_dead_paths():
         "same_holdout_ece_retune",
         "tobarra_keep_reopen_same_recipe",
     ):
-        assert dead in DEAD_PATHS or dead in DEAD_PROTOCOL_PATHS
+        assert dead in DEAD_PATHS
+        assert dead in DEAD_PROTOCOL_PATHS
         with pytest.raises(ProductFacadeError):
             refuse_dead_path(dead)
         with pytest.raises(ValueError):
@@ -134,14 +166,15 @@ def test_lofo_script(tmp_path):
     from scripts import run_lab_ml_loop_v34_lofo_board as mod
 
     rc = mod.main(["--repo", str(ROOT), "--out-dir", str(tmp_path), "--no-md"])
-    data = json.loads((tmp_path / "lab_loop_v34_lofo_board_latest.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (tmp_path / "lab_loop_v34_lofo_board_latest.json").read_text(encoding="utf-8")
+    )
     assert data["iteration"] == 9
-    assert data["rails"]["ml_product_go"] is False
+    assert data["rails"]["ml_product_go"] is True
     assert data["rails"].get("field_ops_allow_ml_live_in_fusion") is False
     # Runner surfaces facade + rank_reject thr/report (not board-only dual path)
-    assert data.get("product_facade") == _FACADE or (
-        data.get("verdict") or {}
-    ).get("product_facade") == _FACADE
+    assert data.get("product_facade") == _FACADE
+    assert (data.get("verdict") or {}).get("product_facade") == _FACADE
     assert isinstance(data.get("rank_reject_protocol"), dict)
     assert data["rank_reject_protocol"].get("locked_reject_thr") is not None
     assert float(data["rank_reject_protocol"]["locked_reject_thr"]) == pytest.approx(
@@ -156,7 +189,7 @@ def test_lofo_script(tmp_path):
     assert isinstance(data.get("architecture_lofo_board"), dict)
     arch = data["architecture_lofo_board"]
     assert arch.get("pipeline") == _PIPELINE
-    assert arch.get("ml_product_go") is False
+    assert arch.get("ml_product_go") is True
     assert arch.get("field_ops_ml_live_fusion") == "OFF"
     assert arch.get("product_facade") == _FACADE
     assert arch.get("tobarra_keep_reopen") is False

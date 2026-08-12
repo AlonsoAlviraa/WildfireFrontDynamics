@@ -9,7 +9,6 @@ import pytest
 
 from wildfire_front.fuel.envelope import (
     PRODUCT_V3,
-    attach_ensemble_to_envelopes,
     compute_hybrid_envelope,
     ellipse_polar_ring,
     envelope_decision_reasons,
@@ -204,9 +203,7 @@ class TestGeojson:
             origin_xy=(500000.0, 4270000.0),
             origin_source="cli",
         )
-        gj = hybrid_envelope_to_geojson(
-            env, center_xy=(500000.0, 4270000.0), include_polar=True
-        )
+        gj = hybrid_envelope_to_geojson(env, center_xy=(500000.0, 4270000.0), include_polar=True)
         assert gj["properties"]["status"] in ("ok", "inputs_assumed")
         assert gj["properties"]["n_features"] > 0
         # closed rings

@@ -1,7 +1,7 @@
 {
   "schema": "plan_3_meses_status_v1",
   "plan": "docs/PLAN_3_MESES.md",
-  "cycle_at_utc": "2026-07-17T19:36:22.325880+00:00",
+  "cycle_at_utc": "2026-08-04T08:53:53.015144+00:00",
   "items": {
     "M1.1_plan_cycle_runner": {
       "status": "DONE",
@@ -25,8 +25,8 @@
       "note": "Improve when XML has usable times"
     },
     "M1.6_open_packs_ge_5": {
-      "status": "IN_PROGRESS",
-      "evidence": "n_packs=4"
+      "status": "DONE",
+      "evidence": "n_packs=11"
     },
     "M1.7_onepager": {
       "status": "DONE",
@@ -68,30 +68,57 @@
       "status": "DONE",
       "evidence": "docs/commander/index.html WFD COMMAND HUD"
     },
+    "M2.12_pilot_honesty": {
+      "status": "DONE",
+      "evidence": "docs/PILOT_HONESTY_CARD.md + run_pilot_honesty_card.py"
+    },
+    "M2.13_demo_multi_ccaa": {
+      "status": "DONE",
+      "evidence": "Tobarra·Níjar·Caminomorisco demo + design doc"
+    },
+    "M2.14_ml_live_card": {
+      "status": "DONE",
+      "evidence": "run_ml_live_card_demo + ML_PRODUCT_SCORECARD (U1 honest)"
+    },
+    "M3.2_third_party_demo": {
+      "status": "PENDING",
+      "evidence": "need 1 demo with external person + 1-page acta"
+    },
     "M3.3_GO_Q": {
       "status": "PENDING",
       "evidence": null
+    },
+    "M3.4_quarter_report": {
+      "status": "ENG_FILLED_HUMAN_FINAL",
+      "evidence": "docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md",
+      "note": "Eng-filled from repo evidence (GO_MES true; GO_Q partial; no M3.2 claim). Awaiting human signature/final author if formal archive."
     }
   },
   "live": {
-    "n_open_packs": 4,
+    "n_open_packs": 11,
     "ml_test_iou": 0.8963,
     "decision_card": {
       "event_id": "hub_aggregate",
       "decision": "GO",
-      "confidence_pred": 0.894,
+      "confidence_pred": 0.8586666666666667,
       "confidence_pred_label": "HIGH",
-      "system_reliability_pass": true,
+      "system_reliability_pass": false,
       "sources": [
         {
           "id": "ml_clm_ensemble",
           "available": true,
-          "weight": 0.25,
-          "confidence": 1.0,
+          "weight": 0.0,
+          "confidence": 0.75,
+          "holdout_quality": 0.75,
+          "actionable": false,
+          "abstained": false,
+          "role": "holdout_quality",
+          "source_type": "research_metadata",
           "metrics": {
             "test_iou": 0.8963,
             "improvement_vs_copy_iou": 0.2545,
-            "model_iou_growth": 0.9071
+            "model_iou_growth": 0.9071,
+            "holdout_quality": 0.75
           }
         },
         {
@@ -113,9 +140,9 @@
           "weight": 0.35,
           "confidence": 0.72,
           "metrics": {
-            "max_area_ha": 5319.506429634212,
-            "n_timeline_steps": 4,
-            "activation": "EMSR632",
+            "max_area_ha": 44376.7,
+            "n_timeline_steps": 10,
+            "activation": "EMSR900",
             "O2_cems_delineation": "GO"
           }
         }
@@ -124,8 +151,10 @@
         "ml": {
           "test_iou": 0.8963,
           "improvement_vs_copy_iou": 0.2545,
-          "model_iou_growth": 0.9071
+          "model_iou_growth": 0.9071,
+          "holdout_quality": 0.75
         },
+        "ml_live": null,
         "ops": {
           "quality_grade": "A",
           "primary_ros_m_min": 5.71,
@@ -134,16 +163,19 @@
           "speed_vs_ref_ratio": 0.8157142857142857
         },
         "open_cems": {
-          "max_area_ha": 5319.506429634212,
-          "n_timeline_steps": 4,
-          "activation": "EMSR632",
+          "max_area_ha": 44376.7,
+          "n_timeline_steps": 10,
+          "activation": "EMSR900",
           "O2_cems_delineation": "GO"
         },
-        "fused_confidence_pred": 0.894,
-        "policy_id": "default"
+        "fused_confidence_pred": 0.8586666666666667,
+        "policy_id": "default",
+        "live_ok": false,
+        "live_available": false,
+        "allow_ml_live_in_fusion": false
       },
       "reasons": [
-        "ml_clm_ensemble:conf=1.000:w=0.25",
+        "ml_clm_ensemble:holdout_quality=0.750:not_fused",
         "ops_thermal_front:conf=0.980:w=0.40",
         "open_cems_perimeter:conf=0.720:w=0.35",
         "policy:default",
@@ -151,14 +183,15 @@
       ],
       "disclaimers": [
         "Not a tactical dispatch order.",
-        "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",
+        "Fire-phenomenon confidence is NOT 99.9999% — that figure only applies to automated gate enforcement under test (no silent GO without sources).",
         "ML IoU is not front ROS; CEMS perimeter is not national cadastre.",
-        "ABSTAIN means the product refuses to recommend action."
+        "ABSTAIN means the product refuses to recommend action.",
+        "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
       ],
       "audit": {
-        "input_hash": "52131e70e7e87d865c07d81a8c2b9108af084482b8ab877f153854abddf72d2b",
-        "output_hash": "279265f3faad435f5e6d4dc9e6309ad2394ab49827c2a25a7b3d544ba0ff56f3",
-        "git_commit": "d57ae16",
+        "input_hash": "7638a9cd176841f9171580b8315463b4f0c2e2deb5bdc1352048dcf60180dcf5",
+        "output_hash": "10213ee47bff849630f71a68ee5707e074b9f39a1fcc6cbadd0486bbc8cdd643",
+        "git_commit": "eb95049",
         "schema": "fire_decision_card_v1",
         "policy_id": "default",
         "policy_label": "Default (historical product thresholds)",
@@ -170,22 +203,30 @@
           "hold_open_min": 0.35,
           "hold_ml_only_min": 0.5,
           "allow_ml_only_hold": true,
-          "allow_open_only_hold": true
+          "allow_open_only_hold": true,
+          "allow_ml_live_in_fusion": false,
+          "effective_allow_ml_live_in_fusion": false,
+          "ml_live_max_weight": 0.25,
+          "ml_live_abstain_below": 0.35,
+          "ml_live_veto_on_abstain": false
         },
+        "abstention_heuristic_ok": true,
+        "provenance_hashes_attached": true,
         "system_reliability": {
-          "system_reliability_pass": true,
+          "system_reliability_pass": false,
+          "status": "unknown",
           "checks": {
-            "R1_determinism": true,
-            "R2_gates": true,
-            "R3_abstention_enforced": true,
-            "R4_provenance": true
+            "R1_determinism": null,
+            "R2_gates": null,
+            "R3_abstention_enforced": null,
+            "R4_provenance": null
           },
-          "residual_silent_go_risk_bound": 1e-06,
-          "five_nines_claim": "PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.",
+          "residual_silent_go_risk_bound": 1.0,
+          "five_nines_claim": "UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.",
           "fire_prediction_accuracy_claim": "NOT_CLAIMED"
         }
       },
-      "built_at_utc": "2026-07-17T19:36:09.936263+00:00"
+      "built_at_utc": "2026-08-04T08:53:52.513660+00:00"
     }
   },
   "go_q_progress": {
@@ -197,16 +238,49 @@
     "open_packs_ge_4": true,
     "ml_hold": true,
     "incident_sla": true,
-    "pilot_or_outreach": false,
-    "quarter_report": false
+    "pilot_or_outreach": true,
+    "quarter_report": false,
+    "u1_test_honest": true,
+    "ml_product_go": true,
+    "field_ops_live_fusion": false,
+    "confirmed_anchors": 2,
+    "second_anchor": true,
+    "third_party_demo": false
   },
   "go_q_partial_ready": true,
   "adaptations_this_cycle": [
-    "M1.6: 4 packs sufficient for demo; raise to 5 when next CEMS build is free",
-    "M1.5 deferred: keep 24h assumption + document; focus M1.2/M1.4",
-    "Mes 2 priority shift: outreach list earlier if product gate stays green"
+    "M1.6 DONE: open packs n=11 (demo multi-CCAA ready)",
+    "M1.5 deferred: keep 24h assumption + document; focus external anchors",
+    "Mes 3 focus: 1 external demo + acta (not more honesty graph cycles)",
+    "ML lab GO rails OK (U1 honest); ml_product_go=false; field_ops fusion OFF",
+    "GO_Q almost: write quarter report / freeze tag when third_party_demo lands"
   ],
   "hub_decision": "GO",
-  "hub_confidence_pred": 0.894,
-  "executed": []
+  "hub_confidence_pred": 0.8586666666666667,
+  "executed": [
+    {
+      "name": "reliability",
+      "ok": true,
+      "code": 0,
+      "tail": "s\",\n    \"checks\": {\n      \"R1_determinism\": true,\n      \"R2_gates\": true,\n      \"R3_abstention_enforced\": true,\n      \"R4_provenance\": true\n    },\n    \"residual_silent_go_risk_bound\": 1e-06,\n    \"five_nines_claim\": \"PASS: residual risk of silent GO without gates under automated enforcement bound at 1e-6 (design+tests). DOES NOT mean 99.9999% fire-spread prediction accuracy.\",\n    \"fire_prediction_accuracy_claim\": \"NOT_CLAIMED\"\n  },\n  \"note\": \"docs sample is suite-only; not a field unlock key\"\n}\n"
+    },
+    {
+      "name": "metrics_hub",
+      "ok": true,
+      "code": 0,
+      "tail": "{\n  \"ok\": true,\n  \"decision\": \"GO\",\n  \"confidence_pred\": 0.8586666666666667,\n  \"n_open_packs\": 11,\n  \"ml_iou\": 0.8963,\n  \"hash\": \"aae42eb78b792dfa\",\n  \"files\": [\n    \"docs/METRICS_HUB.json\",\n    \"docs/METRICS_HUB.md\",\n    \"docs/METRICS_DASHBOARD.html\",\n    \"docs/FIRE_DECISION_CARD.json\"\n  ]\n}\n"
+    },
+    {
+      "name": "decide_cli",
+      "ok": true,
+      "code": 0,
+      "tail": "stention_enforced\": null,\n        \"R4_provenance\": null\n      },\n      \"residual_silent_go_risk_bound\": 1.0,\n      \"five_nines_claim\": \"UNKNOWN: system reliability checks not measured for this card. Does NOT claim residual 1e-6 or five-nines gate enforcement.\",\n      \"fire_prediction_accuracy_claim\": \"NOT_CLAIMED\"\n    }\n  },\n  \"built_at_utc\": \"2026-08-04T08:53:52.874658+00:00\",\n  \"latency_ms\": 2.396,\n  \"api_version\": \"decide_api_v1\",\n  \"product\": \"fire_decision_card\",\n  \"policy_id\": \"default\"\n}\n"
+    },
+    {
+      "name": "open_index",
+      "ok": true,
+      "code": 0,
+      "tail": "{\n  \"n_packs\": 11,\n  \"score_dual\": 95.0,\n  \"score_clm\": 39.0,\n  \"VENTA_GO\": true\n}\n"
+    }
+  ]
 }

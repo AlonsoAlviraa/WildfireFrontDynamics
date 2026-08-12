@@ -1,0 +1,20 @@
+{
+  "source": "copernicus_glo30",
+  "bbox_wgs84": [
+    -1.72,
+    38.58,
+    -1.66,
+    38.63
+  ],
+  "crs": "EPSG:32630",
+  "cell_size_m": 25.0,
+  "tiles": [
+    "N38_W002"
+  ],
+  "hrefs": [
+    "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W002_00_DEM/Copernicus_DSM_COG_10_N38_00_W002_00_DEM.tif"
+  ],
+  "sha256": "2ad21a800e78baffb50febd6ccb0d5898f22672df13cb5bde37265fb0cc28364",
+  "fetched_at": "2026-07-31T09:18:38.257542+00:00",
+  "cache_path": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\data\\dem\\tobarra\\glo30_window.tif"
+}

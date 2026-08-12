@@ -123,5 +123,5 @@ def run_cross_protocol_eval(
             target_mode=spec.get("target_mode", "absolute"),
         )
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(report, indent=2, default=str))
+    output_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report

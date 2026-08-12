@@ -130,8 +130,7 @@ def run_preprocess_ndws(
     )
     if total < min_total:
         raise RuntimeError(
-            f"Insufficient data after preprocessing: {total} patches "
-            f"(expected >= {min_total})"
+            f"Insufficient data after preprocessing: {total} patches (expected >= {min_total})"
         )
     return total
 

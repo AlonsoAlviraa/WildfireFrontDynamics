@@ -77,7 +77,9 @@ def main() -> int:
             dem_binding={"dem_source": args.dem_source},
         )
     except CalibrationRefusedError as exc:
-        print(json.dumps({"status": exc.status, "error": str(exc), "details": exc.details}, indent=2))
+        print(
+            json.dumps({"status": exc.status, "error": str(exc), "details": exc.details}, indent=2)
+        )
         return 4
 
     hybrid = hybrid_ros_prior(

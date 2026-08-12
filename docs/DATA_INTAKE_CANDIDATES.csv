@@ -1,0 +1,13 @@
+pri,fire_id,honesty_class,n_lwir,n_masks,legacy17_status,spatial_patches,ml_queue,next_action,risk
+1,hellin_2024,chain_honest,36,16,in_holdout_v1_plus_w3,120,PROMOTE_LOFO,lofo_v2_redesign_leak_audit,masks_lt_lwir_anchor_confirmed
+2,brazatortas_2025,partial_masks,16,8,missing_sealed,40,train_cap_external,emit_legacy17_or_spatial_cap,no_anchor
+3,la_estrella_acom2_2024,partial_masks,67,17,in_lofo_v1,120,stress_fold,complete_masks_if_possible,min_iou_bottleneck
+4,retuerta_2025,partial_masks_qa_flag,10,8,exclude,80,EXCLUDE_TRAIN,qa_clean_first,fov_area_flag
+5,polan_2025,blocked,1,0,none,0,NO,need_masks_or_drop,insufficient
+6,cardoso_2025,chain_honest,85,79,in_lofo_v1,1120,core_lofo,request_infocam_vp,pending_external_anchor
+7,pablo_geacam_tobarra_ops,perimeter_only,0,0,n/a,0,ops_eval_only,request_multi_if_kmz,ops_ne_cadastre
+8,es_gu_la_mierla_20260716,press_only,0,0,none,0,BLOCKED_ML,egif_lwir_only,press_ha_not_egif
+9,es_av_burgohondo_202607,press_only,0,0,none,0,BLOCKED_ML,cems_research_only,press_ha_not_egif
+10,es_md_sierra_oeste_202607,press_only,0,0,none,0,BLOCKED_ML,cems_research_only,press_ha_not_egif
+11,cems_open_perimeter,perimeter_only,0,0,open_packs,0,open_demo_not_t1,build_open_if_pack,no_vp
+12,nijar_rediam_and,perimeter_only,0,0,open_industrial,0,o2_and_demo,keep_industrial_demo,no_lwir_chain

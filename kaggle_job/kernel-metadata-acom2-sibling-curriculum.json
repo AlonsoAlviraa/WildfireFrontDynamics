@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-acom2-sibling-curriculum",
+  "title": "WFD ACOM2 Sibling Curriculum",
+  "code_file": "run_acom2_sibling_curriculum.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-v1-core3"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

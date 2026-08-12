@@ -5,6 +5,9 @@
 **Trámite:** https://gobiernoabierto.jcyl.es/web/es/transparencia/derecho-informacion-publica.html  
 **Catálogo open data (elegir IF):** https://analisis.datosabiertos.jcyl.es/explore/dataset/incendios-forestales/table/
 
+> **Seguimiento (as of 2026-08-04):** estado **FOLLOW_UP / WAIT** · acuse ~**4082/2026** · **silence rule** — no re-spam antes de ~**2026-08-17**; tras silencio un follow-up o cierre D1.  
+> Calendario y reglas: [`docs/fire_intel/CYL_SILENCE_RULE_NOTE.md`](fire_intel/CYL_SILENCE_RULE_NOTE.md) · contactos: [`docs/CONTACTOS_EMERGENCIAS_DATOS.md`](CONTACTOS_EMERGENCIAS_DATOS.md).
+
 ---
 
 ## 1. Qué significa el correo
@@ -178,7 +181,8 @@ python scripts/fetch_cyl_incendios.py --min-nivel 2 --limit 100 --out docs/cyl_n
 1. Guardar JSON/CSV como prueba de identificación del IF.  
 2. Cruzar con **EFFIS / Copernicus EMS** para el bbox de Llamas de Cabrera / Bierzo agosto 2025.  
 3. EGIF MITECO: https://servicio.mapa.gob.es/incendios/Search/Publico  
-4. Seguir validación CLM (Tobarra ancla + ensemble v30) sin bloquear el TFG.
+4. Seguir validación CLM (Tobarra ancla + ensemble v30) sin bloquear el TFG.  
+5. **No re-spam** del trámite/email mientras rija el silence calendar (~**2026-08-17**): ver [`docs/fire_intel/CYL_SILENCE_RULE_NOTE.md`](fire_intel/CYL_SILENCE_RULE_NOTE.md).
 
 ---
 

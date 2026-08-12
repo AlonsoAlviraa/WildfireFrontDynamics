@@ -1,7 +1,7 @@
 {
   "schema": "commander_app_data_v1",
-  "built_at_utc": "2026-07-27T14:55:17.030872+00:00",
-  "git": "c58d118",
+  "built_at_utc": "2026-08-04T14:13:46.842729+00:00",
+  "git": "eb95049",
   "title": "WFD COMMAND",
   "subtitle": "Sala de mando \u00b7 Decision Card \u00b7 Open CEMS \u00b7 Ops t\u00e9rmico",
   "decision_card": {
@@ -105,7 +105,7 @@
       "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
     ],
     "audit": {
-      "input_hash": "b5c1d810fd9611fcd415effcd0b735875d688c589bc35babae3b11b253abe61b",
+      "input_hash": "19ce3701fdccc1919f49ea3bacdde88b2b64df8a2093b02b5f32e783ef7ec59c",
       "output_hash": "2de4b79b593610aa37658000e1bb603c82d3f9397d445f711f68fcacfb534f1d",
       "git_commit": null,
       "schema": "fire_decision_card_v1",
@@ -142,8 +142,8 @@
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-27T14:55:16.770805+00:00",
-    "latency_ms": 4.232,
+    "built_at_utc": "2026-08-04T14:13:46.498189+00:00",
+    "latency_ms": 6.207,
     "api_version": "decide_api_v1",
     "product": "fire_decision_card",
     "policy_id": "demo"
@@ -151,12 +151,29 @@
   "radio": "WFD COMMAND_DEMO: GO conf=0.86 (HIGH). NO es orden t\u00e1ctica. hash=2de4b79b59\u2026 src=ml+ops+cems",
   "ml": {
     "product": "clm_ensemble_v34",
+    "pitch": "u1_test_honest",
+    "u1_lab": {
+      "u1_test_honest_mean_iou": 0.8568865373678947,
+      "ece_patch_conf": 0.15280955026564416,
+      "selective_iou_at_80pct_coverage": 0.903428533834858,
+      "u1_test_honest": true,
+      "ml_product_go": true,
+      "note": "Lab pitch: U1 TEST honest mean IoU + ECE. Catalog holdout test_iou 0.8963 is provenance only \u2014 not live certainty, not ROS."
+    },
+    "catalog_holdout_provenance": {
+      "test_iou": 0.8963,
+      "improvement_vs_copy_iou": 0.2545,
+      "model_iou_growth": 0.9071,
+      "label": "provenance_only",
+      "note": "Do not treat as U1 eval mean IoU or live fire certainty."
+    },
     "metrics": {
       "test_iou": 0.8963,
       "copy_baseline_iou": 0.6418,
       "improvement_vs_copy_iou": 0.2545,
       "model_iou_growth": 0.9071
     },
+    "metrics_note": "metrics.test_iou is catalog holdout (provenance). Prefer u1_lab for public lab pitch.",
     "member_weights": [
       0.28,
       0.32,
@@ -169,7 +186,8 @@
     ],
     "protocol": "clm_holdout_test_seed42_v1",
     "loop_status": "STOPPED_PLATEAU",
-    "champion_name": "source_mix_val_temp_calibrated"
+    "champion_name": "source_mix_val_temp_calibrated",
+    "manifest_verdict": "GO_RESEARCH_HOLDOUT"
   },
   "ops": {
     "product": "incident_runtime_v1 / front_dynamics_v1",
@@ -182,7 +200,13 @@
       "behavior": "Contraviento",
       "source": "INFOCAM 2024 parte operativo",
       "status": "confirmed",
-      "detection": "2024-08-02T16:42:00"
+      "detection": "2024-08-02T16:42:00",
+      "perimeter_drop_pablo_20260730": {
+        "path": "data/real_if/pablo_geacam_20260730_tobarra",
+        "kmz_1830_sup_ha": 21.489832,
+        "kmz_2143_sup_ha": 37.075054,
+        "note": "Per\u00edmetro activo multi-hora from Pablo/CMA (not national cadastre). Area at 21:43 ~37 ha vs anchor 39 ha."
+      }
     },
     "representative_metrics": {
       "quality_grade": "A",
@@ -12189,6 +12213,108 @@
       "map_rel": "../../outputs/open_if/emsr632/map.html"
     },
     {
+      "id": "emsr896",
+      "activation": "EMSR896",
+      "max_area_ha": 12133.4,
+      "n_timeline_steps": 4,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr896/map.html"
+    },
+    {
+      "id": "emsr898",
+      "activation": "EMSR898",
+      "max_area_ha": 27213.2,
+      "n_timeline_steps": 8,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr898/map.html"
+    },
+    {
+      "id": "emsr899",
+      "activation": "EMSR899",
+      "max_area_ha": 26064.7,
+      "n_timeline_steps": 2,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr899/map.html"
+    },
+    {
+      "id": "emsr900",
+      "activation": "EMSR900",
+      "max_area_ha": 44376.7,
+      "n_timeline_steps": 10,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr900/map.html"
+    },
+    {
+      "id": "emsr902",
+      "activation": "EMSR902",
+      "max_area_ha": 2682.2,
+      "n_timeline_steps": 3,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr902/map.html"
+    },
+    {
+      "id": "emsr905",
+      "activation": "EMSR905",
+      "max_area_ha": 7265.8,
+      "n_timeline_steps": 3,
+      "O2_cems_delineation": "GO",
+      "dnbr_status": null,
+      "dnbr_mean": null,
+      "status": null,
+      "lat": null,
+      "lon": null,
+      "geojson": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "map_rel": "../../outputs/open_if/emsr905/map.html"
+    },
+    {
       "id": "la_mierla_20260717",
       "activation": "guadalajara_la_mierla_20260717",
       "max_area_ha": 32000,
@@ -12317,7 +12443,7 @@
   ],
   "reliability_ok": true,
   "api_p95_ms": 25.687,
-  "plan_items_done": 13,
+  "plan_items_done": 17,
   "disclaimers": [
     "Not a tactical dispatch order.",
     "Fire-phenomenon confidence is NOT 99.9999% \u2014 that figure only applies to automated gate enforcement under test (no silent GO without sources).",

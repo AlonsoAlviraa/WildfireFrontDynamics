@@ -211,3 +211,29 @@ def build_stage_sequence(
         engine_name=eng,
         all_partial_reasons=all_reasons,
     )
+
+
+def multihorizon_from_stage_sequence(
+    seq: StageSequence,
+    *,
+    lead_times_h=None,
+) -> dict[str, Any]:
+    """Field_ops multi-horizon card from PSB duration + final area (isotropic equiv ROS).
+
+    Honesty: PSB is synthetic reverse-growth — not multipass LWIR ROS.
+    """
+    from wildfire_front.multihorizon_fieldops import from_psb_duration
+
+    card = from_psb_duration(
+        seq.config.total_duration_s,
+        seq.final_area_ha,
+        lead_times_h=lead_times_h,
+        engine=seq.engine_name,
+        n_stages=seq.n_stages,
+        extra={
+            "final_geom_type": seq.final_geom_type,
+            "final_n_parts": seq.final_n_parts,
+            "all_partial_reasons": list(seq.all_partial_reasons),
+        },
+    )
+    return card.as_dict()

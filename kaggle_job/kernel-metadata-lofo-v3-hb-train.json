@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-lofo-v3-hb-train-t1",
+  "title": "WFD LOFO V3 HB Train T1",
+  "code_file": "run_lofo_v3_hb_train.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-v3-hellin-brazatortas"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "ml_uncertainty_calibration_v1",
+  "method": "logistic",
+  "calibrator_id": "uncertainty_calibration_v1_lab_ece",
+  "weights": [
+    -0.34205135735156494,
+    -0.1303913567966543,
+    0.15725253879323609,
+    1.1064826473077154
+  ],
+  "feature_names": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "features": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "tau_iou": 0.5,
+  "fit_split": "val",
+  "head": "patch_reliability",
+  "label": {
+    "type": "patch_iou_ge_tau",
+    "tau": 0.5,
+    "mask_threshold": 0.5
+  },
+  "params": {
+    "coef": [
+      -0.34205135735156494,
+      -0.1303913567966543,
+      0.15725253879323609
+    ],
+    "intercept": 1.1064826473077154,
+    "temperature": 1.106737128493453,
+    "platt_a": 1.33145545162161,
+    "platt_b": -0.14128450303395038
+  },
+  "temperature": 1.106737128493453,
+  "platt_a": 1.33145545162161,
+  "platt_b": -0.14128450303395038,
+  "abstain_threshold": 0.7749999999999999,
+  "lab_only": true,
+  "parent_calibrator": "uncertainty_calibration_v1",
+  "ece_posthoc": {
+    "method": "temperature",
+    "temperature": 1.106737128493453,
+    "platt_a": null,
+    "platt_b": null,
+    "note": "Applied to confidence logits after base calibrator.predict_proba"
+  },
+  "metrics_lab_loop_ece": {
+    "test_ece_baseline": 0.15280955026564416,
+    "test_ece_tuned": 0.17435859413254068,
+    "improved": false
+  },
+  "note": "LAB/research_open only. ECE post-hoc VAL-fit. Does not promote ml_product_go or field_ops fusion."
+}

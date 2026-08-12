@@ -199,9 +199,7 @@ class TestHybrid:
         # PR-7 DoD: with obs present, hybrid head is obs-locked
         assert h["sectors"]["head_m_min"] == pytest.approx(5.71, abs=1e-6)
         # Primary matches obs-locked head (not unscaled physics primary)
-        assert h["sectors"]["primary_m_min"] == pytest.approx(
-            h["sectors"]["head_m_min"], abs=1e-6
-        )
+        assert h["sectors"]["primary_m_min"] == pytest.approx(h["sectors"]["head_m_min"], abs=1e-6)
         assert h.get("weather_scenario_assumed") is True
         assert h.get("weather_drivers_merge") is not None
         phys = h.get("physics") or {}

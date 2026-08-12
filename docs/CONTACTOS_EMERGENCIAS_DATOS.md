@@ -16,6 +16,10 @@
 
 CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUTREACH.csv)
 
+**Pack nuevo 2026-08-10 (Portugal / Francia / CCAA frescas + plantillas “IF completo”):**  
+[`docs/OUTREACH_PT_FR_CCAA_20260810.md`](OUTREACH_PT_FR_CCAA_20260810.md)  
+Nota: Gmail OAuth **revocado** (`invalid_grant`); re-auth antes de re-leer inbox.
+
 ---
 
 ## Seguimiento CyL — Llamas de Cabrera (2026-07-17)
@@ -24,9 +28,11 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 |-------|-------|
 | Solicitud | `docs/SOLICITUD_TRANSPARENCIA_CYL.md` + `scripts/fetch_cyl_incendios.py` |
 | Incendio | Llamas de Cabrera 2025-08-08 |
-| Estado | **FOLLOW_UP_DUE** — formulario/transparencia enviado o listo; falta respuesta con perímetro/Vp/ha |
-| Acción | Reenviar o registrar nº de registro si ya enviado; no inventar anclas |
-| Gate | D1 / O1-O2 desbloqueo parcial si llegan vectores oficiales |
+| Estado | **FOLLOW_UP / WAIT** (as of **2026-08-04**) — acuse ~4082/2026 (17-jul); **falta** respuesta con perímetro/Vp/ha liberables |
+| **Silence rule** | **No re-spam** antes de ~**2026-08-17**. Detalle calendario: [`docs/fire_intel/CYL_SILENCE_RULE_NOTE.md`](fire_intel/CYL_SILENCE_RULE_NOTE.md) |
+| Tras silencio (~17 ago) | **Un** follow-up educado **o** cierre D1 NO_DATA — no cadenas de spam |
+| Acción ahora | Esperar; registrar nº de registro si se anota; open data/INFORCYL pasivo OK; **no inventar anclas** |
+| Gate | D1 — desbloqueo parcial O1/O2 **solo si** llegan vectores oficiales |
 
 ---
 
@@ -90,7 +96,8 @@ CSV de seguimiento (mismas filas): [`docs/CONTACTOS_OUTREACH.csv`](CONTACTOS_OUT
 ## Castilla y León (INFOCAL) — contactos y datos
 
 > Plan: **INFOCAL** (Protección Civil ante incendios forestales).  
-> Ops en campaña: **INFORCYL** (mapa + partes). Tragsa/personal operativo **no** es canal de datos GIS por email público.
+> Ops en campaña: **INFORCYL** (mapa + partes). Tragsa/personal operativo **no** es canal de datos GIS por email público.  
+> **Silence rule (H5 / D1, as of 2026-08-04):** no re-spam antes de ~**2026-08-17**; tras silencio un follow-up o cierre — ver [`docs/fire_intel/CYL_SILENCE_RULE_NOTE.md`](fire_intel/CYL_SILENCE_RULE_NOTE.md) y [`docs/SOLICITUD_TRANSPARENCIA_CYL.md`](SOLICITUD_TRANSPARENCIA_CYL.md).
 
 ### Datos sin pedir permiso (primero)
 

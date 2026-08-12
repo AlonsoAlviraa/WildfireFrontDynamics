@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from wildfire_front.geometry_speed import (
     estimate_geometry_speeds,
@@ -15,13 +14,7 @@ from wildfire_front.models import FrontObservation, GeometrySpeedConfig, Line
 
 
 def rectangle(min_x: float, min_y: float, max_x: float, max_y: float) -> Line:
-    return (
-        (min_x, min_y),
-        (max_x, min_y),
-        (max_x, max_y),
-        (min_x, max_y),
-        (min_x, min_y),
-    )
+    return ((min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y), (min_x, min_y))
 
 
 def observation(
@@ -42,7 +35,7 @@ def observation(
     )
 
 
-class GeometrySpeedTests(unittest.TestCase):
+class GeometrySpeedTests:
     def test_non_radial_rectangle_expansion_recovers_local_speed(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 20, 10),))
         current = observation(60.0, (rectangle(-2, -2, 22, 12),))
@@ -52,17 +45,17 @@ class GeometrySpeedTests(unittest.TestCase):
         )
         summary = summarize_geometry_speeds(result)
         observable = [item.speed_m_min for item in result.estimates if item.observable]
-        self.assertGreater(summary["observable_ratio"], 0.8)
-        self.assertAlmostEqual(2.0, float(np.median(observable)), delta=0.15)
-        self.assertEqual("estimated", summary["speed_status"])
+        assert summary["observable_ratio"] > 0.8
+        assert pytest.approx(float(np.median(observable)), abs=0.15) == 2.0
+        assert summary["speed_status"] == "estimated"
 
     def test_sub_error_motion_abstains(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 20, 10),), error_m=1.0)
         current = observation(60.0, (rectangle(-0.2, -0.2, 20.2, 10.2),), error_m=1.0)
         result = estimate_geometry_speeds([previous, current])
         summary = summarize_geometry_speeds(result)
-        self.assertEqual("abstained", summary["speed_status"])
-        self.assertEqual(0, summary["num_observable"])
+        assert summary["speed_status"] == "abstained"
+        assert summary["num_observable"] == 0
 
     def test_inconsistent_normal_intersection_abstains(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 20, 10),))
@@ -77,17 +70,14 @@ class GeometrySpeedTests(unittest.TestCase):
             ),
         )
         reasons = {item.abstention_reason for item in result.estimates}
-        self.assertIn("normal_intersection_inconsistent_with_nearest_boundary", reasons)
+        assert "normal_intersection_inconsistent_with_nearest_boundary" in reasons
 
     def test_new_ignition_is_unmatched_not_forced(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 10, 10),))
-        current = observation(
-            60.0,
-            (rectangle(-2, -2, 12, 12), rectangle(500, 500, 510, 510)),
-        )
+        current = observation(60.0, (rectangle(-2, -2, 12, 12), rectangle(500, 500, 510, 510)))
         result = estimate_geometry_speeds([previous, current])
-        self.assertEqual(1, result.matched_component_pairs)
-        self.assertEqual(1, result.unmatched_current_components)
+        assert result.matched_component_pairs == 1
+        assert result.unmatched_current_components == 1
 
     def test_component_matching_is_one_to_one(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 10, 10), rectangle(100, 100, 110, 110)))
@@ -95,29 +85,26 @@ class GeometrySpeedTests(unittest.TestCase):
         matches, missing_previous, missing_current = match_components(
             previous, current, GeometrySpeedConfig()
         )
-        self.assertEqual(2, len(matches))
-        self.assertFalse(missing_previous)
-        self.assertFalse(missing_current)
+        assert len(matches) == 2
+        assert not missing_previous
+        assert not missing_current
 
     def test_non_metric_crs_abstains_at_pair_level(self) -> None:
         previous = observation(0.0, (rectangle(0, 0, 10, 10),))
         current = observation(60.0, (rectangle(-1, -1, 11, 11),))
         current = FrontObservation(**{**current.__dict__, "coordinate_system": "geographic"})
         result = estimate_geometry_speeds([previous, current])
-        self.assertEqual(0, len(result.estimates))
-        self.assertTrue(
-            any(
-                "geometry speed requires projected metric coordinates" in reason
-                for reason in result.pair_abstentions
-            ),
-            f"Expected coordinate-system abstention, got {result.pair_abstentions}",
-        )
+        assert len(result.estimates) == 0
+        assert any(
+            "geometry speed requires projected metric coordinates" in reason
+            for reason in result.pair_abstentions
+        ), f"Expected coordinate-system abstention, got {result.pair_abstentions}"
 
     def test_resampling_and_orientation_are_stable(self) -> None:
         ring = rectangle(0, 0, 20, 10)
         sampled = resample_closed_component(ring, 2.0)
-        self.assertGreater(len(sampled), 10)
-        self.assertGreater(signed_area(ring), 0)
+        assert len(sampled) > 10
+        assert signed_area(ring) > 0
 
     def test_local_cartesian_crs_none_is_accepted(self) -> None:
         """Synthetic data uses coordinate_system='local_cartesian_m' + crs=None.
@@ -153,12 +140,12 @@ class GeometrySpeedTests(unittest.TestCase):
         )
         result = estimate_geometry_speeds([previous, current])
         summary = summarize_geometry_speeds(result)
-        self.assertEqual("estimated", summary["speed_status"])
-        self.assertGreater(summary["num_observable"], 0)
+        assert summary["speed_status"] == "estimated"
+        assert summary["num_observable"] > 0
 
     def test_mixed_crs_none_and_real_is_rejected(self) -> None:
         """crs=None mixed with a real EPSG code must be rejected."""
-        previous = observation(0.0, (rectangle(0, 0, 10, 10),))  # EPSG:32630
+        previous = observation(0.0, (rectangle(0, 0, 10, 10),))
         current = FrontObservation(
             observation_id="syn_cur",
             event_id="syn",
@@ -173,12 +160,7 @@ class GeometrySpeedTests(unittest.TestCase):
             method="synthetic",
         )
         result = estimate_geometry_speeds([previous, current])
-        self.assertEqual(0, len(result.estimates))
-        self.assertTrue(
-            any("matching CRS" in reason for reason in result.pair_abstentions),
-            f"Expected CRS mismatch abstention, got {result.pair_abstentions}",
+        assert len(result.estimates) == 0
+        assert any("matching CRS" in reason for reason in result.pair_abstentions), (
+            f"Expected CRS mismatch abstention, got {result.pair_abstentions}"
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

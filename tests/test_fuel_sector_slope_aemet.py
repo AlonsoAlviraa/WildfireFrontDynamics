@@ -69,9 +69,7 @@ class TestAemetWeather:
             "dir": "27",
             "prec": "0,0",
         }
-        ws = weather_scenario_from_aemet_daily(
-            rec, fire_id="tobarra_20240802", station_id="8175"
-        )
+        ws = weather_scenario_from_aemet_daily(rec, fire_id="tobarra_20240802", station_id="8175")
         assert ws.source == "aemet"
         assert ws.wind_10m_ms == pytest.approx(5.8, abs=0.05)
         assert ws.wind_from_deg == pytest.approx(270.0)

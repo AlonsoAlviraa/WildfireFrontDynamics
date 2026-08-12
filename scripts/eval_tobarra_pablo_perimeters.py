@@ -49,9 +49,7 @@ DEFAULT_KMZ = [
     "2024020124_TOBARRA_20240802_1830.kmz",
     "2024020124_TOBARRA_20240802_2143.kmz",
 ]
-DEFAULT_MAIN_FRONT = (
-    ROOT / "outputs" / "observatorio" / "tobarra_20240802" / "main_front.geojson"
-)
+DEFAULT_MAIN_FRONT = ROOT / "outputs" / "observatorio" / "tobarra_20240802" / "main_front.geojson"
 DEFAULT_OUT_DIR = ROOT / "outputs" / "tobarra_pablo_perimeters"
 DEFAULT_OUT = DEFAULT_OUT_DIR / "eval_report.json"
 
@@ -193,9 +191,7 @@ def _time_deltas_for_ops(
     out["wallclock_naive"] = {
         "delta_min_vs_main_front_last": round(d_last, 2),
         "delta_min_vs_main_front_first": round(d_first, 2) if d_first is not None else None,
-        "within_main_front_span": bool(
-            mf_first is not None and mf_first <= ops <= mf_last
-        ),
+        "within_main_front_span": bool(mf_first is not None and mf_first <= ops <= mf_last),
         "near_main_front_window": abs(d_last) <= OVERLAP_WINDOW_MIN
         or (
             mf_first is not None
@@ -272,9 +268,7 @@ def _centroid_wgs84(ring: tuple[tuple[float, float], ...]) -> list[float]:
     return [round(lon, 6), round(lat, 6)]
 
 
-def _pair_hausdorff_ops(
-    a: OpsPerimeter, b: OpsPerimeter, sample_spacing_m: float
-) -> dict:
+def _pair_hausdorff_ops(a: OpsPerimeter, b: OpsPerimeter, sample_spacing_m: float) -> dict:
     try:
         ra = ring_wgs84_to_utm30n(a.coords_wgs84)
         rb = ring_wgs84_to_utm30n(b.coords_wgs84)
@@ -617,9 +611,7 @@ def main() -> int:
         "ops_pair_hausdorff_m": pair.get("metrics_m"),
         "ops_pair_status": pair.get("status"),
         "vs_main_front_status": report["vs_reconstructed_main_front"].get("status"),
-        "instant_time_statuses": report["vs_reconstructed_main_front"].get(
-            "instant_time_statuses"
-        ),
+        "instant_time_statuses": report["vs_reconstructed_main_front"].get("instant_time_statuses"),
         "output": repo_relative_path(out),
         "geojson_exports": report.get("geojson_exports"),
     }

@@ -1,0 +1,20 @@
+{
+    "machine_shape":  "NvidiaTeslaT4",
+    "id":  "alonsoalviraaaa/wfd-metrics-lift-exact-force-ema",
+    "enable_gpu":  true,
+    "kernel_type":  "script",
+    "kernel_sources":  [
+
+                       ],
+    "dataset_sources":  [
+                            "alonsoalviraaaa/wfd-lofo-v1-core3"
+                        ],
+    "competition_sources":  [
+
+                            ],
+    "is_private":  true,
+    "enable_internet":  true,
+    "language":  "python",
+    "title":  "WFD Metrics Lift Exact Force EMA",
+    "code_file":  "run_metrics_lift_lofo_exact_force_ema.py"
+}

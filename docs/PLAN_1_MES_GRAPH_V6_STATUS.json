@@ -1,0 +1,290 @@
+{
+  "schema": "plan_1_mes_graph_v6_status",
+  "version": "6.1",
+  "as_of": "2026-08-04",
+  "horizon_start": "2026-08-04",
+  "horizon_end": "2026-09-04",
+  "mode": "v6.1",
+  "active_plan": "docs/PLAN_1_MES_GRAPH_V6_IMPLEMENT.md",
+  "research_map": "docs/fire_intel/RESEARCH_TO_GRAPH_V6_MAP.md",
+  "subwindow_plan": "docs/PLAN_1_MES_POST_O1_UNLOCK.md",
+  "graph_state": ".grok/graph_engineering/STATE.md",
+  "inputs_fused": [
+    "docs/PLAN_1_MES_POST_O1_UNLOCK.md",
+    "docs/REUNION_RESUMEN_Y_ANALISIS_ACCIONES.md",
+    "docs/fire_intel/INDUSTRY_RESEARCH_2024_2026_CONGRESOS_FERIAS_OSS.md",
+    "docs/MEGA_RESEARCH_MEJORAS_SOTA_2024_2026.md",
+    "docs/fire_intel/SOTA_STACK_ADOPTION_2026.md",
+    "docs/fire_intel/LITERATURE_CORPUS_ROS_FUEL.md",
+    "docs/fire_intel/COMPLETION_MATRIX.md",
+    "research/chinese_research.md",
+    "docs/GO_MES_VERDICT.md"
+  ],
+  "rails": {
+    "GO_MES": true,
+    "GO_MES_plus": false,
+    "GO_Q": "partial",
+    "ml_product_go": true,
+    "field_ops_ml_live_fusion": "OFF",
+    "invented_vp": false,
+    "joint_k_tobarra_hellin": false,
+    "hellin_grade_a_param_chase": "killed_as_primary",
+    "ml_retrain_hours_this_month_target": 0,
+    "lampman_mae_as_sla": false,
+    "crc_evacuate_labels": false
+  },
+  "ml_lab_product": {
+    "plan": "docs/PLAN_ML_PRODUCT_USABLE.md",
+    "status": "docs/PLAN_ML_PRODUCT_STATUS.json",
+    "cli": "wildfire-front ml list|show|predict|card|doctor",
+    "note": "lab surface only; does not flip GO_Q or field_ops fusion"
+  },
+  "gates": {
+    "GO_MES": {
+      "met": true,
+      "doc": "docs/GO_MES_VERDICT.md"
+    },
+    "O1": {
+      "met": true,
+      "status": "PASS"
+    },
+    "O4": {
+      "met": true,
+      "status": "PASS"
+    },
+    "P1_two_real_smoke": {
+      "met": true,
+      "status": "PASS"
+    },
+    "M2": {
+      "met": true,
+      "status": "PASS"
+    },
+    "E1_CI": {
+      "met": true,
+      "status": "PASS"
+    },
+    "O5": {
+      "met": false,
+      "status": "OPEN_HELLIN_B"
+    },
+    "O2": {
+      "met": false,
+      "status": "BLOCKED"
+    },
+    "M3.2": {
+      "met": false,
+      "status": "PENDING",
+      "templates_ready": true
+    },
+    "M3.4": {
+      "met": false,
+      "status": "ENG_FILLED_HUMAN_FINAL",
+      "skeleton_ready": true,
+      "eng_filled_path": "docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md",
+      "note": "Eng-filled product trimester report from repo evidence; awaiting human signature/final author stamp if archived as formal M3.4"
+    },
+    "GO_Q": {
+      "met": false,
+      "status": "partial"
+    }
+  },
+  "tracks": {
+    "H": {
+      "role": "human_primary",
+      "items": {
+        "H1_demo_acta": "TODO",
+        "H2_informe": "ENG_FILLED",
+        "H3_dry_run_pack": "ENG_EXECUTED_HUMAN_ATTESTATION_PENDING",
+        "H4_shadow_outreach": "TODO",
+        "H5_cyl_silence": "DONE"
+      },
+      "evidence": {
+        "H1": "TODO — prep kit ready: docs/H1_GO_Q_RUNBOOK.md + scripts/prepare_h1_acta_draft.py + scripts/record_h1_demo_complete.py (strict; no fake third party)",
+        "H2": "docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md (ENG_FILLED; GO_MES true; GO_Q partial; Hellín B / Tobarra A; fusion OFF; ml_product_go false; IoU≠ROS; cites reliability + research rails)",
+        "H3": "scripts/run_h3_dry_run_path.py → outputs/demo_third_party/H3_DRY_RUN_REPORT.md (eng path; human attestation pending; go_q_met false)",
+        "H5": "docs/fire_intel/CYL_SILENCE_RULE_NOTE.md + CyL block docs/CONTACTOS_EMERGENCIAS_DATOS.md + CONTACTOS_OUTREACH.csv silence ~2026-08-17"
+      }
+    },
+    "E": {
+      "role": "eng_evidence",
+      "items": {
+        "E1_demo_pack": "DONE",
+        "E2_reliability_report": "DONE",
+        "E3_replay_one_cmd": "DONE",
+        "E4_thermal_contract": "DONE",
+        "E5_open_freshness": "DONE",
+        "E6_card_reasons_uq": "DONE",
+        "E7_hub_abstention": "DONE",
+        "E9_metrics_onepager": "DONE",
+        "E10_portal_sync": "DONE"
+      },
+      "evidence": {
+        "E1": "scripts/build_demo_third_party_pack.py → outputs/demo_third_party/ + dist/zip",
+        "E2": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md",
+        "E3": "scripts/run_third_party_replay.py (exit 0 iff replay_ok)",
+        "E4": "docs/GEOTIFF_INPUT_CONTRACT.md + scripts/validate_geotiff_contract.py",
+        "E5": "scripts/audit_open_pack_freshness.py",
+        "E6": "wildfire_front/incident/pipeline.py render_decision_card_md reasons + UQ band",
+        "E7": "scripts/build_metrics_hub.py collect_abstention_slice → hub.abstention (abstain_rate, source_coverage)",
+        "E9": "docs/METRICS_HONESTY_IOU_NE_ROS.md",
+        "E10": "docs/START_HERE.md pack + reliability pointers"
+      }
+    },
+    "R": {
+      "role": "research_backed",
+      "items": {
+        "R-UQ1_orion_mapping": "DONE",
+        "R-STACK-L_lampman_in_report": "DONE",
+        "R-DATA1_oss_catalog": "DONE",
+        "R-B1_sector_ros": "DONE",
+        "R-SIM1_elmfire_forefire": "DONE",
+        "R-A1_effis_cems_perimeter": "DONE",
+        "R-A3_firms_direction": "DONE",
+        "R-B4_eo_lwir_inventory": "DONE",
+        "R-OSS1_pyronear_feds": "DONE",
+        "R-CN1_lab_only_flag": "DONE",
+        "R-LIT1_corpus_hygiene": "maintain",
+        "R-C_wfts_swin_retrain": "FROZEN"
+      },
+      "evidence": {
+        "R-UQ1": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md §3 + card MD uncertainty band",
+        "R-STACK-L": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md §1 Lampman method cite",
+        "R-DATA1": "docs/fire_intel/OSS_DATASETS_CATALOG_2026.md",
+        "R-B1": "docs/fire_intel/SECTOR_ROS_TOBARRA_NOTE.md (export exists; not invented)",
+        "R-SIM1": "docs/fire_intel/ELMFIRE_FOREFIRE_SPIKE_NOTE.md (no install; compare protocol)",
+        "R-A1": "scripts/summarize_open_perimeter_attempt.py → outputs/open_perimeter_attempts/",
+        "R-A3": "scripts/firms_direction_overlay_note.py → outputs/firms_direction_notes/",
+        "R-B4": "docs/fire_intel/EO_LWIR_PAIR_INVENTORY.md (0 co-located pairs indexed)",
+        "R-OSS1": "OSS_DATASETS_CATALOG_2026.md § R-OSS1 Pyronear/FEDS/FlamMap",
+        "R-CN1": "docs/fire_intel/CN_RESEARCH_LAB_ONLY.md"
+      }
+    },
+    "I": {
+      "role": "industry_calendar",
+      "items": {
+        "I1_owtrd_notes": "DONE",
+        "I2_icffr_abstract": "DONE",
+        "I3_red_sky_decision": "DONE",
+        "I4_interschutz_flag": "DONE",
+        "I5_oss_catalog": "DONE"
+      },
+      "evidence": {
+        "I1": "docs/fire_intel/OWTRD_NOTES.md (skeleton + public URLs; PDF sections UNREAD)",
+        "I2": "docs/fire_intel/ICFFR_ABSTRACT_DRAFT.md (draft only)",
+        "I3": "docs/fire_intel/INDUSTRY_CALENDAR_DECISIONS.md (Red Sky WAIT→prepare apply)",
+        "I4": "docs/fire_intel/INDUSTRY_CALENDAR_DECISIONS.md (INTERSCHUTZ SKIP 2026 default)"
+      }
+    },
+    "X": {
+      "role": "external_wait",
+      "items": {
+        "O2_national": "BLOCKED",
+        "O5_second_grade_a": "OPEN",
+        "third_anchor_cardoso": "pending_external"
+      }
+    },
+    "T": {
+      "role": "teach_cli_overlay_v7",
+      "items": {
+        "T1_teach_cmd": "DONE",
+        "T2_show_cmd": "DONE",
+        "T3_demo_third_party_cli": "DONE",
+        "T4_decide_explain": "DONE",
+        "T5_cheatsheet_12min": "DONE",
+        "T6_crosslinks_tests": "DONE"
+      },
+      "note": "Eng teachability overlay. Does NOT flip GO_Q. Primary product gate remains H1/M3.2.",
+      "evidence": {
+        "T1": "wildfire_front/cli_teach.py + product/teach_path.py → wildfire-front teach",
+        "T2": "wildfire-front show (gates snapshot; not portal rebuild)",
+        "T3": "wildfire-front demo-third-party (importlib E1 + E3; replay default ON)",
+        "T4": "decide --explain presentation only",
+        "T5": "docs/CHEATSHEET_DEMO_12MIN.md",
+        "T6": "tests/test_cli_teach_product.py + START_HERE/CURSO links"
+      }
+    }
+  },
+  "critical_path": [
+    "E3_replay_one_cmd",
+    "E1_demo_pack",
+    "R-UQ1_orion_mapping",
+    "R-STACK-L_lampman_in_report",
+    "E2_reliability_report",
+    "H3_dry_run_pack",
+    "H1_demo_acta",
+    "H2_informe",
+    "GO_Q_checklist"
+  ],
+  "research_on_critical_path": [
+    "citations_and_UQ_rails_only",
+    "not_model_retrain"
+  ],
+  "weeks": {
+    "S1_2026-08-04_to_08-10": "pack_plus_research_spine",
+    "S2_2026-08-11_to_08-17": "human_close_plus_report_final",
+    "S3_2026-08-18_to_08-24": "thermal_open_research_eng",
+    "S4_2026-08-25_to_09-04": "GO_Q_and_stretch_research"
+  },
+  "capacity_pct": {
+    "human_demo_informe": 30,
+    "eng_evidence_stack": 25,
+    "eng_diversify": 12,
+    "research_backed_R": 15,
+    "industry_calendar": 8,
+    "hygiene_wait": 10
+  },
+  "next_72h": [
+    "H3: human attestation still pending — walk cheatsheet 12 min offline (eng path executed)",
+    "H1: schedule third-party demo + fill acta (blocks full GO_Q); use docs/H1_GO_Q_RUNBOOK.md",
+    "H2: optional human stamp/final author on docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md",
+    "H5: respect CyL silence until ~2026-08-17 then one follow-up or close",
+    "Optional: live FIRMS re-overlay if network; PDF pass OWTRD 2024/2025"
+  ],
+  "eng_shipped_this_run": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E9",
+    "E10",
+    "R-UQ1",
+    "R-STACK-L",
+    "R-DATA1",
+    "R-B1",
+    "R-SIM1",
+    "R-A1",
+    "R-A3",
+    "R-B4",
+    "R-OSS1",
+    "R-CN1",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I5",
+    "H3_eng_support",
+    "H3_full_path_dry_run",
+    "H1_prep_kit",
+    "H2_informe_eng_filled",
+    "H5_cyl_silence_note",
+    "T1_T6_teach_cli_v7"
+  ],
+  "kill_list": [
+    "hellin_param_spam_primary",
+    "field_ops_fusion_on",
+    "ml_product_go_true",
+    "invented_anchors",
+    "joint_k_7_50",
+    "iou_as_ros",
+    "claim_GO_Q_without_M3.2",
+    "ml_retrain_as_primary_this_month",
+    "lampman_mae_as_sla",
+    "crc_evacuate_product_labels",
+    "cn_ca_cnn_field_product",
+    "wfts_swin_retrain_primary"
+  ]
+}

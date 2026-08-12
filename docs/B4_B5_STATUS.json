@@ -1,0 +1,41 @@
+{
+  "schema": "wfd_b4_b5_status_v1",
+  "as_of_utc": "2026-08-10T12:06:29.412481+00:00",
+  "product_flags_touched": false,
+  "B4": {
+    "id": "second_grade_A_ops",
+    "status": "OPEN",
+    "tobarra": "A",
+    "hellin_structural_grade": "B",
+    "hellin_grade_a_eligible": false,
+    "n_grade_a_ops": 1,
+    "need": "second IF with grade A + in-band ROS/Vp without silent k-fit",
+    "calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md",
+    "scorecard": "docs/HELLIN_TRACK_A_SCORECARD.md"
+  },
+  "B5": {
+    "id": "o2_national_perimeter",
+    "status": "BLOCKED_EXTERNAL",
+    "official_national": false,
+    "open_proxy_note": "CEMS/EFFIS dual-track only — not official cadastre",
+    "outreach_batch_20260810": {
+      "sent": 19,
+      "total": 19
+    },
+    "silence": [
+      "CyL 4082 until ~2026-08-17"
+    ],
+    "calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md",
+    "blocked_doc": "docs/O2_HAUSDORFF_BLOCKED.md"
+  },
+  "eng_actions_done": [
+    "Calendar doc B4_B5_UNBLOCK_CALENDAR.md",
+    "Status probe JSON (this file)",
+    "No GO_MES+ flip"
+  ],
+  "human_next": [
+    "Follow-up outreach non-response (not CyL silence)",
+    "Request 2nd complete IF package from partner",
+    "After new media: re-run score_hellin_track_a.py"
+  ]
+}

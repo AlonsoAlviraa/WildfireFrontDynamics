@@ -23,13 +23,15 @@ parser = argparse.ArgumentParser(description="Wildfire U-Net v21 — delta targe
 parser.add_argument("--epochs", type=int, default=50)
 parser.add_argument("--batch-size", type=int, default=32)
 parser.add_argument("--lr", type=float, default=1e-3)
-parser.add_argument("--loss", choices=["combined", "composite", "tversky", "focal", "bce"],
-                    default="composite")
+parser.add_argument(
+    "--loss", choices=["combined", "composite", "tversky", "focal", "bce"], default="composite"
+)
 parser.add_argument("--pos-weight", type=float, default=5.0)
 parser.add_argument("--model", choices=["full", "small"], default="small")
 parser.add_argument("--architecture", choices=["standard", "residual"], default="residual")
-parser.add_argument("--target-mode", choices=["absolute", "delta", "changed_weighted"],
-                    default="delta")
+parser.add_argument(
+    "--target-mode", choices=["absolute", "delta", "changed_weighted"], default="delta"
+)
 parser.add_argument("--change-loss-weight", type=float, default=5.0)
 parser.add_argument("--weighted-sampler", action="store_true", default=True)
 parser.add_argument("--no-weighted-sampler", action="store_false", dest="weighted_sampler")
@@ -77,15 +79,18 @@ def _install_pytorch_p100_compat() -> None:
     try:
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if result.returncode != 0 or "P100" not in result.stdout:
             return
         print("  P100 detected — attempting PyTorch 2.1.2 (sm_60 support)...")
         pip_result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q",
-             "torch==2.1.2", "torchvision==0.16.2"],
-            capture_output=True, text=True, timeout=600,
+            [sys.executable, "-m", "pip", "install", "-q", "torch==2.1.2", "torchvision==0.16.2"],
+            capture_output=True,
+            text=True,
+            timeout=600,
         )
         if pip_result.returncode == 0:
             print("  PyTorch 2.1.2 installed.")
@@ -186,10 +191,14 @@ if not args.smoke_test:
                 print(f"  {split}: {existing} patches exist, skipping")
                 continue
             cmd = [
-                sys.executable, str(script),
-                "--split", split,
-                "--patch-size", "64",
-                "--filter-mode", args.filter_mode,
+                sys.executable,
+                str(script),
+                "--split",
+                split,
+                "--patch-size",
+                "64",
+                "--filter-mode",
+                args.filter_mode,
             ]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:

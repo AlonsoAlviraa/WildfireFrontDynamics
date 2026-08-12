@@ -20,14 +20,13 @@ if str(ROOT) not in sys.path:
 
 from wildfire_front.fuel.calibration import (  # noqa: E402
     CalibrationRefusedError,
-    fit_sector_scale_factors,
-    save_recipe,
 )
 from wildfire_front.fuel.dem import (  # noqa: E402
     TOBARRA_BBOX_WGS84,
     DemUnavailableError,
     resolve_dem,
 )
+
 # TOBARRA_BBOX also used for envelope origin
 from wildfire_front.fuel.hybrid import hybrid_ros_prior  # noqa: E402
 from wildfire_front.fuel.rothermel_lite import (  # noqa: E402
@@ -189,11 +188,7 @@ def main() -> int:
     except DemUnavailableError as exc:
         # Legacy convenience: bare CLI with no flags falls back to synthetic once,
         # with an explicit stderr note (never silent).
-        if (
-            args.dem is None
-            and not args.allow_download
-            and not allow_syn
-        ):
+        if args.dem is None and not args.allow_download and not allow_syn:
             print(
                 "NOTE: no local DEM/cache and --allow-download not set; "
                 "falling back to synthetic DEM. Pass --dem, --allow-download, "
@@ -233,11 +228,7 @@ def main() -> int:
             reference_transform=dem.transform,
         )
     except FuelMapUnavailableError as exc:
-        if (
-            args.landcover is None
-            and not args.allow_fuel_download
-            and not allow_fuel_syn
-        ):
+        if args.landcover is None and not args.allow_fuel_download and not allow_fuel_syn:
             print(
                 "NOTE: no landcover/cache; using synthetic fuel mosaic. "
                 "Pass --landcover, --allow-fuel-download, or --allow-fuel-synthetic.",
@@ -367,16 +358,8 @@ def main() -> int:
             dead_fmc_pct=args.fmc,
         )
         wind_ms = wx_merge.wind_10m_ms  # may be None → physics ABSTAIN
-        wind_from = (
-            float(wx_merge.wind_from_deg)
-            if wx_merge.wind_from_deg is not None
-            else 0.0
-        )
-        fmc = (
-            float(wx_merge.dead_fmc_pct)
-            if wx_merge.dead_fmc_pct is not None
-            else float(args.fmc)
-        )
+        wind_from = float(wx_merge.wind_from_deg) if wx_merge.wind_from_deg is not None else 0.0
+        fmc = float(wx_merge.dead_fmc_pct) if wx_merge.dead_fmc_pct is not None else float(args.fmc)
         weather_assumed = bool(wx_merge.weather_scenario_assumed)
         head_b = (wind_from + 180.0) % 360.0
 
@@ -384,11 +367,11 @@ def main() -> int:
         sector_summary = None
         if use_spatial:
             try:
-                sector_summary = sector_fuel_summary_from_product(
-                    fmap, head_bearing_deg=head_b
-                )
+                sector_summary = sector_fuel_summary_from_product(fmap, head_bearing_deg=head_b)
             except Exception as exc:
-                print(f"NOTE: sector fuel summary failed ({exc}); dominant fuel only", file=sys.stderr)
+                print(
+                    f"NOTE: sector fuel summary failed ({exc}); dominant fuel only", file=sys.stderr
+                )
                 use_spatial = False
 
         slope_grid = stack.layers.get("slope_deg") if use_spatial else None
@@ -464,9 +447,7 @@ def main() -> int:
                 "sector_slopes_deg": drivers.get("sector_slopes_deg"),
                 "sector_terrain": drivers.get("sector_terrain"),
             }
-            st_path.write_text(
-                json.dumps(st_doc, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+            st_path.write_text(json.dumps(st_doc, indent=2, ensure_ascii=False), encoding="utf-8")
             paths["sector_slopes"] = str(st_path)
             payload["sector_slopes"] = st_doc
         wx_path = out / "weather_scenario.json"

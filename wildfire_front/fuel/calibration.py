@@ -7,8 +7,8 @@ Never overwrites official anchors. Raw metrics always retained for honesty.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -92,7 +92,7 @@ class CalibrationRecipe:
             no_tactical_dispatch=bool(d.get("no_tactical_dispatch", True)),
             honesty_notes=list(d.get("honesty_notes") or []),
             literature_refs=list(d.get("literature_refs") or []),
-            created_at=str(d.get("created_at") or datetime.now(timezone.utc).isoformat()),
+            created_at=str(d.get("created_at") or datetime.now(UTC).isoformat()),
         )
 
 
@@ -105,9 +105,7 @@ def residual_metrics(
 ) -> dict[str, Any]:
     """Split raw vs cal residual metrics (honesty)."""
     out: dict[str, Any] = {
-        "honesty": (
-            "cal_err~0 after fit-to-obs is by construction; raw metrics are the model gap"
-        )
+        "honesty": ("cal_err~0 after fit-to-obs is by construction; raw metrics are the model gap")
     }
     raw = float(ros_head_raw)
     if observed_ros_head_m_min is not None and observed_ros_head_m_min > 0:
@@ -318,7 +316,7 @@ def fit_sector_scale_factors(
             "kim_2025_cell2fire / Cell2Fire HROS-BROS-FROS adjustment factors",
             "cardil_2023_ops_ros_bias protocol (report bias, do not silent-fix obs)",
         ],
-        created_at=datetime.now(timezone.utc).isoformat(),
+        created_at=datetime.now(UTC).isoformat(),
     )
 
 

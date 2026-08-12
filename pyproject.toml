@@ -47,7 +47,14 @@ Documentation = "https://github.com/AlonsoAlviraa/WildfireFrontDynamics/tree/mai
 [project.optional-dependencies]
 ml = ["torch>=2.0", "scikit-learn>=1.3"]
 cloud = ["tensorflow>=2.15"]
-dev = ["pytest>=7.0", "hypothesis>=6.0", "ruff>=0.4", "mypy>=1.10"]
+dev = [
+    "pytest>=7.0",
+    "hypothesis>=6.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest-cov>=5.0",
+    "coverage>=7.0",
+]
 viz = ["matplotlib>=3.7", "Pillow>=10.0"]
 all = ["wildfire-front-dynamics[ml,cloud,dev,viz]"]
 
@@ -61,6 +68,9 @@ filterwarnings = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+# Collect both pytest-style Test* and legacy *Tests class names after
+# unittest.TestCase → plain class migrations (pytest default is Test* only).
+python_classes = ["Test*", "*Tests"]
 markers = [
     "requires_weights: needs local .pt checkpoints under models/ (gitignored; see CONTRIBUTING)",
     "slow: high-volume property / Monte Carlo grids (nightly; excluded from default CI with -m 'not slow')",

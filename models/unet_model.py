@@ -33,7 +33,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 # --------------------------------------------------------------------------- #
 # Building blocks
 # --------------------------------------------------------------------------- #
@@ -55,19 +54,19 @@ class DoubleConv(nn.Module):
         mid = mid_channels if mid_channels is not None else out_channels
         self.residual = residual and (in_channels == out_channels)
 
-        if norm == "batch":
-            norm_layer = lambda c: nn.BatchNorm2d(c)
-        elif norm == "instance":
-            norm_layer = lambda c: nn.InstanceNorm2d(c)
-        else:
-            norm_layer = lambda c: nn.GroupNorm(8, c)
+        def _make_norm(channels: int) -> nn.Module:
+            if norm == "batch":
+                return nn.BatchNorm2d(channels)
+            if norm == "instance":
+                return nn.InstanceNorm2d(channels)
+            return nn.GroupNorm(8, channels)
 
         self.double_conv = nn.Sequential(
             nn.Conv2d(in_channels, mid, kernel_size=3, padding=1, bias=False),
-            norm_layer(mid),
+            _make_norm(mid),
             nn.ReLU(inplace=True),
             nn.Conv2d(mid, out_channels, kernel_size=3, padding=1, bias=False),
-            norm_layer(out_channels),
+            _make_norm(out_channels),
             nn.ReLU(inplace=True),
         )
 
@@ -104,9 +103,7 @@ class SqueezeExcitation(nn.Module):
 class DownBlock(nn.Module):
     """MaxPool → DoubleConv downsampling block."""
 
-    def __init__(
-        self, in_channels: int, out_channels: int, **conv_kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, **conv_kwargs):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool2d(2),
@@ -120,9 +117,7 @@ class DownBlock(nn.Module):
 class UpBlock(nn.Module):
     """Upsample → Concatenate skip → DoubleConv upsampling block."""
 
-    def __init__(
-        self, in_channels: int, out_channels: int, bilinear: bool = True, **conv_kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, bilinear: bool = True, **conv_kwargs):
         super().__init__()
         if bilinear:
             self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
@@ -130,9 +125,7 @@ class UpBlock(nn.Module):
                 in_channels, out_channels, mid_channels=in_channels // 2, **conv_kwargs
             )
         else:
-            self.up = nn.ConvTranspose2d(
-                in_channels, in_channels // 2, kernel_size=2, stride=2
-            )
+            self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels, **conv_kwargs)
 
     def forward(self, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
@@ -140,9 +133,7 @@ class UpBlock(nn.Module):
         # Pad if sizes don't match (for odd input dimensions)
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
-        x1 = F.pad(
-            x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2]
-        )
+        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
 
@@ -175,7 +166,7 @@ class WildfireUNet(nn.Module):
         self.out_channels = out_channels
         self.bilinear = bilinear
 
-        conv_kw = dict(norm=norm, se_attention=se_attention)
+        conv_kw = {"norm": norm, "se_attention": se_attention}
 
         # Encoder (downsampling path) — 64→32→16→8
         self.inc = DoubleConv(in_channels, 64, **conv_kw)
@@ -194,14 +185,14 @@ class WildfireUNet(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass — processes entire batch at once."""
-        x1 = self.inc(x)      # (B, 64, 64, 64)
-        x2 = self.down1(x1)   # (B, 128, 32, 32)
-        x3 = self.down2(x2)   # (B, 256, 16, 16)
-        x4 = self.down3(x3)   # (B, 256, 8, 8) — bottleneck
+        x1 = self.inc(x)  # (B, 64, 64, 64)
+        x2 = self.down1(x1)  # (B, 128, 32, 32)
+        x3 = self.down2(x2)  # (B, 256, 16, 16)
+        x4 = self.down3(x3)  # (B, 256, 8, 8) — bottleneck
 
         x = self.up1(x4, x3)  # (B, 128, 16, 16)
-        x = self.up2(x, x2)   # (B, 64, 32, 32)
-        x = self.up3(x, x1)   # (B, 64, 64, 64)
+        x = self.up2(x, x2)  # (B, 64, 32, 32)
+        x = self.up3(x, x1)  # (B, 64, 64, 64)
 
         logits = self.outc(x)  # (B, 1, 64, 64)
         return logits
@@ -233,7 +224,7 @@ class WildfireUNetSmall(nn.Module):
         super().__init__()
         self.bilinear = bilinear
 
-        conv_kw = dict(norm=norm, se_attention=se_attention)
+        conv_kw = {"norm": norm, "se_attention": se_attention}
 
         self.inc = DoubleConv(in_channels, 32, **conv_kw)
         self.down1 = DownBlock(32, 64, **conv_kw)
@@ -321,9 +312,7 @@ def weighted_bce_loss(
         Scalar loss
     """
     pw = torch.tensor(pos_weight, device=logits.device, dtype=logits.dtype)
-    return F.binary_cross_entropy_with_logits(
-        logits, targets, reduction="mean", pos_weight=pw
-    )
+    return F.binary_cross_entropy_with_logits(logits, targets, reduction="mean", pos_weight=pw)
 
 
 def dynamic_weighted_bce(
@@ -403,9 +392,7 @@ def focal_loss(
     logits = torch.where(torch.isnan(logits), torch.zeros_like(logits), logits)
 
     pw = torch.tensor(pos_weight, device=logits.device, dtype=logits.dtype)
-    bce = F.binary_cross_entropy_with_logits(
-        logits, targets, reduction="none", pos_weight=pw
-    )
+    bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none", pos_weight=pw)
     p = torch.sigmoid(logits)
     p_t = p * targets + (1.0 - p) * (1.0 - targets)
     focal_factor = (1.0 - p_t) ** gamma
@@ -496,7 +483,8 @@ def make_loss_fn(name: str = "combined", **kwargs):
     # Filter kwargs to only those the function actually accepts
     sig = inspect.signature(base_fn)
     valid_params = {
-        p.name for p in sig.parameters.values()
+        p.name
+        for p in sig.parameters.values()
         if p.kind in (p.POSITIONAL_OR_KEYWORD, p.KEYWORD_ONLY)
     }
     # If the function accepts **kwargs, keep everything

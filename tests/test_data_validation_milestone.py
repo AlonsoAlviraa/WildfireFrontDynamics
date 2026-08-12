@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import tempfile
-import unittest
 from pathlib import Path
 
 from scripts.run_data_validation_sprint import DEFAULT_DATASET_ID, build_parser
@@ -35,11 +34,11 @@ def populate_pipeline(pipeline: Path) -> None:
     write(pipeline / "summary.json", json.dumps({"metrics": {"speed_status": "estimated"}}))
 
 
-class DataValidationMilestoneTests(unittest.TestCase):
+class DataValidationMilestoneTests:
     def test_sprint_parser_defaults_to_semireal_candidate(self) -> None:
         args = build_parser().parse_args([])
-        self.assertEqual(DEFAULT_DATASET_ID, args.dataset_id)
-        self.assertFalse(args.skip_tests)
+        assert args.dataset_id == DEFAULT_DATASET_ID
+        assert not args.skip_tests
 
     def test_complete_candidate_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -73,7 +72,7 @@ class DataValidationMilestoneTests(unittest.TestCase):
                 pipeline_dir=pipeline,
                 audit_doc=doc,
             )
-        self.assertTrue(all(check.passed for check in checks))
+        assert all(check.passed for check in checks)
 
     def test_reference_metrics_without_annotations_fail(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -108,7 +107,7 @@ class DataValidationMilestoneTests(unittest.TestCase):
                 audit_doc=doc,
             )
         failed = {check.name for check in checks if not check.passed}
-        self.assertIn("reference_metric_policy", failed)
+        assert "reference_metric_policy" in failed
 
     def test_too_few_observations_fail_timestamp_window(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -143,8 +142,4 @@ class DataValidationMilestoneTests(unittest.TestCase):
                 audit_doc=doc,
             )
         failed = {check.name for check in checks if not check.passed}
-        self.assertIn("candidate_timestamp_window", failed)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert "candidate_timestamp_window" in failed

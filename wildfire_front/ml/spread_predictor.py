@@ -1,4 +1,13 @@
-"""Production inference for NDWS / CLM single and ensemble spread models."""
+"""Production inference for NDWS / CLM single and ensemble spread models.
+
+Feature / inference stage of the clm_ensemble_v34 product pipeline
+(features → calibrator conf → rank/reject → scorecard). Live conf + thr-reject
+go through ``product_facade.ClmEnsembleV34Facade`` /
+``apply_thr_reject`` (frozen VAL surface ``iter1_reject_only`` /
+``ITER1_LOCKED_REJECT_THR``), not a parallel ``uncertainty.decide_abstain`` path
+or legacy 0.35 hardcodes. Field fusion stays OFF; lab ``ml_product_go`` is
+promoted true (lab GO ≠ field fusion; no silent auto-flip thrash).
+"""
 
 from __future__ import annotations
 
@@ -12,6 +21,37 @@ import numpy as np
 import torch
 
 from wildfire_front.ml.unet_train import build_model, model_forward, prepare_input
+
+
+def _product_conf_and_abstain(
+    cal: Any,
+    diag: dict[str, float],
+    abstain_below: float | None,
+) -> tuple[float, bool]:
+    """Product-path conf + thr-reject via product_facade (single live path).
+
+    ``ClmEnsembleV34Facade.with_iter1_locked_thr`` → confidence →
+    ``apply_thr_reject`` at frozen VAL iter1 thr (or explicit ``abstain_below``).
+    Identity calibrators always abstain (not actionable on the product path).
+    """
+    from wildfire_front.ml.product_facade import (
+        ClmEnsembleV34Facade,
+        apply_thr_reject,
+    )
+
+    facade = ClmEnsembleV34Facade.with_iter1_locked_thr(cal)
+    conf = float(facade.confidence_from_diag(diag))
+    if bool(getattr(cal, "is_identity", False)):
+        return conf, True
+    thr = (
+        float(abstain_below)
+        if abstain_below is not None
+        else float(facade.rank_reject_cfg.reject_thr)
+    )
+    surface = apply_thr_reject(np.asarray([conf], dtype=np.float64), thr=thr)
+    keep = surface["keep"]
+    abstain = True if keep.size == 0 else (not bool(keep[0]))
+    return conf, abstain
 
 
 @dataclass(frozen=True)
@@ -188,11 +228,12 @@ class SpreadPredictor:
         Diagnostics: ``member_disagreement=0``, entropy/margin from absolute fire
         probability of the sole member (n_members=1).
 
-        ``abstain_below`` defaults to the calibrator artifact threshold
-        (``cal.abstain_threshold``), else 0.35.
+        ``abstain_below`` defaults to the frozen VAL / product-facade reject thr
+        (``iter1_reject_only`` ≈ 0.795), not legacy 0.35. Explicit thr wins;
+        identity calibrator always abstains. Conf + abstain use
+        ``ClmEnsembleV34Facade`` / ``apply_thr_reject`` only.
         """
         from wildfire_front.ml.uncertainty import (
-            DEFAULT_ABSTAIN_THRESHOLD,
             LogisticCalibrator,
             SpreadPrediction,
             ensemble_diagnostics,
@@ -217,13 +258,7 @@ class SpreadPredictor:
         cal = calibrator if calibrator is not None else LogisticCalibrator.identity()
         if not isinstance(cal, LogisticCalibrator):
             cal = LogisticCalibrator.identity()
-        conf = float(cal.predict_proba(diag))
-        thr_ab = (
-            float(abstain_below)
-            if abstain_below is not None
-            else float(getattr(cal, "abstain_threshold", DEFAULT_ABSTAIN_THRESHOLD))
-        )
-        abstain = conf < thr_ab or bool(getattr(cal, "is_identity", False))
+        conf, abstain = _product_conf_and_abstain(cal, diag, abstain_below)
         pid = product_id or self.manifest.version or "single"
         return SpreadPrediction(
             prob=prob_np,
@@ -460,11 +495,12 @@ class EnsembleSpreadPredictor:
         decodes ``prev_bin`` with ``manifest.threshold`` always; caller
         ``threshold`` applies only to the binary mask.
 
-        ``abstain_below`` defaults to the calibrator artifact threshold
-        (``cal.abstain_threshold``), else 0.35.
+        ``abstain_below`` defaults to the frozen VAL / product-facade reject thr
+        (``iter1_reject_only`` ≈ 0.795), not legacy 0.35. Explicit thr wins;
+        identity calibrator always abstains (not actionable on product path).
+        Conf + abstain use ``ClmEnsembleV34Facade`` / ``apply_thr_reject`` only.
         """
         from wildfire_front.ml.uncertainty import (
-            DEFAULT_ABSTAIN_THRESHOLD,
             LogisticCalibrator,
             SpreadPrediction,
             ensemble_diagnostics,
@@ -522,14 +558,8 @@ class EnsembleSpreadPredictor:
         cal = calibrator if calibrator is not None else LogisticCalibrator.identity()
         if not isinstance(cal, LogisticCalibrator):
             cal = LogisticCalibrator.identity()
-        conf = float(cal.predict_proba(diag))
-        # Identity / unfitted calibrator must not look actionable on product path.
-        thr_ab = (
-            float(abstain_below)
-            if abstain_below is not None
-            else float(getattr(cal, "abstain_threshold", DEFAULT_ABSTAIN_THRESHOLD))
-        )
-        abstain = conf < thr_ab or bool(getattr(cal, "is_identity", False))
+        # Single product path: facade conf → apply_thr_reject (no dual decide_abstain).
+        conf, abstain = _product_conf_and_abstain(cal, diag, abstain_below)
         pid = product_id or self.manifest.version or "clm_ensemble"
         return SpreadPrediction(
             prob=prob_np,

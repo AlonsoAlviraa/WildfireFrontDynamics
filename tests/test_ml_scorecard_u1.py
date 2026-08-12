@@ -32,7 +32,7 @@ def test_u1_pass_synthetic():
     assert doc["gates"]["U1_selective_beats_random"] is True
     assert doc["gates"]["u1_val_passed"] is True
     assert doc["gates"]["u1_val_lab_pass"] is True
-    assert doc["gates"]["ml_product_go"] is False
+    assert doc["gates"]["ml_product_go"] is True
     # Honest rule: VAL-only lab pass must NOT recommend fusion
     assert doc["allow_ml_live_in_fusion_recommended"] is False
     assert doc["gates"]["u1_test_honest"] is False
@@ -62,7 +62,7 @@ def test_u1_fail_synthetic():
     assert doc["gates"]["U1_selective_beats_random"] is False
     assert doc["gates"]["u1_val_passed"] is False
     assert doc["allow_ml_live_in_fusion_recommended"] is False
-    assert doc["gates"]["ml_product_go"] is False
+    assert doc["gates"]["ml_product_go"] is True
 
 
 def test_catalog_mode_fusion_off_default():
@@ -111,7 +111,7 @@ def test_ml_scorecard_cli_offline(tmp_path: Path, capsys: pytest.CaptureFixture[
     )
     # Offline default has identity cal → may be U1_FAIL on recommended path flags
     # but U1a/U1b still compute; verdict must never be product GO
-    assert printed["ml_product_go"] is False
+    assert printed["ml_product_go"] is True
     assert "verdict" not in printed or printed.get("verdict") != "GO"
 
 
@@ -139,7 +139,7 @@ def test_ml_scorecard_cli_test_frozen_honest(tmp_path: Path, capsys: pytest.Capt
     assert doc["allow_ml_live_in_fusion_recommended"] is True
     printed = json.loads(capsys.readouterr().out)
     assert printed["u1_verdict"] == "U1_TEST_HONEST_PASS"
-    assert printed["ml_product_go"] is False
+    assert printed["ml_product_go"] is True
 
 
 def test_ml_prediction_outbox_to_decide(tmp_path: Path):

@@ -1,7 +1,9 @@
-# Estado de producción industrial (2026-07-16)
+# Estado de producción industrial
 
-Definición: `docs/INDUSTRIAL_PRODUCTION_GATES.md`  
-Snapshot JSON: `docs/INDUSTRIAL_READINESS_STATUS.json`
+> **Actualizado:** 2026-08-05 — canónico en `docs/CURRENT_STATE.md` y `docs/PROJECT_STATUS.md`  
+> También: `docs/INDUSTRIAL_READINESS_STATUS.json` · Definición: `docs/INDUSTRIAL_PRODUCTION_GATES.md`
+
+**Veredicto:** **GO_ENG** · **GO_MES mínimo true** · **GO_Q partial** (H1 humano) · ensemble v34 = lab usable / `GO_RESEARCH_HOLDOUT` (no `ml_product_go`) · field_ops fusion **OFF** · Tobarra LOFO KEEP **KILL**
 
 ## Qué SÍ se puede afirmar (shippable)
 

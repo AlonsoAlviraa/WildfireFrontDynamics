@@ -11,10 +11,11 @@ Honesty rails:
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 # Cardinal / intercardinal → meteorological *from* degrees
 _CARDINAL_FROM_DEG: dict[str, float] = {
@@ -128,7 +129,7 @@ class WeatherScenario:
         return d
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "WeatherScenario":
+    def from_dict(cls, data: Mapping[str, Any]) -> WeatherScenario:
         notes = data.get("notes") or []
         if isinstance(notes, str):
             notes = [notes]
@@ -242,9 +243,7 @@ def tobarra_20240802_default_scenario() -> WeatherScenario:
             "pre_analisis_1711": (
                 "02/08/2024 17:11; meteo T35 HR10 wind W21 gust40; detection 16:42"
             ),
-            "inventory_path": (
-                "data/real_if/pablo_geacam_20260730_tobarra/inventory.json"
-            ),
+            "inventory_path": ("data/real_if/pablo_geacam_20260730_tobarra/inventory.json"),
             "wind_kmh_assumed": wind_kmh,
             "gust_kmh_assumed": gust_kmh,
             "wind_cardinal": "W",
@@ -267,7 +266,7 @@ def scenario_from_cli_args(
         wind_from_deg=wind_from_deg,
         dead_fmc_pct=dead_fmc_pct,
         source=source,
-        as_of=datetime.now(timezone.utc).isoformat(),
+        as_of=datetime.now(UTC).isoformat(),
         notes=list(notes or ["from_cli_args"]),
         fire_id=fire_id,
     )
@@ -373,9 +372,7 @@ def merge_weather_drivers(
         # Incomplete station payload: never present library wind as observed
         out_wind = None
         cleared.append("wind_10m_ms")
-        notes.append(
-            "observed_or_aemet_missing_wind_10m_ms_not_filled_from_library"
-        )
+        notes.append("observed_or_aemet_missing_wind_10m_ms_not_filled_from_library")
     elif wind_10m_ms is not None:
         out_wind = float(wind_10m_ms)
         # caller/CLI value under assumed scenario
@@ -440,9 +437,7 @@ def merge_weather_drivers(
         # (physics abstains) — incomplete but not falsely filled.
         if filled:
             assumed = True
-            notes.append(
-                "station_source_but_defaults_filled_weather_scenario_assumed"
-            )
+            notes.append("station_source_but_defaults_filled_weather_scenario_assumed")
         else:
             assumed = False
     else:
@@ -659,9 +654,7 @@ def fetch_aemet_daily_records(
     with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         meta = json.loads(_decode_aemet_body(resp.read()))
     if meta.get("estado") != 200:
-        raise RuntimeError(
-            f"AEMET status {meta.get('estado')}: {meta.get('descripcion')}"
-        )
+        raise RuntimeError(f"AEMET status {meta.get('estado')}: {meta.get('descripcion')}")
     data_url = meta.get("datos")
     if not data_url:
         raise RuntimeError("AEMET response missing datos URL")

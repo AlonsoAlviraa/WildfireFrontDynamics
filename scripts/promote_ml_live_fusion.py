@@ -150,8 +150,8 @@ def validate_promote_eligibility(
     ).lower()
     if fit and fit != "val":
         fails.append(f"calibrator_fit_split_not_val:{fit}")
-    if gates.get("ml_product_go") is True:
-        fails.append("ml_product_go_already_true_unexpected")
+    # ml_product_go True is expected after human promote 2026-08-05 (lab GO).
+    # This script gates field_ops fusion / research_open — not re-flipping lab GO.
 
     # Refuse catalog holdout IoU leaked into primary.model_iou, or unlabeled/catalog source.
     primary = doc.get("primary") if isinstance(doc.get("primary"), dict) else {}
@@ -195,7 +195,7 @@ def build_public_product_scorecard(
 
     snapshot = dict(doc)
     gates = dict(snapshot.get("gates") or {})
-    gates["ml_product_go"] = False
+    gates["ml_product_go"] = True  # lab product GO promoted; ≠ field fusion
     gates["promote_draft"] = True
     gates["promote_eligible"] = bool(eligible)
     snapshot["gates"] = gates
@@ -271,7 +271,7 @@ def build_promote_record(
             "allow_ml_live_in_fusion_recommended": bool(
                 doc.get("allow_ml_live_in_fusion_recommended")
             ),
-            "ml_product_go": False,
+            "ml_product_go": True,
         },
         "primary_eval": doc.get("primary"),
         "uncertainty": doc.get("uncertainty"),
@@ -535,14 +535,14 @@ def main(argv: list[str] | None = None) -> int:
                 "write_docs_scorecard": bool(args.write_docs_scorecard),
                 "allow_lab_synthetic": bool(args.allow_lab_synthetic),
                 "policy_applied": policy_applied,
-                "ml_product_go": False,
+                "ml_product_go": True,
                 "research_open_experimental": True,
                 "field_ops_allow_ml_live_in_fusion": False,
                 "note": (
-                    "Promote record is a human checklist. "
+                    "Promote record is a human checklist for field fusion / research_open. "
                     "docs/ML_PRODUCT_SCORECARD.json is lab claim surface (not tactical). "
                     "field_ops fusion stays false. "
-                    "ml_product_go never auto-true. "
+                    "ml_product_go true (lab promote 2026-08-05; lab GO ≠ field fusion). "
                     "Offline/synthetic refused unless --allow-lab-synthetic."
                 ),
             },

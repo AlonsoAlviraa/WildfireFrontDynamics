@@ -192,13 +192,13 @@ def load_queue() -> list[dict]:
     """Load experiment queue, creating default if missing."""
     if not QUEUE_FILE.exists():
         QUEUE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        QUEUE_FILE.write_text(json.dumps(DEFAULT_QUEUE, indent=2))
+        QUEUE_FILE.write_text(json.dumps(DEFAULT_QUEUE, indent=2), encoding="utf-8")
         print(f"[queue] Created default queue at {QUEUE_FILE}")
-    return json.loads(QUEUE_FILE.read_text())
+    return json.loads(QUEUE_FILE.read_text(encoding="utf-8"))
 
 
 def save_queue(queue: list[dict]):
-    QUEUE_FILE.write_text(json.dumps(queue, indent=2))
+    QUEUE_FILE.write_text(json.dumps(queue, indent=2), encoding="utf-8")
 
 
 def list_queue(queue: list[dict]):
@@ -274,14 +274,14 @@ def kaggle_push_kernel(exp: dict) -> bool:
         REPO_ROOT / "kaggle_job" / "kernel-metadata.json",
     ]
     metadata_path = next((p for p in meta_candidates if p.exists()), meta_candidates[-1])
-    meta = json.loads(metadata_path.read_text())
+    meta = json.loads(metadata_path.read_text(encoding="utf-8"))
     meta["source_file"] = script_path.name
     meta["id"] = kernel_slug_for(exp)
     meta["language"] = "python"
     meta["kernel_type"] = "script"
     # kaggle CLI reads kernel-metadata.json in the push folder
     push_meta = REPO_ROOT / "kaggle_job" / "kernel-metadata.json"
-    push_meta.write_text(json.dumps(meta, indent=2))
+    push_meta.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
     result = subprocess.run(
         ["kaggle", "kernels", "push", "-p", str(REPO_ROOT / "kaggle_job")],
@@ -340,7 +340,7 @@ def kaggle_pull_output(version: str, kernel_slug: str) -> dict | None:
 
     summary_path = out_dir / "training_summary.json"
     if summary_path.exists():
-        return json.loads(summary_path.read_text())
+        return json.loads(summary_path.read_text(encoding="utf-8"))
     print(f"[WARN] training_summary.json not found in {out_dir}")
     return None
 
@@ -502,7 +502,7 @@ def main():
     args = parser.parse_args()
 
     if args.reset_queue:
-        QUEUE_FILE.write_text(json.dumps(DEFAULT_QUEUE, indent=2))
+        QUEUE_FILE.write_text(json.dumps(DEFAULT_QUEUE, indent=2), encoding="utf-8")
         print(f"[info] Queue reset to defaults at {QUEUE_FILE}")
 
     queue = load_queue()

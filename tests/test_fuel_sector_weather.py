@@ -337,9 +337,7 @@ class TestAbstainEdges:
 
     def test_empty_fuel_grid_raises(self) -> None:
         with pytest.raises(ValueError, match="empty"):
-            sector_fuel_summary_from_grid(
-                np.array([]).reshape(0, 0), head_bearing_deg=90.0
-            )
+            sector_fuel_summary_from_grid(np.array([]).reshape(0, 0), head_bearing_deg=90.0)
 
     def test_invalid_fuel_id_remapped(self) -> None:
         """Issue 3: garbage strings remapped via catalog check, not try/except."""
@@ -374,9 +372,8 @@ class TestAbstainEdges:
         weather_doc = ws.to_dict()
         # preset branch (as fixed): only set assumed when weather_doc is None
         preset = "tobarra_scenario"
-        if preset == "tobarra_scenario":
-            if weather_doc is None:
-                assumed = True
+        if preset == "tobarra_scenario" and weather_doc is None:
+            assumed = True
             # else keep assumed from weather file
         assert assumed is False
         assert weather_doc["source"] == "observed"
@@ -424,9 +421,7 @@ class TestAbstainEdges:
             notes=["incomplete_station"],
         )
         # Direct merge: wind cleared, not filled to 4.4
-        m = merge_weather_drivers(
-            ws, wind_10m_ms=4.4, wind_from_deg=270.0, dead_fmc_pct=7.0
-        )
+        m = merge_weather_drivers(ws, wind_10m_ms=4.4, wind_from_deg=270.0, dead_fmc_pct=7.0)
         assert m.wind_10m_ms is None
         assert "wind_10m_ms" in m.fields_missing_cleared
         # FMC may be filled → assumed True if any fill; wind still not invented
@@ -442,7 +437,11 @@ class TestAbstainEdges:
         )
         # Physics must not report observed-labeled 4.4 m/s
         phys_wind = ((h.get("physics") or {}).get("drivers") or {}).get("wind_10m_ms")
-        assert phys_wind is None or phys_wind == 0.0 or h.get("physics", {}).get("status") == "abstained"
+        assert (
+            phys_wind is None
+            or phys_wind == 0.0
+            or h.get("physics", {}).get("status") == "abstained"
+        )
         assert (h.get("physics") or {}).get("status") == "abstained" or "missing_wind" in (
             (h.get("physics") or {}).get("reasons") or []
         )
@@ -485,11 +484,7 @@ class TestAbstainEdges:
         """Issue 11: build_hybrid_envelope resolve path — no 4.4 under assumed=False."""
         import importlib.util
 
-        script = (
-            Path(__file__).resolve().parents[1]
-            / "scripts"
-            / "build_hybrid_envelope.py"
-        )
+        script = Path(__file__).resolve().parents[1] / "scripts" / "build_hybrid_envelope.py"
         spec = importlib.util.spec_from_file_location("build_hybrid_envelope", script)
         assert spec and spec.loader
         mod = importlib.util.module_from_spec(spec)

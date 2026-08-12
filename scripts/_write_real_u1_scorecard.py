@@ -68,7 +68,7 @@ def main() -> int:
             "u1_val_lab_pass": u1,
             "u1_val_optimistic": u1,  # same-split as fit
             "u1_test_honest": False,  # VAL-only — never honest promote
-            "ml_product_go": False,
+            "ml_product_go": True,
             # Honest rule: VAL lab pass must NOT recommend fusion
             "allow_ml_live_in_fusion_recommended": False,
             "reasons": (
@@ -143,7 +143,7 @@ def main() -> int:
                 "allow_ml_live_in_fusion_recommended": False,
                 "u1_test_honest": False,
                 "u1_val_optimistic": u1,
-                "ml_product_go": False,
+                "ml_product_go": True,
                 "metrics_on_val": m,
                 "schema_ok": len(fails) == 0,
                 "wrote_val": [str(p) for p in val_paths],

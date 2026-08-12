@@ -10,25 +10,37 @@ table{width:100%;border-collapse:collapse} th,td{padding:.4rem;border-bottom:1px
 h1{margin-top:0}
 </style></head><body><div class="wrap">
 <h1>Metrics Hub</h1>
-<p class="muted">2026-07-27T14:55:16.684105+00:00 · c58d118 · hash 471e89014d526a7f…</p>
+<p class="muted">2026-08-04T14:44:28.330203+00:00 · eb95049 · hash 1c4be67a850b903d…</p>
 <div class="card">
   <span class="badge">GO</span>
-  <p>confidence_pred = <b>0.7559999999999999</b> (HIGH)
+  <p>confidence_pred = <b>0.8586666666666667</b> (HIGH)
   · system_reliability = <b>False</b></p>
   <p class="muted">99.9999% applies only to silent-GO prevention under tests — NOT fire accuracy.</p>
 </div>
 <div class="card">
-  <h2>ML v34</h2>
+  <h2>ML v34 — lab pitch (U1 TEST honest)</h2>
   <ul>
-    <li>IoU 0.8963</li>
-    <li>Δ copy 0.2545</li>
-    <li>growth 0.9071</li>
+    <li><b>U1 mean IoU</b> 0.8568865373678947</li>
+    <li><b>ECE</b> 0.15280955026564416</li>
+    <li>selective@80 0.903428533834858</li>
+    <li>u1_test_honest=True · ml_product_go=False</li>
   </ul>
+  <p class="muted">Catalog holdout IoU 0.8963 = <b>provenance only</b> — not live certainty, not ROS.</p>
 </div>
 <div class="card">
   <h2>Open CEMS packs</h2>
   <table><thead><tr><th>Pack</th><th>ha</th><th>steps</th><th>O2</th></tr></thead>
-  <tbody><tr><td>EMSR578</td><td>2693</td><td>5</td><td>GO</td></tr><tr><td>EMSR581</td><td>2210</td><td>4</td><td>GO</td></tr><tr><td>EMSR583</td><td>1791</td><td>5</td><td>GO</td></tr><tr><td>EMSR632</td><td>5320</td><td>4</td><td>GO</td></tr><tr><td>guadalajara_la_mierla_20260717</td><td>32000</td><td>1</td><td>NOT_ACTIVATED_OR_UNKNOWN</td></tr></tbody></table>
+  <tbody><tr><td>EMSR578</td><td>2693</td><td>5</td><td>GO</td></tr><tr><td>EMSR581</td><td>2210</td><td>4</td><td>GO</td></tr><tr><td>EMSR583</td><td>1791</td><td>5</td><td>GO</td></tr><tr><td>EMSR632</td><td>5320</td><td>4</td><td>GO</td></tr><tr><td>EMSR896</td><td>12133</td><td>4</td><td>GO</td></tr><tr><td>EMSR898</td><td>27213</td><td>8</td><td>GO</td></tr><tr><td>EMSR899</td><td>26065</td><td>2</td><td>GO</td></tr><tr><td>EMSR900</td><td>44377</td><td>10</td><td>GO</td></tr><tr><td>EMSR902</td><td>2682</td><td>3</td><td>GO</td></tr><tr><td>EMSR905</td><td>7266</td><td>3</td><td>GO</td></tr><tr><td>guadalajara_la_mierla_20260717</td><td>32000</td><td>1</td><td>NOT_ACTIVATED_OR_UNKNOWN</td></tr></tbody></table>
+</div>
+<div class="card">
+  <h2>Abstention (E7)</h2>
+  <ul>
+    <li>abstain_rate = <b>0.2777777777777778</b>
+      (n_cards=18)</li>
+    <li>source_coverage_mean = 0.5231481481481481</li>
+    <li>R3 = True · ml_live = OFF</li>
+  </ul>
+  <p class="muted">abstain_rate = fraction of sampled Decision Cards with decision=ABSTAIN (suite + on-disk artifacts). NOT live fire accuracy, NOT field fleet rate. source_coverage_mean = mean fraction of sources[] marked available per card. ml_live fusion remains OFF (weight 0 / not fused).</p>
 </div>
 <div class="card">
   <h2>Commercial</h2>
@@ -45,9 +57,10 @@ h1{margin-top:0}
   "G0_ndws": "GO",
   "G1_ndws": "KILL",
   "G2_clm_v28": "GO",
-  "G2e_ensemble_v34": "GO",
+  "G2e_ensemble_v34": "GO_RESEARCH_HOLDOUT",
   "O1_multi_anchor": "OPEN",
   "O2_hausdorff_official": "BLOCKED",
+  "O2_cems_open_proxy": "GO_PROXY",
   "O3_temporal": "PARTIAL",
   "O4_brief": "GO_ENG",
   "O5_second_grade_a": "OPEN",
@@ -55,7 +68,10 @@ h1{margin-top:0}
   "E1_ci_smokes": "GO_ENG",
   "D1_cyl": "FOLLOW_UP",
   "M2_v34_hold": "GO",
-  "M5_v35": "NO_DATA"
+  "M5_v35": "NO_DATA",
+  "pilot_honesty_pack": "GO_ENG",
+  "demo_multi_ccaa": "GO_ENG",
+  "third_party_demo": "PENDING"
 }</pre>
 </div>
 </div></body></html>

@@ -8,13 +8,15 @@ Network is **never** used unless ``allow_download=True``.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import math
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -58,7 +60,14 @@ class DemProduct:
         d.pop("elevation_m", None)
         t = self.transform
         if t is not None:
-            d["transform"] = [float(t.a), float(t.b), float(t.c), float(t.d), float(t.e), float(t.f)]
+            d["transform"] = [
+                float(t.a),
+                float(t.b),
+                float(t.c),
+                float(t.d),
+                float(t.e),
+                float(t.f),
+            ]
         d["shape"] = list(self.elevation_m.shape)
         d["elevation_m_stats"] = {
             "min": float(np.nanmin(self.elevation_m)),
@@ -192,9 +201,7 @@ def load_dem_geotiff(
         # If requested bbox does not intersect source, fall back to full source extent
         if not np.isfinite(dest).any():
             try:
-                w, s, e, n = transform_bounds(
-                    src_crs, "EPSG:4326", *src.bounds, densify_pts=21
-                )
+                w, s, e, n = transform_bounds(src_crs, "EPSG:4326", *src.bounds, densify_pts=21)
                 bbox = [float(w), float(s), float(e), float(n)]
             except Exception:
                 bbox = list(TOBARRA_BBOX_WGS84)
@@ -353,7 +360,7 @@ def download_glo30_window(
         "tiles": tiles,
         "hrefs": hrefs,
         "sha256": product.sha256,
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "fetched_at": datetime.now(UTC).isoformat(),
         "cache_path": str(cache_path.resolve()),
     }
     (cache_path.parent / "dem_manifest.json").write_text(
@@ -382,7 +389,9 @@ def synthetic_dem_product(
 
     # place grid in metric CRS covering bbox
     try:
-        transform, _, _, _ = _grid_for_bbox(bbox_wgs84, target_crs=target_crs, cell_size_m=cell_size_m)
+        transform, _, _, _ = _grid_for_bbox(
+            bbox_wgs84, target_crs=target_crs, cell_size_m=cell_size_m
+        )
         # override shape: rebuild transform for n x n
         rasterio, from_bounds, transform_bounds, _, _ = _require_rasterio()
         w, s, e, n_b = (float(x) for x in bbox_wgs84)
@@ -441,10 +450,8 @@ def resolve_dem(
             prod.source = "copernicus_glo30"
             prod.cache_path = str(cp.resolve())
             prod.notes.append("resolved_from_cache")
-            try:
+            with contextlib.suppress(OSError):
                 prod.sha256 = _sha256_file(cp)
-            except OSError:
-                pass
             return prod
         reasons.append(f"cache_missing:{cp}")
 

@@ -3,7 +3,12 @@
 > **Horizonte:** 4 semanas (≈ 2026-07-17 → 2026-08-17)  
 > **Método:** loop-engineering — hipótesis → un cambio → métrica honesta → GO/NO_GO → siguiente  
 > **Clientes:** (A) ops / CMA-INFOCAM  ·  (B) ML transfer CLM / TFG  
-> **Regla de oro:** ops y ML no se mezclan en claims; un experimento = una métrica primaria
+> **Regla de oro:** ops y ML no se mezclan en claims; un experimento = una métrica primaria  
+>  
+> **⚠ Plan activo (2026-08-04 post-parallel):** ver **`docs/PLAN_1_MES_POST_O1_UNLOCK.md`** y graph **v5**  
+> (`.grok/graph_engineering/STATE.md`). Snapshot: `docs/PLAN_1_MES_STATUS_20260804.json`.  
+> O1 multi-ancla **PASS** (Tobarra+Hellín). Track A Hellín eng **BLOCKED** (grade B/in-band; no P1 close).  
+> **Next primary = human demo M3.2** (templates ready). GO_MES sigue **false** hasta P1/O5 policy satisfied — eng BLOCKED ≠ GO_MES.
 
 ---
 
@@ -230,12 +235,12 @@ GO_MES+ = GO_MES AND
 | G1 NDWS | IoU≥0.25 Δ≥0.09 | **KILL** features/temporal |
 | G2 CLM single | holdout Δ>0 | GO v28 |
 | G2e ensemble | holdout + honest mix/temps | **GO v34** |
-| O1 multi-ancla | ≥2 IF | OPEN |
+| O1 multi-ancla | ≥2 IF | **PASS** (Tobarra+Hellín; 2026-08-03) |
 | O2 Hausdorff oficial | perímetro real | BLOCKED |
 | O3 temporal | ventanas estables | PARTIAL Tobarra |
-| O4 producto decisor | brief 5 min | PARTIAL |
-| O5 2º grado A | segundo IF | OPEN |
-| P1 incident | 2 IF smoke | PARTIAL |
+| O4 producto decisor | brief 5 min | PARTIAL → eng yes (field kit) |
+| O5 2º grado A | segundo IF | OPEN (Hellín grade B; eng BLOCKED) |
+| P1 incident | 2 IF smoke / 2º grade A | PARTIAL / eng BLOCKED — **no** GO_MES |
 
 ---
 
@@ -277,7 +282,7 @@ Checklist cierre (2026-08-17):
 ## 10. Progreso loop-engineering (2026-07-17)
 
 Ver `docs/SCORECARD_MES_1.md`. Ingeniería automatizable adelantada (semanas 1–2 eng + cierre parcial).  
-**GO_MES bloqueado por O1/O2 datos externos**, no por deuda de código del plan.
+**GO_MES bloqueado por P1/O5** (2º IF grade A usable; Hellín eng BLOCKED documentado — no es GO_MES). O1 ya **PASS**. O2 nacional sigue BLOCKED. Ver plan activo `PLAN_1_MES_POST_O1_UNLOCK.md`.
 
 ---
 

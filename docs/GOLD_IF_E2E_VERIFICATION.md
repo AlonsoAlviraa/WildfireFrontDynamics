@@ -39,7 +39,7 @@ fuentes heterogéneas. El stack oro verificable es dual:
 - decision: **GO**
 - confidence_pred: 0.8586666666666667
 - system_reliability_pass: False
-- sources: [{"id": "ml_clm_ensemble", "available": true, "confidence": 1.0}, {"id": "ops_thermal_front", "available": true, "confidence": 0.98}, {"id": "open_cems_perimeter", "available": true, "confidence": 0.72}]
+- sources: [{"id": "ml_clm_ensemble", "available": true, "confidence": 0.75}, {"id": "ops_thermal_front", "available": true, "confidence": 0.98}, {"id": "open_cems_perimeter", "available": true, "confidence": 0.72}]
 
 ## Pasos ejecutados
 

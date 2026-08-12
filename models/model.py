@@ -14,6 +14,7 @@ Input channels:
 - Channel 11: NDVI (vegetation)
 - Channel 12-15: FSM (forest susceptibility, one-hot)
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -65,7 +66,7 @@ class A3C_PerCellModel_LSTM(nn.Module):
             hidden_size=lstm_hidden,
             num_layers=1,
             batch_first=False,  # (seq, batch, features)
-            dropout=0.0
+            dropout=0.0,
         )
 
         # Temporal-context projection: maps LSTM hidden state (256) to a spatial
@@ -93,10 +94,7 @@ class A3C_PerCellModel_LSTM(nn.Module):
 
         # Policy head - per-cell 8-neighbor prediction (operates on fused features)
         self.policy_head = nn.Sequential(
-            nn.Linear(256 * 9, 256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, 8)
+            nn.Linear(256 * 9, 256), nn.ReLU(), nn.Dropout(0.2), nn.Linear(256, 8)
         )
 
         # Value head (global pooling over fused features)
@@ -106,7 +104,7 @@ class A3C_PerCellModel_LSTM(nn.Module):
             nn.Linear(256, 64),
             nn.ReLU(),
             nn.Dropout(0.2),
-            nn.Linear(64, 1)
+            nn.Linear(64, 1),
         )
 
         self._initialize_weights()
@@ -115,14 +113,14 @@ class A3C_PerCellModel_LSTM(nn.Module):
         """Initialize weights for strong gradients"""
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.Linear)):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.LSTM):
                 for name, param in m.named_parameters():
-                    if 'weight' in name:
+                    if "weight" in name:
                         nn.init.orthogonal_(param)
-                    elif 'bias' in name:
+                    elif "bias" in name:
                         nn.init.constant_(param, 0)
 
     def encode_timestep(self, x):
@@ -209,8 +207,8 @@ class A3C_PerCellModel_LSTM(nn.Module):
     def extract_local_features(self, features, i, j):
         """Extract 3x3 local features around cell (i, j)"""
         B, C, H, W = features.shape
-        padded_features = F.pad(features, (1, 1, 1, 1), mode='constant', value=0)
-        local = padded_features[:, :, i:i+3, j:j+3]
+        padded_features = F.pad(features, (1, 1, 1, 1), mode="constant", value=0)
+        local = padded_features[:, :, i : i + 3, j : j + 3]
         return local.flatten(1)
 
     def predict_8_neighbors(self, features, i, j):
@@ -222,8 +220,14 @@ class A3C_PerCellModel_LSTM(nn.Module):
     def get_8_neighbor_coords(self, i, j, H, W):
         """Get 8-neighbor coordinates"""
         neighbors = [
-            (i-1, j), (i-1, j+1), (i, j+1), (i+1, j+1),
-            (i+1, j), (i+1, j-1), (i, j-1), (i-1, j-1)
+            (i - 1, j),
+            (i - 1, j + 1),
+            (i, j + 1),
+            (i + 1, j + 1),
+            (i + 1, j),
+            (i + 1, j - 1),
+            (i, j - 1),
+            (i - 1, j - 1),
         ]
         valid_neighbors = []
         for ni, nj in neighbors:
@@ -255,13 +259,13 @@ class A3C_PerCellModel_LSTM(nn.Module):
             return torch.empty(0, 8, device=features.device)
 
         # Pad features with 1px zeros border so edge cells work
-        padded = F.pad(features, (1, 1, 1, 1), mode='constant', value=0)  # (1,256,H+2,W+2)
+        padded = F.pad(features, (1, 1, 1, 1), mode="constant", value=0)  # (1,256,H+2,W+2)
 
         # Extract all 3x3 patches for all burning cells in one operation
         N = len(burning_cells)
         all_local = torch.empty(N, 256 * 9, device=features.device)
         for idx, (i, j) in enumerate(burning_cells):
-            local = padded[0, :, i:i+3, j:j+3]  # (256, 3, 3)
+            local = padded[0, :, i : i + 3, j : j + 3]  # (256, 3, 3)
             all_local[idx] = local.flatten()
 
         # Single batched forward through policy_head
@@ -279,14 +283,18 @@ class A3C_PerCellModel_LSTM(nn.Module):
 
         # Neighbor offset order matches get_8_neighbor_coords:
         # 0:(-1,0) 1:(-1,+1) 2:(0,+1) 3:(+1,+1) 4:(+1,0) 5:(+1,-1) 6:(0,-1) 7:(-1,-1)
-        offsets = [(-1,0), (-1,1), (0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1)]
+        offsets = [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
 
         for idx, (i, j) in enumerate(burning_cells):
             for n_idx, (di, dj) in enumerate(offsets):
                 ni, nj = i + di, j + dj
-                if 0 <= ni < H and 0 <= nj < W:
-                    if target_fire[0, ni, nj] > 0.5 and current_fire[0, ni, nj] <= 0.5:
-                        labels[idx, n_idx] = 1.0
+                if (
+                    0 <= ni < H
+                    and 0 <= nj < W
+                    and target_fire[0, ni, nj] > 0.5
+                    and current_fire[0, ni, nj] <= 0.5
+                ):
+                    labels[idx, n_idx] = 1.0
         return labels
 
     def get_action_and_value(self, sequence, fire_mask, action=None):
@@ -334,14 +342,18 @@ class A3C_PerCellModel_LSTM(nn.Module):
             if action is None:
                 action_8d = torch.bernoulli(probs_8d)
             else:
-                action_8d = action[cell_idx] if isinstance(action, list) else torch.bernoulli(probs_8d)
+                action_8d = (
+                    action[cell_idx] if isinstance(action, list) else torch.bernoulli(probs_8d)
+                )
 
-            log_prob_8d = (action_8d * torch.log(probs_8d) +
-                          (1 - action_8d) * torch.log(1 - probs_8d))
+            log_prob_8d = action_8d * torch.log(probs_8d) + (1 - action_8d) * torch.log(
+                1 - probs_8d
+            )
             log_prob_cell = log_prob_8d.sum()
 
-            entropy_8d = -(probs_8d * torch.log(probs_8d) +
-                          (1 - probs_8d) * torch.log(1 - probs_8d))
+            entropy_8d = -(
+                probs_8d * torch.log(probs_8d) + (1 - probs_8d) * torch.log(1 - probs_8d)
+            )
             entropy_cell = entropy_8d.sum()
 
             all_log_probs.append(log_prob_cell)

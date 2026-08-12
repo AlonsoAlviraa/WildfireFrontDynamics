@@ -64,21 +64,20 @@ def resolve_envelope_cli_weather(
     elif weather_tobarra_map:
         ws_obj = tobarra_20240802_default_scenario()
 
-    if preset == "tobarra_scenario":
-        # Pure preset (no weather file): invent assumed engineering scenario.
-        # If a weather file/map scenario is already loaded, do **not** fill
-        # missing wind with 4.4 here — merge_weather_drivers owns that honesty.
-        if ws_obj is None:
-            cli_wind = 4.4 if cli_wind is None else cli_wind
-            cli_from = 270.0 if cli_from is None else cli_from
-            cli_fmc = 7.0 if cli_fmc is None else cli_fmc
-            resolved = resolve_weather_for_stack(
-                wind_10m_ms=cli_wind,
-                wind_from_deg=cli_from,
-                dead_fmc_pct=cli_fmc,
-                fire_id=fire_id,
-            )
-            ws_obj = resolved
+    # Pure preset (no weather file): invent assumed engineering scenario.
+    # If a weather file/map scenario is already loaded, do **not** fill
+    # missing wind with 4.4 here — merge_weather_drivers owns that honesty.
+    if preset == "tobarra_scenario" and ws_obj is None:
+        cli_wind = 4.4 if cli_wind is None else cli_wind
+        cli_from = 270.0 if cli_from is None else cli_from
+        cli_fmc = 7.0 if cli_fmc is None else cli_fmc
+        resolved = resolve_weather_for_stack(
+            wind_10m_ms=cli_wind,
+            wind_from_deg=cli_from,
+            dead_fmc_pct=cli_fmc,
+            fire_id=fire_id,
+        )
+        ws_obj = resolved
 
     # fill_library_when_missing only when we have a scenario or pure preset
     # (so bare --obs-ros without wind stays obs-only, wind=None)
@@ -154,9 +153,7 @@ def main() -> int:
                 fuel_id = str(meta["fuel_id_dominant"])
         elif slope is None:
             slope = 3.3
-        default_recipe = (
-            ROOT / "outputs" / "fuel_stack" / "tobarra" / "ros_calibration_recipe.json"
-        )
+        default_recipe = ROOT / "outputs" / "fuel_stack" / "tobarra" / "ros_calibration_recipe.json"
         if recipe is None and default_recipe.is_file():
             recipe = default_recipe
             try:

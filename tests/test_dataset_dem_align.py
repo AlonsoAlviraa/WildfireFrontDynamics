@@ -159,6 +159,17 @@ def test_unaligned_shapes_refuse_by_default(tmp_path: Path):
         )
 
 
+def test_allow_unaligned_crop_default_is_false() -> None:
+    """Shipped default must refuse silent misaligned top-left crop (modernize freeze)."""
+    import inspect
+
+    from wildfire_front.ml.dataset import WildfireDataset
+
+    param = inspect.signature(WildfireDataset.__init__).parameters["allow_unaligned_crop"]
+    assert param.default is False
+    assert param.kind is inspect.Parameter.KEYWORD_ONLY
+
+
 def test_unaligned_shapes_opt_in_crop(tmp_path: Path):
     from wildfire_front.ml.dataset import WildfireDataset
 
@@ -173,13 +184,19 @@ def test_unaligned_shapes_opt_in_crop(tmp_path: Path):
         _write_image(images / name, h, w, transform=transform)
         _write_mask(masks / name, h, w, transform=transform)
 
-    ds = WildfireDataset(
-        images_dir=images,
-        masks_dir=masks,
-        sequence_length=2,
-        patch_size=16,
-        max_patches=2,
-        allow_unaligned_crop=True,
-    )
+    with pytest.warns(UserWarning, match="allow_unaligned_crop=True"):
+        ds = WildfireDataset(
+            images_dir=images,
+            masks_dir=masks,
+            sequence_length=2,
+            patch_size=16,
+            max_patches=2,
+            allow_unaligned_crop=True,
+        )
     assert ds.height == 40
     assert ds.width == 40
+    # Telemetry: one larger frame (42x41) drops pixels under top-left crop to 40x40
+    assert ds.crop_telemetry["h_span_px"] == 2
+    assert ds.crop_telemetry["w_span_px"] == 1
+    assert ds.crop_telemetry["frames_with_dropped_pixels"] >= 1
+    assert ds.crop_telemetry["total_pixels_dropped"] > 0

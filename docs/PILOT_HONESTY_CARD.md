@@ -1,6 +1,6 @@
 # Piloto de honestidad — tarjeta de decisión multi-fuente
 Tobarra · Níjar · Caminomorisco
-Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm_ensemble_v34
+Generado: 2026-08-04T14:12:17.319132+00:00 · política: research_open · producto: clm_ensemble_v34
 
 ## 0. Banner de honestidad (producto dual)
 - Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)

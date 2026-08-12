@@ -10,7 +10,7 @@
     "model_iou": 0.8962661597172356,
     "improvement_vs_copy_iou": 0.2544639893725479,
     "model_iou_growth": 0.9070774227697294,
-    "verdict": "GO_PROMOTE",
+    "verdict": "GO_RESEARCH_HOLDOUT",
     "recipe": {
       "type": "source_mix_val_temp_calibrated",
       "members": [

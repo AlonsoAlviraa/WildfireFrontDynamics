@@ -1,0 +1,77 @@
+{
+  "schema": "wfd_fire_intel_v1",
+  "purpose": "Fields required to approach Tobarra-grade ops validation (O1/O2/O5). Open-source scrape can fill provisional fields only.",
+  "gold_reference": {
+    "fire_id": "tobarra_20240802",
+    "why_gold": "Only confirmed anchor + multi-frame LWIR + masks + grade A ROS vs Vp"
+  },
+  "fields": {
+    "identity": {
+      "fire_id": "required",
+      "name": "required",
+      "country": "required",
+      "region": "required",
+      "province_or_dept": "preferred",
+      "municipality_start": "preferred",
+      "detection_utc": "preferred",
+      "status_ops": "active|stabilizing|contained|extinguished|unknown"
+    },
+    "tobarra_has_we_need": {
+      "vp_m_min_official": {
+        "tobarra": 7.0,
+        "source_type": "operational_parte",
+        "status_if_missing": "blocks_O1_grade_A",
+        "open_scrape_allowed": false,
+        "notes": "Never invent from press ROS. Official parte / INFOCAM / SDIS only."
+      },
+      "area_ha_official": {
+        "tobarra": 39.0,
+        "source_type": "EGIF_or_CCAA_parte",
+        "status_if_missing": "blocks_O1",
+        "open_scrape_allowed": "provisional_press_only"
+      },
+      "intensity_behavior": {
+        "tobarra": "Media-Alta / Contraviento",
+        "open_scrape_allowed": true
+      },
+      "lwir_geotiff_seq_ge3": {
+        "tobarra": true,
+        "open_scrape_allowed": false,
+        "notes": "Heligrafics/CMA Dropbox-class thermal. Public scrape rarely yields this."
+      },
+      "masks_ge3": {
+        "tobarra": true,
+        "open_scrape_allowed": false
+      },
+      "perimeter_official_vector": {
+        "tobarra": false,
+        "status_if_missing": "blocks_O2_official",
+        "open_scrape_allowed": "CEMS_REDIAM_EFFIS_proxy"
+      },
+      "kmz_flight_context": {
+        "tobarra": true,
+        "notes": "Useful for geolocation, NOT official perimeter"
+      }
+    },
+    "open_intel_fields": {
+      "area_ha_press": "provisional only",
+      "area_ha_effis_or_copernicus": "proxy O2",
+      "evacuated_n": "context",
+      "confined_n": "context",
+      "perimeter_km_press": "context",
+      "ucpm_activated": "context",
+      "news_urls": "provenance",
+      "x_post_ids": "provenance",
+      "reddit_urls": "weak provenance",
+      "firms_hotspots": "optional overlay"
+    }
+  },
+  "confidence_tiers": {
+    "T0_rumor": "social only, no official number",
+    "T1_press": "reputable news / ministry quote; NOT for confirmed anchor",
+    "T2_agency_open": "EFFIS/CEMS/REDIAM/RAI SHP or ministry bulletin with explicit ha",
+    "T3_ops_parte": "Vp/ha from operational parte with source string — eligible for confirmed",
+    "T4_gold_stack": "T3 + LWIR seq + masks (Tobarra-class)"
+  },
+  "promotion_rule": "Only T3+ may set anchors.status=confirmed. Press ha must stay area_ha_press_provisional."
+}

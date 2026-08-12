@@ -1,0 +1,105 @@
+{
+  "schema": "wfd_hellin_track_a_scorecard_v1",
+  "generated_at_utc": "2026-08-04T09:00:17.106095+00:00",
+  "fire_id": "hellin_2024",
+  "engine": "front_dynamics_v1",
+  "source_pack": "outputs/observatorio/hellin_2024",
+  "anchor": {
+    "vp_m_min": 50.0,
+    "area_ha": 100.0,
+    "area_note": "Cabeza fuera de capacidad de extincion, con fuego de copas (boletin). area_ha is estimated non-official per boletin footnote. KMZ 20:45 sup_ha attr ~93.66 ha (ops perimeter, not EGIF).",
+    "source": "Boletin UNAP INFOCAM 2024-07-20 — tabla SEGUIMIENTO: Hellin (AB) 19/07/2024 Vp media = 50 m/min; superficie 100 ha* (*estimada no oficial)",
+    "status": "confirmed",
+    "kmz_2045_sup_ha": 93.659599
+  },
+  "ops": {
+    "primary_ros_m_min": 27.934049204415448,
+    "primary_ros_n": 1,
+    "primary_methods_used": [
+      "area_isotropic"
+    ],
+    "structural_grade": "B",
+    "structural_label_es": "orientativo — muestra corta",
+    "n_pairs": 8,
+    "pairs": [
+      {
+        "dt_min": 0.07505,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 0.025583333333333336,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 0.7184666666666667,
+        "primary_method": "fused:area_isotropic",
+        "primary_ros_m_min": 27.934049204415448,
+        "pair_quality": "A"
+      },
+      {
+        "dt_min": 0.03731666666666662,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 0.18546666666666667,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 0.1759833333333334,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 23.728749999999998,
+        "primary_method": "abstained",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      },
+      {
+        "dt_min": 0.20241666666666636,
+        "primary_method": "abstained_dt",
+        "primary_ros_m_min": null,
+        "pair_quality": "C"
+      }
+    ]
+  },
+  "calibration": {
+    "has_reference": true,
+    "reference_name": "Hellin UNAP boletin 2024-07-20",
+    "reference_vp_m_min": 50.0,
+    "reference_area_ha": 100.0,
+    "raw_primary_ros_m_min": 27.934049204415448,
+    "raw_vs_ref_ratio": 0.5586809840883089,
+    "scale_to_match_ref": 1.7899302615997632,
+    "grade": "compatible_order_of_magnitude",
+    "interpretation_es": "ROS primaria 27.93 m/min vs ancla 50.0 m/min (ratio 0.56): mismo orden de magnitud. No se reescala en silencio; se reporta crudo."
+  },
+  "ratio_primary_to_vp": 0.5586809840883089,
+  "ratio_in_band_0_5_2_0": true,
+  "grade_a_eligible": false,
+  "p1_second_if_closed": false,
+  "o5_second_grade_a": false,
+  "verdict": "OPS_PARTIAL_GRADE_B_IN_BAND",
+  "honesty": [
+    "No silent rescale of ROS to Vp",
+    "Grade A eligible requires structural A AND ratio in [0.5,2]; grade B or out-of-band ⇒ not A",
+    "Do NOT fit single k calibration Tobarra(7) and Hellin(50)",
+    "Mask ROS is orientation only — not tactical dispatch",
+    "Area series in pack max ~44 ha vs boletin 100 ha* — FOV/mask incompleteness likely",
+    "P1 eng BLOCKED note: docs/P1_HELLIN_ENG_STATUS.md"
+  ],
+  "next_actions": [
+    "Keep Hellin confirmed ANCHOR with best in-band grade-B pack (max-frames 10, max-side 2500)",
+    "Do not chase grade A via param noise alone — structural A ROS cap (25) conflicts with Vp=50 in-band floor",
+    "P1 remains PARTIAL / eng BLOCKED until policy change or second grade-A IF for O5"
+  ]
+}

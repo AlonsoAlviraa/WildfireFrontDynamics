@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WFD Consola Incendios - Estado del incendio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "forest": "#0B7A4B",
+                "amber": "#C47A00",
+                "cream": "#FFFDF5",
+                "surface": "#F7F4ED",
+                "cyan-dark": "#0E7C8A",
+                "orange-firms": "#D9480F",
+                "red-soft": "#B3261E",
+                "text-dark": "#1A1A1A",
+                "text-gray": "#4A4A4A"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.5rem",
+                    "lg": "0.75rem",
+                    "xl": "1rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": ["Public Sans", "sans-serif"],
+                    "display": ["Public Sans", "sans-serif"],
+                    "body": ["Public Sans", "sans-serif"],
+                    "label": ["Public Sans", "sans-serif"]
+            },
+            "fontSize": {}
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #F7F4ED; color: #1A1A1A; }
+    </style>
+</head>
+<body class="font-body min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-[#FFFDF5] dark:bg-surface-container-highest border-b-4 border-[#0B7A4B] shadow-sm flex justify-between items-center w-full px-8 h-20 docked full-width top-0 z-50">
+<div class="flex items-center gap-4">
+<img alt="W Logo" class="h-12 w-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASZoJQjMDdLjgNOCukheKIK_C6CM7Fhwgd1mdMJ7uEiY5GK5LQHoYQJSYJADICNCNQZ_tWdXUijDjzybassbXFL9HDaMnrUhfvZOAh3V5YPOfbxWK34aWstAN82sXPZ7AkgteQ3byh8zGXLwO7FCS_NNCuDj4CfB2LzhK-5-RvmD4kNnELLEyUF3dXJJ1VZSSUUeDM7HKs7KRAIrCsreXhHFwRZMbocHXtabHjYD0IlMly6KEnI8GES2U8Wl3tG0M3npiA_zM5d4w"/>
+<div>
+<h1 class="font-headline text-[28px] font-bold tracking-tight text-[#0B7A4B] dark:text-primary-container">WFD Consola Incendios</h1>
+</div>
+</div>
+<nav class="hidden lg:flex items-end h-full pt-4">
+<a class="text-[#0B7A4B] border-b-4 border-[#0B7A4B] pb-2 font-bold px-4 hover:bg-[#0B7A4B]/10 transition-colors active:scale-95 duration-150" href="#">Resumen</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 px-4 hover:bg-[#0B7A4B]/10 transition-colors active:scale-95 duration-150" href="#">Decisión</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 px-4 hover:bg-[#0B7A4B]/10 transition-colors active:scale-95 duration-150" href="#">Acciones</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 px-4 hover:bg-[#0B7A4B]/10 transition-colors active:scale-95 duration-150" href="#">Incendios</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 px-4 hover:bg-[#0B7A4B]/10 transition-colors active:scale-95 duration-150" href="#">Diccionario</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="flex bg-gray-200 rounded-full p-1">
+<button class="px-4 py-1.5 bg-white text-forest font-bold rounded-full shadow-sm text-lg">Modo Fácil</button>
+<button class="px-4 py-1.5 text-text-gray hover:text-text-dark font-medium rounded-full text-lg">Avanzado</button>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<main class="flex-grow p-6 md:p-8 max-w-[1600px] mx-auto w-full flex flex-col lg:flex-row gap-8">
+<!-- Left Column: Map -->
+<section class="lg:w-[55%] flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[600px] relative">
+<div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center z-10">
+<h2 class="font-bold text-xl flex items-center gap-2">
+<span class="material-symbols-outlined text-forest" style="font-variation-settings: 'FILL' 1;">map</span>
+                    Capas: frente local
+                </h2>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-gray-200 text-sm font-bold rounded-full text-gray-700">Fusión ML: apagada</span>
+<span class="px-3 py-1 bg-gray-200 text-sm font-bold rounded-full text-gray-700">2 incendios</span>
+</div>
+</div>
+<div class="flex-grow relative bg-gray-300">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A highly detailed satellite view of a mountainous terrain with dense forest. The image has a slightly muted, realistic color palette suitable for a professional mapping application. The lighting is neutral daylight, casting subtle shadows to emphasize the topography. The overall aesthetic is clean, technical, and high-resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9wIWA8nzIpaLzY-5wXQh_I2Ukm2Nzl3FKTcuI6Jtwvvyy55-uS_IWbwY2t7-ddIvmslfJX4M-cXRKFGpdvffLPybkR5rDyH1ROBk3Ib1uTdSQB5GJGb_RhUDL_GNlEoGYmRnSxojEdBTWzjBV6mWhrC6oqCBVvFyHLJV2Kz9ha5uVjehTl99i5kfVWbBwf_BNVCSjDYlkCh8AHfk_xGwaLaKAv_TDBHbhE_UOSVz86ls5ZNcApa3IvlRcDYY4IMAVbZTssxNLDpE"/>
+<!-- Map Overlays -->
+<div class="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-200 w-80">
+<h3 class="font-bold text-lg mb-3">Leyenda</h3>
+<div class="flex items-center gap-3 mb-2">
+<div class="w-4 h-4 rounded-full bg-cyan-dark"></div>
+<span class="text-base">Frente / zona del incendio</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-4 h-4 rounded-full bg-orange-firms"></div>
+<span class="text-base text-gray-700">Focos satélite <br/><span class="text-sm font-bold">(NO es el perímetro oficial)</span></span>
+</div>
+</div>
+<button class="absolute bottom-6 right-6 bg-forest text-white px-6 py-4 rounded-lg font-bold text-lg shadow-lg hover:bg-forest/90 transition-colors flex items-center gap-2 active:scale-95">
+<span class="material-symbols-outlined">center_focus_strong</span>
+                    Centrar el mapa
+                </button>
+</div>
+</section>
+<!-- Right Column: Decision & Details -->
+<section class="lg:w-[45%] flex flex-col gap-6 overflow-y-auto pr-2 pb-20">
+<div class="mb-2">
+<h2 class="font-headline text-[32px] font-black text-text-dark tracking-tight">Estado del incendio</h2>
+<p class="text-xl text-text-gray mt-1">Apoyo a la lectura del fuego — no es una orden de extinción</p>
+</div>
+<!-- Decision Card -->
+<div class="bg-[#FFF8E6] border-2 border-amber rounded-xl p-8 text-center shadow-sm">
+<div class="text-[64px] font-black text-amber leading-none tracking-tight mb-2">HOLD</div>
+<div class="text-xl font-bold text-amber/80 mb-6">confianza 62%</div>
+<p class="text-2xl font-bold text-text-dark mb-4 leading-snug">
+                    Hay datos, pero no bastan o chocan: espera / revisa antes de actuar.
+                </p>
+<div class="bg-cyan-dark/10 text-cyan-dark font-bold p-4 rounded-lg text-lg border border-cyan-dark/20">
+                    Para el fuego: no lances recursos solo por esta tarjeta.
+                </div>
+</div>
+<!-- Active Fire Selector -->
+<div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+<label class="block text-lg font-bold text-text-dark mb-2">Incendio seleccionado</label>
+<select class="w-full bg-gray-50 border-2 border-gray-300 rounded-lg p-4 text-lg font-bold text-text-dark focus:ring-forest focus:border-forest mb-2">
+<option>_sla_measure — mapa · decisión · HOLD</option>
+</select>
+<p class="text-sm text-text-gray italic">Para ver otro incendio, elige en la lista y pida regenerar (Avanzado).</p>
+</div>
+<!-- Content Tabs -->
+<div class="flex gap-2 border-b-2 border-gray-200 pb-2 overflow-x-auto">
+<button class="px-4 py-2 font-bold text-lg text-forest border-b-4 border-forest bg-forest/10 rounded-t-lg">Resumen</button>
+<button class="px-4 py-2 font-bold text-lg text-text-gray hover:bg-gray-100 rounded-t-lg">Decisión</button>
+<button class="px-4 py-2 font-bold text-lg text-text-gray hover:bg-gray-100 rounded-t-lg whitespace-nowrap">Qué puedo hacer</button>
+<button class="px-4 py-2 font-bold text-lg text-text-gray hover:bg-gray-100 rounded-t-lg whitespace-nowrap">Nuevo incendio</button>
+</div>
+<!-- Resumen Panel -->
+<div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+<span class="block text-sm text-text-gray font-bold uppercase tracking-wider mb-1">Producto base</span>
+<span class="text-xl font-bold text-forest">SÍ</span>
+</div>
+<div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+<span class="block text-sm text-text-gray font-bold uppercase tracking-wider mb-1">Calidad demo</span>
+<span class="text-xl font-bold text-amber">PARCIAL</span>
+</div>
+<div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+<span class="block text-sm text-text-gray font-bold uppercase tracking-wider mb-1">Lab ML listo</span>
+<span class="text-xl font-bold text-forest">SÍ</span>
+</div>
+<div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+<span class="block text-sm text-text-gray font-bold uppercase tracking-wider mb-1">Fusión ML campo</span>
+<span class="text-xl font-bold text-text-gray">OFF</span>
+</div>
+</div>
+<div class="border-l-4 border-cyan-dark pl-4 py-2 mb-6 bg-cyan-dark/5 rounded-r-lg">
+<span class="block text-sm font-bold text-cyan-dark uppercase tracking-wider mb-1">Siguiente paso</span>
+<span class="text-lg font-bold text-text-dark">[P1] Cerrar demo con tercero y acta (humano)</span>
+</div>
+<h3 class="font-bold text-xl mb-4 border-b border-gray-200 pb-2">Datos del incendio</h3>
+<ul class="space-y-3 text-lg">
+<li class="flex justify-between border-b border-gray-100 pb-2"><span class="text-text-gray">Calidad</span> <span class="font-bold">B</span></li>
+<li class="flex justify-between border-b border-gray-100 pb-2"><span class="text-text-gray">Velocidad frente</span> <span class="font-bold">4.2 m/min</span></li>
+<li class="flex justify-between border-b border-gray-100 pb-2"><span class="text-text-gray">Área</span> <span class="font-bold">12 ha</span></li>
+<li class="flex justify-between"><span class="text-text-gray">Frames</span> <span class="font-bold">8</span></li>
+</ul>
+</div>
+<!-- Rules / Context -->
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-forest/10 text-forest font-bold rounded-lg border border-forest/20 text-sm">fusión ML apagada</span>
+<span class="px-4 py-2 bg-forest/10 text-forest font-bold rounded-lg border border-forest/20 text-sm">no despacho táctico</span>
+<span class="px-4 py-2 bg-forest/10 text-forest font-bold rounded-lg border border-forest/20 text-sm">satélite ≠ perímetro</span>
+<span class="px-4 py-2 bg-forest/10 text-forest font-bold rounded-lg border border-forest/20 text-sm">no inventar calidad comercial</span>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#FFFDF5] dark:bg-surface border-t border-outline-variant w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center text-center docked full-width bottom-0 mt-auto z-50">
+<p class="font-body text-lg text-on-surface dark:text-on-surface-variant font-bold mb-4 md:mb-0">
+            Aviso: Los datos de satélite (FIRMS) pueden tener desfase. El perímetro oficial prevalece. <br/>
+<span class="font-normal text-text-gray">No sustituye al mando de extinción. El sistema puede callarse (ABSTAIN) y eso es correcto.</span>
+</p>
+<div class="flex gap-6">
+<a class="font-body text-lg text-on-surface-variant hover:text-[#0B7A4B] cursor-pointer" href="#">Soporte Técnico</a>
+<a class="font-body text-lg text-on-surface-variant hover:text-[#0B7A4B] cursor-pointer" href="#">Protocolo Emergencias</a>
+<a class="font-body text-lg text-on-surface-variant hover:text-[#0B7A4B] cursor-pointer" href="#">Privacidad</a>
+</div>
+</footer>
+</body></html>

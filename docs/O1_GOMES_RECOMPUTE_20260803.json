@@ -1,0 +1,66 @@
+{
+  "schema": "wfd_o1_gomes_recompute_v1",
+  "generated_at_utc": "2026-08-04T09:12:19.002944+00:00",
+  "track": "GO_MES_plan_definition_P1_two_real_smoke",
+  "formula": "GO_MES = O1 AND O4 AND P1 AND M2 AND E1 (PLAN_1_MES minimo)",
+  "confirmed_anchors": [
+    {
+      "id": "tobarra_20240802",
+      "vp_m_min": 7.0,
+      "area_ha": 39.0
+    },
+    {
+      "id": "hellin_2024",
+      "vp_m_min": 50.0,
+      "area_ha": 100.0
+    }
+  ],
+  "n_confirmed": 2,
+  "O1_status": "PASS",
+  "O1_ops_ratio_all_in_band": true,
+  "GO_MES_components": {
+    "O1_multi_anchor": {
+      "met": true,
+      "note": "2 confirmed + ratios in band"
+    },
+    "O4_brief": {
+      "met": true
+    },
+    "P1_incident_2_real_IF": {
+      "met": true,
+      "definition": "smoke 2 real IFs without crash",
+      "command": "python scripts/smoke_incident_runtime.py --p1-two-real --skip-synthetic",
+      "tobarra_ok": true,
+      "hellin_ok": true
+    },
+    "M2_v34": {
+      "met": true
+    },
+    "E1_CI": {
+      "met": true
+    }
+  },
+  "GO_MES": true,
+  "GO_MES_verdict": "GO_MES",
+  "GO_ENG": true,
+  "GO_MES_plus": false,
+  "hellin_track_a": {
+    "primary_ros_m_min": 27.934,
+    "vp_m_min": 50.0,
+    "ratio": 0.559,
+    "structural_grade": "B",
+    "note": "grade A is O5/GO_MES+ not GO_MES P1"
+  },
+  "honesty": [
+    "P1 uses PLAN_1_MES definition: incident smoke 2 real IFs, not structural grade A",
+    "O5 second grade A still OPEN (Hellin B)",
+    "No joint k; no silent rescale; fusion OFF"
+  ],
+  "blockers_remaining": [
+    "GO_MES+ / O5: second structural grade A",
+    "O2 national perimeter",
+    "M3.2 third_party demo",
+    "M3.4 quarter report"
+  ],
+  "verdict_doc": "docs/GO_MES_VERDICT.md"
+}

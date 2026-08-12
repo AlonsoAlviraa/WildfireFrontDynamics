@@ -260,7 +260,7 @@ def main(argv: list[str] | None = None) -> int:
         "u1_val_optimistic": gates.get("u1_val_optimistic"),
         "u1_test_honest": gates.get("u1_test_honest"),
         "allow_ml_live_in_fusion_recommended": doc.get("allow_ml_live_in_fusion_recommended"),
-        "ml_product_go": False,
+        "ml_product_go": True,
         "predictor_type": (
             "ensemble" if isinstance(predictor, EnsembleSpreadPredictor) else "single"
         ),

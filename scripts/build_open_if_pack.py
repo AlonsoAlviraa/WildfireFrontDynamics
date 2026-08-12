@@ -43,6 +43,8 @@ except ImportError:  # pragma: no cover
 
 BASE = "https://cems-mapping-website.s3.eu-west-1.amazonaws.com/static/activations"
 PAGE = "https://mapping.emergency.copernicus.eu/activations"
+# 2026+ Rapid Mapping SPA API (vector zips no longer embedded in HTML)
+RM_API = "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/"
 
 
 def _utc() -> str:
@@ -50,9 +52,86 @@ def _utc() -> str:
 
 
 def fetch_activation_vectors(code: str) -> list[str]:
-    html = urllib.request.urlopen(f"{PAGE}/{code}", timeout=60).read().decode("utf-8", "replace")
-    s3 = sorted(set(re.findall(r"https://cems-mapping-website[^\s\"'<>]+", html)))
-    return [u for u in s3 if u.endswith("_vector.zip") or "vector.zip" in u]
+    """Return product zip URLs for an activation (legacy S3 HTML scrape + 2026 API)."""
+    code = code.upper().strip()
+    urls: list[str] = []
+
+    # Legacy: server-rendered activation pages embed s3 vector.zip links
+    try:
+        html = (
+            urllib.request.urlopen(f"{PAGE}/{code}", timeout=60).read().decode("utf-8", "replace")
+        )
+        s3 = sorted(set(re.findall(r"https://cems-mapping-website[^\s\"'<>]+", html)))
+        urls.extend(u for u in s3 if u.endswith("_vector.zip") or "vector.zip" in u)
+    except Exception as e:
+        print(f"  legacy HTML scrape skip: {e}", flush=True)
+
+    if urls:
+        return sorted(set(urls))
+
+    # 2026 SPA: public-activations API → product downloadPath zips
+    try:
+        api = f"{RM_API}?code={code}"
+        raw = urllib.request.urlopen(api, timeout=90).read().decode("utf-8", "replace")
+        data = json.loads(raw)
+        results = data.get("results") or []
+        if not results and isinstance(data, dict) and data.get("code"):
+            results = [data]
+        geojson_urls: list[str] = []
+        zip_urls: list[str] = []
+        for act in results:
+            for aoi in act.get("aois") or []:
+                for prod in aoi.get("products") or []:
+                    ptype = str(prod.get("type") or "").upper()
+                    # Harvest observedEventA layer JSON from S3 (preferred)
+                    for layer in prod.get("layers") or []:
+                        if not isinstance(layer, dict):
+                            continue
+                        lj = layer.get("json")
+                        lname = str(layer.get("name") or "")
+                        nlow = lname.lower().replace("_", "")
+                        if not (
+                            isinstance(lj, str)
+                            and lj.endswith(".json")
+                            and "observedeventa" in nlow
+                        ):
+                            continue
+                        # Skip heavy GRA grading layers when DEL monits exist
+                        if "gra" in nlow and ptype == "GRA":
+                            continue
+                        geojson_urls.append("GEOJSON:" + lj)
+                    # Fallback: vectors-only zip
+                    dp = prod.get("downloadPath")
+                    if isinstance(dp, str) and dp.endswith(".zip"):
+                        zip_urls.append(dp if "?" in dp else dp + "?type=vectors")
+        # Prefer geojson; cap count to keep pack builds tractable
+        if geojson_urls:
+            # Prefer DEL monits first, then DEL product; drop GRA
+            def _gj_key(u: str) -> tuple[int, str]:
+                s = u.lower()
+                if "del_monit" in s:
+                    return (0, s)
+                if "del_product" in s:
+                    return (1, s)
+                if "gra" in s:
+                    return (9, s)
+                return (5, s)
+
+            geojson_urls = sorted(set(geojson_urls), key=_gj_key)[:6]
+            urls.extend(geojson_urls)
+        else:
+            urls.extend(zip_urls[:6])
+    except Exception as e:
+        print(f"  rapidmapping API skip: {e}", flush=True)
+
+    # de-dupe preserving order, prefer plain zip before ?type=vectors if both fail later
+    seen: set[str] = set()
+    out: list[str] = []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out
 
 
 def download(url: str, dest: Path) -> Path:
@@ -60,7 +139,15 @@ def download(url: str, dest: Path) -> Path:
     if dest.is_file() and dest.stat().st_size > 100:
         return dest
     print(f"  GET {url}", flush=True)
-    urllib.request.urlretrieve(url, dest)
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "WildfireFrontDynamics-open-if/1.0",
+            "Accept": "application/zip, application/octet-stream, */*",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        dest.write_bytes(resp.read())
     return dest
 
 
@@ -170,26 +257,73 @@ def build_pack(activation: str, out_root: Path) -> dict[str, Any]:
 
     for url in urls:
         kind = _parse_product_kind(url)
-        fname = url.rsplit("/", 1)[-1]
-        zpath = download(url, raw_dir / fname)
-        extract_dir = raw_dir / fname.replace(".zip", "")
-        if extract_dir.exists():
-            shutil.rmtree(extract_dir)
-        extract_dir.mkdir(parents=True)
-        with zipfile.ZipFile(zpath, "r") as zf:
-            zf.extractall(extract_dir)
+        geo_items: list[dict[str, Any]] = []
 
-        geo_items = _load_geojsons_from_zip(zpath)
-        # also load extracted
-        for p in extract_dir.rglob("*"):
-            if p.suffix.lower() in {".json", ".geojson"}:
-                with contextlib.suppress(OSError, json.JSONDecodeError):
-                    geo_items.append(
-                        {
-                            "member": str(p.relative_to(extract_dir)),
-                            "geojson": json.loads(p.read_text(encoding="utf-8")),
-                        }
+        # Direct observedEventA JSON from rapidmapping-viewer S3
+        if url.startswith("GEOJSON:"):
+            gurl = url[len("GEOJSON:") :]
+            gname = gurl.rsplit("/", 1)[-1]
+            fname = gname
+            gpath = raw_dir / gname
+            try:
+                download(gurl, gpath)
+                # Skip pathological large layers (multi-10MB vector tiles dumps)
+                if gpath.stat().st_size > 5_000_000:
+                    print(
+                        f"  skip oversized geojson {gname} "
+                        f"({gpath.stat().st_size // 1_000_000} MB)",
+                        flush=True,
                     )
+                    continue
+                geo_items.append(
+                    {
+                        "member": gname,
+                        "geojson": json.loads(gpath.read_text(encoding="utf-8")),
+                    }
+                )
+            except Exception as e:
+                print(f"  skip geojson {gurl}: {e}", flush=True)
+                continue
+            # synthesize minimal product record path below via same ranking
+            extract_dir = raw_dir / (gname + "_dir")
+            zpath = gpath
+        else:
+            # sanitize filename for query-string downloads
+            raw_name = url.rsplit("/", 1)[-1]
+            fname = raw_name.split("?", 1)[0]
+            if not fname.endswith(".zip"):
+                fname = fname + ".zip"
+            if "type=vectors" in url:
+                fname = fname.replace(".zip", "_vectors.zip")
+            zpath = raw_dir / fname
+            try:
+                download(url, zpath)
+            except Exception as e:
+                print(f"  skip download {url}: {e}", flush=True)
+                continue
+            if not zipfile.is_zipfile(zpath):
+                print(f"  skip non-zip {zpath.name}", flush=True)
+                with contextlib.suppress(OSError):
+                    zpath.unlink()
+                continue
+            extract_dir = raw_dir / fname.replace(".zip", "")
+            if extract_dir.exists():
+                shutil.rmtree(extract_dir)
+            extract_dir.mkdir(parents=True)
+            with zipfile.ZipFile(zpath, "r") as zf:
+                zf.extractall(extract_dir)
+
+            geo_items = _load_geojsons_from_zip(zpath)
+            # also load extracted
+            for p in extract_dir.rglob("*"):
+                if p.suffix.lower() in {".json", ".geojson"}:
+                    with contextlib.suppress(OSError, json.JSONDecodeError):
+                        geo_items.append(
+                            {
+                                "member": str(p.relative_to(extract_dir)),
+                                "geojson": json.loads(p.read_text(encoding="utf-8")),
+                            }
+                        )
 
         # Prefer observedEventA (fire area polygons). Never AOI/hydro/buildings.
         def _rank(member: str) -> int:

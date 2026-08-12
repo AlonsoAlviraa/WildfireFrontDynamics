@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import csv
 import tempfile
-import unittest
 from pathlib import Path
 
 import numpy as np
+import pytest
 import rasterio
 from PIL import Image
 from rasterio.enums import Resampling
@@ -25,11 +25,7 @@ from wildfire_front.visual_qa import render_contact_sheet, render_frame_thumbnai
 
 
 def _write_projected_tiff(
-    path: Path,
-    data: np.ndarray,
-    *,
-    crs: str = "EPSG:32630",
-    transform=None,
+    path: Path, data: np.ndarray, *, crs: str = "EPSG:32630", transform=None
 ) -> None:
     array = data if data.ndim == 3 else data[np.newaxis, ...]
     transform = transform or from_origin(500000.0, 4100000.0, 10.0, 10.0)
@@ -60,15 +56,13 @@ def _write_lonlat_tiff(path: Path) -> None:
         count=4,
         dtype=data.dtype,
         crs="EPSG:4326",
-        transform=from_origin(-1.71, 38.64, 0.00001, 0.00001),
+        transform=from_origin(-1.71, 38.64, 1e-05, 1e-05),
     ) as dataset:
         dataset.write(data)
 
 
 def _make_row(
-    timestamp: str = "2024-08-02T16:08:21Z",
-    sensor: str = "LWIR",
-    qa_status: str = "ok",
+    timestamp: str = "2024-08-02T16:08:21Z", sensor: str = "LWIR", qa_status: str = "ok"
 ) -> FrameManifestRow:
     return FrameManifestRow(
         event_id="evt",
@@ -99,7 +93,7 @@ def _make_row(
     )
 
 
-class AssessFrameQualityTests(unittest.TestCase):
+class AssessFrameQualityTests:
     def test_ok_when_all_fields_valid(self) -> None:
         status, reasons = assess_frame_quality(
             timestamp_utc="2024-01-01T00:00:00Z",
@@ -109,8 +103,8 @@ class AssessFrameQualityTests(unittest.TestCase):
             bbox=(0.0, 0.0, 1.0, 1.0),
             resolution_estimate_m=1.0,
         )
-        self.assertEqual("ok", status)
-        self.assertEqual([], reasons)
+        assert status == "ok"
+        assert reasons == []
 
     def test_rejected_when_crs_missing(self) -> None:
         status, reasons = assess_frame_quality(
@@ -121,8 +115,8 @@ class AssessFrameQualityTests(unittest.TestCase):
             bbox=None,
             resolution_estimate_m=None,
         )
-        self.assertEqual("rejected", status)
-        self.assertIn("missing_crs", reasons)
+        assert status == "rejected"
+        assert "missing_crs" in reasons
 
     def test_review_when_crs_not_projected(self) -> None:
         status, reasons = assess_frame_quality(
@@ -133,8 +127,8 @@ class AssessFrameQualityTests(unittest.TestCase):
             bbox=(0.0, 0.0, 1.0, 1.0),
             resolution_estimate_m=1.0,
         )
-        self.assertEqual("review", status)
-        self.assertIn("crs_not_projected_metric", reasons)
+        assert status == "review"
+        assert "crs_not_projected_metric" in reasons
 
     def test_review_when_alpha_almost_empty(self) -> None:
         status, reasons = assess_frame_quality(
@@ -145,8 +139,8 @@ class AssessFrameQualityTests(unittest.TestCase):
             bbox=(0.0, 0.0, 1.0, 1.0),
             resolution_estimate_m=1.0,
         )
-        self.assertEqual("review", status)
-        self.assertIn("alpha_almost_empty", reasons)
+        assert status == "review"
+        assert "alpha_almost_empty" in reasons
 
     def test_review_when_bbox_invalid(self) -> None:
         status, reasons = assess_frame_quality(
@@ -154,23 +148,23 @@ class AssessFrameQualityTests(unittest.TestCase):
             crs="EPSG:32630",
             coordinate_system="projected_metric",
             alpha_valid_fraction=0.5,
-            bbox=(10.0, 0.0, 1.0, 1.0),  # west > east
+            bbox=(10.0, 0.0, 1.0, 1.0),
             resolution_estimate_m=1.0,
         )
-        self.assertEqual("review", status)
-        self.assertIn("invalid_bbox", reasons)
+        assert status == "review"
+        assert "invalid_bbox" in reasons
 
 
-class TemporalGapsTests(unittest.TestCase):
+class TemporalGapsTests:
     def test_detects_gap_above_threshold(self) -> None:
         rows = [
             _make_row(timestamp="2024-08-02T16:00:00Z"),
-            _make_row(timestamp="2024-08-02T16:01:00Z"),  # 60s gap, below threshold
-            _make_row(timestamp="2024-08-02T16:10:00Z"),  # 540s gap, above threshold
+            _make_row(timestamp="2024-08-02T16:01:00Z"),
+            _make_row(timestamp="2024-08-02T16:10:00Z"),
         ]
         gaps = compute_temporal_gaps(rows, threshold_s=300.0)
-        self.assertEqual(1, len(gaps))
-        self.assertAlmostEqual(540.0, gaps[0].gap_seconds)
+        assert len(gaps) == 1
+        assert pytest.approx(gaps[0].gap_seconds) == 540.0
 
     def test_no_gaps_when_dense(self) -> None:
         rows = [
@@ -178,7 +172,7 @@ class TemporalGapsTests(unittest.TestCase):
             _make_row(timestamp="2024-08-02T16:01:00Z"),
         ]
         gaps = compute_temporal_gaps(rows, threshold_s=300.0)
-        self.assertEqual(0, len(gaps))
+        assert len(gaps) == 0
 
     def test_gap_detection_per_sensor(self) -> None:
         rows = [
@@ -187,10 +181,10 @@ class TemporalGapsTests(unittest.TestCase):
             _make_row(timestamp="2024-08-02T16:10:00Z", sensor="LWIR"),
         ]
         gaps = compute_temporal_gaps(rows, threshold_s=300.0)
-        self.assertEqual(1, len(gaps))
+        assert len(gaps) == 1
 
 
-class DuplicateTimestampsTests(unittest.TestCase):
+class DuplicateTimestampsTests:
     def test_finds_duplicates(self) -> None:
         rows = [
             _make_row(timestamp="2024-08-02T16:00:00Z", sensor="LWIR"),
@@ -198,18 +192,18 @@ class DuplicateTimestampsTests(unittest.TestCase):
             _make_row(timestamp="2024-08-02T16:00:00Z", sensor="HD-EO"),
         ]
         dups = find_duplicate_timestamps(rows)
-        self.assertEqual(1, len(dups))
-        self.assertEqual(("2024-08-02T16:00:00Z", "LWIR"), dups[0])
+        assert len(dups) == 1
+        assert dups[0] == ("2024-08-02T16:00:00Z", "LWIR")
 
     def test_no_duplicates_when_unique(self) -> None:
         rows = [
             _make_row(timestamp="2024-08-02T16:00:00Z", sensor="LWIR"),
             _make_row(timestamp="2024-08-02T16:01:00Z", sensor="LWIR"),
         ]
-        self.assertEqual(0, len(find_duplicate_timestamps(rows)))
+        assert len(find_duplicate_timestamps(rows)) == 0
 
 
-class BuildFrameManifestTests(unittest.TestCase):
+class BuildFrameManifestTests:
     def _make_source(self, root: Path) -> Path:
         source = root / "source"
         source.mkdir()
@@ -217,7 +211,6 @@ class BuildFrameManifestTests(unittest.TestCase):
         lwir1[0, 2:6, 2:6] = 200
         lwir1[3, :, :] = 255
         _write_projected_tiff(source / "2024-08-02_16-00-00_LWIR.tif", lwir1)
-
         lwir2 = np.zeros((4, 10, 10), dtype=np.uint8)
         lwir2[0, 3:7, 3:7] = 200
         lwir2[3, :, :] = 255
@@ -228,36 +221,36 @@ class BuildFrameManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             source = self._make_source(Path(temp))
             result = build_frame_manifest(source, event_id="tobarra_2024")
-            self.assertEqual(2, len(result.rows))
+            assert len(result.rows) == 2
             sensors = {r.sensor for r in result.rows}
-            self.assertIn("LWIR", sensors)
+            assert "LWIR" in sensors
             timestamps = sorted(r.timestamp_utc for r in result.rows)
-            self.assertEqual("2024-08-02T16:00:00Z", timestamps[0])
-            self.assertEqual("2024-08-02T16:10:00Z", timestamps[1])
+            assert timestamps[0] == "2024-08-02T16:00:00Z"
+            assert timestamps[1] == "2024-08-02T16:10:00Z"
 
     def test_build_manifest_detects_temporal_gap(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             source = self._make_source(Path(temp))
             result = build_frame_manifest(source, event_id="evt")
-            self.assertEqual(1, len(result.gaps))
-            self.assertAlmostEqual(600.0, result.gaps[0].gap_seconds)
-            self.assertEqual(1, result.summary["gaps_above_threshold"])
+            assert len(result.gaps) == 1
+            assert pytest.approx(result.gaps[0].gap_seconds) == 600.0
+            assert result.summary["gaps_above_threshold"] == 1
 
     def test_build_manifest_assigns_qa_status(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             source = self._make_source(Path(temp))
             result = build_frame_manifest(source, event_id="evt")
-            self.assertTrue(all(r.qa_status == "ok" for r in result.rows))
-            self.assertEqual(2, result.summary["qa_ok"])
+            assert all(r.qa_status == "ok" for r in result.rows)
+            assert result.summary["qa_ok"] == 2
 
     def test_build_manifest_records_crs_and_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             source = self._make_source(Path(temp))
             result = build_frame_manifest(source, event_id="evt")
             row = result.rows[0]
-            self.assertEqual("EPSG:32630", row.crs)
-            self.assertEqual("projected_metric", row.coordinate_system)
-            self.assertAlmostEqual(10.0, row.resolution_estimate_m)
+            assert row.crs == "EPSG:32630"
+            assert row.coordinate_system == "projected_metric"
+            assert pytest.approx(row.resolution_estimate_m) == 10.0
 
     def test_build_manifest_rejects_non_projected_crs(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -265,23 +258,23 @@ class BuildFrameManifestTests(unittest.TestCase):
             source.mkdir()
             _write_lonlat_tiff(source / "2024-08-02_16-00-00_LWIR.tif")
             result = build_frame_manifest(source, event_id="evt")
-            self.assertEqual(1, len(result.rows))
-            self.assertEqual("review", result.rows[0].qa_status)
-            self.assertIn("crs_not_projected_metric", result.rows[0].qa_reasons)
+            assert len(result.rows) == 1
+            assert result.rows[0].qa_status == "review"
+            assert "crs_not_projected_metric" in result.rows[0].qa_reasons
 
     def test_empty_directory_raises(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             source = Path(temp) / "empty"
             source.mkdir()
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 build_frame_manifest(source, event_id="evt")
 
     def test_nonexistent_directory_raises(self) -> None:
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             build_frame_manifest(Path("does_not_exist_xyz"), event_id="evt")
 
 
-class WriteManifestTests(unittest.TestCase):
+class WriteManifestTests:
     def test_write_frame_manifest_csv(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "manifest.csv"
@@ -290,8 +283,8 @@ class WriteManifestTests(unittest.TestCase):
             with output.open(encoding="utf-8") as handle:
                 reader = csv.DictReader(handle)
                 data = list(reader)
-            self.assertEqual(1, len(data))
-            self.assertEqual("evt", data[0]["event_id"])
+            assert len(data) == 1
+            assert data[0]["event_id"] == "evt"
 
     def test_write_manifest_summary_includes_counts(self) -> None:
         from wildfire_front.real_if import FrameManifestResult
@@ -317,11 +310,11 @@ class WriteManifestTests(unittest.TestCase):
             )
             write_manifest_summary(result, output)
             text = output.read_text(encoding="utf-8")
-            self.assertIn("Total rows:", text)
-            self.assertIn("QA ok:", text)
+            assert "Total rows:" in text
+            assert "QA ok:" in text
 
 
-class PrepareRealIfManifestTests(unittest.TestCase):
+class PrepareRealIfManifestTests:
     def test_prepare_sequence_writes_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -331,7 +324,6 @@ class PrepareRealIfManifestTests(unittest.TestCase):
             source.mkdir()
             _write_lonlat_tiff(source / "2024-08-02_16-08-21-553_LWIR.tif")
             _write_lonlat_tiff(source / "2024-08-02_16-08-21-553_HD-EO.tif")
-
             written = prepare_sequence(
                 source,
                 output,
@@ -341,18 +333,17 @@ class PrepareRealIfManifestTests(unittest.TestCase):
                 resampling=Resampling.nearest,
                 manifest_path=manifest,
             )
-
-            self.assertEqual(1, len(written))
-            self.assertTrue(manifest.exists())
+            assert len(written) == 1
+            assert manifest.exists()
             with manifest.open(encoding="utf-8") as handle:
                 reader = csv.DictReader(handle)
                 rows = list(reader)
-            self.assertEqual(1, len(rows))
-            self.assertEqual("LWIR", rows[0]["sensor"])
-            self.assertEqual("EPSG:4326", rows[0]["source_crs"])
-            self.assertEqual("EPSG:32630", rows[0]["destination_crs"])
-            self.assertEqual("2024-08-02T16:08:21.553000Z", rows[0]["timestamp_utc"])
-            self.assertTrue(rows[0]["source_sha256"])
+            assert len(rows) == 1
+            assert rows[0]["sensor"] == "LWIR"
+            assert rows[0]["source_crs"] == "EPSG:4326"
+            assert rows[0]["destination_crs"] == "EPSG:32630"
+            assert rows[0]["timestamp_utc"] == "2024-08-02T16:08:21.553000Z"
+            assert rows[0]["source_sha256"]
 
     def test_prepare_sequence_without_manifest_works(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -361,7 +352,6 @@ class PrepareRealIfManifestTests(unittest.TestCase):
             output = root / "output"
             source.mkdir()
             _write_lonlat_tiff(source / "2024-08-02_16-08-21-553_LWIR.tif")
-
             written = prepare_sequence(
                 source,
                 output,
@@ -370,10 +360,10 @@ class PrepareRealIfManifestTests(unittest.TestCase):
                 resolution_m=1.0,
                 resampling=Resampling.nearest,
             )
-            self.assertEqual(1, len(written))
+            assert len(written) == 1
 
 
-class VisualQaTests(unittest.TestCase):
+class VisualQaTests:
     def _make_manifest_row(self, geotiff_path: str, qa_status: str = "ok") -> FrameManifestRow:
         return FrameManifestRow(
             event_id="evt",
@@ -411,22 +401,20 @@ class VisualQaTests(unittest.TestCase):
             data[0, 5:15, 5:15] = 200
             data[3, :, :] = 255
             _write_projected_tiff(tiff_path, data)
-
             output_dir = root / "thumbs"
             row = self._make_manifest_row(str(tiff_path))
             result = render_frame_thumbnail(row, output_dir)
-
-            self.assertIsNotNone(result)
-            assert result is not None  # for type checker
-            self.assertTrue(result.thumbnail_path.exists())
+            assert result is not None
+            assert result is not None
+            assert result.thumbnail_path.exists()
             with Image.open(result.thumbnail_path) as img:
-                self.assertGreater(img.width, 0)
-                self.assertGreater(img.height, 0)
+                assert img.width > 0
+                assert img.height > 0
 
     def test_render_frame_thumbnail_returns_none_for_missing(self) -> None:
         row = self._make_manifest_row("")
         result = render_frame_thumbnail(row, Path("irrelevant"))
-        self.assertIsNone(result)
+        assert result is None
 
     def test_render_contact_sheet_produces_single_png(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -440,18 +428,13 @@ class VisualQaTests(unittest.TestCase):
                 _write_projected_tiff(path, data)
                 qa = "ok" if i % 2 == 0 else "review"
                 rows.append(self._make_manifest_row(str(path), qa_status=qa))
-
             sheet_path = root / "contact_sheet.png"
             results = render_contact_sheet(rows, sheet_path, columns=3)
-            self.assertTrue(sheet_path.exists())
-            self.assertEqual(4, len(results))
+            assert sheet_path.exists()
+            assert len(results) == 4
             with Image.open(sheet_path) as img:
-                self.assertGreater(img.width, 0)
+                assert img.width > 0
 
     def test_render_contact_sheet_raises_on_empty(self) -> None:
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             render_contact_sheet([], Path("irrelevant.png"))
-
-
-if __name__ == "__main__":
-    unittest.main()

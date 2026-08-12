@@ -166,6 +166,63 @@ def render_acta_md(
     return "\n".join(lines)
 
 
+def _reliability_gate_from_card(card: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Snapshot this-run reliability so field_ops GO can be re-verified offline.
+
+    Without R1–R4, ``field_ops`` fail-closed degrades GO → ABSTAIN and breaks
+    forensic replay. Suite-only samples are never reconstructed as unlock keys.
+
+    Limits (E3 honesty): this is an **offline consistency** snapshot, not
+    cryptographic authenticity. R2 is not re-derived from ops at replay time;
+    a fully controlled bundle can re-align gate + expected_* together.
+    Live HTTP still rejects untrusted inline gates; live publish re-runs
+    this-run quality floor.
+    """
+    _audit = card.get("audit")
+    audit: Mapping[str, Any] = _audit if isinstance(_audit, Mapping) else {}
+    sys_rel = audit.get("system_reliability")
+    if not isinstance(sys_rel, Mapping):
+        return None
+    checks = sys_rel.get("checks")
+    if not isinstance(checks, Mapping):
+        return None
+    # Only embed when all four checks are explicit bools (measured this run).
+    keys = ("R1_determinism", "R2_gates", "R3_abstention_enforced", "R4_provenance")
+    if any(not isinstance(checks.get(k), bool) for k in keys):
+        return None
+    event_id = card.get("event_id") or "decision"
+    passed = bool(sys_rel.get("system_reliability_pass")) and all(
+        checks.get(k) is True for k in keys
+    )
+    # Bind snapshot to card hashes when present (helps detect ops/card drift
+    # vs a re-issued expected_* without rewriting the gate provenance).
+    return {
+        "suite_only": False,
+        "field_unlock": passed,
+        "event_id": event_id,
+        "ok": passed,
+        "provenance": {
+            "kind": "this_run",
+            "event_id": event_id,
+            "input_hash": audit.get("input_hash"),
+            "output_hash": audit.get("output_hash"),
+            "note": (
+                "embedded in forensic replay_sources for offline field_ops re-verify; "
+                "not cryptographic authenticity — exit 0 = internal consistency"
+            ),
+        },
+        "system_reliability": {
+            "system_reliability_pass": passed,
+            "status": sys_rel.get("status") or ("pass" if passed else "fail"),
+            "checks": {k: checks.get(k) for k in keys},
+            "residual_silent_go_risk_bound": sys_rel.get("residual_silent_go_risk_bound"),
+            "five_nines_claim": sys_rel.get("five_nines_claim"),
+            "fire_prediction_accuracy_claim": sys_rel.get("fire_prediction_accuracy_claim")
+            or "NOT_CLAIMED",
+        },
+    }
+
+
 def extract_replay_sources(
     card: Mapping[str, Any],
     *,
@@ -173,6 +230,7 @@ def extract_replay_sources(
     ops_metrics: Mapping[str, Any] | None = None,
     open_metrics: Mapping[str, Any] | None = None,
     require_ops_for_go: bool = False,
+    reliability_gate: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build replay snapshot. Prefer explicit metrics; else reconstruct hints from card."""
     # Prefer caller-provided raw metrics (exact replay)
@@ -188,6 +246,7 @@ def extract_replay_sources(
     _metrics = card.get("metrics")
     metrics: Mapping[str, Any] = _metrics if isinstance(_metrics, Mapping) else {}
     policy_id = audit.get("policy_id") or metrics.get("policy_id") or "default"
+    gate = reliability_gate if reliability_gate is not None else _reliability_gate_from_card(card)
     return {
         "schema": REPLAY_SOURCES_SCHEMA,
         "event_id": card.get("event_id") or "decision",
@@ -196,6 +255,7 @@ def extract_replay_sources(
         "ml_metrics": dict(ml_metrics) if ml_metrics else None,
         "ops_metrics": dict(ops_metrics) if ops_metrics else None,
         "open_metrics": dict(open_metrics) if open_metrics else None,
+        "reliability_gate": dict(gate) if isinstance(gate, Mapping) else None,
         "expected_decision": card.get("decision"),
         "expected_output_hash": audit.get("output_hash"),
         "expected_input_hash": audit.get("input_hash"),
@@ -229,7 +289,7 @@ def replay_decision(
     base: Path | None = None,
 ) -> dict[str, Any]:
     """Rebuild Decision Card from stored sources and verify hashes/decision."""
-    req = {
+    req: dict[str, Any] = {
         "event_id": sources.get("event_id") or "replay",
         "ml_metrics": sources.get("ml_metrics"),
         "ops_metrics": sources.get("ops_metrics"),
@@ -238,6 +298,9 @@ def replay_decision(
         "policy_id": sources.get("policy_id") or sources.get("policy") or "default",
         "channel": "forensic_replay",
     }
+    # Preserve this-run reliability so field_ops GO does not fail-closed to ABSTAIN.
+    if isinstance(sources.get("reliability_gate"), Mapping):
+        req["reliability_gate"] = dict(sources["reliability_gate"])
     card = decide_from_request(req, base=base)
     expected_out = sources.get("expected_output_hash")
     expected_dec = sources.get("expected_decision")
@@ -253,6 +316,7 @@ def replay_decision(
 
     return {
         "schema": "forensic_replay_result_v1",
+        "event_id": sources.get("event_id") or card.get("event_id"),
         "replay_ok": bool(match_hash and match_dec and conf_ok),
         "match_output_hash": match_hash,
         "match_decision": match_dec,

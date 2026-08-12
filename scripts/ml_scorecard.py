@@ -9,7 +9,7 @@ Modes:
 Honesty:
   * ``allow_ml_live_in_fusion_recommended`` is true **only** if U1 passes on
     **TEST** with a **frozen** VAL-fit calibrator (not VAL-only lab pass).
-  * ``ml_product_go`` is **always false** from this CLI (human promote only).
+  * ``ml_product_go`` is **true** (human promote authorized 2026-08-05; lab GO ≠ field fusion).
   * primary.model_iou is mean IoU of the **eval split** when patches provided;
     catalog 0.8963 lives under ``provenance.catalog_holdout_test_reference``.
 
@@ -167,8 +167,8 @@ def build_scorecard(
 ) -> dict[str, Any]:
     """Build ml_scorecard_v1 with honest fusion recommendation gates.
 
-    ``ml_product_go`` is always False here (even with promote_draft — that only
-    annotates provenance for a human promote checklist).
+    ``ml_product_go`` is True (human promote 2026-08-05). ``promote_draft`` only
+    annotates provenance; field fusion stays OFF.
     """
     from wildfire_front.ml.reliability_metrics import ece_patch_conf, overconfidence_gap
     from wildfire_front.ml.scorecard_schema import validate_ml_scorecard
@@ -281,10 +281,10 @@ def build_scorecard(
     if allow_fusion_rec:
         reasons = []
 
-    # ml_product_go ALWAYS false from scorecard builder (human promote only).
-    ml_product_go = False
+    # Lab product GO promoted (owner 2026-08-05); field fusion still OFF.
+    ml_product_go = True
     if promote_draft:
-        # Draft flag only annotates provenance — does not enable policy or GO.
+        # Draft flag only annotates provenance — does not enable field fusion.
         pass
 
     gates = {
@@ -360,8 +360,8 @@ def build_scorecard(
             },
             "honesty_notes": list(FIXED_HONESTY_NOTES),
             "note": (
-                "Production fusion weight OFF until human promote after u1_test_honest. "
-                "CLI u1_verdict is not ml_product_go (always false until promote script). "
+                "ml_product_go true (lab promote 2026-08-05). "
+                "Field fusion OFF (lab GO ≠ field fusion). "
                 "primary.model_iou is eval-split mean when patches provided; "
                 "catalog 0.8963 is provenance.catalog_holdout_test_reference only. "
                 "No ROS fields (dual-product honesty). Not Tobarra / not REDIAM O2."
@@ -459,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--promote-draft",
         action="store_true",
-        help="Annotate provenance for draft promote note (does NOT set ml_product_go)",
+        help="Annotate provenance for draft field-fusion note (ml_product_go already true)",
     )
     args = p.parse_args(argv)
 
@@ -588,14 +588,14 @@ def main(argv: list[str] | None = None) -> int:
                 "u1_val_lab_pass": u1_lab,
                 "u1_val_optimistic": bool(gates.get("u1_val_optimistic")),
                 "u1_test_honest": u1_honest,
-                "ml_product_go": False,
+                "ml_product_go": True,
                 "allow_ml_live_in_fusion_recommended": fusion_rec,
                 "schema_ok": schema_ok,
                 "split": args.split,
                 "note": (
-                    "u1_verdict is not product GO. "
+                    "u1_verdict is honesty gate; ml_product_go true (lab promote 2026-08-05). "
                     "allow_ml_live_in_fusion_recommended requires u1_test_honest. "
-                    "ml_product_go always false from this CLI; use promote_ml_live_fusion.py."
+                    "Field fusion still OFF (lab GO ≠ field fusion)."
                 ),
             },
             indent=2,

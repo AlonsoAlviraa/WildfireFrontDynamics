@@ -1084,4 +1084,91 @@ def decide_from_request(
     payload["api_version"] = API_VERSION
     payload["product"] = PRODUCT_ID
     payload["policy_id"] = (payload.get("audit") or {}).get("policy_id") or policy_id or "default"
+
+    # PR12: multihorizon field_ops surface when ops ROS present; omit/ABSTAIN if none.
+    # Never enables field fusion; never uses ML mask IoU as ROS.
+    payload["multihorizon_fieldops"] = _attach_multihorizon_fieldops(
+        sources.get("ops_metrics"),
+        policy_id=str(policy_id) if policy_id else None,
+        request=req,
+    )
     return payload
+
+
+def _attach_multihorizon_fieldops(
+    ops_metrics: Mapping[str, Any] | None,
+    *,
+    policy_id: str | None = None,
+    request: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Attach multihorizon when ops ROS present; else omit-style status.
+
+    field_ops channel only for full anisotropic/hybrid; still safe under any policy
+    because fusion stays OFF and product_rail is field_ops.
+    """
+    req = dict(request or {})
+    # Allow explicit skip
+    if req.get("skip_multihorizon") is True:
+        return {
+            "status": "skipped",
+            "reason": "skip_multihorizon_requested",
+            "product_rail": "field_ops",
+        }
+    if not ops_metrics:
+        return {
+            "status": "ABSTAIN",
+            "reason": "no_ops_ros",
+            "product_rail": "field_ops",
+            "field_ops_ml_live_fusion": "OFF",
+            "iou_is_not_ros": True,
+        }
+    try:
+        from wildfire_front.multihorizon_fieldops import (
+            METHOD_ANISOTROPIC,
+            METHOD_HYBRID,
+            METHOD_ISOTROPIC,
+            attach_multihorizon_for_ops,
+            load_weather_json,
+        )
+    except Exception as exc:  # pragma: no cover
+        return {
+            "status": "error",
+            "reason": f"multihorizon_import_failed:{exc}",
+            "product_rail": "field_ops",
+        }
+
+    method = str(req.get("multihorizon_method") or METHOD_ANISOTROPIC)
+    if method in ("isotropic", "isotropic_ros_buffer_v1"):
+        method = METHOD_ISOTROPIC
+    elif method in ("hybrid", "hybrid_sector_envelope_v1"):
+        method = METHOD_HYBRID
+    else:
+        method = METHOD_ANISOTROPIC
+
+    weather = None
+    wpath = req.get("weather_json") or req.get("weather")
+    if wpath:
+        try:
+            weather = load_weather_json(wpath)
+        except Exception:
+            weather = None
+    if weather is None and isinstance(req.get("weather_inline"), Mapping):
+        weather = dict(req["weather_inline"])
+
+    card = attach_multihorizon_for_ops(
+        ops_metrics,
+        method=method,
+        weather=weather,
+    )
+    if card is None:
+        return {
+            "status": "ABSTAIN",
+            "reason": "ops_present_but_no_finite_ros",
+            "product_rail": "field_ops",
+            "field_ops_ml_live_fusion": "OFF",
+            "iou_is_not_ros": True,
+            "policy_id": policy_id,
+        }
+    card["attached_via"] = "decide_service"
+    card["policy_id"] = policy_id
+    return card

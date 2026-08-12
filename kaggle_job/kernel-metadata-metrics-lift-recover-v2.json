@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-metrics-lift-lofo-recover-v2",
+  "title": "WFD Metrics Lift LOFO Recover V2",
+  "code_file": "run_metrics_lift_lofo_recover_v2.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-v1-core3"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

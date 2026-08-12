@@ -1,0 +1,37 @@
+{
+  "schema": "wfd_dem_lapse_weather_v1",
+  "created_utc": "2026-08-06T22:28:13.346661+00:00",
+  "source_id": "tobarra_20240802",
+  "provenance": "dem_lapse_v1",
+  "not_reanalysis": true,
+  "dem_path": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/dem/tobarra/glo30_window.tif",
+  "scalar_anchors": {
+    "temp": 36.0,
+    "humidity": 18.0,
+    "wind_speed": 4.4,
+    "wind_dir": 270.0,
+    "precip": 0.0
+  },
+  "params": {
+    "lapse_c_per_m": 0.0065,
+    "rh_per_km": 4.0,
+    "wind_slope_k": 0.35,
+    "precip_oro_max": 0.5
+  },
+  "fields": {
+    "tmin": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/tmin.tif",
+    "tmax": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/tmax.tif",
+    "humidity": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/humidity.tif",
+    "wind_speed": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/wind_speed.tif",
+    "wind_dir": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/wind_dir.tif",
+    "precip": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/tobarra/precip.tif"
+  },
+  "honesty": {
+    "weather_provenance": "dem_lapse_v1",
+    "not_reanalysis": true,
+    "not_aemet_gridded": true,
+    "not_era5": true,
+    "spatial_variance_from_dem": true,
+    "scalar_anchors_fire_day": true
+  }
+}

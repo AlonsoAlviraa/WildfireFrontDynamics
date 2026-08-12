@@ -225,7 +225,7 @@ def _rings_from_placemark(pm: ET.Element) -> list[list[tuple[float, float]]]:
 
 def _close_ring(pts: list[tuple[float, float]]) -> tuple[tuple[float, float], ...]:
     if not pts:
-        return tuple()
+        return ()
     out = list(pts)
     if out[0] != out[-1]:
         out.append(out[0])
@@ -300,7 +300,9 @@ def parse_ops_perimeter(path: Path | str, *, root: Path | None = None) -> OpsPer
     return best
 
 
-def parse_ops_perimeters(paths: list[Path | str], *, root: Path | None = None) -> list[OpsPerimeter]:
+def parse_ops_perimeters(
+    paths: list[Path | str], *, root: Path | None = None
+) -> list[OpsPerimeter]:
     """Parse many paths; sort by inferred time when available."""
     out = [parse_ops_perimeter(p, root=root) for p in paths]
     out.sort(key=lambda p: p.time_local_inferred or "")
@@ -420,7 +422,9 @@ def to_geojson_collection(
     }
 
 
-def write_geojson(perims: list[OpsPerimeter], path: Path | str, *, name: str = "ops_perimeters") -> Path:
+def write_geojson(
+    perims: list[OpsPerimeter], path: Path | str, *, name: str = "ops_perimeters"
+) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fc = to_geojson_collection(perims, name=name)

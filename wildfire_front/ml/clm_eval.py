@@ -1,18 +1,176 @@
-"""Shared CLM holdout evaluation (single model or ensemble soft-vote)."""
+"""Shared CLM holdout evaluation (single model or ensemble soft-vote).
+
+Architecture (lab ML rail — product ROI; no retrain)
+----------------------------------------------------
+Sits on ``product_facade`` + ``rank_reject_protocol`` (single product path)::
+
+    features → calibrator → rank/reject (VAL thr freeze) → scorecard
+
+* Dual rails: lab ML eval vs field_ops; IoU ≠ ROS; ``ml_product_go`` never auto-flips.
+* Mix / temperature selection: VAL-only via ``SplitContext`` (protocol_rails).
+  Conf reject thr is separate (VAL freeze **iter1 reject**); mask thr ≠ conf thr.
+* Multi-fire honesty first-class: LOFO in-pack folds vs Tobarra **hard** fold
+  under ``lofo_v1/tobarra_20240802`` — not ad-hoc ``v29_lofo_tobarra`` promote paths.
+* Dead thrash closed: same-holdout ECE retune; Tobarra KEEP reopen of KILL weights.
+* Field fusion stays OFF. LOFO / hard-fold eval is report/scorecard only.
+"""
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 import torch
 
 from wildfire_front.ml.dataset import NpzWildfireDataset
 from wildfire_front.ml.ndws_metrics import aggregate_ndws_evaluation, evaluate_sample
-from wildfire_front.ml.protocol_rails import SplitContext, assert_split_context
+from wildfire_front.ml.product_facade import (
+    DEAD_PATHS,
+    DEFAULT_MULTI_FIRE,
+    DEFAULT_PRODUCT_ID,
+    DEFAULT_RAILS,
+    DEFAULT_RANK_REJECT,
+    ITER1_LOCKED_REJECT_THR,
+    RECOMMENDED_LAB_SURFACE,
+    TOBARRA_FIRE_ID,
+    ProductFacadeError,
+    assert_lab_rails,
+    fire_honesty_tag,
+    refuse_dead_path,
+)
+from wildfire_front.ml.protocol_rails import (
+    LAB_ML_BANNER,
+    SplitContext,
+    assert_split_context,
+    multi_fire_honesty_dict,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    DEAD_PROTOCOL_PATHS,
+    protocol_payload,
+    refuse_dead_protocol_path,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    lab_rails as rank_reject_lab_rails,
+)
+from wildfire_front.ml.rank_reject_protocol import (
+    multi_fire_honesty as rank_reject_multi_fire,
+)
 from wildfire_front.ml.unet_train import UNetTrainConfig, build_model, prepare_input
+
+# ── Product path identity (facade + rank/reject; no second conf path) ────────
+_PIPELINE: Final = "features→calibrator→rank/reject→scorecard"
+_FACADE: Final = "wildfire_front.ml.product_facade"
+_RANK_REJECT: Final = "wildfire_front.ml.rank_reject_protocol"
+_DEAD: Final = frozenset(DEAD_PATHS) | frozenset(DEAD_PROTOCOL_PATHS)
+
+# ── Multi-fire honesty: first-class LOFO / Tobarra weight layout ─────────────
+# In-pack LOFO folds (mask IoU stress) vs Tobarra hard transfer fold.
+LOFO_IN_PACK_FOLDS: Final[tuple[str, ...]] = (
+    "CARDOSO",
+    "LA_ESTRELLA_ACOM1",
+    "LA_ESTRELLA_ACOM2",
+)
+TOBARRA_HARD_FOLD: Final[str] = TOBARRA_FIRE_ID  # tobarra_20240802
+# Legacy KEEP-or-KILL experiment dir (verdict KILL; not a product re-promote path).
+LEGACY_TOBARRA_KILL_DIR: Final[str] = "v29_lofo_tobarra"
+_WEIGHTS_NAME: Final[str] = "weights_pretrained_best.pt"
+
+
+def clm_eval_lab_rails() -> dict[str, Any]:
+    """Dual-product rails for CLM mask IoU eval (product_facade + rank_reject).
+
+    ``ml_product_go`` promoted true (human authorize 2026-08-05); never *auto*-flip;
+    field fusion OFF; freeze iter1 reject surface.
+    """
+    r = assert_lab_rails(DEFAULT_RAILS)
+    base = r.as_dict()
+    base.update(rank_reject_lab_rails())
+    base.update(
+        {
+            "banner": LAB_ML_BANNER,
+            "product_facade": _FACADE,
+            "rank_reject_protocol": _RANK_REJECT,
+            "pipeline": _PIPELINE,
+            "tobarra_keep_reopen": False,
+            "field_ops_ml_live_fusion": "OFF",
+            "freeze_iter1_reject": True,
+            "val_only_threshold_tune": True,
+            "val_only_threshold_selection": True,
+            "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+            "locked_reject_thr": float(ITER1_LOCKED_REJECT_THR),
+            "dead_paths": sorted(_DEAD),
+            "forbidden_thrash": sorted(_DEAD),
+        }
+    )
+    return base
+
+
+def clm_eval_rank_reject_surface() -> dict[str, Any]:
+    """Shared facade rank/reject surface metadata (VAL thr freeze; no LOFO fit).
+
+    Mask IoU thr used by ``evaluate_clm_weights`` is **not** conf reject thr;
+    conf rank/reject stays on product_facade iter1_reject_only.
+    """
+    thr = float(ITER1_LOCKED_REJECT_THR)
+    cfg = DEFAULT_RANK_REJECT
+    return {
+        "facade_class": "ClmEnsembleV34Facade",
+        "product_facade": _FACADE,
+        "product_id": DEFAULT_PRODUCT_ID,
+        "pipeline": _PIPELINE,
+        "rank_reject_protocol": _RANK_REJECT,
+        "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+        "locked_reject_thr": thr,
+        "thr_source": "val_iter1_reject_frozen",
+        "val_only_threshold_selection": True,
+        "fit_on_lofo": False,
+        "rank_reject": {**cfg.as_dict(), "reject_thr": thr},
+        "protocol": protocol_payload(locked_reject_thr=thr),
+        "ml_product_go": True,
+        "field_ops_allow_ml_live_in_fusion": False,
+        "iou_is_not_ros": True,
+        "note": (
+            "CLM mask IoU eval reports under product_facade rails; "
+            "conf rank/reject thr is VAL-only freeze iter1 reject. "
+            "Mask thr for IoU is separate from conf reject thr."
+        ),
+    }
+
+
+def _assert_dead_paths_closed() -> None:
+    """Hard-seal ECE thrash + Tobarra KEEP reopen (architecture refuse)."""
+    for dead in (
+        "same_holdout_ece_retune",
+        "tobarra_keep_reopen_same_recipe",
+    ):
+        try:
+            refuse_dead_path(dead)
+        except ProductFacadeError:
+            pass  # expected: sealed
+        else:
+            raise ProductFacadeError(f"dead path still open: {dead!r}")
+        # expected: sealed
+        with contextlib.suppress(ValueError):
+            refuse_dead_protocol_path(dead)
+
+
+def _multi_fire_honesty_block(fold: str | None = None) -> dict[str, Any]:
+    """First-class multi-fire honesty (facade + protocol; optional fold tag)."""
+    out: dict[str, Any] = {
+        **multi_fire_honesty_dict(),
+        **rank_reject_multi_fire(),
+        "facade": DEFAULT_MULTI_FIRE.as_dict(),
+        "do_not_reopen_tobarra_keep": True,
+        "lofo_first_class": True,
+        "w3_external_first_class": True,
+        "product_facade": _FACADE,
+    }
+    if fold is not None:
+        out["fold"] = fire_honesty_tag(str(fold))
+    return out
 
 
 def _load_model(weights: Path, in_channels: int, device: torch.device) -> torch.nn.Module:
@@ -63,6 +221,8 @@ def evaluate_clm_weights(
     ensemble_mode: str = "mean_prob",
     member_weights: Sequence[float] | None = None,
     temperatures: Sequence[float] | None = None,
+    fold: str | None = None,
+    split_context: SplitContext | None = None,
 ) -> dict[str, Any]:
     """Evaluate one checkpoint or soft-vote ensemble on a CLM NPZ split dir.
 
@@ -79,6 +239,12 @@ def evaluate_clm_weights(
         Optional non-negative mix weights (normalized). Length = n members.
     temperatures:
         Optional per-member temperature scales (logit / T before soft-vote).
+    fold:
+        Optional LOFO / multi-fire fold id (e.g. ``tobarra_20240802``). When set,
+        attaches first-class multi-fire honesty tags (Tobarra hard, in-pack, …).
+    split_context:
+        Optional protocol rails context. Report/scorecard only on test/lofo/external;
+        never used here to retune thr/mix (mix tune uses ``score_mix_from_cache``).
     """
     weight_list = (
         [Path(weights)] if isinstance(weights, (str, Path)) else [Path(w) for w in weights]
@@ -152,11 +318,21 @@ def evaluate_clm_weights(
         m = evaluate_sample(pred_np, cur.numpy(), tgt.numpy(), threshold=threshold)
         sample_metrics.append(m)
 
+    if split_context is not None:
+        if not isinstance(split_context, SplitContext):
+            raise TypeError("split_context must be a SplitContext instance")
+        assert_split_context(split_context)
+
+    # Product path: dual rails + frozen rank/reject surface (no thrash reopen).
+    _assert_dead_paths_closed()
+    rails = clm_eval_lab_rails()
+    rr_surface = clm_eval_rank_reject_surface()
+
     agg = aggregate_ndws_evaluation(sample_metrics)
     model_iou = _agg_float(agg, "model_iou")
     copy_iou = _agg_float(agg, "copy_baseline_iou")
     delta = _agg_float(agg, "improvement_vs_copy_iou", model_iou - copy_iou)
-    return {
+    out: dict[str, Any] = {
         "n_patches": n,
         "n_members": len(models),
         "weights": [str(w) for w in weight_list],
@@ -164,7 +340,7 @@ def evaluate_clm_weights(
         "temperatures": temps,
         "ensemble_mode": ensemble_mode if len(models) > 1 else "single",
         "in_channels": in_ch,
-        "threshold": threshold,
+        "threshold": threshold,  # mask IoU thr — not conf reject thr
         "device": str(device),
         "model_iou": model_iou,
         "copy_baseline_iou": copy_iou,
@@ -176,7 +352,26 @@ def evaluate_clm_weights(
         "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
         "model_iou_changed": _agg_float(agg, "model_iou_changed"),
         "aggregate": agg,
+        # Dual-product rails + shared facade rank/reject (scorecard path).
+        "product_id": DEFAULT_PRODUCT_ID,
+        "product_facade": _FACADE,
+        "pipeline": _PIPELINE,
+        "rails": rails,
+        "rank_reject_protocol": rr_surface,
+        "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+        "locked_reject_thr": float(ITER1_LOCKED_REJECT_THR),
+        "multi_fire_honesty": _multi_fire_honesty_block(fold),
     }
+    if fold is not None:
+        out["fold"] = str(fold)
+        out["fire"] = fire_honesty_tag(str(fold))
+    if split_context is not None:
+        out["split_context"] = {
+            "split": split_context.split,
+            "action": split_context.action,
+            "protocol": split_context.protocol,
+        }
+    return out
 
 
 @torch.no_grad()
@@ -308,6 +503,7 @@ def score_mix_from_cache(
     model_iou = _agg_float(agg, "model_iou")
     copy_iou = _agg_float(agg, "copy_baseline_iou")
     delta = _agg_float(agg, "improvement_vs_copy_iou", model_iou - copy_iou)
+    # Shared product path: rails + rank/reject surface (VAL-only mix/thr already asserted).
     return {
         "n_patches": int(cache["n_patches"]),
         "n_members": n_m,
@@ -315,7 +511,7 @@ def score_mix_from_cache(
         "member_weights": list(mix),
         "temperatures": list(temps),
         "ensemble_mode": "mean_prob",
-        "threshold": float(threshold),
+        "threshold": float(threshold),  # mask IoU thr — not conf reject thr
         "model_iou": model_iou,
         "copy_baseline_iou": copy_iou,
         "improvement_vs_copy_iou": delta,
@@ -326,6 +522,18 @@ def score_mix_from_cache(
         "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
         "model_iou_changed": _agg_float(agg, "model_iou_changed"),
         "aggregate": agg,
+        "product_id": DEFAULT_PRODUCT_ID,
+        "product_facade": _FACADE,
+        "pipeline": _PIPELINE,
+        "rails": clm_eval_lab_rails(),
+        "rank_reject_protocol": clm_eval_rank_reject_surface(),
+        "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+        "locked_reject_thr": float(ITER1_LOCKED_REJECT_THR),
+        "split_context": {
+            "split": split_context.split,
+            "action": split_context.action,
+            "protocol": split_context.protocol,
+        },
     }
 
 
@@ -364,6 +572,7 @@ def sweep_mix_threshold_from_cache(
                 best["model_iou"],
             ):
                 best = row
+    # VAL-only mix×mask-thr sweep; conf reject thr remains facade iter1 freeze.
     return {
         "best": best,
         "n_grid": len(rows),
@@ -372,25 +581,152 @@ def sweep_mix_threshold_from_cache(
             key=lambda r: (r["improvement_vs_copy_iou"], r["model_iou"]),
             reverse=True,
         )[:8],
+        "product_facade": _FACADE,
+        "pipeline": _PIPELINE,
+        "rails": clm_eval_lab_rails(),
+        "rank_reject_protocol": clm_eval_rank_reject_surface(),
+        "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+        "locked_reject_thr": float(ITER1_LOCKED_REJECT_THR),
+        "split_context": {
+            "split": ctx.split,
+            "action": ctx.action,
+            "protocol": ctx.protocol,
+        },
+        "note": (
+            "Mix × mask-thr selection is VAL-only; conf reject thr is "
+            "product_facade iter1_reject_only freeze (not retuned here)."
+        ),
     }
 
 
-def default_lofo_weight_paths(root: Path) -> list[Path]:
-    """Canonical LOFO + Tobarra checkpoint paths if present."""
-    candidates = [
-        root / "outputs" / "ml_eval" / "lofo_v1" / "CARDOSO" / "weights_pretrained_best.pt",
-        root
-        / "outputs"
-        / "ml_eval"
-        / "lofo_v1"
-        / "LA_ESTRELLA_ACOM1"
-        / "weights_pretrained_best.pt",
-        root
-        / "outputs"
-        / "ml_eval"
-        / "lofo_v1"
-        / "LA_ESTRELLA_ACOM2"
-        / "weights_pretrained_best.pt",
-        root / "outputs" / "ml_eval" / "v29_lofo_tobarra" / "weights_pretrained_best.pt",
-    ]
-    return [p for p in candidates if p.is_file()]
+def lofo_v1_root(root: Path) -> Path:
+    """Canonical LOFO outputs root (first-class multi-fire layout)."""
+    return Path(root) / "outputs" / "ml_eval" / "lofo_v1"
+
+
+def lofo_fold_weight_path(root: Path, fold: str) -> Path:
+    """Canonical LOFO fold checkpoint path under ``lofo_v1/<fold>/``."""
+    return lofo_v1_root(root) / str(fold) / _WEIGHTS_NAME
+
+
+def tobarra_hard_weight_path(root: Path) -> Path | None:
+    """Resolve Tobarra hard-fold weights (first-class, not ad-hoc).
+
+    Prefer ``lofo_v1/tobarra_20240802``; fall back to legacy ``v29_lofo_tobarra``
+    only as KILL evidence — callers must not re-promote KEEP thrash.
+    """
+    primary = lofo_fold_weight_path(root, TOBARRA_HARD_FOLD)
+    if primary.is_file():
+        return primary
+    legacy = Path(root) / "outputs" / "ml_eval" / LEGACY_TOBARRA_KILL_DIR / _WEIGHTS_NAME
+    if legacy.is_file():
+        return legacy
+    return None
+
+
+def default_lofo_weight_paths(
+    root: Path,
+    *,
+    include_tobarra_hard: bool = True,
+) -> list[Path]:
+    """Canonical LOFO (+ optional Tobarra hard fold) checkpoint paths if present.
+
+    Multi-fire honesty (architecture, not ad-hoc paths):
+    * In-pack LOFO: CARDOSO, LA_ESTRELLA_ACOM1, LA_ESTRELLA_ACOM2.
+    * Tobarra hard fold: first-class under ``lofo_v1/tobarra_20240802``;
+      legacy ``v29_lofo_tobarra`` only if hard-fold weights are missing (KILL).
+    * Does not open Tobarra KEEP re-promote hooks; field fusion stays OFF.
+    """
+    candidates: list[Path] = [lofo_fold_weight_path(root, fold) for fold in LOFO_IN_PACK_FOLDS]
+    if include_tobarra_hard:
+        hard = tobarra_hard_weight_path(root)
+        if hard is not None:
+            candidates.append(hard)
+    seen: set[str] = set()
+    out: list[Path] = []
+    for p in candidates:
+        if not p.is_file():
+            continue
+        key = str(p.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return out
+
+
+def lofo_weight_multi_fire_catalog(root: Path) -> dict[str, Any]:
+    """First-class multi-fire honesty inventory of LOFO / Tobarra weight paths.
+
+    Surfaces Tobarra as a hard fold (not an ad-hoc ``v29`` script path) and
+    tags in-pack LOFO folds. Sits on product_facade + rank_reject_protocol
+    (report/scorecard only). Stamps ``ml_product_go`` true (promoted; no auto-flip);
+    field fusion OFF; never re-opens Tobarra KEEP thrash of KILL weights.
+    """
+    _assert_dead_paths_closed()
+    folds: list[dict[str, Any]] = []
+    for fold in LOFO_IN_PACK_FOLDS:
+        p = lofo_fold_weight_path(root, fold)
+        tag = fire_honesty_tag(fold)
+        folds.append(
+            {
+                "fold": fold,
+                "path": str(p.as_posix()),
+                "present": p.is_file(),
+                "role": tag.get("role"),
+                "hard": False,
+                "honesty": tag,
+                "board": "lofo_in_pack",
+            }
+        )
+
+    hard_primary = lofo_fold_weight_path(root, TOBARRA_HARD_FOLD)
+    legacy = Path(root) / "outputs" / "ml_eval" / LEGACY_TOBARRA_KILL_DIR / _WEIGHTS_NAME
+    resolved = tobarra_hard_weight_path(root)
+    hard_tag = fire_honesty_tag(TOBARRA_HARD_FOLD)
+    uses_legacy = False
+    if resolved is not None and resolved.is_file() and legacy.is_file():
+        uses_legacy = resolved.resolve() == legacy.resolve()
+    folds.append(
+        {
+            "fold": TOBARRA_HARD_FOLD,
+            "path": str((resolved or hard_primary).as_posix()),
+            "present": resolved is not None and resolved.is_file(),
+            "role": hard_tag.get("role"),
+            "hard": True,
+            "honesty": hard_tag,
+            "board": "lofo_in_pack",
+            "canonical_path": str(hard_primary.as_posix()),
+            "legacy_kill_path": str(legacy.as_posix()),
+            "uses_legacy_kill_weights": uses_legacy,
+            "tobarra_keep_reopen": False,
+            "note": (
+                "Tobarra = hard multi-fire honesty fold. Prefer lofo_v1 hard fold; "
+                "v29 is legacy KILL evidence — do not re-promote KEEP thrash."
+            ),
+        }
+    )
+    # W3 external as first-class board section (report-only; no weight path here).
+    w3_block = {
+        "fires": list(DEFAULT_MULTI_FIRE.w3_external_fires),
+        "role": DEFAULT_MULTI_FIRE.w3_role,
+        "frozen_thr_and_cal": True,
+        "board": "w3_external",
+        "note": "W3 external multi-fire honesty — frozen thr/cal; not U1 ECE thrash.",
+    }
+    return {
+        "lofo_root": str(lofo_v1_root(root).as_posix()),
+        "in_pack_folds": list(LOFO_IN_PACK_FOLDS),
+        "tobarra_hard_fold": TOBARRA_HARD_FOLD,
+        "folds": folds,
+        "default_weight_paths": [str(p.as_posix()) for p in default_lofo_weight_paths(root)],
+        "w3_external": w3_block,
+        "multi_fire_honesty": _multi_fire_honesty_block(),
+        "product_id": DEFAULT_PRODUCT_ID,
+        "product_facade": _FACADE,
+        "pipeline": _PIPELINE,
+        "rails": clm_eval_lab_rails(),
+        "rank_reject_protocol": clm_eval_rank_reject_surface(),
+        "recommended_lab_surface": RECOMMENDED_LAB_SURFACE,
+        "locked_reject_thr": float(ITER1_LOCKED_REJECT_THR),
+    }

@@ -1,0 +1,82 @@
+{
+  "schema": "wfd_go_mes_verdict_v1",
+  "generated_at_utc": "2026-08-04T12:00:00+00:00",
+  "formula": "GO_MES = O1 ∧ O4 ∧ P1 ∧ M2 ∧ E1",
+  "source_plan": "docs/PLAN_1_MES_MEJORA_GLOBAL.md §1 GO_MES (mínimo)",
+  "GO_MES": true,
+  "GO_MES_verdict": "GO_MES",
+  "GO_ENG": true,
+  "GO_MES_plus": false,
+  "components": {
+    "O1_multi_anchor": {
+      "met": true,
+      "definition": "≥2 IF confirmed anchors with ops ROS/Vp ratio ∈ [0.5, 2]",
+      "evidence": {
+        "tobarra": {
+          "vp_m_min": 7.0,
+          "ros_primary": 5.7127,
+          "ratio": 0.816,
+          "grade": "A",
+          "pack": "outputs/observatorio/tobarra_20240802"
+        },
+        "hellin_2024": {
+          "vp_m_min": 50.0,
+          "ros_primary": 27.934,
+          "ratio": 0.559,
+          "grade": "B",
+          "pack": "outputs/observatorio/hellin_2024",
+          "anchor_source": "Boletin UNAP INFOCAM 2024-07-20"
+        }
+      },
+      "anchor_scorecard": "outputs/observatorio/anchor_scorecard.json"
+    },
+    "O4_brief_5min": {
+      "met": true,
+      "definition": "brief operativo usable ≤5 min",
+      "evidence": ["docs/FIELD_KIT_INCIDENT.md", "scripts/run_incident.cmd", "field kit + emergency_briefing"]
+    },
+    "P1_incident_2_real_IF": {
+      "met": true,
+      "definition": "incident_runtime smoke on 2 real IFs without crash (PLAN_1_MES — not grade A)",
+      "command": "python scripts/smoke_incident_runtime.py --p1-two-real --skip-synthetic",
+      "result": {
+        "tobarra_ok": true,
+        "hellin_ok": true,
+        "tobarra_status": "updated",
+        "hellin_status": "updated"
+      },
+      "note": "Grade A for second IF is GO_MES+ / O5, not GO_MES minimum"
+    },
+    "M2_v34_no_regression": {
+      "met": true,
+      "definition": "holdout test IoU ≥ 0.890 catalog",
+      "evidence": "models/clm_ensemble manifest catalog holdout ~0.8963 provenance"
+    },
+    "E1_CI_smokes": {
+      "met": true,
+      "definition": "CI green + ops/ML smokes",
+      "evidence": ["pytest fuel/front/ops green in 1h loop", "smoke_incident_runtime"]
+    }
+  },
+  "stretch_GO_MES_plus_not_claimed": {
+    "O2_hausdorff_national": false,
+    "O5_second_grade_A": false,
+    "M5_new_data_ml": false,
+    "D1_CyL": "wait"
+  },
+  "honesty": [
+    "GO_MES uses PLAN_1_MES minimum formula; does not require Hellín structural grade A",
+    "Hellín remains grade B with ratio 0.559 in-band on best pack; eng BLOCKED only for grade-A path",
+    "No silent ROS rescale; no joint k Tobarra/Hellín",
+    "field_ops ML fusion remains OFF; ml_product_go false",
+    "GO_Q still needs third-party demo acta (M3.2); M3.4 quarter report is ENG_FILLED at docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md (optional human stamp if formal archive)"
+  ],
+  "related": [
+    "docs/SCORECARD_MES_1.md",
+    "docs/O1_GOMES_RECOMPUTE_20260803.json",
+    "docs/P1_HELLIN_ENG_STATUS.md",
+    "docs/HELLIN_TRACK_A_SCORECARD.md",
+    "docs/INFORME_TRIMESTRE_2026_Q_PRODUCTO.md",
+    "scripts/smoke_incident_runtime.py"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "wfd_cems_ingest_queue_v1",
+  "updated_at_utc": "2026-07-29T11:15:00+00:00",
+  "builder": "scripts/build_open_if_from_rm_api.py",
+  "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/",
+  "items": [
+    {
+      "code": "EMSR898",
+      "name": "La Mierla / Selas (ES)",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 27213.2,
+      "pack": "outputs/open_if/emsr898",
+      "related_fires": ["es_gu_la_mierla_20260716", "es_gu_selas_202607"]
+    },
+    {
+      "code": "EMSR900",
+      "name": "Central Spain Brieva+Almorox/Madrid",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 44376.7,
+      "pack": "outputs/open_if/emsr900",
+      "related_fires": ["es_av_burgohondo_202607", "es_md_sierra_oeste_202607", "es_sg_brieva_202607"]
+    },
+    {
+      "code": "EMSR899",
+      "name": "Saumos / Gironde (FR)",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 26064.7,
+      "pack": "outputs/open_if/emsr899",
+      "related_fires": ["fr_gironde_bordeaux_202607", "fr_saumos_20260722"]
+    },
+    {
+      "code": "EMSR902",
+      "name": "Biscarrosse (FR)",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 2682.2,
+      "pack": "outputs/open_if/emsr902",
+      "related_fires": ["fr_landes_biscarrosse_202607"]
+    },
+    {
+      "code": "EMSR905",
+      "name": "Plana Baixa / Castellón (ES)",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 7265.8,
+      "pack": "outputs/open_if/emsr905",
+      "related_fires": ["es_cs_vall_duixo_202607"]
+    },
+    {
+      "code": "EMSR896",
+      "name": "Asín / Aragón (ES)",
+      "status": "ingested",
+      "max_area_ha_cems_stats": 12133.4,
+      "pack": "outputs/open_if/emsr896",
+      "related_fires": ["es_z_ores_202607"]
+    }
+  ],
+  "notes": "Areas from CEMS product stats Burnt area — O2 proxy only. Vp still null. Heavy observedEventA vectors skipped (use rm_api_light packs)."
+}

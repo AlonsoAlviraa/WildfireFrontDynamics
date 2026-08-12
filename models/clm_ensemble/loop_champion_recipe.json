@@ -3,7 +3,8 @@
   "model_iou": 0.8962661597172356,
   "improvement_vs_copy_iou": 0.2544639893725479,
   "model_iou_growth": 0.9070774227697294,
-  "verdict": "GO_PROMOTE",
+  "verdict": "GO_RESEARCH_HOLDOUT",
+  "verdict_note": "Research holdout quality only — not ml_product_go, not field_ops fusion, not live certainty. Renamed from GO_PROMOTE (2026-07-29 honesty cycle c3).",
   "recipe": {
     "type": "source_mix_val_temp_calibrated",
     "members": [

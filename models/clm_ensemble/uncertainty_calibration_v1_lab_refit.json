@@ -1,0 +1,59 @@
+{
+  "schema": "ml_uncertainty_calibration_v1",
+  "method": "logistic",
+  "calibrator_id": "uncertainty_calibration_v1_lab_refit",
+  "weights": [
+    -0.45797817081432013,
+    -0.18137505318604172,
+    0.2144613062356263,
+    0.02475610155780927
+  ],
+  "feature_names": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "features": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "tau_iou": 0.5,
+  "fit_split": "val",
+  "head": "patch_reliability",
+  "label": {
+    "type": "patch_iou_ge_tau",
+    "tau": 0.5,
+    "mask_threshold": 0.5
+  },
+  "params": {
+    "coef": [
+      -0.45797817081432013,
+      -0.18137505318604172,
+      0.2144613062356263
+    ],
+    "intercept": 0.02475610155780927,
+    "platt_a": 1.574673674418346,
+    "platt_b": 1.1847717114186311
+  },
+  "temperature": 1.0,
+  "platt_a": 1.574673674418346,
+  "platt_b": 1.1847717114186311,
+  "abstain_threshold": 0.7833333333333333,
+  "lab_only": true,
+  "parent_calibrator": "uncertainty_calibration_v1",
+  "second_stage": "platt",
+  "second_stage_params": {
+    "platt_a": 1.574673674418346,
+    "platt_b": 1.1847717114186311
+  },
+  "metrics_lab_loop_refit": {
+    "test_ece_baseline": 0.15280955026564416,
+    "test_ece_refit": 0.17822750711056895,
+    "improved": false,
+    "reject_thr": 0.7833333333333333,
+    "test_abstain_rate": 0.5349999999999999,
+    "test_iou_accepted": 0.9533225619796679
+  },
+  "note": "LAB/research_open only. Logistic re-fit on VAL Head A features. Promote only if metrics_lab_loop_refit.improved and human review. Does not set ml_product_go or field_ops fusion."
+}

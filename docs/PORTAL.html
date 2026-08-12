@@ -105,7 +105,7 @@ pre.cmd {
         no un visor más de mapas gratis.
       </p>
       <p class="tag" style="margin-top:.75rem">
-        Actualizado: 2026-07-21 10:57 UTC · git <code>29fb877</code>
+        Actualizado: 2026-08-04 14:44 UTC · git <code>eb95049</code>
       </p>
     </div>
   </header>
@@ -114,25 +114,19 @@ pre.cmd {
     <div class="card">
       <h2>Decisión ahora</h2>
       <div class="badge">GO</div>
-      <div class="sub">Confianza del fenómeno: <b>0.76</b> · Sistema reliability: <b>False</b></div>
+      <div class="sub">Confianza del fenómeno: <b>0.86</b> · Sistema reliability: <b>False</b></div>
       <p class="sub" style="margin-top:.6rem">Si faltan fuentes → ABSTAIN. No inventamos acción.</p>
     </div>
     <div class="card">
-      <h2>ML España (v34) · U1 honest</h2>
-      <div class="big">~0.86</div>
-      <div class="sub">U1 TEST mean IoU eval · sel@80 ~<b>0.90</b> · ECE ~<b>0.15</b></div>
+      <h2>ML España (v34)</h2>
+      <div class="big">0.8963</div>
+      <div class="sub">IoU holdout · Δ vs copy <b>0.2545</b></div>
       <div class="sub">Producto: clm_ensemble_v34 (no es ROS de dron)</div>
-      <ul class="sub" style="margin-top:.6rem;padding-left:1.1rem">
-        <li><b>Pitch surface</b> = U1 TEST honest (scorecard / promote record) — not catalog 0.8963 as live certainty.</li>
-        <li><b>Catalog holdout 0.8963</b> = provenance / research quality only (Δ vs copy 0.2545).</li>
-        <li><b>Live confidence</b> = ensemble disagreement + VAL-fit calibrator; Card can HOLD/ABSTAIN.</li>
-        <li><b>research_open</b> fusion experimental after U1; <b>field_ops fusion OFF</b>. Demo: <code>scripts/run_ml_live_card_demo.py</code>.</li>
-      </ul>
     </div>
     <div class="card">
       <h2>Open CEMS (sin NDA)</h2>
-      <div class="big">5</div>
-      <div class="sub">packs públicos · hasta <b>29000 ha</b></div>
+      <div class="big">11</div>
+      <div class="sub">packs públicos · hasta <b>44377 ha</b></div>
       <div class="sub">Perímetros multi-día descargables</div>
     </div>
     <div class="card">
@@ -164,11 +158,36 @@ pre.cmd {
 
   <section class="grid">
     <div class="card wide">
-      <h2>Un solo comando para recrear la demo</h2>
+      <h2>Demo terceros — SPA industrial C2 (primary)</h2>
 <pre class="cmd">cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
-$env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
-python scripts\show_all.py</pre>
-      <p class="sub">Abre este portal, el hub de métricas y los mapas. Sin memorizar 40 scripts.</p>
+$env:PYTHONPATH = "."
+python -m wildfire_front app --fire _sla_measure --open
+# artefacto: outputs/app/index.html
+python -m wildfire_front app --serve --fire _sla_measure</pre>
+      <p class="sub">
+        <a href="../outputs/app/index.html"><b>Abrir SPA ops</b></a>
+        · dual-mode Fácil|Pro · Estado · Decidir · Acta · fusion OFF · GO_Q partial (H1).
+        Doc: <a href="APP.md">APP.md</a> · audit: <a href="AUDIT_AND_PR_PLAN_SPA_C2_20260811.md">SPA C2 plan</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card wide">
+      <h2>Modo operario (CLI)</h2>
+<pre class="cmd">python -m wildfire_front operator
+python -m wildfire_front operator do --all
+python -m wildfire_front operator checklist</pre>
+      <p class="sub">Semáforo VERDE/AMARILLO/ROJO · 4 actos · qué falta para GO_Q. Alias: <code>operador</code> / <code>ops</code>. ABSTAIN ≠ bug.</p>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card wide">
+      <h2>Portal / commander (legacy — no primary third-party)</h2>
+<pre class="cmd">python scripts\show_all.py
+# commander legacy: docs/commander/index.html</pre>
+      <p class="sub">Hub eng pesado + commander marcado <b>legacy</b>. Superficie demo terceros = <code>app</code> / <code>outputs/app</code>.</p>
     </div>
   </section>
 
@@ -176,10 +195,10 @@ python scripts\show_all.py</pre>
     <div class="card wide">
       <h2>Trabajo hecho (visible)</h2>
       <div class="work">
-        <div class="row"><span>ML ensemble CLM v34 (U1 TEST honest + catalog provenance)</span><span class="ok-text">HECHO · U1 ~0.86 / cat 0.8963</span></div>
+        <div class="row"><span>ML ensemble CLM v34 (holdout honesto)</span><span class="ok-text">HECHO · IoU 0.8963</span></div>
         <div class="row"><span>Incident runtime + field kit</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>FDC en cada incident update (outbox)</span><span class="ok-text">HECHO · fire_decision_card.json</span></div>
-        <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · 5 packs</span></div>
+        <div class="row"><span>Open IF CEMS multi-pack</span><span class="ok-text">HECHO · 11 packs</span></div>
         <div class="row"><span>Decision Card CLI + reliability gate</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>Metrics Hub unificado</span><span class="ok-text">HECHO</span></div>
         <div class="row"><span>SLA incidente sintético (&lt;10 min)</span><span class="ok-text">HECHO · ver INCIDENT_SLA_LATENCY.json</span></div>
@@ -187,8 +206,9 @@ python scripts\show_all.py</pre>
         <div class="row"><span>Acta forense + radio + replay</span><span class="ok-text">HECHO · outbox acta/radio · replay-decide</span></div>
         <div class="row"><span>Políticas de decisión (field_ops / research)</span><span class="ok-text">HECHO · config/decision_policies.json</span></div>
         <div class="row"><span>dNBR/STAC post-fuego (EMSR578)</span><span class="ok-text">HECHO · dnbr_preview.tif + STAC S2</span></div>
-        <div class="row"><span>App sala de mando (WFD COMMAND)</span><span class="ok-text">HECHO · docs/commander/index.html</span></div>
-        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · 13/17 items DONE</span></div>
+        <div class="row"><span>SPA industrial C2 (product app)</span><span class="ok-text">PRIMARY · outputs/app · app/spa/console</span></div>
+        <div class="row"><span>App sala de mando (WFD COMMAND)</span><span class="warn-text">LEGACY · docs/commander/index.html</span></div>
+        <div class="row"><span>Plan 3 meses + cycle runner</span><span class="ok-text">HECHO · 17/22 items DONE</span></div>
         <div class="row"><span>2ª ancla INFOCAM / perímetro nacional</span><span class="warn-text">BLOQUEADO externo</span></div>
         <div class="row"><span>Piloto con cliente real</span><span class="warn-text">PENDIENTE humano</span></div>
       </div>
@@ -200,7 +220,7 @@ python scripts\show_all.py</pre>
       <h2>Packs open (mapas)</h2>
       <table>
         <thead><tr><th>Activación</th><th>Área</th><th>Pasos</th><th>O2 CEMS</th><th>Ver</th></tr></thead>
-        <tbody><tr><td><b>EMSR578</b></td><td class='num'>2693 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr578/map.html'>mapa</a></td></tr><tr><td><b>EMSR581</b></td><td class='num'>2210 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr581/map.html'>mapa</a></td></tr><tr><td><b>EMSR583</b></td><td class='num'>1791 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr583/map.html'>mapa</a></td></tr><tr><td><b>EMSR632</b></td><td class='num'>5320 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr632/map.html'>mapa</a></td></tr><tr><td><b>guadalajara_la_mierla_20260717</b></td><td class='num'>29000 ha</td><td class='num'>1</td><td><span class='pill ok'>NOT_ACTIVATED_OR_UNKNOWN</span></td><td><a href='../outputs/open_if/la_mierla_20260717/map.html'>mapa</a></td></tr></tbody>
+        <tbody><tr><td><b>EMSR578</b></td><td class='num'>2693 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr578/map.html'>mapa</a></td></tr><tr><td><b>EMSR581</b></td><td class='num'>2210 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr581/map.html'>mapa</a></td></tr><tr><td><b>EMSR583</b></td><td class='num'>1791 ha</td><td class='num'>5</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr583/map.html'>mapa</a></td></tr><tr><td><b>EMSR632</b></td><td class='num'>5320 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr632/map.html'>mapa</a></td></tr><tr><td><b>EMSR896</b></td><td class='num'>12133 ha</td><td class='num'>4</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr896/map.html'>mapa</a></td></tr><tr><td><b>EMSR898</b></td><td class='num'>27213 ha</td><td class='num'>8</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr898/map.html'>mapa</a></td></tr><tr><td><b>EMSR899</b></td><td class='num'>26065 ha</td><td class='num'>2</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr899/map.html'>mapa</a></td></tr><tr><td><b>EMSR900</b></td><td class='num'>44377 ha</td><td class='num'>10</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr900/map.html'>mapa</a></td></tr><tr><td><b>EMSR902</b></td><td class='num'>2682 ha</td><td class='num'>3</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr902/map.html'>mapa</a></td></tr><tr><td><b>EMSR905</b></td><td class='num'>7266 ha</td><td class='num'>3</td><td><span class='pill ok'>GO</span></td><td><a href='../outputs/open_if/emsr905/map.html'>mapa</a></td></tr><tr><td><b>guadalajara_la_mierla_20260717</b></td><td class='num'>32000 ha</td><td class='num'>1</td><td><span class='pill ok'>NOT_ACTIVATED_OR_UNKNOWN</span></td><td><a href='../outputs/open_if/la_mierla_20260717/map.html'>mapa</a></td></tr></tbody>
       </table>
       <p class="sub"><a href="../outputs/open_if/index.html">Índice open_if</a></p>
     </div>
@@ -209,17 +229,18 @@ python scripts\show_all.py</pre>
   <section class="grid">
     <div class="card wide">
       <h2>Gates (estado)</h2>
-      <div class="pills"><span class='pill ok'>G0_ndws: GO</span><span class='pill bad'>G1_ndws: KILL</span><span class='pill ok'>G2_clm_v28: GO</span><span class='pill ok'>G2e_ensemble_v34: GO</span><span class='pill bad'>O1_multi_anchor: OPEN</span><span class='pill bad'>O2_hausdorff_official: BLOCKED</span><span class='pill warn'>O3_temporal: PARTIAL</span><span class='pill ok'>O4_brief: GO_ENG</span><span class='pill bad'>O5_second_grade_a: OPEN</span><span class='pill warn'>P1_incident_2if: PARTIAL</span><span class='pill ok'>E1_ci_smokes: GO_ENG</span><span class='pill warn'>D1_cyl: FOLLOW_UP</span></div>
+      <div class="pills"><span class='pill ok'>G0_ndws: GO</span><span class='pill bad'>G1_ndws: KILL</span><span class='pill ok'>G2_clm_v28: GO</span><span class='pill bad'>G2e_ensemble_v34: GO_RESEARCH_HOLDOUT</span><span class='pill bad'>O1_multi_anchor: OPEN</span><span class='pill bad'>O2_hausdorff_official: BLOCKED</span><span class='pill ok'>O2_cems_open_proxy: GO_PROXY</span><span class='pill warn'>O3_temporal: PARTIAL</span><span class='pill ok'>O4_brief: GO_ENG</span><span class='pill bad'>O5_second_grade_a: OPEN</span><span class='pill warn'>P1_incident_2if: PARTIAL</span><span class='pill ok'>E1_ci_smokes: GO_ENG</span></div>
     </div>
   </section>
 
   <section class="grid">
     <div class="card wide">
-      <h2>Cómo enseñarlo (3 pasos)</h2>
+      <h2>Cómo enseñarlo (4 actos operario)</h2>
       <ol class="steps">
-        <li><b>ABSTAIN vacío</b> — <code>python -m wildfire_front decide</code> → el sistema se calla sin datos.</li>
-        <li><b>Mapa open grande</b> — abrir EMSR632 (~5k ha) sin NDA.</li>
-        <li><b>Incidente → Decision Card en outbox</b> — tras <code>incident update</code> lee <code>fire_decision_card.md</code> (GO/HOLD/ABSTAIN).</li>
+        <li><b>Ver</b> — <code>python -m wildfire_front operator do --act 1</code> multi-CCAA.</li>
+        <li><b>Callarse</b> — <code>operator do --act 2</code> · ABSTAIN es feature (no bug).</li>
+        <li><b>Decidir</b> — <code>operator do --act 3</code> · Decision Card en lenguaje normal.</li>
+        <li><b>Probar</b> — <code>operator do --act 4</code> o <code>do --all</code> · pack + replay; GO_Q sigue humano.</li>
       </ol>
     </div>
   </section>
@@ -228,25 +249,27 @@ python scripts\show_all.py</pre>
     <div class="card">
       <h2>Docs cortos (solo estos)</h2>
       <ul>
-        <li><a href="commander/index.html"><b>WFD COMMAND</b></a> — app sala de mando</li>
+        <li><a href="../outputs/app/index.html"><b>SPA industrial C2</b></a> — demo terceros (primary)</li>
+        <li><a href="APP.md">APP.md</a> — doc SPA</li>
+        <li><a href="OPERATOR_UX_LOOP_LOG.md">Operator UX loop</a> — camino operario CLI</li>
+        <li><a href="CHEATSHEET_DEMO_12MIN.md">Cheatsheet 12 min</a></li>
         <li><a href="START_HERE.md">START_HERE.md</a> — lectura 2 min</li>
+        <li><a href="commander/index.html">WFD COMMAND</a> — <b>legacy</b></li>
         <li><a href="ONEPAGER_COMERCIAL_ES.md">One-pager venta</a></li>
-        <li><a href="SUENOS_MAXIMOS.md">Sueños máximos</a> — techo de resultados y funciones</li>
-        <li><a href="GUIA_COMANDOS_RECREAR_TODO.md">Comandos completos</a></li>
+        <li><a href="H1_GO_Q_RUNBOOK.md">H1 / GO_Q runbook</a></li>
+        <li><a href="GUIA_COMANDOS_RECREAR_TODO.md">Comandos completos (lab)</a></li>
         <li><a href="PLAN_3_MESES.md">Plan 3 meses</a></li>
-        <li><a href="PRODUCT_REDESIGN_PAID_VALUE.md">Por qué se paga</a></li>
       </ul>
     </div>
     <div class="card">
       <h2>Números clave</h2>
       <ul>
-        <li>ML U1 mean IoU: <b>~0.86</b> (lab honest)</li>
-        <li>ML catalog holdout: <b>0.8963</b> (provenance)</li>
-        <li>ML Δ vs copy: <b>0.2545</b></li>
-        <li>Open packs: <b>5</b></li>
-        <li>Max ha open: <b>29000</b></li>
+        <li>ML IoU: <b>0.8963</b></li>
+        <li>ML Δ: <b>0.2545</b></li>
+        <li>Open packs: <b>11</b></li>
+        <li>Max ha open: <b>44377</b></li>
         <li>Score dual vs CLM-solo: <b>95.0</b> / <b>39.0</b></li>
-        <li>Decision: <b>GO</b> (0.76)</li>
+        <li>Decision: <b>GO</b> (0.86)</li>
       </ul>
     </div>
   </section>

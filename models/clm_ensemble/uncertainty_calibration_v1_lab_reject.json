@@ -1,0 +1,73 @@
+{
+  "schema": "ml_uncertainty_calibration_v1",
+  "method": "logistic",
+  "calibrator_id": "uncertainty_calibration_v1_lab_reject",
+  "weights": [
+    -0.34205135735156494,
+    -0.1303913567966543,
+    0.15725253879323609,
+    1.1064826473077154
+  ],
+  "feature_names": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "features": [
+    "mean_entropy",
+    "member_disagreement",
+    "mean_margin"
+  ],
+  "tau_iou": 0.5,
+  "fit_split": "val",
+  "head": "patch_reliability",
+  "label": {
+    "type": "patch_iou_ge_tau",
+    "tau": 0.5,
+    "mask_threshold": 0.5
+  },
+  "params": {
+    "coef": [
+      -0.34205135735156494,
+      -0.1303913567966543,
+      0.15725253879323609
+    ],
+    "intercept": 1.1064826473077154,
+    "platt_a": 1.33145545162161,
+    "platt_b": -0.14128450303395038
+  },
+  "temperature": 1.0,
+  "platt_a": 1.33145545162161,
+  "platt_b": -0.14128450303395038,
+  "abstain_threshold": 0.7949999999999999,
+  "lab_only": true,
+  "confidence_temperature": 1.0,
+  "parent_calibrator": "uncertainty_calibration_v1",
+  "note": "LAB/research_open only. Confidence post-hoc temperature applied at inference by consumers that read confidence_temperature. Does not promote ml_product_go or field_ops fusion.",
+  "metrics_lab_loop": {
+    "test_metrics_tuned": {
+      "n": 200.0,
+      "abstain_rate": 0.515,
+      "keep_rate": 0.485,
+      "ece_full": 0.15280955026564416,
+      "ece_accepted": 0.17327674586998973,
+      "mean_iou_accepted": 0.9492431452930816,
+      "mean_conf_accepted": 0.8061046974289797,
+      "selective_iou_at_coverage": 0.903428533834858,
+      "n_keep": 97.0,
+      "threshold": 0.7949999999999999
+    },
+    "test_metrics_baseline": {
+      "n": 200.0,
+      "abstain_rate": 0.0,
+      "keep_rate": 1.0,
+      "ece_full": 0.15280955026564416,
+      "ece_accepted": 0.15280955026564416,
+      "mean_iou_accepted": 0.8568865373678947,
+      "mean_conf_accepted": 0.7821904497343559,
+      "selective_iou_at_coverage": 0.903428533834858,
+      "n_keep": 200.0,
+      "threshold": 0.35
+    }
+  }
+}

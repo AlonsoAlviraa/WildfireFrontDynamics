@@ -5,11 +5,11 @@
 
 | ID | Cuello | Sev. | Control eng | ETA | **Estado tras este goal** | Acción residual |
 |----|--------|------|-------------|-----|---------------------------|-----------------|
-| **B1** | H1 humano (demo+acta) | crítica | **no** | 1 call 30 min | **OPEN** — eng pack listo; falta tercero | Agendar + `scripts/record_h1_demo_complete.py` |
+| **B1** | H1 humano (demo+acta) | crítica | **no** | 1 call 30 min | **ENG READY / HUMAN OPEN** — `prepare_h1_demo_session.py` + `H1_CALENDAR_INVITE.md`; `record_h1` refuse PENDING | Agendar tercero + acta firmada + `record_h1_demo_complete.py` |
 | **B2** | Docs/flags desalineados | alta | **sí** | ½ día | **MITIGADO** | `scripts/check_release_flags.py` PASS; stamp GO_MES alineado; actas/curso corregidos |
 | **B3** | Repo noise (`_*`, untracked) | alta | **sí** | 1–2 h | **MITIGADO** | `.gitignore` AI/data caches endurecido; no `_FINAL_*` en raíz |
-| **B4** | Solo 1 grade A ops | alta | parcial | semanas | **OPEN** — Tobarra A · Hellín B | 2º grade A / ancla (datos) |
-| **B5** | O2 nacional BLOCKED | media-alta | **no** | externo | **OPEN / BLOCKED** | FOI/partner EGIF/CCAA |
+| **B4** | Solo 1 grade A ops | alta | parcial | semanas | **OPEN** — Tobarra A · Hellín B; calendar `docs/B4_B5_UNBLOCK_CALENDAR.md` | Datos 2º IF / re-score Hellín sin k-fit |
+| **B5** | O2 nacional BLOCKED | media-alta | **no** | externo | **OPEN / BLOCKED** — outreach 19 SENT (2026-08-10); silence CyL | FOI/partner; no flags |
 | **B6** | ML Tobarra LOFO ~0.48 | alta si vende ML | solo datos | mes+ | **CLOSED process (KILL)** | No thrash; FREEZE+REQUEST_DATA; pitch sealed LOFO ~0.79 |
 
 ## Verificación eng (B2)

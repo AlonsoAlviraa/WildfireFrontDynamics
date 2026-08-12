@@ -42,9 +42,7 @@ DEFAULT_OUT = PROJECT_ROOT / "outputs" / "ml_live_card_demo"
 FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "ml"
 SCORECARD_PATH = PROJECT_ROOT / "docs" / "ML_PRODUCT_SCORECARD.json"
 PROMOTE_PATH = PROJECT_ROOT / "docs" / "ML_U1_PROMOTE_RECORD.json"
-CALIBRATOR_PRODUCT = (
-    PROJECT_ROOT / "models" / "clm_ensemble" / "uncertainty_calibration_v1.json"
-)
+CALIBRATOR_PRODUCT = PROJECT_ROOT / "models" / "clm_ensemble" / "uncertainty_calibration_v1.json"
 
 # U1 numeric fallbacks for demo banners only when scorecard is missing.
 # Gates default False: never claim honest TEST / fusion-recommended without a real scorecard.
@@ -251,9 +249,7 @@ def load_fixture_ml_prediction(
                 live.setdefault("product_id", product_id)
                 data["ml_live_metrics"] = live
             return data
-    return build_offline_ml_prediction(
-        scenario=scenario, product_id=product_id, event_id=event_id
-    )
+    return build_offline_ml_prediction(scenario=scenario, product_id=product_id, event_id=event_id)
 
 
 def weights_available_for_product(product_id: str = DEFAULT_PRODUCT) -> bool:
@@ -437,9 +433,7 @@ def build_abstain_ece_note(
             "conf=0.5 is not calibrated reliability."
         )
     if abstain_flag:
-        reasons.append(
-            f"Explicit live abstain=true (payload). confidence={conf:.3f}."
-        )
+        reasons.append(f"Explicit live abstain=true (payload). confidence={conf:.3f}.")
     if conf_below_floor and not abstain_flag:
         # Only when conf alone trips the floor without an explicit abstain flag.
         reasons.append(
@@ -565,9 +559,7 @@ def run_demo(
         ml_doc["event_id"] = event_id
     else:
         # offline
-        ml_doc = load_fixture_ml_prediction(
-            scenario, product_id=product_id, event_id=event_id
-        )
+        ml_doc = load_fixture_ml_prediction(scenario, product_id=product_id, event_id=event_id)
 
     open_metrics = None
     if open_pack is not None:

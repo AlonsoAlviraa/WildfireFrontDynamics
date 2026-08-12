@@ -11,7 +11,13 @@
       "behavior": "Contraviento",
       "source": "INFOCAM 2024 parte operativo",
       "status": "confirmed",
-      "detection": "2024-08-02T16:42:00"
+      "detection": "2024-08-02T16:42:00",
+      "perimeter_drop_pablo_20260730": {
+        "path": "data/real_if/pablo_geacam_20260730_tobarra",
+        "kmz_1830_sup_ha": 21.489832,
+        "kmz_2143_sup_ha": 37.075054,
+        "note": "Perímetro activo multi-hora from Pablo/CMA (not national cadastre). Area at 21:43 ~37 ha vs anchor 39 ha."
+      }
     },
     "cardoso_2025": {
       "fire_id": "cardoso_2025",
@@ -20,16 +26,44 @@
       "area_ha": null,
       "source": null,
       "status": "pending_external",
-      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM",
+      "perimeter_drop_pablo_20260803": {
+        "path": "data/real_if/pablo_geacam_20260803_drop/cardoso",
+        "promised": "KMZ per day + thermal perimeters",
+        "extract_status": "ingested_20260803",
+        "timeline_sup_ha_attr": {
+          "2025-09-22T17:40": null,
+          "2025-09-23T09:03": null,
+          "2025-09-24T12:30": null,
+          "2025-09-26T10:10": 1309.2,
+          "2025-09-27T13:00": 2153.0,
+          "2025-09-28T09:30": null,
+          "2025-09-29T09:50": 2964.43,
+          "2025-09-30T09:30": 2973.37
+        },
+        "note": "Multi-day ops KMZ; no Vp quote in this drop. ha from KMZ attrs/name — not EGIF. Vp/ha still null for O1 Cardoso."
+      }
     },
     "hellin_2024": {
       "fire_id": "hellin_2024",
-      "name": "Hellín 2024",
-      "vp_m_min": null,
-      "area_ha": null,
-      "source": null,
-      "status": "pending_external",
-      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+      "name": "Hellín (AB) 2024-07-19",
+      "vp_m_min": 50.0,
+      "area_ha": 100.0,
+      "intensity": "Muy alta",
+      "behavior": "Viento",
+      "source": "Boletin UNAP INFOCAM 2024-07-20 — tabla SEGUIMIENTO: Hellin (AB) 19/07/2024 Vp media = 50 m/min; superficie 100 ha* (*estimada no oficial)",
+      "status": "confirmed",
+      "detection": "2024-07-19",
+      "fs_m": 280,
+      "notes": "Cabeza fuera de capacidad de extincion, con fuego de copas (boletin). area_ha is estimated non-official per boletin footnote. KMZ 20:45 sup_ha attr ~93.66 ha (ops perimeter, not EGIF).",
+      "perimeter_drop_pablo_20260803": {
+        "path": "data/real_if/pablo_geacam_20260803_drop/hellin",
+        "kmz": "20240719_Hellin_2045_20240719_2045.kmz",
+        "kmz_2045_sup_ha": 93.659599,
+        "boletin_pdf": "20240720_BoletinUNAP.pdf",
+        "extract_status": "ingested_20260803",
+        "o1_role": "second_confirmed_anchor"
+      }
     },
     "la_estrella_acom1_2024": {
       "fire_id": "la_estrella_acom1_2024",
@@ -38,7 +72,15 @@
       "area_ha": null,
       "source": null,
       "status": "pending_external",
-      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM"
+      "request": "Solicitar Vp media y ha a Observatorio/INFOCAM",
+      "perimeter_drop_pablo_20260803": {
+        "path": "data/real_if/pablo_geacam_20260803_drop/la_estrella",
+        "kmz": "2024450280_LaEstrella_20240807_1425.kmz",
+        "kmz_1425_sup_ha": 2523.9871,
+        "photos_ops_cartography": 10,
+        "extract_status": "ingested_20260803",
+        "note": "Ops perimeter ~2524 ha at 2024-08-07 14:25. Photos are scenario cartography — OCR later; no confirmed Vp yet."
+      }
     },
     "retuerta_2025": {
       "fire_id": "retuerta_2025",
@@ -47,8 +89,88 @@
       "area_ha": null,
       "source": null,
       "status": "pending_external"
+    },
+    "guadalajara_la_mierla_20260717": {
+      "fire_id": "guadalajara_la_mierla_20260717",
+      "name": "La Mierla / Sierra Norte de Guadalajara 2026-07",
+      "vp_m_min": null,
+      "area_ha": null,
+      "area_ha_press_provisional": 32000,
+      "area_ha_press_range": [30000, 35000],
+      "area_ha_press_note": "INFOCAM estimada ~32k; press 30-35k plateau 22-23 jul. NOT EGIF. phase=estabilizacion. CEMS EMSR898 GRA ~25572 / max_extent ~31840 / EFFIS ~33022 = satellite provisional only.",
+      "source": "Plan_INFOCAM X status/2080216111883129077 + press 2026-07 (estimate only)",
+      "status": "pending_external",
+      "detection": "2026-07-16T13:55:00",
+      "ccaa": "Castilla-La Mancha",
+      "province": "Guadalajara",
+      "open_pack": "outputs/open_if/la_mierla_20260717",
+      "cems_activation": "EMSR898",
+      "firms_nrt_hotspots_24h": 273,
+      "civil_protection_level": 2,
+      "evacuated_municipalities_reported": 34,
+      "confined_municipalities_reported": 14,
+      "request": "Solicitar a INFOCAM/CMA: LWIR+KMZ, Vp media m/min, ha oficiales EGIF, perimetro si existe",
+      "notes": "Write agent 2026-07-29 iter3/4 merge. Still pending_external for O1 Vp/ha. Never promote press/CEMS ha to area_ha or confirmed. No invented Vp.",
+      "phase_open_source": "estabilizacion",
+      "fire_intel_id": "es_gu_la_mierla_20260716"
+    },
+    "avila_burgohondo_202607": {
+      "fire_id": "avila_burgohondo_202607",
+      "name": "Burgohondo (Ávila) / complejo Ávila–Madrid 2026-07",
+      "vp_m_min": null,
+      "area_ha": null,
+      "area_ha_press_provisional": 50000,
+      "area_ha_press_range": [45000, 55000],
+      "area_ha_press_note": "Press Ávila ~50-55k; complex AV+MD+TO ~77k. CEMS La Atalaya ~44377 / EFFIS Navaluenga ~44403 provisional only. NOT EGIF. NOT confirmed.",
+      "perimeter_km_press_provisional": 180,
+      "perimeter_km_press_range": [160, 280],
+      "source": "El País / Público / RTVE / press 2026-07-27 (estimate only)",
+      "status": "pending_external",
+      "ccaa": "Castilla y León",
+      "province": "Ávila",
+      "cems_activation": "EMSR900",
+      "request": "Solicitar parte oficial Vp/ha + perímetro vectorial CyL / EGIF / Miteco",
+      "fire_intel_id": "es_av_burgohondo_202607",
+      "notes": "Stub fire_intel 2026-07-29 iter4. Almorox/TO = complex slice. Do not use press ha for O1 GO."
+    },
+    "madrid_sierra_oeste_202607": {
+      "fire_id": "madrid_sierra_oeste_202607",
+      "name": "Sierra Oeste de Madrid 2026-07",
+      "vp_m_min": null,
+      "area_ha": null,
+      "area_ha_press_provisional": 34000,
+      "area_ha_press_range": [15849, 34000],
+      "area_ha_press_note": "Provisional raised 19k→~34k (Europa Press/CM 2026-07-29). El País/EFFIS SMV ~15849; CEMS Villa del Prado slice ~2876 only. May merge with Burgohondo complex. NOT EGIF.",
+      "source": "Europa Press / Comunidad de Madrid / El País 2026-07 (estimate only)",
+      "status": "pending_external",
+      "ccaa": "Comunidad de Madrid",
+      "province": "Madrid",
+      "request": "Parte oficial CAM / Miteco Vp/ha + perímetro",
+      "fire_intel_id": "es_md_sierra_oeste_202607",
+      "cems_activation": "EMSR900",
+      "notes": "Updated fire_intel iter4 2026-07-29. 112cmadrid = status only (no ha/Vp). Never confirmed from press."
+    },
+    "castellon_vall_duixo_202607": {
+      "fire_id": "castellon_vall_duixo_202607",
+      "name": "La Vall d'Uixó / Plana Baixa (Castellón) 2026-07",
+      "vp_m_min": null,
+      "area_ha": null,
+      "area_ha_press_provisional": null,
+      "area_ha_press_note": "Ha deliberately null (honesty). Mega by evacuations ~15-16k. EMSR905 Plana Baixa may relate — bind geometry before any ha. NOT EGIF.",
+      "evacuated_press_provisional": 16000,
+      "source": "press multi-fire balances 2026-07 (evac only; no solid ha)",
+      "status": "pending_external",
+      "ccaa": "Comunitat Valenciana",
+      "province": "Castellón",
+      "request": "Parte GVA / Miteco Vp/ha + perímetro",
+      "fire_intel_id": "es_cs_vall_duixo_espadan_202607",
+      "cems_activation": "EMSR905",
+      "notes": "Write agent 2026-07-29: fire_intel_id aligned to es_cs_vall_duixo_espadan_202607. Press ha kept null on anchor (inventory holds provisional band 4.3-10k only). Still pending_external. Pri 2 not Pri 1."
     }
   },
-  "ratio_band": [0.5, 2.0],
+  "ratio_band": [
+    0.5,
+    2.0
+  ],
   "grade_a_requires_confirmed_anchor": true
 }

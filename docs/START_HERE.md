@@ -10,19 +10,47 @@
 
 No es “otro mapa de Copernicus”. Es **cuándo confiar y cuándo callarse**.
 
-## Abre esto
+## Operario (un solo comando)
 
-### Demo multi-CCAA vendible (recomendado para calls)
+Si no conoces el código, **solo necesitas esto**:
 
 ```powershell
 cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
-.\scripts\open_demo_multi_ccaa.ps1
-# o: python scripts\build_demo_multi_ccaa.py ; start outputs\demo_multi_ccaa\index.html
+$env:PYTHONPATH = "."
+python -m wildfire_front              # sin COMMAND → modo operario
+# o: python -m wildfire_front operator | operador | ops
 ```
 
-Portal: `outputs/demo_multi_ccaa/index.html` — Tobarra OPS + Níjar AND + Caminomorisco EXT, KPIs, gates, guion 12 min, pitch.
+Verás un **semáforo** (VERDE / AMARILLO / ROJO), los **4 pasos** y **qué falta para GO_Q**.
 
-### Portal repo completo
+```powershell
+python -m wildfire_front ensayo              # = operator do --all (compacto)
+python -m wildfire_front operator checklist
+python -m wildfire_front operator explain-abstain
+# make operator · make operator-path · make operator-checklist
+```
+
+> **ABSTAIN no es un bug.** **GO_Q** no lo cierra el eng (hace falta H1: demo+acta con tercero).  
+> Log UX: `docs/OPERATOR_UX_LOOP_LOG.md`
+
+## Superficie demo terceros (un solo path)
+
+**Abrir esto para terceros:** Live Ops + SPA industrial C2.
+
+```powershell
+# Presentador H1 (recomendado): Live Ops + pack/reliability check + serve loopback
+python -m wildfire_front app --demo-day
+
+# Alternativas
+python -m wildfire_front app --fire _sla_measure --serve   # live acts
+python -m wildfire_front app --fire _sla_measure --open    # file:// estático (copia CLI)
+python -m wildfire_front app --all-fires --open            # multi-IF pack cliente
+```
+
+Artefacto: **`outputs/app/index.html`**. Doc: **[`docs/APP.md`](APP.md)** · design: **`docs/design/LIVE_OPS_DEMO_KERNEL.md`**.  
+Primary acts: **Estado · Decidir · Acta** (live con `--serve`/`--demo-day`) · Fácil|Pro · fusion OFF · GO_Q partial (H1 humano).
+
+## Portal / commander (legacy, no primary)
 
 ```powershell
 cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
@@ -30,65 +58,46 @@ $env:PYTHONPATH = "C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics"
 python scripts\show_all.py
 ```
 
-Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces.
+`docs/PORTAL.html` y `docs/commander/` son **legacy / hub eng** — el path de demo terceros es **`app`**, no commander.
 
 ## Tres números para enseñar
 
 | Qué | Valor |
 |-----|------:|
-| ML U1 TEST honest (lab) | mean IoU ~**0.86** · sel@80 ~**0.90** · ECE ~**0.15** |
-| Catalog holdout IoU (provenance only) | **0.8963** — not live certainty |
-| Packs open CEMS | **5** (hasta ~29000 ha) |
-
-## ML-first (honest bullets)
-
-1. **Pitch with U1 TEST honest** metrics (mean IoU eval ~**0.86**, selective@80 ~**0.90**, ECE ~**0.15**) from `docs/ML_PRODUCT_SCORECARD.json` / `docs/ML_U1_PROMOTE_RECORD.json`. Catalog holdout **0.8963** is **provenance only** — protocol-clean next-day **mask** research quality; **not** live fire certainty, **not** ops ROS, **not** Tobarra tactical speed, **not** REDIAM O2 perimeter truth.
-2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths). Demo: `python scripts/run_ml_live_card_demo.py --mode offline`.
-3. **`research_open` live fusion is experimental** after U1 TEST honest promote; **`field_ops.allow_ml_live_in_fusion` remains false**. VAL-only U1 is a **lab** diagnostic and does not alone promote fusion.
-4. Dual product: ML mask product ≠ ops `front_dynamics_v1`. Promote checklist: `scripts/promote_ml_live_fusion.py` (never flips policy without `--apply-policy`, and only `research_open`).
-5. **Lab claim surface** (not tactical): scorecard + abstain/ECE note `docs/ML_LIVE_ABSTAIN_ECE_NOTE.md` — research quality only; no ROS / no field_ops.
+| ML v34 IoU holdout | **0.8963** (provenance only · not live certainty · **not ROS**) |
+| Packs open CEMS (emsr*) | **11** en `outputs/open_if/` (+ AND/EXT/open aparte; no inventar ha en pitch) |
+| Decisión ejemplo | **GO/HOLD/ABSTAIN** según fuentes (vacío → **ABSTAIN**) |
 
 ## Documentos clave
 
 | Doc | Para qué |
 |------|----------|
-| **`docs/CURSO_WFD_PARA_DESCONOCIDOS.md`** | **Curso completo** (qué es cada cosa, cómo usarlo) |
-| `docs/PORTAL.html` | **Ver todo** |
-| `docs/ML_PRODUCT_SCORECARD.json` | **Lab claim surface** (ML product; not tactical) |
-| `docs/START_HERE.md` | Este resumen |
+| `docs/CURRENT_STATE.md` | **Snapshot canónico** (gates + ML freeze) |
+| `docs/REPO_MAP.md` | **Mapa profesional** de carpetas |
+| `docs/ml/README.md` | **ML probado**: champions, cómo se midió, kill list |
+| `docs/GOAL_ML_CLOSEOUT.md` | Cierre ML: freeze / más datos / techo |
+| `outputs/ml_eval/canonical/` | Stamps locales de champions (gitignored) |
+| `docs/MEGA_AUDIT_SELL_20260805.md` | Qué falta para vender (H1 + pitch) |
+| `docs/goals/README.md` | Mega goals cerrados + closeout |
+| `docs/OPERATOR_UX_LOOP_LOG.md` | Loop UX operario |
+| `docs/APP.md` | **SPA ops** (Leaflet + dashboard) |
+| `docs/CHEATSHEET_DEMO_12MIN.md` | Demo 12 min |
+| `docs/ML_PRODUCT_START_HERE.md` | ML lab CLI |
+| `docs/PORTAL.html` | Ver todo (generado) |
 | `docs/ONEPAGER_COMERCIAL_ES.md` | Venta |
-| **`docs/funding/README.md`** | **Sin empresa → partners y ayudas UE/ES (playbook)** |
-| `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos largos |
-| `docs/PLAN_3_MESES.md` | Roadmap realista |
-| `docs/SUENOS_MAXIMOS.md` | Techo de resultados y funciones |
+| `docs/H1_GO_Q_RUNBOOK.md` | Cierre GO_Q (humano) |
+| `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos lab |
+| `docs/PLAN_3_MESES.md` | Roadmap |
 
 ## Qué está hecho vs bloqueado
 
 | Hecho | Bloqueado (externo / humano) |
-|-------|---------------------|
-| ML v34 U1 honest + ops Tobarra A | **2ª ancla INFOCAM (O1)** — Cardoso |
-| Decision Card + Metrics Hub + policies | Perímetro nacional oficial (O2) |
-| Piloto honesty multi-pack + demo multi-CCAA | **Demo con tercero** + acta 1 pág |
-| FDC en incident + API `/v1/decide` | Auth / 99.9% uptime (sueño) |
-| Acta forense + radio + replay | PDF firmado (sueño) |
-| Graph v2 external-unblock ready | Gmail MCP re-auth (token Testing) |
-
-**Estado canónico:** [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) · scorecard mes: [`SCORECARD_MES_1.md`](SCORECARD_MES_1.md)
-
-## Fuel stack + AEMET Tobarra (PR-α / PR-β)
-
-```powershell
-# PR-α core physics tests
-pytest tests/test_fuel_rothermel_lite.py tests/test_fuel_dem.py tests/test_fuel_map.py `
-  tests/test_fuel_calibration.py tests/test_fuel_sector_weather.py tests/test_fuel_sector_slope_aemet.py -q
-
-# PR-β envelope + AEMET (offline fixtures + optional live key in .env)
-pytest tests/test_aemet_weather.py tests/test_fuel_envelope.py `
-  tests/test_fuel_envelope_scorecard.py tests/test_pr_beta_envelope_aemet.py -q
-python scripts/run_tobarra_aemet_pipeline.py
-```
-
-Plan de aterrizaje: `docs/design/PR_PLAN_FUEL_AEMET_ENVELOPE.md`.
+|-------|------------------------------|
+| Operator UX + 4 actos + Decision Card | **H1** demo tercero → GO_Q |
+| ML sealed LOFO **0.788** + weather ERA5 long **+0.019** · thrash **FREEZE** | **Más IF chain_honest** (siguiente cola ML) |
+| Tobarra KEEP **KILL** · fusion OFF | 3ª ancla / perímetro nacional / O5 grade A |
+| Pack third-party + replay | Piloto cliente real |
+| API mínima POST /v1/decide | Auth / 99.9% uptime (sueño) |
 
 ## Comando mínimo de decisión
 
@@ -107,15 +116,6 @@ start docs\commander\index.html
 ```
 
 Teclas: **1–4** packs · **R** copiar radio · **F** fullscreen.
-
-## Demo multi-CCAA (Tobarra · Níjar · Caminomorisco)
-
-```powershell
-python scripts\build_demo_multi_ccaa.py
-start outputs\demo_multi_ccaa\index.html
-```
-
-OPS gold CLM + O2 REDIAM AND + O2 RAI EXT · mismos gates · HOLD sin ancla.
 
 ## API + acta + políticas
 

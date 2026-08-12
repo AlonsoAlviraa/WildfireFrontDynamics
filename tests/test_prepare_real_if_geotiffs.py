@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import tempfile
-import unittest
 from pathlib import Path
 
 import numpy as np
+import pytest
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.transform import from_origin
@@ -30,7 +30,7 @@ def write_lonlat_tiff(path: Path) -> None:
         dataset.write(data)
 
 
-class PrepareRealIfGeoTiffsTests(unittest.TestCase):
+class PrepareRealIfGeoTiffsTests:
     def test_reprojects_selected_lwir_files_to_metric_crs(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -49,13 +49,9 @@ class PrepareRealIfGeoTiffsTests(unittest.TestCase):
                 resampling=Resampling.nearest,
             )
 
-            self.assertEqual(1, len(written))
+            assert len(written) == 1
             with rasterio.open(written[0]) as dataset:
-                self.assertEqual("EPSG:32630", str(dataset.crs))
-                self.assertTrue(dataset.crs.is_projected)
-                self.assertEqual(4, dataset.count)
-                self.assertAlmostEqual(1.0, abs(dataset.transform.a), places=6)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert str(dataset.crs) == "EPSG:32630"
+                assert dataset.crs.is_projected
+                assert dataset.count == 4
+                assert pytest.approx(abs(dataset.transform.a), abs=10**-6) == 1.0

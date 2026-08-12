@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import tempfile
-import unittest
 from pathlib import Path
+
+import pytest
 
 from scripts.audit_dataset_candidate import (
     classify_candidate,
@@ -37,17 +38,17 @@ def observation(observation_id: str, observed_at: str, component) -> FrontObserv
     )
 
 
-class DatasetCandidateAuditTests(unittest.TestCase):
+class DatasetCandidateAuditTests:
     def test_projected_temporal_sequence_is_ready_for_dynamics(self) -> None:
         records = [
             {"status": "accepted", "coordinate_system": "projected_metric", "reason": ""},
             {"status": "accepted", "coordinate_system": "projected_metric", "reason": ""},
         ]
-        self.assertEqual("ready_for_dynamics", classify_candidate(records, observation_count=2))
+        assert classify_candidate(records, observation_count=2) == "ready_for_dynamics"
 
     def test_single_metric_observation_is_segmentation_only(self) -> None:
         records = [{"status": "accepted", "coordinate_system": "projected_metric", "reason": ""}]
-        self.assertEqual("segmentation_only", classify_candidate(records, observation_count=1))
+        assert classify_candidate(records, observation_count=1) == "segmentation_only"
 
     def test_non_projected_candidate_is_segmentation_only(self) -> None:
         records = [
@@ -57,19 +58,19 @@ class DatasetCandidateAuditTests(unittest.TestCase):
                 "reason": "crs_not_projected_metric",
             }
         ]
-        self.assertEqual("segmentation_only", classify_candidate(records, observation_count=0))
+        assert classify_candidate(records, observation_count=0) == "segmentation_only"
 
     def test_unusable_candidate_is_rejected(self) -> None:
         records = [{"status": "rejected", "coordinate_system": "unknown", "reason": "empty_mask"}]
-        self.assertEqual("rejected", classify_candidate(records, observation_count=0))
+        assert classify_candidate(records, observation_count=0) == "rejected"
 
     def test_reference_metrics_match_by_timestamp(self) -> None:
         observed = [observation("obs", "2026-06-10T12:00:00Z", rectangle(0, 0, 10, 10))]
         references = [observation("ref", "2026-06-10T12:00:00Z", rectangle(1, 0, 11, 10))]
         summary = summarize_reference_metrics(observed, references, sample_spacing=1.0)
-        self.assertTrue(summary["front_distance_metrics_available"])
-        self.assertEqual(1, summary["front_reference_match_count"])
-        self.assertAlmostEqual(1.0, summary["reference_front_hausdorff_m"], delta=0.01)
+        assert summary["front_distance_metrics_available"]
+        assert summary["front_reference_match_count"] == 1
+        assert pytest.approx(summary["reference_front_hausdorff_m"], abs=0.01) == 1.0
 
     def test_markdown_audit_records_reference_status(self) -> None:
         summary = {
@@ -97,10 +98,6 @@ class DatasetCandidateAuditTests(unittest.TestCase):
             output = Path(temp) / "audit.md"
             write_markdown_audit(summary, output)
             text = output.read_text(encoding="utf-8")
-        self.assertIn("Auditoría de candidato: candidate", text)
-        self.assertIn("Independent reference metrics are available", text)
-        self.assertIn("Hausdorff front distance m", text)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert "Auditoría de candidato: candidate" in text
+        assert "Independent reference metrics are available" in text
+        assert "Hausdorff front distance m" in text

@@ -1,16 +1,33 @@
 {
   "schema": "metrics_hub_v1",
-  "built_at_utc": "2026-07-27T14:55:16.684105+00:00",
-  "git_commit": "c58d118",
-  "content_hash": "471e89014d526a7f09bc1b8d88701aebd0123114913e95e7a63e73d72d88d7bf",
+  "built_at_utc": "2026-08-04T14:44:28.330203+00:00",
+  "git_commit": "eb95049",
+  "content_hash": "1c4be67a850b903dfa24beccc6b68378d8087ce69af0278808cddceb90aec1a1",
   "ml": {
     "product": "clm_ensemble_v34",
+    "pitch": "u1_test_honest",
+    "u1_lab": {
+      "u1_test_honest_mean_iou": 0.8568865373678947,
+      "ece_patch_conf": 0.15280955026564416,
+      "selective_iou_at_80pct_coverage": 0.903428533834858,
+      "u1_test_honest": true,
+      "ml_product_go": false,
+      "note": "Lab pitch: U1 TEST honest mean IoU + ECE. Catalog holdout test_iou 0.8963 is provenance only \u2014 not live certainty, not ROS."
+    },
+    "catalog_holdout_provenance": {
+      "test_iou": 0.8963,
+      "improvement_vs_copy_iou": 0.2545,
+      "model_iou_growth": 0.9071,
+      "label": "provenance_only",
+      "note": "Do not treat as U1 eval mean IoU or live fire certainty."
+    },
     "metrics": {
       "test_iou": 0.8963,
       "copy_baseline_iou": 0.6418,
       "improvement_vs_copy_iou": 0.2545,
       "model_iou_growth": 0.9071
     },
+    "metrics_note": "metrics.test_iou is catalog holdout (provenance). Prefer u1_lab for public lab pitch.",
     "member_weights": [
       0.28,
       0.32,
@@ -23,7 +40,8 @@
     ],
     "protocol": "clm_holdout_test_seed42_v1",
     "loop_status": "STOPPED_PLATEAU",
-    "champion_name": "source_mix_val_temp_calibrated"
+    "champion_name": "source_mix_val_temp_calibrated",
+    "manifest_verdict": "GO_RESEARCH_HOLDOUT"
   },
   "ops": {
     "product": "incident_runtime_v1 / front_dynamics_v1",
@@ -36,7 +54,13 @@
       "behavior": "Contraviento",
       "source": "INFOCAM 2024 parte operativo",
       "status": "confirmed",
-      "detection": "2024-08-02T16:42:00"
+      "detection": "2024-08-02T16:42:00",
+      "perimeter_drop_pablo_20260730": {
+        "path": "data/real_if/pablo_geacam_20260730_tobarra",
+        "kmz_1830_sup_ha": 21.489832,
+        "kmz_2143_sup_ha": 37.075054,
+        "note": "Per\u00edmetro activo multi-hora from Pablo/CMA (not national cadastre). Area at 21:43 ~37 ha vs anchor 39 ha."
+      }
     },
     "representative_metrics": {
       "quality_grade": "A",
@@ -48,7 +72,7 @@
     }
   },
   "open_cems": {
-    "n_packs": 5,
+    "n_packs": 11,
     "packs": [
       {
         "id": "emsr578",
@@ -67,6 +91,11 @@
         "dnbr_burned_frac_ge_0.27": 0.018515625,
         "dnbr_pre_item": "S2A_31TCG_20220619_0_L2A",
         "dnbr_post_item": "S2B_31TCG_20220724_0_L2A",
+        "decision_open": "HOLD",
+        "decision_open_note": "Open pack is monitoring/research only \u2014 not tactical dispatch, not ops ROS. status=GO_OPEN_DATA_PACK means data pack ready.",
+        "not_tactical_dispatch": true,
+        "not_ops_ros": true,
+        "ros_is_proxy_only": true,
         "ros_proxy_n": 4,
         "hausdorff_series": [
           1685.944765359855,
@@ -93,6 +122,11 @@
         "lwir_heligraphics": false,
         "status": "GO_OPEN_DATA_PACK",
         "pack_dir": "outputs\\open_if\\emsr581",
+        "decision_open": "HOLD",
+        "decision_open_note": "Open pack is monitoring/research only \u2014 not tactical dispatch, not ops ROS. status=GO_OPEN_DATA_PACK means data pack ready.",
+        "not_tactical_dispatch": true,
+        "not_ops_ros": true,
+        "ros_is_proxy_only": true,
         "ros_proxy_n": 3,
         "hausdorff_series": [
           4041.139715549566,
@@ -117,6 +151,11 @@
         "lwir_heligraphics": false,
         "status": "GO_OPEN_DATA_PACK",
         "pack_dir": "outputs\\open_if\\emsr583",
+        "decision_open": "HOLD",
+        "decision_open_note": "Open pack is monitoring/research only \u2014 not tactical dispatch, not ops ROS. status=GO_OPEN_DATA_PACK means data pack ready.",
+        "not_tactical_dispatch": true,
+        "not_ops_ros": true,
+        "ros_is_proxy_only": true,
         "ros_proxy_n": 4,
         "hausdorff_series": [
           1475.8332095808528,
@@ -143,6 +182,11 @@
         "lwir_heligraphics": false,
         "status": "GO_OPEN_DATA_PACK",
         "pack_dir": "outputs\\open_if\\emsr632",
+        "decision_open": "HOLD",
+        "decision_open_note": "Open pack is monitoring/research only \u2014 not tactical dispatch, not ops ROS. status=GO_OPEN_DATA_PACK means data pack ready.",
+        "not_tactical_dispatch": true,
+        "not_ops_ros": true,
+        "ros_is_proxy_only": true,
         "ros_proxy_n": 3,
         "hausdorff_series": [
           1603.8602999953632,
@@ -154,6 +198,802 @@
           17.78597526735486,
           46.69691636823359
         ]
+      },
+      {
+        "id": "emsr896",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR896",
+        "built_at_utc": "2026-07-29T09:08:17.608916+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfire in Aragon, Spain",
+        "eventTime": "2026-07-15T13:25:00",
+        "activationTime": "2026-07-16T16:13:00",
+        "countries": [
+          {
+            "name": "Spain"
+          }
+        ],
+        "max_area_ha": 12133.4,
+        "n_timeline_steps": 4,
+        "n_products": 5,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "Asin",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 8157.9,
+            "deliveryTime": "2026-07-17T16:57:40.955792",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/AOI01/DEL_PRODUCT/EMSR896_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Asin",
+            "aoi_number": 1,
+            "type": "FEP",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": null,
+            "deliveryTime": "2026-07-17T08:46:13.185828",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/AOI01/FEP_PRODUCT/EMSR896_AOI01_FEP_PRODUCT_v2.zip"
+          },
+          {
+            "aoi_name": "Asin",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": 12021.6,
+            "deliveryTime": "2026-07-19T17:36:58.265458",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/AOI01/DEL_MONIT02/EMSR896_AOI01_DEL_MONIT02_v1.zip"
+          },
+          {
+            "aoi_name": "Asin",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 10686.0,
+            "deliveryTime": "2026-07-18T20:33:19.862283",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/AOI01/DEL_MONIT01/EMSR896_AOI01_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "Asin",
+            "aoi_number": 1,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 12133.4,
+            "deliveryTime": "2026-07-20T20:11:19.933449",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR896/AOI01/GRA_PRODUCT/EMSR896_AOI01_GRA_PRODUCT_v1.zip"
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-17T16:57:40.955792",
+            "aoi": "Asin",
+            "type": "DEL",
+            "burnt_area_ha": 8157.9
+          },
+          {
+            "deliveryTime": "2026-07-18T20:33:19.862283",
+            "aoi": "Asin",
+            "type": "DEL",
+            "burnt_area_ha": 10686.0
+          },
+          {
+            "deliveryTime": "2026-07-19T17:36:58.265458",
+            "aoi": "Asin",
+            "type": "DEL",
+            "burnt_area_ha": 12021.6
+          },
+          {
+            "deliveryTime": "2026-07-20T20:11:19.933449",
+            "aoi": "Asin",
+            "type": "GRA",
+            "burnt_area_ha": 12133.4
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR896/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR896",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
+      },
+      {
+        "id": "emsr898",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR898",
+        "built_at_utc": "2026-07-29T09:08:13.255544+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfire in La Mierla, Spain",
+        "eventTime": "2026-07-19T22:00:00",
+        "activationTime": "2026-07-20T13:26:00",
+        "countries": [
+          {
+            "name": "Spain"
+          }
+        ],
+        "max_area_ha": 27213.2,
+        "n_timeline_steps": 8,
+        "n_products": 8,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "La Mierla",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 26749.6,
+            "deliveryTime": "2026-07-21T21:59:48.406930",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI01/DEL_MONIT01/EMSR898_AOI01_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "La Mierla",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 12650.8,
+            "deliveryTime": "2026-07-21T02:32:40.560353",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI01/DEL_PRODUCT/EMSR898_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "La Mierla",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": 27213.2,
+            "deliveryTime": "2026-07-24T02:41:42.924257",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI01/DEL_MONIT02/EMSR898_AOI01_DEL_MONIT02_v1.zip"
+          },
+          {
+            "aoi_name": "La Mierla",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 3,
+            "burnt_area_ha": 26621.8,
+            "deliveryTime": "2026-07-25T17:06:23.620062",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI01/DEL_MONIT03/EMSR898_AOI01_DEL_MONIT03_v2.zip"
+          },
+          {
+            "aoi_name": "La Mierla",
+            "aoi_number": 1,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 25571.7,
+            "deliveryTime": "2026-07-27T20:37:18.014604",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI01/GRA_PRODUCT/EMSR898_AOI01_GRA_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Selas",
+            "aoi_number": 2,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 5.0,
+            "deliveryTime": "2026-07-21T20:02:15.423163",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI02/DEL_PRODUCT/EMSR898_AOI02_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Selas",
+            "aoi_number": 2,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 504.8,
+            "deliveryTime": "2026-07-25T19:04:04.989091",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI02/DEL_MONIT01/EMSR898_AOI02_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "Selas",
+            "aoi_number": 2,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 2501.5,
+            "deliveryTime": "2026-07-26T20:58:57.015210",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR898/AOI02/GRA_PRODUCT/EMSR898_AOI02_GRA_PRODUCT_v1.zip"
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-21T02:32:40.560353",
+            "aoi": "La Mierla",
+            "type": "DEL",
+            "burnt_area_ha": 12650.8
+          },
+          {
+            "deliveryTime": "2026-07-21T20:02:15.423163",
+            "aoi": "Selas",
+            "type": "DEL",
+            "burnt_area_ha": 5.0
+          },
+          {
+            "deliveryTime": "2026-07-21T21:59:48.406930",
+            "aoi": "La Mierla",
+            "type": "DEL",
+            "burnt_area_ha": 26749.6
+          },
+          {
+            "deliveryTime": "2026-07-24T02:41:42.924257",
+            "aoi": "La Mierla",
+            "type": "DEL",
+            "burnt_area_ha": 27213.2
+          },
+          {
+            "deliveryTime": "2026-07-25T17:06:23.620062",
+            "aoi": "La Mierla",
+            "type": "DEL",
+            "burnt_area_ha": 26621.8
+          },
+          {
+            "deliveryTime": "2026-07-25T19:04:04.989091",
+            "aoi": "Selas",
+            "type": "DEL",
+            "burnt_area_ha": 504.8
+          },
+          {
+            "deliveryTime": "2026-07-26T20:58:57.015210",
+            "aoi": "Selas",
+            "type": "GRA",
+            "burnt_area_ha": 2501.5
+          },
+          {
+            "deliveryTime": "2026-07-27T20:37:18.014604",
+            "aoi": "La Mierla",
+            "type": "GRA",
+            "burnt_area_ha": 25571.7
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR898/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR898",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
+      },
+      {
+        "id": "emsr899",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR899",
+        "built_at_utc": "2026-07-29T09:08:15.302145+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfire in Saumos, France",
+        "eventTime": "2026-07-22T18:00:00",
+        "activationTime": "2026-07-22T18:54:00",
+        "countries": [
+          {
+            "name": "France"
+          }
+        ],
+        "max_area_ha": 26064.7,
+        "n_timeline_steps": 2,
+        "n_products": 5,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "Le Porge",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": null,
+            "deliveryTime": null,
+            "statusCode": "W",
+            "downloadPath": ""
+          },
+          {
+            "aoi_name": "Le Porge",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 3,
+            "burnt_area_ha": null,
+            "deliveryTime": null,
+            "statusCode": "W",
+            "downloadPath": ""
+          },
+          {
+            "aoi_name": "Le Porge",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 5775.4,
+            "deliveryTime": "2026-07-25T00:25:58.145507",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR899/AOI01/DEL_PRODUCT/EMSR899_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Le Porge",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 26064.7,
+            "deliveryTime": "2026-07-27T11:04:50.934274",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR899/AOI01/DEL_MONIT01/EMSR899_AOI01_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "Le Porge",
+            "aoi_number": 1,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": null,
+            "deliveryTime": null,
+            "statusCode": "I",
+            "downloadPath": ""
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-25T00:25:58.145507",
+            "aoi": "Le Porge",
+            "type": "DEL",
+            "burnt_area_ha": 5775.4
+          },
+          {
+            "deliveryTime": "2026-07-27T11:04:50.934274",
+            "aoi": "Le Porge",
+            "type": "DEL",
+            "burnt_area_ha": 26064.7
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR899/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR899",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
+      },
+      {
+        "id": "emsr900",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR900",
+        "built_at_utc": "2026-07-29T09:08:14.410046+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfire in Central Spain",
+        "eventTime": "2026-07-20T01:07:00",
+        "activationTime": "2026-07-23T09:48:00",
+        "countries": [
+          {
+            "name": "Spain"
+          }
+        ],
+        "max_area_ha": 44376.7,
+        "n_timeline_steps": 10,
+        "n_products": 13,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "Brieva",
+            "aoi_number": 1,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 2876.9,
+            "deliveryTime": "2026-07-27T22:17:32.188694",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/GRA_PRODUCT/EMSR900_AOI01_GRA_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Brieva",
+            "aoi_number": 1,
+            "type": "FEP",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": null,
+            "deliveryTime": "2026-07-23T13:11:31.202675",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/FEP_PRODUCT/EMSR900_AOI01_FEP_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Brieva",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 2977.1,
+            "deliveryTime": "2026-07-24T17:59:53.393258",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/DEL_PRODUCT/EMSR900_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Villa del Prado",
+            "aoi_number": 2,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 1807.2,
+            "deliveryTime": "2026-07-25T23:37:38.908457",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_MONIT01/EMSR900_AOI02_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "Villa del Prado",
+            "aoi_number": 2,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": 2601.1,
+            "deliveryTime": "2026-07-26T22:26:49.795231",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_MONIT02/EMSR900_AOI02_DEL_MONIT02_v1.zip"
+          },
+          {
+            "aoi_name": "Villa del Prado",
+            "aoi_number": 2,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 2876.3,
+            "deliveryTime": "2026-07-27T23:14:36.376934",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/GRA_PRODUCT/EMSR900_AOI02_GRA_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Villa del Prado",
+            "aoi_number": 2,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 658.1,
+            "deliveryTime": "2026-07-24T15:45:07.313253",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_PRODUCT/EMSR900_AOI02_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 19295.6,
+            "deliveryTime": "2026-07-27T14:15:25.582795",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT01/EMSR900_AOI03_DEL_MONIT01_v2.zip"
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 3,
+            "burnt_area_ha": 36031.1,
+            "deliveryTime": "2026-07-28T00:15:47.228374",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT03/EMSR900_AOI03_DEL_MONIT03_v1.zip"
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": 27235.8,
+            "deliveryTime": "2026-07-27T03:22:41.043367",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT02/EMSR900_AOI03_DEL_MONIT02_v1.zip"
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 5,
+            "burnt_area_ha": null,
+            "deliveryTime": null,
+            "statusCode": "W",
+            "downloadPath": ""
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 4,
+            "burnt_area_ha": 44376.7,
+            "deliveryTime": "2026-07-28T16:53:30.290219",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT04/EMSR900_AOI03_DEL_MONIT04_v1.zip"
+          },
+          {
+            "aoi_name": "La Atalaya",
+            "aoi_number": 3,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": null,
+            "deliveryTime": "2026-07-24T22:43:32.000868",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_PRODUCT/EMSR900_AOI03_DEL_PRODUCT_v1.zip"
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-24T15:45:07.313253",
+            "aoi": "Villa del Prado",
+            "type": "DEL",
+            "burnt_area_ha": 658.1
+          },
+          {
+            "deliveryTime": "2026-07-24T17:59:53.393258",
+            "aoi": "Brieva",
+            "type": "DEL",
+            "burnt_area_ha": 2977.1
+          },
+          {
+            "deliveryTime": "2026-07-25T23:37:38.908457",
+            "aoi": "Villa del Prado",
+            "type": "DEL",
+            "burnt_area_ha": 1807.2
+          },
+          {
+            "deliveryTime": "2026-07-26T22:26:49.795231",
+            "aoi": "Villa del Prado",
+            "type": "DEL",
+            "burnt_area_ha": 2601.1
+          },
+          {
+            "deliveryTime": "2026-07-27T03:22:41.043367",
+            "aoi": "La Atalaya",
+            "type": "DEL",
+            "burnt_area_ha": 27235.8
+          },
+          {
+            "deliveryTime": "2026-07-27T14:15:25.582795",
+            "aoi": "La Atalaya",
+            "type": "DEL",
+            "burnt_area_ha": 19295.6
+          },
+          {
+            "deliveryTime": "2026-07-27T22:17:32.188694",
+            "aoi": "Brieva",
+            "type": "GRA",
+            "burnt_area_ha": 2876.9
+          },
+          {
+            "deliveryTime": "2026-07-27T23:14:36.376934",
+            "aoi": "Villa del Prado",
+            "type": "GRA",
+            "burnt_area_ha": 2876.3
+          },
+          {
+            "deliveryTime": "2026-07-28T00:15:47.228374",
+            "aoi": "La Atalaya",
+            "type": "DEL",
+            "burnt_area_ha": 36031.1
+          },
+          {
+            "deliveryTime": "2026-07-28T16:53:30.290219",
+            "aoi": "La Atalaya",
+            "type": "DEL",
+            "burnt_area_ha": 44376.7
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR900/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR900",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
+      },
+      {
+        "id": "emsr902",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR902",
+        "built_at_utc": "2026-07-29T09:08:16.087450+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfire in Biscarrosse, France",
+        "eventTime": "2026-07-23T14:00:00",
+        "activationTime": "2026-07-24T02:42:00",
+        "countries": [
+          {
+            "name": "France"
+          }
+        ],
+        "max_area_ha": 2682.2,
+        "n_timeline_steps": 3,
+        "n_products": 3,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "Biscarrosse",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 1018.6,
+            "deliveryTime": "2026-07-24T18:44:10.854862",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR902/AOI01/DEL_PRODUCT/EMSR902_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Biscarrosse",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 1752.7,
+            "deliveryTime": "2026-07-27T16:36:47.430433",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR902/AOI01/DEL_MONIT01/EMSR902_AOI01_DEL_MONIT01_v2.zip"
+          },
+          {
+            "aoi_name": "Biscarrosse",
+            "aoi_number": 1,
+            "type": "GRA",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 2682.2,
+            "deliveryTime": "2026-07-28T04:45:18.875698",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR902/AOI01/GRA_PRODUCT/EMSR902_AOI01_GRA_PRODUCT_v1.zip"
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-24T18:44:10.854862",
+            "aoi": "Biscarrosse",
+            "type": "DEL",
+            "burnt_area_ha": 1018.6
+          },
+          {
+            "deliveryTime": "2026-07-27T16:36:47.430433",
+            "aoi": "Biscarrosse",
+            "type": "DEL",
+            "burnt_area_ha": 1752.7
+          },
+          {
+            "deliveryTime": "2026-07-28T04:45:18.875698",
+            "aoi": "Biscarrosse",
+            "type": "GRA",
+            "burnt_area_ha": 2682.2
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR902/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR902",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
+      },
+      {
+        "id": "emsr905",
+        "schema": "scorecard_pista_b_v1",
+        "activation": "EMSR905",
+        "built_at_utc": "2026-07-29T09:08:16.887605+00:00",
+        "source": "copernicus_rapidmapping_public_api",
+        "name": "Wildfires in Plana Baixa, Spain",
+        "eventTime": "2026-07-25T10:07:00",
+        "activationTime": "2026-07-26T00:05:00",
+        "countries": [
+          {
+            "name": "Spain"
+          }
+        ],
+        "max_area_ha": 7265.8,
+        "n_timeline_steps": 3,
+        "n_products": 4,
+        "O2_cems_delineation": "GO",
+        "O2_national_official": "NO_GO_CEMS_PROXY",
+        "decision_open": "HOLD",
+        "not_tactical_dispatch": true,
+        "not_official_perimeter": true,
+        "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+        "products": [
+          {
+            "aoi_name": "Artana",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": false,
+            "monitoringNumber": 0,
+            "burnt_area_ha": 295.3,
+            "deliveryTime": "2026-07-26T23:28:09.045264",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR905/AOI01/DEL_PRODUCT/EMSR905_AOI01_DEL_PRODUCT_v1.zip"
+          },
+          {
+            "aoi_name": "Artana",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 1,
+            "burnt_area_ha": 6079.5,
+            "deliveryTime": "2026-07-27T18:00:59.470973",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR905/AOI01/DEL_MONIT01/EMSR905_AOI01_DEL_MONIT01_v1.zip"
+          },
+          {
+            "aoi_name": "Artana",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 3,
+            "burnt_area_ha": null,
+            "deliveryTime": null,
+            "statusCode": "W",
+            "downloadPath": ""
+          },
+          {
+            "aoi_name": "Artana",
+            "aoi_number": 1,
+            "type": "DEL",
+            "monitoring": true,
+            "monitoringNumber": 2,
+            "burnt_area_ha": 7265.8,
+            "deliveryTime": "2026-07-28T22:03:00.533240",
+            "statusCode": "F",
+            "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR905/AOI01/DEL_MONIT02/EMSR905_AOI01_DEL_MONIT02_v1.zip"
+          }
+        ],
+        "timeline_burnt_ha": [
+          {
+            "deliveryTime": "2026-07-26T23:28:09.045264",
+            "aoi": "Artana",
+            "type": "DEL",
+            "burnt_area_ha": 295.3
+          },
+          {
+            "deliveryTime": "2026-07-27T18:00:59.470973",
+            "aoi": "Artana",
+            "type": "DEL",
+            "burnt_area_ha": 6079.5
+          },
+          {
+            "deliveryTime": "2026-07-28T22:03:00.533240",
+            "aoi": "Artana",
+            "type": "DEL",
+            "burnt_area_ha": 7265.8
+          }
+        ],
+        "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR905/",
+        "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR905",
+        "ros_proxy_n": 0,
+        "hausdorff_series": [],
+        "growth_ha_h": []
       },
       {
         "id": "la_mierla_20260717",
@@ -188,44 +1028,244 @@
           "Hull FIRMS != burned area; drop in hotspots may reflect cooler perimeter not final ha",
           "IF Selas is separate Nivel 2 fire in Guadalajara"
         ],
+        "decision_open": "HOLD",
         "ros_proxy_n": 0,
         "hausdorff_series": [],
         "growth_ha_h": []
       }
     ],
     "best": {
-      "id": "la_mierla_20260717",
-      "activation": "guadalajara_la_mierla_20260717",
-      "track": "open_firms_only",
-      "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN",
-      "O2_national_official": "BLOCKED",
-      "phase": "estabilizacion",
-      "max_area_ha": 32000,
-      "max_area_ha_source": "press_2026-07-22_EP_EFE_range_30_32k_INFOCAM_plus30k",
-      "ha_infocam_estimate": 30000,
-      "firms_hull_area_ha_approx": 22149.1,
-      "n_hotspots_24h": 273,
-      "firms_acq_dates": [
-        "2026-07-21",
-        "2026-07-22"
+      "id": "emsr900",
+      "schema": "scorecard_pista_b_v1",
+      "activation": "EMSR900",
+      "built_at_utc": "2026-07-29T09:08:14.410046+00:00",
+      "source": "copernicus_rapidmapping_public_api",
+      "name": "Wildfire in Central Spain",
+      "eventTime": "2026-07-20T01:07:00",
+      "activationTime": "2026-07-23T09:48:00",
+      "countries": [
+        {
+          "name": "Spain"
+        }
       ],
-      "n_timeline_steps": 1,
-      "civil_protection_level": 2,
-      "evacuated_municipalities_reported": 34,
-      "confined_municipalities_reported": 14,
-      "pma": "Tamajon",
-      "related_if_selas_ha": 1700,
-      "domain": "CLM_Guadalajara",
-      "not_official_perimeter": true,
+      "max_area_ha": 44376.7,
+      "n_timeline_steps": 10,
+      "n_products": 13,
+      "O2_cems_delineation": "GO",
+      "O2_national_official": "NO_GO_CEMS_PROXY",
+      "decision_open": "HOLD",
       "not_tactical_dispatch": true,
-      "generated_at_utc": "2026-07-22T06:48:58.686599+00:00",
-      "notes": [
-        "INFOCAM 21 jul: fase estabilizacion; +30k ha; Nivel 2",
-        "Prensa 22 jul: 30-32k ha; visita Sanchez+Page",
-        "Fernandez: no control aun; ha suben mas lento",
-        "Hull FIRMS != burned area; drop in hotspots may reflect cooler perimeter not final ha",
-        "IF Selas is separate Nivel 2 fire in Guadalajara"
+      "not_official_perimeter": true,
+      "notes": "Areas from CEMS product stats Burnt area (ha). AOI polygons only in aois.geojson \u2014 not national cadastre. Never invent Vp. Press ha is separate (fire_intel).",
+      "products": [
+        {
+          "aoi_name": "Brieva",
+          "aoi_number": 1,
+          "type": "GRA",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": 2876.9,
+          "deliveryTime": "2026-07-27T22:17:32.188694",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/GRA_PRODUCT/EMSR900_AOI01_GRA_PRODUCT_v1.zip"
+        },
+        {
+          "aoi_name": "Brieva",
+          "aoi_number": 1,
+          "type": "FEP",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": null,
+          "deliveryTime": "2026-07-23T13:11:31.202675",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/FEP_PRODUCT/EMSR900_AOI01_FEP_PRODUCT_v1.zip"
+        },
+        {
+          "aoi_name": "Brieva",
+          "aoi_number": 1,
+          "type": "DEL",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": 2977.1,
+          "deliveryTime": "2026-07-24T17:59:53.393258",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI01/DEL_PRODUCT/EMSR900_AOI01_DEL_PRODUCT_v1.zip"
+        },
+        {
+          "aoi_name": "Villa del Prado",
+          "aoi_number": 2,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 1,
+          "burnt_area_ha": 1807.2,
+          "deliveryTime": "2026-07-25T23:37:38.908457",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_MONIT01/EMSR900_AOI02_DEL_MONIT01_v1.zip"
+        },
+        {
+          "aoi_name": "Villa del Prado",
+          "aoi_number": 2,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 2,
+          "burnt_area_ha": 2601.1,
+          "deliveryTime": "2026-07-26T22:26:49.795231",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_MONIT02/EMSR900_AOI02_DEL_MONIT02_v1.zip"
+        },
+        {
+          "aoi_name": "Villa del Prado",
+          "aoi_number": 2,
+          "type": "GRA",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": 2876.3,
+          "deliveryTime": "2026-07-27T23:14:36.376934",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/GRA_PRODUCT/EMSR900_AOI02_GRA_PRODUCT_v1.zip"
+        },
+        {
+          "aoi_name": "Villa del Prado",
+          "aoi_number": 2,
+          "type": "DEL",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": 658.1,
+          "deliveryTime": "2026-07-24T15:45:07.313253",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI02/DEL_PRODUCT/EMSR900_AOI02_DEL_PRODUCT_v1.zip"
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 1,
+          "burnt_area_ha": 19295.6,
+          "deliveryTime": "2026-07-27T14:15:25.582795",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT01/EMSR900_AOI03_DEL_MONIT01_v2.zip"
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 3,
+          "burnt_area_ha": 36031.1,
+          "deliveryTime": "2026-07-28T00:15:47.228374",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT03/EMSR900_AOI03_DEL_MONIT03_v1.zip"
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 2,
+          "burnt_area_ha": 27235.8,
+          "deliveryTime": "2026-07-27T03:22:41.043367",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT02/EMSR900_AOI03_DEL_MONIT02_v1.zip"
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 5,
+          "burnt_area_ha": null,
+          "deliveryTime": null,
+          "statusCode": "W",
+          "downloadPath": ""
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": true,
+          "monitoringNumber": 4,
+          "burnt_area_ha": 44376.7,
+          "deliveryTime": "2026-07-28T16:53:30.290219",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_MONIT04/EMSR900_AOI03_DEL_MONIT04_v1.zip"
+        },
+        {
+          "aoi_name": "La Atalaya",
+          "aoi_number": 3,
+          "type": "DEL",
+          "monitoring": false,
+          "monitoringNumber": 0,
+          "burnt_area_ha": null,
+          "deliveryTime": "2026-07-24T22:43:32.000868",
+          "statusCode": "F",
+          "downloadPath": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR900/AOI03/DEL_PRODUCT/EMSR900_AOI03_DEL_PRODUCT_v1.zip"
+        }
       ],
+      "timeline_burnt_ha": [
+        {
+          "deliveryTime": "2026-07-24T15:45:07.313253",
+          "aoi": "Villa del Prado",
+          "type": "DEL",
+          "burnt_area_ha": 658.1
+        },
+        {
+          "deliveryTime": "2026-07-24T17:59:53.393258",
+          "aoi": "Brieva",
+          "type": "DEL",
+          "burnt_area_ha": 2977.1
+        },
+        {
+          "deliveryTime": "2026-07-25T23:37:38.908457",
+          "aoi": "Villa del Prado",
+          "type": "DEL",
+          "burnt_area_ha": 1807.2
+        },
+        {
+          "deliveryTime": "2026-07-26T22:26:49.795231",
+          "aoi": "Villa del Prado",
+          "type": "DEL",
+          "burnt_area_ha": 2601.1
+        },
+        {
+          "deliveryTime": "2026-07-27T03:22:41.043367",
+          "aoi": "La Atalaya",
+          "type": "DEL",
+          "burnt_area_ha": 27235.8
+        },
+        {
+          "deliveryTime": "2026-07-27T14:15:25.582795",
+          "aoi": "La Atalaya",
+          "type": "DEL",
+          "burnt_area_ha": 19295.6
+        },
+        {
+          "deliveryTime": "2026-07-27T22:17:32.188694",
+          "aoi": "Brieva",
+          "type": "GRA",
+          "burnt_area_ha": 2876.9
+        },
+        {
+          "deliveryTime": "2026-07-27T23:14:36.376934",
+          "aoi": "Villa del Prado",
+          "type": "GRA",
+          "burnt_area_ha": 2876.3
+        },
+        {
+          "deliveryTime": "2026-07-28T00:15:47.228374",
+          "aoi": "La Atalaya",
+          "type": "DEL",
+          "burnt_area_ha": 36031.1
+        },
+        {
+          "deliveryTime": "2026-07-28T16:53:30.290219",
+          "aoi": "La Atalaya",
+          "type": "DEL",
+          "burnt_area_ha": 44376.7
+        }
+      ],
+      "portal": "https://mapping.emergency.copernicus.eu/activations/EMSR900/",
+      "api": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations/?code=EMSR900",
       "ros_proxy_n": 0,
       "hausdorff_series": [],
       "growth_ha_h": []
@@ -235,9 +1275,10 @@
     "G0_ndws": "GO",
     "G1_ndws": "KILL",
     "G2_clm_v28": "GO",
-    "G2e_ensemble_v34": "GO",
+    "G2e_ensemble_v34": "GO_RESEARCH_HOLDOUT",
     "O1_multi_anchor": "OPEN",
     "O2_hausdorff_official": "BLOCKED",
+    "O2_cems_open_proxy": "GO_PROXY",
     "O3_temporal": "PARTIAL",
     "O4_brief": "GO_ENG",
     "O5_second_grade_a": "OPEN",
@@ -245,7 +1286,10 @@
     "E1_ci_smokes": "GO_ENG",
     "D1_cyl": "FOLLOW_UP",
     "M2_v34_hold": "GO",
-    "M5_v35": "NO_DATA"
+    "M5_v35": "NO_DATA",
+    "pilot_honesty_pack": "GO_ENG",
+    "demo_multi_ccaa": "GO_ENG",
+    "third_party_demo": "PENDING"
   },
   "industrial": {
     "GO_MES": false,
@@ -261,7 +1305,7 @@
   "decision_card": {
     "event_id": "hub_aggregate",
     "decision": "GO",
-    "confidence_pred": 0.7559999999999999,
+    "confidence_pred": 0.8586666666666667,
     "confidence_pred_label": "HIGH",
     "system_reliability_pass": false,
     "sources": [
@@ -299,12 +1343,12 @@
         "id": "open_cems_perimeter",
         "available": true,
         "weight": 0.35,
-        "confidence": 0.5,
+        "confidence": 0.72,
         "metrics": {
-          "max_area_ha": 32000.0,
-          "n_timeline_steps": 1,
-          "activation": "guadalajara_la_mierla_20260717",
-          "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
+          "max_area_ha": 44376.7,
+          "n_timeline_steps": 10,
+          "activation": "EMSR900",
+          "O2_cems_delineation": "GO"
         }
       }
     ],
@@ -324,12 +1368,12 @@
         "speed_vs_ref_ratio": 0.8157142857142857
       },
       "open_cems": {
-        "max_area_ha": 32000.0,
-        "n_timeline_steps": 1,
-        "activation": "guadalajara_la_mierla_20260717",
-        "O2_cems_delineation": "NOT_ACTIVATED_OR_UNKNOWN"
+        "max_area_ha": 44376.7,
+        "n_timeline_steps": 10,
+        "activation": "EMSR900",
+        "O2_cems_delineation": "GO"
       },
-      "fused_confidence_pred": 0.7559999999999999,
+      "fused_confidence_pred": 0.8586666666666667,
       "policy_id": "default",
       "live_ok": false,
       "live_available": false,
@@ -338,7 +1382,7 @@
     "reasons": [
       "ml_clm_ensemble:holdout_quality=0.750:not_fused",
       "ops_thermal_front:conf=0.980:w=0.40",
-      "open_cems_perimeter:conf=0.500:w=0.35",
+      "open_cems_perimeter:conf=0.720:w=0.35",
       "policy:default",
       "ops_confidence_ok"
     ],
@@ -350,9 +1394,9 @@
       "System reliability gates not verified for this card (no residual 1e-6 claim; status=unknown)."
     ],
     "audit": {
-      "input_hash": "c2e15e6634c17f6dcf4bd87f8b8bacb9ed23f3c7b5749f5c004de7094ac5f356",
-      "output_hash": "0cc785f605f0c9fb92587481bbad4d60d074aaf148a4f09900e65c1dfab60559",
-      "git_commit": "c58d118",
+      "input_hash": "7638a9cd176841f9171580b8315463b4f0c2e2deb5bdc1352048dcf60180dcf5",
+      "output_hash": "10213ee47bff849630f71a68ee5707e074b9f39a1fcc6cbadd0486bbc8cdd643",
+      "git_commit": "eb95049",
       "schema": "fire_decision_card_v1",
       "policy_id": "default",
       "policy_label": "Default (historical product thresholds)",
@@ -387,7 +1431,194 @@
         "fire_prediction_accuracy_claim": "NOT_CLAIMED"
       }
     },
-    "built_at_utc": "2026-07-27T14:55:16.684105+00:00"
+    "built_at_utc": "2026-08-04T14:44:28.330203+00:00"
+  },
+  "abstention": {
+    "schema": "metrics_hub_abstention_v1",
+    "graph_id": "E7",
+    "unknown": false,
+    "n_cards": 18,
+    "n_abstain": 5,
+    "n_hold": 7,
+    "n_go": 6,
+    "abstain_rate": 0.2777777777777778,
+    "hold_rate": 0.3888888888888889,
+    "go_rate": 0.3333333333333333,
+    "source_coverage_mean": 0.5231481481481481,
+    "source_coverage_by_id": {
+      "envelope_v3_hybrid": {
+        "n_seen": 1,
+        "n_available": 1,
+        "available_rate": 1.0
+      },
+      "ml": {
+        "n_seen": 1,
+        "n_available": 0,
+        "available_rate": 0.0
+      },
+      "ml_clm_ensemble": {
+        "n_seen": 17,
+        "n_available": 6,
+        "available_rate": 0.35294117647058826
+      },
+      "ml_live_reliability": {
+        "n_seen": 9,
+        "n_available": 9,
+        "available_rate": 1.0
+      },
+      "open_cems": {
+        "n_seen": 8,
+        "n_available": 0,
+        "available_rate": 0.0
+      },
+      "open_cems_perimeter": {
+        "n_seen": 10,
+        "n_available": 10,
+        "available_rate": 1.0
+      },
+      "ops": {
+        "n_seen": 11,
+        "n_available": 0,
+        "available_rate": 0.0
+      },
+      "ops_thermal_front": {
+        "n_seen": 7,
+        "n_available": 7,
+        "available_rate": 1.0
+      }
+    },
+    "r3_abstention_enforced": true,
+    "ml_live_fusion": "OFF",
+    "population": "artifact_cards_plus_suite_samples_not_fleet_telemetry",
+    "note": "abstain_rate = fraction of sampled Decision Cards with decision=ABSTAIN (suite + on-disk artifacts). NOT live fire accuracy, NOT field fleet rate. source_coverage_mean = mean fraction of sources[] marked available per card. ml_live fusion remains OFF (weight 0 / not fused).",
+    "samples": [
+      {
+        "id": "reliability:reliability_gate_report.json:empty",
+        "path": "outputs/reliability_gate_report.json",
+        "kind": "suite_sample",
+        "decision": "ABSTAIN",
+        "confidence_pred": 0.0
+      },
+      {
+        "id": "reliability:reliability_gate_report.json:open_only",
+        "path": "outputs/reliability_gate_report.json",
+        "kind": "suite_sample",
+        "decision": "HOLD",
+        "confidence_pred": 0.7200000000000001
+      },
+      {
+        "id": "reliability:reliability_gate_report.json:both",
+        "path": "outputs/reliability_gate_report.json",
+        "kind": "suite_sample",
+        "decision": "GO",
+        "confidence_pred": 0.8586666666666667
+      },
+      {
+        "id": "demo_third_party",
+        "path": "outputs/demo_third_party/fire_decision_card.json",
+        "kind": "artifact_card",
+        "decision": "GO",
+        "confidence_pred": 0.8586666666666667
+      },
+      {
+        "id": "forensic_demo",
+        "path": "outputs/forensic_demo/fire_decision_card.json",
+        "kind": "artifact_card",
+        "decision": "ABSTAIN",
+        "confidence_pred": 1.0
+      },
+      {
+        "id": "gold_e2e",
+        "path": "outputs/gold_e2e/fire_decision_card.json",
+        "kind": "artifact_card",
+        "decision": "GO",
+        "confidence_pred": 0.8586666666666667
+      },
+      {
+        "id": "gold_e2e_empty",
+        "path": "outputs/gold_e2e/fire_decision_card_empty.json",
+        "kind": "artifact_card",
+        "decision": "ABSTAIN",
+        "confidence_pred": 0.0
+      },
+      {
+        "id": "fuel_envelope",
+        "path": "outputs/fuel_stack/tobarra/fire_decision_card_with_envelope.json",
+        "kind": "artifact_card",
+        "decision": "GO",
+        "confidence_pred": 0.7559999999999999
+      },
+      {
+        "id": "ml_live_card_demo",
+        "path": "outputs/ml_live_card_demo/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.7200000000000001
+      },
+      {
+        "id": "ml_live_card_demo_abstain",
+        "path": "outputs/ml_live_card_demo_abstain/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "ABSTAIN",
+        "confidence_pred": 0.0
+      },
+      {
+        "id": "ml_live_card_demo_live",
+        "path": "outputs/ml_live_card_demo_live/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.8024779502743649
+      },
+      {
+        "id": "docs_hub_card",
+        "path": "docs/FIRE_DECISION_CARD.json",
+        "kind": "artifact_card",
+        "decision": "GO",
+        "confidence_pred": 0.8586666666666667
+      },
+      {
+        "id": "pilot:caminomorisco/decision_card.json",
+        "path": "outputs/pilot_honesty_card/sites/caminomorisco/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.5
+      },
+      {
+        "id": "pilot:caminomorisco/decision_card_field_ops.json",
+        "path": "outputs/pilot_honesty_card/sites/caminomorisco/decision_card_field_ops.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.5
+      },
+      {
+        "id": "pilot:nijar/decision_card.json",
+        "path": "outputs/pilot_honesty_card/sites/nijar/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.61
+      },
+      {
+        "id": "pilot:nijar/decision_card_field_ops.json",
+        "path": "outputs/pilot_honesty_card/sites/nijar/decision_card_field_ops.json",
+        "kind": "artifact_card",
+        "decision": "HOLD",
+        "confidence_pred": 0.5
+      },
+      {
+        "id": "pilot:tobarra/decision_card.json",
+        "path": "outputs/pilot_honesty_card/sites/tobarra/decision_card.json",
+        "kind": "artifact_card",
+        "decision": "GO",
+        "confidence_pred": 0.672
+      },
+      {
+        "id": "pilot:tobarra/decision_card_field_ops.json",
+        "path": "outputs/pilot_honesty_card/sites/tobarra/decision_card_field_ops.json",
+        "kind": "artifact_card",
+        "decision": "ABSTAIN",
+        "confidence_pred": 0.63
+      }
+    ]
   },
   "reliability_note": "system_reliability five-nines bound applies to silent-GO prevention under tests, NOT to fire-spread forecast accuracy."
 }

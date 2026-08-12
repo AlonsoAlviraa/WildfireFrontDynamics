@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from wildfire_front.product.confidence import build_decision_card
 from wildfire_front.product.decide_service import decide_from_request
 from wildfire_front.product.forensics import (
     RADIO_MAX_CHARS,
+    _reliability_gate_from_card,
     extract_replay_sources,
     load_and_replay_bundle,
     render_radio_bridge,
@@ -120,3 +122,100 @@ def test_extract_replay_from_card_alone():
     assert result["match_decision"] is True
     # output hash should match when sources metrics sufficient
     assert result["replay_ok"] is True
+    assert result.get("event_id") == "forensic_test"
+
+
+def test_reliability_gate_from_card_partial_checks_returns_none():
+    """Partial / non-bool R1–R4 must not embed a field unlock gate."""
+    card = {
+        "event_id": "partial",
+        "decision": "GO",
+        "audit": {
+            "system_reliability": {
+                "system_reliability_pass": True,
+                "checks": {
+                    "R1_determinism": True,
+                    "R2_gates": None,  # unmeasured
+                    "R3_abstention_enforced": True,
+                    "R4_provenance": True,
+                },
+            }
+        },
+    }
+    assert _reliability_gate_from_card(card) is None
+
+
+def test_reliability_gate_from_card_all_true_embeds_pass():
+    card = {
+        "event_id": "full_pass",
+        "decision": "GO",
+        "audit": {
+            "input_hash": "a" * 64,
+            "output_hash": "b" * 64,
+            "system_reliability": {
+                "system_reliability_pass": True,
+                "status": "pass",
+                "checks": {
+                    "R1_determinism": True,
+                    "R2_gates": True,
+                    "R3_abstention_enforced": True,
+                    "R4_provenance": True,
+                },
+            },
+        },
+    }
+    gate = _reliability_gate_from_card(card)
+    assert gate is not None
+    assert gate["field_unlock"] is True
+    assert gate["suite_only"] is False
+    assert gate["event_id"] == "full_pass"
+    assert gate["provenance"]["kind"] == "this_run"
+    assert gate["provenance"]["input_hash"] == "a" * 64
+    assert gate["system_reliability"]["checks"]["R2_gates"] is True
+
+
+def test_field_ops_go_replay_with_embedded_this_run_gate():
+    """field_ops GO needs this-run-shaped gate; without it replay fails closed to ABSTAIN."""
+    ops = {
+        "quality_grade": "A",
+        "primary_ros_m_min": 5.7,
+        "n_frames_staged": 12,
+        "speed_vs_ref_ratio": 0.85,
+        "area_ha_max": 40,
+    }
+    open_m = {"max_area_ha": 2000, "n_timeline_steps": 5, "activation": "X"}
+    # Card with measured R1–R4 (as live publish would attach)
+    card = build_decision_card(
+        "field_ops_replay",
+        ops_metrics=ops,
+        open_metrics=open_m,
+        policy_id="field_ops",
+        require_ops_for_go=True,
+        gates_ok=True,
+        determinism_ok=True,
+        abstention_enforced=True,
+        provenance_ok=True,
+    )
+    assert card.decision.value == "GO"
+    payload = card.to_dict()
+    gate = _reliability_gate_from_card(payload)
+    assert gate is not None and gate["field_unlock"] is True
+
+    src = extract_replay_sources(
+        payload,
+        ops_metrics=ops,
+        open_metrics=open_m,
+        require_ops_for_go=True,
+    )
+    assert src.get("reliability_gate") is not None
+    result = replay_decision(src)
+    assert result["replay_ok"] is True
+    assert result["got_decision"] == "GO"
+    assert result.get("event_id") == "field_ops_replay"
+
+    # Without embedded gate, field_ops fail-closed → ABSTAIN (not a silent GO)
+    src_no_gate = dict(src)
+    src_no_gate["reliability_gate"] = None
+    bad = replay_decision(src_no_gate)
+    assert bad["got_decision"] == "ABSTAIN"
+    assert bad["match_decision"] is False

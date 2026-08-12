@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-07-21T10:57:40.202819+00:00",
+  "updated_at_utc": "2026-08-04T14:13:45.860446+00:00",
   "definition": "docs/PLAN_COMERCIAL_SUPERA_CLM.md",
   "clm_product": {
     "id": "clm_ensemble_v34",
@@ -31,11 +31,15 @@
           "area_ha_to": 1501.9057821938034,
           "delta_area_ha": -411.10753966774087,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.0,
           "growth_ha_per_hour": -17.129480819489203,
           "hausdorff_m": 1685.944765359855,
           "mean_boundary_to_prev_m": 3.393461191639263,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.0,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR578_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
@@ -44,11 +48,15 @@
           "area_ha_to": 2111.447221855512,
           "delta_area_ha": 609.5414396617086,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.28194032289435994,
           "growth_ha_per_hour": 25.397559985904525,
           "hausdorff_m": 2386.114343560732,
           "mean_boundary_to_prev_m": 116.50901014634809,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.28194032289435994,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR578_AOI01_DEL_MONIT01_r1_RTP01_v1_vector.zip",
@@ -57,11 +65,15 @@
           "area_ha_to": 2693.4837707192946,
           "delta_area_ha": 582.0365488637826,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.23305328888122478,
           "growth_ha_per_hour": 24.251522869324276,
           "hausdorff_m": 1623.7754805788961,
           "mean_boundary_to_prev_m": 1.1239859263643416e-10,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.23305328888122478,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR578_AOI01_DEL_MONIT02_r1_RTP01_v1_vector.zip",
@@ -70,11 +82,15 @@
           "area_ha_to": 2693.4837707192946,
           "delta_area_ha": 0.0,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.0,
           "growth_ha_per_hour": 0.0,
           "hausdorff_m": 0.0,
           "mean_boundary_to_prev_m": 1.1239859263643416e-10,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.0,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         }
       ]
     },
@@ -97,11 +113,15 @@
           "area_ha_to": 2209.794940004186,
           "delta_area_ha": 65.41926828802389,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.027467098843961125,
           "growth_ha_per_hour": 2.7258028453343286,
           "hausdorff_m": 4041.139715549566,
           "mean_boundary_to_prev_m": 523.8662665949925,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.027467098843961125,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR581_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
@@ -110,11 +130,15 @@
           "area_ha_to": 2209.794940004186,
           "delta_area_ha": 0.0,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.0,
           "growth_ha_per_hour": 0.0,
           "hausdorff_m": 0.0,
           "mean_boundary_to_prev_m": 9.386215587940406e-11,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.0,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR581_AOI01_GRA_MONIT01_r1_RTP01_v1_vector.zip",
@@ -123,11 +147,15 @@
           "area_ha_to": 2141.586944804027,
           "delta_area_ha": -68.20799520015908,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.0,
           "growth_ha_per_hour": -2.841999800006628,
           "hausdorff_m": 379.9027469709821,
           "mean_boundary_to_prev_m": 0.12613125263885047,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.0,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         }
       ]
     },
@@ -150,11 +178,15 @@
           "area_ha_to": 1497.2414022260618,
           "delta_area_ha": -242.99042658601957,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.0,
           "growth_ha_per_hour": -10.124601107750815,
           "hausdorff_m": 1475.8332095808528,
           "mean_boundary_to_prev_m": 0.0,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.0,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR583_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
@@ -163,11 +195,15 @@
           "area_ha_to": 1645.1675445875233,
           "delta_area_ha": 147.92614236146142,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.07312763906984969,
           "growth_ha_per_hour": 6.163589265060892,
           "hausdorff_m": 1367.607886773742,
           "mean_boundary_to_prev_m": 4.2379156538214554e-10,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.07312763906984969,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR583_AOI01_DEL_MONIT01_r1_RTP01_v1_vector.zip",
@@ -176,11 +212,15 @@
           "area_ha_to": 1784.2774706912096,
           "delta_area_ha": 139.10992610368635,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.06582383019043744,
           "growth_ha_per_hour": 5.796246920986931,
           "hausdorff_m": 2110.1172100655253,
           "mean_boundary_to_prev_m": 55.95414074050488,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.06582383019043744,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR583_AOI01_DEL_MONIT02_r1_RTP01_v1_vector.zip",
@@ -189,11 +229,15 @@
           "area_ha_to": 1790.5688508544401,
           "delta_area_ha": 6.291380163230542,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.002915177358072659,
           "growth_ha_per_hour": 0.2621408401346059,
           "hausdorff_m": 235.40189978947063,
           "mean_boundary_to_prev_m": 1.6483182180494216,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.002915177358072659,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         }
       ]
     },
@@ -216,11 +260,15 @@
           "area_ha_to": 3771.917030380089,
           "delta_area_ha": 455.81821628261196,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.15007272426452908,
           "growth_ha_per_hour": 18.992425678442164,
           "hausdorff_m": 1603.8602999953632,
           "mean_boundary_to_prev_m": 25.73356624543282,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.15007272426452908,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR632_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
@@ -229,11 +277,15 @@
           "area_ha_to": 4198.7804367966055,
           "delta_area_ha": 426.8634064165167,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.13250864139583818,
           "growth_ha_per_hour": 17.78597526735486,
           "hausdorff_m": 1192.2899964858168,
           "mean_boundary_to_prev_m": 56.20963678409001,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.13250864139583818,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         },
         {
           "from": "EMSR632_AOI01_DEL_MONIT01_r1_RTP01_v1_vector.zip",
@@ -242,18 +294,100 @@
           "area_ha_to": 5319.506429634212,
           "delta_area_ha": 1120.725992837606,
           "assumed_dt_hours": 24.0,
-          "equiv_radius_growth_m_min": 0.3188043117600491,
           "growth_ha_per_hour": 46.69691636823359,
           "hausdorff_m": 4144.184082006344,
           "mean_boundary_to_prev_m": 310.72556250462907,
-          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official."
+          "note": "Proxy from successive CEMS products with assumed 24h spacing when exact acquisition times are not parsed. Not tactical ROS. Hausdorff is perimeter-to-perimeter (CEMS vs CEMS), not national official.",
+          "equiv_radius_growth_m_min_proxy": 0.3188043117600491,
+          "ros_is_proxy": true,
+          "not_primary_ros": true,
+          "not_vp_tactical": true,
+          "vp_tactical": null
         }
       ]
     },
     {
+      "id": "emsr896",
+      "activation": "EMSR896",
+      "max_area_ha": 12133.4,
+      "n_timeline_steps": 4,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
+      "id": "emsr898",
+      "activation": "EMSR898",
+      "max_area_ha": 27213.2,
+      "n_timeline_steps": 8,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
+      "id": "emsr899",
+      "activation": "EMSR899",
+      "max_area_ha": 26064.7,
+      "n_timeline_steps": 2,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
+      "id": "emsr900",
+      "activation": "EMSR900",
+      "max_area_ha": 44376.7,
+      "n_timeline_steps": 10,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
+      "id": "emsr902",
+      "activation": "EMSR902",
+      "max_area_ha": 2682.2,
+      "n_timeline_steps": 3,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
+      "id": "emsr905",
+      "activation": "EMSR905",
+      "max_area_ha": 7265.8,
+      "n_timeline_steps": 3,
+      "n_ros_proxy_steps": null,
+      "status": null,
+      "O2_cems": "GO",
+      "map": null,
+      "brief": null,
+      "activation_url": null,
+      "ros_proxy_rows": []
+    },
+    {
       "id": "la_mierla_20260717",
       "activation": "guadalajara_la_mierla_20260717",
-      "max_area_ha": 29000,
+      "max_area_ha": 32000,
       "n_timeline_steps": 1,
       "n_ros_proxy_steps": null,
       "status": null,
@@ -295,7 +429,7 @@
   "claims_allowed": [
     "Dual product: thermal front when drone data exists + open CEMS perimeter intelligence",
     "Public multi-fire packs without NDA",
-    "Open packs max area ~29000 ha"
+    "Open packs max area ~44377 ha"
   ],
   "claims_forbidden": [
     "Open CEMS IoU better than CLM ensemble on Cardoso holdout",

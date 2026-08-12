@@ -24,17 +24,20 @@
 | Residual silent-GO risk | **≤ 1×10⁻⁶** bajo suite de tests de abstención/gates |
 | Predicción del incendio | **NO reclamada** al 99.9999% — se muestra `confidence_pred` real (p.ej. MEDIUM) |
 
-## Demo
+## Demo (modo operario primero)
 
 ```bash
-python scripts/show_all.py
-# abre docs/commander/index.html  ← app sala de mando
-# + docs/PORTAL.html
+# Única puerta de entrada (semáforo + 4 actos + qué falta para GO_Q)
+python -m wildfire_front
+python -m wildfire_front ensayo          # = operator do --all
+python -m wildfire_front operator checklist
 ```
 
 ```bash
+# App sala de mando / portal (opcional, eng)
 python scripts/build_commander_app.py
 # start docs/commander/index.html
+# rebuild pesado: python scripts/show_all.py
 ```
 
 En **campo**, cada `incident update` escribe la Decision Card en el outbox:

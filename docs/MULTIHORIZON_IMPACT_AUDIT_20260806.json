@@ -1,0 +1,31 @@
+{
+  "schema": "wfd_multihorizon_impact_audit_v1",
+  "created_utc": "2026-08-06",
+  "verdict": "NO_METRIC_LIFT",
+  "product_surface_lift": true,
+  "metrics_delta": {
+    "lab_u1_honest_mean_iou": {"before": 0.8569, "after": 0.8569, "delta": 0.0},
+    "catalog_holdout_iou_provenance": {"before": 0.8963, "after": 0.8963, "delta": 0.0},
+    "kaggle_v21_model_iou": {"value": 0.22317207434722727, "delta": 0.0, "note": "no retrain"},
+    "tobarra_keep_or_kill": {"before": "KILL", "after": "KILL", "delta": "none", "status": "CLOSED_KILL"},
+    "GO_MES": {"before": false, "after": false}
+  },
+  "field_ops_demo": {
+    "method": "isotropic_ros_buffer_v1",
+    "vp_cite_m_min": 7.0,
+    "vp_1h_advance_m": 420.0,
+    "s4_primary_ros_m_min": 6.135704762450378,
+    "s4_1h_advance_m": 368.1422857470227,
+    "s4_oneill_median_m_min": 1.2796073951222064,
+    "anchor_ratio_vs_vp": 0.8765,
+    "anchor_grade": "compatible_order_of_magnitude"
+  },
+  "rails_held": {
+    "field_ops_allow_ml_live_in_fusion": false,
+    "iou_is_not_ros": true,
+    "tobarra_keep_reopen": false,
+    "ece_thrash_reopen": false
+  },
+  "recommendation": "expand_prs_from_deep_research_not_larger_unet",
+  "next_plan": "docs/design/PR_PLAN_MULTIHORIZON_FIELDOPS.md"
+}

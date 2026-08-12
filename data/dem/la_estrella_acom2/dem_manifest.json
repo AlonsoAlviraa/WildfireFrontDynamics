@@ -1,0 +1,20 @@
+{
+  "source": "copernicus_glo30",
+  "bbox_wgs84": [
+    -5.1054183241995945,
+    39.688508687102626,
+    -5.061559020304709,
+    39.73242310764071
+  ],
+  "crs": "EPSG:32630",
+  "cell_size_m": 25.0,
+  "tiles": [
+    "N39_W006"
+  ],
+  "hrefs": [
+    "https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N39_00_W006_00_DEM/Copernicus_DSM_COG_10_N39_00_W006_00_DEM.tif"
+  ],
+  "sha256": "32dfe87b7d491b689929ff0a6e60d3aab7a64f665b525748aee65fe390518474",
+  "fetched_at": "2026-08-06T16:58:28.846795+00:00",
+  "cache_path": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\data\\dem\\la_estrella_acom2\\glo30_window.tif"
+}

@@ -1,0 +1,24 @@
+{
+  "source_id": "brazatortas_2025",
+  "method": "dem_lapse_proxy_v1",
+  "honesty": "NOT AEMET gridded reanalysis. Spatial variance from DEM elevation lapse + per-fire scalar anchors. Precip=0 constant (GAP for precip). wind_dir scalar broadcast. Suitable for engineering signal test only.",
+  "dem_path": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/dem/brazatortas/glo30_window.tif",
+  "weather_dir": "C:/Users/Mariano/Documents/ALONSOO/WildfireFrontDynamics/data/weather/brazatortas",
+  "scalars": {
+    "temp": 28.0,
+    "humidity": 35.0,
+    "wind_speed": 5.0,
+    "wind_dir": 90.0
+  },
+  "elev_mean_m": 700.0358276367188,
+  "files": [
+    "tmin.tif",
+    "tmax.tif",
+    "humidity.tif",
+    "wind_speed.tif",
+    "wind_dir.tif",
+    "precip.tif",
+    "temp.tif"
+  ],
+  "ok": true
+}

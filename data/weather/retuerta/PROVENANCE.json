@@ -1,0 +1,11 @@
+{
+  "schema": "wfd_weather_provenance_v1",
+  "created_utc": "2026-08-08T16:06:20.848413+00:00",
+  "source_id": "retuerta_2025",
+  "provenance": "era5_land_cds_v1",
+  "not_era5": false,
+  "not_dem_lapse": true,
+  "nc": "era5_land_2025-09-04.nc",
+  "ml_product_go": true,
+  "field_ops_allow_ml_live_in_fusion": false
+}

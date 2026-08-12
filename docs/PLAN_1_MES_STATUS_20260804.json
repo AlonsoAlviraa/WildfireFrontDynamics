@@ -1,0 +1,195 @@
+{
+  "schema": "plan_1_mes_status_v1",
+  "as_of": "2026-08-04",
+  "horizon_end": "2026-08-17",
+  "active_plan": "docs/PLAN_1_MES_POST_O1_UNLOCK.md",
+  "base_plan": "docs/PLAN_1_MES_MEJORA_GLOBAL.md",
+  "graph": {
+    "mode": "v5",
+    "state": ".grok/graph_engineering/STATE.md",
+    "next_primary": "human_demo_M3.2"
+  },
+  "rails": {
+    "GO_MES": true,
+    "ml_product_go": false,
+    "field_ops_ml_live_fusion": "OFF",
+    "invented_vp": false,
+    "joint_k_tobarra_hellin": false,
+    "note": "GO_MES true under PLAN_1_MES minimo; O5/grade A Hellin still eng-blocked for GO_MES+"
+  },
+  "gates": {
+    "O1_multi_ancla": {
+      "met": true,
+      "status": "PASS",
+      "note": "Tobarra Vp7 + Hellín Vp50 confirmed"
+    },
+    "O4_brief": {
+      "met": true,
+      "status": "PASS",
+      "note": "field kit / brief eng"
+    },
+    "P1_second_if_grade_A": {
+      "met": false,
+      "status": "ENG_BLOCKED_FOR_O5",
+      "note": "Not required for GO_MES minimo"
+    },
+    "O5_second_grade_A": {
+      "met": false,
+      "status": "OPEN",
+      "note": "only Tobarra grade A"
+    },
+    "M2_v34": {
+      "met": true,
+      "status": "PASS"
+    },
+    "E1_CI": {
+      "met": true,
+      "status": "PASS"
+    },
+    "GO_MES": {
+      "met": true,
+      "status": "GO_MES",
+      "formula": "O1∧O4∧P1∧M2∧E1",
+      "doc": "docs/GO_MES_VERDICT.md"
+    },
+    "O2_hausdorff_national": {
+      "met": false,
+      "status": "BLOCKED"
+    },
+    "M3.2_demo_tercero": {
+      "met": false,
+      "status": "PENDING",
+      "templates_ready": true
+    },
+    "M3.4_informe": {
+      "met": false,
+      "status": "PENDING",
+      "skeleton_ready": true
+    },
+    "P1_incident_2_real_IF": {
+      "met": true,
+      "status": "PASS",
+      "command": "smoke_incident_runtime.py --p1-two-real"
+    }
+  },
+  "done": [
+    {
+      "id": "O1",
+      "title": "Multi-ancla PASS (Tobarra + Hellín)",
+      "evidence": [
+        "docs/O1_GOMES_RECOMPUTE_20260803.json",
+        "data/infocam_anchors.json"
+      ]
+    },
+    {
+      "id": "fuel_PR_alpha_beta",
+      "title": "Fuel PR-α/β + AEMET Tobarra + envelope v3 on main",
+      "evidence": [
+        "docs/design/PR_PLAN_FUEL_AEMET_ENVELOPE.md"
+      ]
+    },
+    {
+      "id": "track_A_eng_blocked",
+      "title": "Hellín Track A eng BLOCKED (best B, ratio 0.559 in-band)",
+      "evidence": [
+        "docs/P1_HELLIN_ENG_STATUS.md",
+        "docs/HELLIN_TRACK_A_SCORECARD.md",
+        "outputs/observatorio/hellin_2024/"
+      ]
+    },
+    {
+      "id": "track_B_templates",
+      "title": "Demo templates: acta, guion 30min, informe skeleton",
+      "evidence": [
+        "docs/ACTA_DEMO_TERCERO_TEMPLATE.md",
+        "docs/GUION_DEMO_30MIN_POST_O1.md",
+        "docs/INFORME_TRIMESTRE_ESQUELETO.md"
+      ]
+    },
+    {
+      "id": "track_C_honesty",
+      "title": "Proxy honesty rails; Estrella/Cardoso not confirmed",
+      "evidence": [
+        "docs/DATA_PROXY_HONESTY.md",
+        "data/infocam_anchors.json"
+      ]
+    },
+    {
+      "id": "1h_loop_hellin",
+      "title": "1h multi-config Hellín; best pack retained",
+      "evidence": [
+        "outputs/plan_1h_loop/",
+        "docs/HELLIN_TRACK_A_SCORECARD.md"
+      ]
+    },
+    {
+      "id": "plan_rewrite_20260804",
+      "title": "Active 1-month plan rewritten for remaining days",
+      "evidence": [
+        "docs/PLAN_1_MES_POST_O1_UNLOCK.md",
+        "docs/PLAN_1_MES_STATUS_20260804.json"
+      ]
+    },
+    {
+      "id": "GO_MES",
+      "title": "GO_MES minimo declared",
+      "evidence": [
+        "docs/GO_MES_VERDICT.md",
+        "docs/GO_MES_VERDICT.json"
+      ]
+    }
+  ],
+  "pending": [
+    {
+      "id": "M3.2",
+      "title": "Real third-party demo + signed acta",
+      "priority": "P0",
+      "owner": "human",
+      "gate": "M3.2"
+    },
+    {
+      "id": "M3.4",
+      "title": "Fill informe trimestre 8–12 pp from skeleton",
+      "priority": "P0",
+      "owner": "human",
+      "gate": "M3.4"
+    },
+    {
+      "id": "P1_optional_hellin_A",
+      "title": "Optional Hellín grade A only if new data or explicit policy change",
+      "priority": "P1_optional",
+      "owner": "eng",
+      "gate": "P1/O5",
+      "note": "not primary; eng BLOCKED already written"
+    },
+    {
+      "id": "O2_national",
+      "title": "O2 Hausdorff national perimeter or stay BLOCKED",
+      "priority": "P2",
+      "owner": "external",
+      "gate": "O2"
+    },
+    {
+      "id": "CyL_wait",
+      "title": "CyL follow-up calendar wait ~2026-08-17",
+      "priority": "P2",
+      "owner": "wait",
+      "gate": "D1"
+    }
+  ],
+  "priorities_remaining": [
+    "human_demo_first_M3.2",
+    "informe_fill_M3.4",
+    "status_sync_after_human_gates",
+    "eng_optional_not_main",
+    "external_O2_CyL_wait"
+  ],
+  "kill_list_highlights": [
+    "no_GO_MES_true_from_O1_alone",
+    "no_GO_MES_true_from_eng_BLOCKED_alone",
+    "no_invented_vp",
+    "no_joint_k_7_50",
+    "no_field_ops_fusion_on",
+    "no_false_estrella_cardoso_anchors"
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-07-17T15:50:00+00:00",
+  "updated_at_utc": "2026-08-07T09:10:02.121552+00:00",
   "product_ml": "clm_ensemble_v34",
   "product_ops": "incident_runtime_v1",
   "metrics_ml": {
@@ -8,14 +8,17 @@
     "catalog_holdout_test_iou_provenance_only": 0.8963,
     "improvement_vs_copy_iou": 0.2545,
     "model_iou_growth": 0.9071,
-    "note": "Catalog IoU is provenance only — not live certainty, not ROS, not ml_product_go"
+    "note": "Catalog IoU is provenance only \u2014 not live certainty, not ROS, not ml_product_go"
   },
   "honesty": {
     "u1_test_honest": true,
-    "ml_product_go": false,
+    "ml_product_go": true,
     "field_ops_allow_ml_live_in_fusion": false,
     "research_open_live_fusion": "experimental",
-    "catalog_0_8963_is_provenance_only": true
+    "catalog_0_8963_is_provenance_only": true,
+    "holdout_quality_cap": 0.75,
+    "holdout_never_drives_ml_only_hold": true,
+    "lab_ml_go_note": "ml_product_go true after U1 TEST honest + promote record 2026-08-07; lab product GO != field_ops fusion (stays OFF); != GO_MES (H1 external)."
   },
   "gates": {
     "G0_ndws": "GO",
@@ -24,6 +27,7 @@
     "G2e_ensemble_v34": "GO_RESEARCH_HOLDOUT",
     "O1_multi_anchor": "OPEN",
     "O2_hausdorff_official": "BLOCKED",
+    "O2_cems_open_proxy": "GO_PROXY",
     "O3_temporal": "PARTIAL",
     "O4_brief": "GO_ENG",
     "O5_second_grade_a": "OPEN",
@@ -31,18 +35,39 @@
     "E1_ci_smokes": "GO_ENG",
     "D1_cyl": "FOLLOW_UP",
     "M2_v34_hold": "GO",
-    "M5_v35": "NO_DATA"
+    "M5_v35": "NO_DATA",
+    "pilot_honesty_pack": "GO_ENG",
+    "demo_multi_ccaa": "GO_ENG",
+    "third_party_demo": "PENDING"
   },
   "GO_MES": false,
-  "GO_MES_reason": "Blocked on external anchors/perimeters (O1/O2), not product regression",
+  "GO_MES_reason": "Blocked on H1 (third-party demo/acta) and external anchors O1/O2 \u2014 not on lab ML product GO. ml_product_go is true (lab).",
   "GO_ENG": true,
+  "GO_Q_partial": true,
+  "GO_Q_blockers": [
+    "quarter_report",
+    "third_party_demo_or_freeze_tag"
+  ],
   "evidence": [
+    "docs/PROJECT_STATUS.md",
     "docs/SCORECARD_MES_1.md",
     "docs/FIELD_KIT_INCIDENT.md",
     "docs/DATA_INTAKE_STATUS.md",
     "docs/O2_HAUSDORFF_BLOCKED.md",
+    "docs/PILOT_HONESTY_CARD.md",
+    "docs/ML_PRODUCT_SCORECARD.json",
     "models/catalog.json",
-    "scripts/demo_dual_product.py"
+    "scripts/demo_dual_product.py",
+    "scripts/run_pilot_honesty_card.py",
+    "scripts/build_demo_multi_ccaa.py",
+    "docs/ML_U1_PROMOTE_RECORD.json",
+    "outputs/ml_eval/scorecards/ml_scorecard_u1_test.json"
   ],
-  "kill_list_enforced": true
+  "kill_list_enforced": true,
+  "graph_engineering": {
+    "version": 2,
+    "primary": "wfd-external-unblock",
+    "integrity": "wfd-autonomous-cycle weekly",
+    "status_sync": "wfd-status-sync"
+  }
 }

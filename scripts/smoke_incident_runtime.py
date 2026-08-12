@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Smoke: incident_runtime_v1 watch/update on synthetic growing fire.
+"""Smoke: incident_runtime_v1 on synthetic and/or real IF artifacts.
 
 Usage:
   python scripts/smoke_incident_runtime.py
   python scripts/smoke_incident_runtime.py --tobarra
+  python scripts/smoke_incident_runtime.py --hellin
+  python scripts/smoke_incident_runtime.py --p1-two-real
+    # P1 for GO_MES: Tobarra + Hellín real IF smoke without crash
 """
 
 from __future__ import annotations
@@ -88,61 +91,151 @@ def synthetic_smoke() -> dict:
     }
 
 
-def tobarra_smoke(n: int = 4) -> dict:
-    src = ROOT / "artifacts" / "tobarra_reprojected_lwir"
-    masks_src = ROOT / "artifacts" / "tobarra_lwir_masks"
-    tifs = sorted(src.glob("*.tif")) if src.is_dir() else []
+def _real_if_smoke(
+    *,
+    mode: str,
+    images: Path,
+    masks: Path,
+    event_id: str,
+    n: int,
+    ref_name: str | None = None,
+    ref_vp: float | None = None,
+    ref_area: float | None = None,
+    min_component_pixels: int = 50,
+) -> dict:
+    tifs = sorted(images.glob("*.tif")) if images.is_dir() else []
     if len(tifs) < 2:
-        return {"mode": "tobarra", "ok": False, "skipped": True, "reason": "no artifacts"}
+        return {
+            "mode": mode,
+            "ok": False,
+            "skipped": True,
+            "reason": "no artifacts",
+        }
 
-    tmp = Path(tempfile.mkdtemp(prefix="incident_tobarra_"))
+    tmp = Path(tempfile.mkdtemp(prefix=f"incident_{mode}_"))
     inbox = tmp / "inbox"
     work = tmp / "work"
     inbox.mkdir()
-    for tif in tifs[:n]:
+    # Prefer frames that have a matching mask when masks dir uses *_mask.tif
+    selected: list[Path] = []
+    for tif in tifs:
+        if len(selected) >= n:
+            break
+        if masks.is_dir():
+            m1 = masks / f"{tif.stem}_mask.tif"
+            m2 = masks / tif.name
+            if not m1.is_file() and not m2.is_file():
+                continue
+        selected.append(tif)
+    if len(selected) < 2:
+        selected = tifs[:n]
+    for tif in selected:
         shutil.copy2(tif, inbox / tif.name)
 
     cfg = IncidentConfig(
-        event_id="tobarra_smoke",
+        event_id=event_id,
         sensor_id="lwir_drone",
         estimated_error_m=2.0,
         inbox=inbox,
         work_dir=work,
-        masks_dir=masks_src if masks_src.is_dir() else None,
+        masks_dir=masks if masks.is_dir() else None,
         min_file_age_s=0.0,
-        min_component_pixels=50,
+        min_component_pixels=min_component_pixels,
         scientific_clean=True,
-        ref_name="INFOCAM Tobarra",
-        ref_vp_m_min=7.0,
-        ref_area_ha=39.0,
+        ref_name=ref_name,
+        ref_vp_m_min=ref_vp,
+        ref_area_ha=ref_area,
     )
     summary = process_incident_once(cfg, force=True)
     state_ok = (work / "outbox" / "incident_state.json").is_file()
+    status = summary.get("status")
+    ok = state_ok and status in ("updated", "idle") and not summary.get("error")
     return {
-        "mode": "tobarra",
-        "ok": state_ok and summary.get("status") in ("updated", "idle"),
-        "status": summary.get("status"),
+        "mode": mode,
+        "ok": bool(ok),
+        "status": status,
         "n_staged": summary.get("n_staged"),
         "quality_grade": summary.get("quality_grade"),
         "primary_ros_m_min": summary.get("primary_ros_m_min"),
         "latency_s": summary.get("latency_s"),
         "work_dir": str(work),
         "error": summary.get("error"),
+        "n_inbox": len(selected),
     }
+
+
+def tobarra_smoke(n: int = 4) -> dict:
+    return _real_if_smoke(
+        mode="tobarra",
+        images=ROOT / "artifacts" / "tobarra_reprojected_lwir",
+        masks=ROOT / "artifacts" / "tobarra_lwir_masks",
+        event_id="tobarra_smoke",
+        n=n,
+        ref_name="INFOCAM Tobarra",
+        ref_vp=7.0,
+        ref_area=39.0,
+    )
+
+
+def hellin_smoke(n: int = 4) -> dict:
+    return _real_if_smoke(
+        mode="hellin",
+        images=ROOT / "artifacts" / "hellin_2024_reprojected_lwir",
+        masks=ROOT / "artifacts" / "hellin_2024_lwir_masks",
+        event_id="hellin_smoke",
+        n=n,
+        ref_name="INFOCAM Hellin UNAP 2024-07-20",
+        ref_vp=50.0,
+        ref_area=100.0,
+        min_component_pixels=50,
+    )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tobarra", action="store_true")
+    ap.add_argument("--hellin", action="store_true")
+    ap.add_argument(
+        "--p1-two-real",
+        action="store_true",
+        help="GO_MES P1: smoke Tobarra + Hellín real IFs without crash",
+    )
+    ap.add_argument("--skip-synthetic", action="store_true")
     args = ap.parse_args()
-    report = {"synthetic": synthetic_smoke()}
+
+    report: dict = {}
+    if not args.skip_synthetic:
+        report["synthetic"] = synthetic_smoke()
+
+    if args.p1_two_real:
+        args.tobarra = True
+        args.hellin = True
+
     if args.tobarra:
         report["tobarra"] = tobarra_smoke()
-    ok = report["synthetic"]["ok"] and (
-        not args.tobarra
-        or report.get("tobarra", {}).get("ok")
-        or report.get("tobarra", {}).get("skipped")
-    )
+    if args.hellin:
+        report["hellin"] = hellin_smoke()
+
+    ok = True
+    if "synthetic" in report:
+        ok = ok and bool(report["synthetic"].get("ok"))
+    for key in ("tobarra", "hellin"):
+        if key not in report:
+            continue
+        r = report[key]
+        ok = False if r.get("skipped") else ok and bool(r.get("ok"))
+
+    if args.p1_two_real:
+        t_ok = bool(report.get("tobarra", {}).get("ok"))
+        h_ok = bool(report.get("hellin", {}).get("ok"))
+        report["p1_two_real_if"] = {
+            "ok": t_ok and h_ok,
+            "definition": ("PLAN_1_MES: incident_runtime smoke on 2 real IFs without crash"),
+            "tobarra_ok": t_ok,
+            "hellin_ok": h_ok,
+        }
+        ok = ok and t_ok and h_ok
+
     print(json.dumps({"ok": ok, **report}, indent=2, default=str))
     return 0 if ok else 1
 

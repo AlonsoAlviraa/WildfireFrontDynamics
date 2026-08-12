@@ -10,8 +10,9 @@ Honesty: landcover→fuel is an engineering crosswalk, not field inventory.
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -108,10 +109,7 @@ def fuel_mix_fractions(fuel_ids: Sequence[str]) -> dict[str, float]:
         return {}
     counts = Counter(ids)
     total = float(sum(counts.values())) or 1.0
-    return {
-        k: round(v / total, 4)
-        for k, v in sorted(counts.items(), key=lambda x: (-x[1], x[0]))
-    }
+    return {k: round(v / total, 4) for k, v in sorted(counts.items(), key=lambda x: (-x[1], x[0]))}
 
 
 @dataclass
@@ -229,14 +227,10 @@ def sector_slope_summary_from_grid(
         head_half_width_deg=head_half_width_deg,
         rear_half_width_deg=rear_half_width_deg,
     )
-    global_mean = float(np.nanmean(slope)) if np.isfinite(slope).any() else float(
-        fallback_slope_deg or 0.0
+    global_mean = (
+        float(np.nanmean(slope)) if np.isfinite(slope).any() else float(fallback_slope_deg or 0.0)
     )
-    fb = (
-        float(fallback_slope_deg)
-        if fallback_slope_deg is not None
-        else global_mean
-    )
+    fb = float(fallback_slope_deg) if fallback_slope_deg is not None else global_mean
     notes: list[str] = ["wedge_mean_slope_v1", "from_dem_slope_grid"]
     n_cells: dict[str, int] = {}
     means: dict[str, float] = {}
@@ -270,18 +264,12 @@ def classify_sector_mask(
 ) -> np.ndarray:
     """Return object array of sector labels: head | flank | rear."""
     hb = float(head_bearing_deg) % 360.0
-    d_head = np.abs(
-        ((bearings_deg - hb + 180.0) % 360.0) - 180.0
-    )
-    d_rear = np.abs(
-        ((bearings_deg - (hb + 180.0) + 180.0) % 360.0) - 180.0
-    )
+    d_head = np.abs(((bearings_deg - hb + 180.0) % 360.0) - 180.0)
+    d_rear = np.abs(((bearings_deg - (hb + 180.0) + 180.0) % 360.0) - 180.0)
     labels = np.full(bearings_deg.shape, "flank", dtype=object)
     labels[d_head <= float(head_half_width_deg)] = "head"
     # rear wins only when closer to rear and outside head wedge
-    rear_mask = (d_rear <= float(rear_half_width_deg)) & (
-        d_head > float(head_half_width_deg)
-    )
+    rear_mask = (d_rear <= float(rear_half_width_deg)) & (d_head > float(head_half_width_deg))
     labels[rear_mask] = "rear"
     return labels
 
@@ -316,7 +304,7 @@ def sector_fuel_summary_from_grid(
     buckets: dict[str, list[str]] = {"head": [], "flank": [], "rear": []}
     flat_ids = grid.ravel()
     flat_lab = labels.ravel()
-    for fid, lab in zip(flat_ids.tolist(), flat_lab.tolist()):
+    for fid, lab in zip(flat_ids.tolist(), flat_lab.tolist(), strict=True):
         buckets[str(lab)].append(str(fid))
 
     notes: list[str] = [
@@ -327,9 +315,7 @@ def sector_fuel_summary_from_grid(
     fb = dominant_fallback
     if fb is None:
         all_ids = [str(x) for x in flat_ids.tolist()]
-        fb = majority_fuel_id(
-            all_ids, ignore_unknown_if_minority=ignore_unknown_if_minority
-        )
+        fb = majority_fuel_id(all_ids, ignore_unknown_if_minority=ignore_unknown_if_minority)
     fb = canonicalize_fuel_id(fb) if fb is not None else "UNKNOWN"
     # if fallback itself was garbage → UNKNOWN
     if dominant_fallback is not None and not is_catalog_fuel_id(str(dominant_fallback)):

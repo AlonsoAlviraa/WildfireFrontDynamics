@@ -1,6 +1,6 @@
 # Comparativa vendible: CLM-solo vs producto dual (CLM + open CEMS)
 
-_Actualizado: 2026-07-21T10:57:40.202819+00:00_
+_Actualizado: 2026-08-04T14:13:45.860446+00:00_
 
 **Score ponderado CLM-solo:** 39.0/100
 **Score ponderado dual:** 95.0/100
@@ -22,8 +22,13 @@ _Actualizado: 2026-07-21T10:57:40.202819+00:00_
 - **EMSR581** · 2210 ha · steps=4 · [map](outputs\open_if\emsr581\map.html)
 - **EMSR583** · 1791 ha · steps=5 · [map](outputs\open_if\emsr583\map.html)
 - **EMSR632** · 5320 ha · steps=4 · [map](outputs\open_if\emsr632\map.html)
-- **guadalajara_la_mierla_20260717** · 29000 ha · steps=1 · [map](outputs\open_if\la_mierla_20260717\map.html)
-- **AND REDIAM gold `2024040053`** (Níjar/Almería 2024-06-06) · ~2169 ha · O2 perímetro oficial Junta · FIRMS 85 · dNBR GO · [map](outputs/open_if/and_2024040053_20240606/map.html) · acta `docs/AND_INDUSTRIAL_E2E_VERIFICATION.md` · **no Vp táctico** (ASEMA pendiente)
+- **EMSR896** · 12133 ha · steps=4 · [map](None)
+- **EMSR898** · 27213 ha · steps=8 · [map](None)
+- **EMSR899** · 26065 ha · steps=2 · [map](None)
+- **EMSR900** · 44377 ha · steps=10 · [map](None)
+- **EMSR902** · 2682 ha · steps=3 · [map](None)
+- **EMSR905** · 7266 ha · steps=3 · [map](None)
+- **guadalajara_la_mierla_20260717** · 32000 ha · steps=1 · [map](outputs\open_if\la_mierla_20260717\map.html)
 
 ## Claims permitidos / prohibidos
 

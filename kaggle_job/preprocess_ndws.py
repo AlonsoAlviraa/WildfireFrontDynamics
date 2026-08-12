@@ -27,22 +27,30 @@ Usage (Kaggle):
     #   --sequence-length 1  (1 = single timestep, 3 = real temporal stack)
 """
 
+import argparse
+import glob
 import os
 import sys
-import glob
-import argparse
+
 import numpy as np
 
 parser = argparse.ArgumentParser(description="NDWS TFRecord preprocessor (v2)")
 parser.add_argument("--split", choices=["train", "val", "test"], required=True)
-parser.add_argument("--patch-size", type=int, default=64,
-                    help="Patch size to emit (default 64 = full NDWS grid).")
-parser.add_argument("--max-patches", type=int, default=None,
-                    help="Cap patches for this split (overrides defaults).")
-parser.add_argument("--sequence-length", type=int, default=1,
-                    help="Number of consecutive frames per sample (1 or 3).")
-parser.add_argument("--stride", type=int, default=32,
-                    help="Sliding window stride when patch-size < 64.")
+parser.add_argument(
+    "--patch-size", type=int, default=64, help="Patch size to emit (default 64 = full NDWS grid)."
+)
+parser.add_argument(
+    "--max-patches", type=int, default=None, help="Cap patches for this split (overrides defaults)."
+)
+parser.add_argument(
+    "--sequence-length",
+    type=int,
+    default=1,
+    help="Number of consecutive frames per sample (1 or 3).",
+)
+parser.add_argument(
+    "--stride", type=int, default=32, help="Sliding window stride when patch-size < 64."
+)
 parser.add_argument(
     "--filter-mode",
     choices=["both_fire", "any_fire", "changed", "none"],
@@ -78,12 +86,15 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 try:
     from wildfire_front.ml.feature_schema import build_channels_from_fields  # type: ignore
+
     _HAS_FEATURE_SCHEMA = True
 except Exception:
     _HAS_FEATURE_SCHEMA = False
     build_channels_from_fields = None  # type: ignore
 
-print(f"=== NDWS Preprocessing v2 | split={args.split} patch={args.patch_size}x{args.patch_size} ===")
+print(
+    f"=== NDWS Preprocessing v2 | split={args.split} patch={args.patch_size}x{args.patch_size} ==="
+)
 print(
     f"    sequence_length={args.sequence_length} stride={args.stride} "
     f"filter={args.filter_mode} schema={args.schema}"
@@ -104,7 +115,7 @@ for d in CANDIDATE_INPUT_DIRS:
 
 # Fallback: scan all /kaggle/input subdirs for any .tfrecord files
 if input_dir is None:
-    print(f"Neither candidate dir exists. Scanning /kaggle/input/ ...")
+    print("Neither candidate dir exists. Scanning /kaggle/input/ ...")
     for root, _dirs, files in os.walk("/kaggle/input"):
         for f in files:
             if f.endswith(".tfrecord"):
@@ -125,9 +136,7 @@ print(f"Using input_dir: {input_dir}")
 output_dir = os.path.join(args.output_root, args.split)
 os.makedirs(output_dir, exist_ok=True)
 
-all_tfrecord_files = sorted(
-    glob.glob(os.path.join(input_dir, "**", "*.tfrecord"), recursive=True)
-)
+all_tfrecord_files = sorted(glob.glob(os.path.join(input_dir, "**", "*.tfrecord"), recursive=True))
 
 # Prefer files with 'train' in the name (NDWS convention), but accept all
 train_named = [f for f in all_tfrecord_files if "train" in os.path.basename(f).lower()]
@@ -179,7 +188,7 @@ try:
     is_gzip = False
     print("Detection: First file appears to be uncompressed.")
 except Exception:
-    raw_dataset = tf.data.TFRecordDataset(first_file, compression_type='GZIP')
+    raw_dataset = tf.data.TFRecordDataset(first_file, compression_type="GZIP")
     first_record = next(iter(raw_dataset))
     is_gzip = True
     print("Detection: First file appears to be GZIP compressed.")
@@ -193,18 +202,18 @@ print("Actual keys in TFRecord:", actual_keys)
 # Dynamic feature key mapping
 # --------------------------------------------------------------------------- #
 possible_keys = {
-    'elevation': ['elevation', 'dem', 'Elevation'],
-    'wind_direction': ['wind_direction', 'wind_dir', 'wind_direction_10m', 'th'],
-    'wind_speed': ['wind_speed', 'wind_speed_10m', 'vs'],
-    'min_temp': ['min_temp', 'min_temperature', 'temp_min', 'tmmn'],
-    'max_temp': ['max_temp', 'max_temperature', 'temp_max', 'tmmx'],
-    'humidity': ['humidity', 'relative_humidity', 'rh', 'sph'],
-    'precipitation': ['precipitation', 'precip', 'prcp', 'pr'],
-    'drought_index': ['drought', 'drought_index', 'kbdi', 'pdsi'],
-    'vegetation': ['vegetation', 'ndvi', 'NDVI'],
-    'erc': ['erc', 'energy_release_component'],
-    'prev_fire_mask': ['prev_fire_mask', 'ignition', 'prev_fire', 'PrevFireMask'],
-    'fire_mask': ['fire_mask', 'target', 'next_fire', 'FireMask']
+    "elevation": ["elevation", "dem", "Elevation"],
+    "wind_direction": ["wind_direction", "wind_dir", "wind_direction_10m", "th"],
+    "wind_speed": ["wind_speed", "wind_speed_10m", "vs"],
+    "min_temp": ["min_temp", "min_temperature", "temp_min", "tmmn"],
+    "max_temp": ["max_temp", "max_temperature", "temp_max", "tmmx"],
+    "humidity": ["humidity", "relative_humidity", "rh", "sph"],
+    "precipitation": ["precipitation", "precip", "prcp", "pr"],
+    "drought_index": ["drought", "drought_index", "kbdi", "pdsi"],
+    "vegetation": ["vegetation", "ndvi", "NDVI"],
+    "erc": ["erc", "energy_release_component"],
+    "prev_fire_mask": ["prev_fire_mask", "ignition", "prev_fire", "PrevFireMask"],
+    "fire_mask": ["fire_mask", "target", "next_fire", "FireMask"],
 }
 
 mapped_keys = {}
@@ -219,7 +228,7 @@ for k, v in mapped_keys.items():
     print(f"  {k} -> {v}")
 
 feature_description = {}
-for req_key, actual_key in mapped_keys.items():
+for _req_key, actual_key in mapped_keys.items():
     feature_description[actual_key] = tf.io.FixedLenFeature([64, 64], tf.float32)
 
 
@@ -259,10 +268,8 @@ def compute_ffmc(temp_c, rh, wind_kmh, precip_mm, prev_ffmc=85.0):
     is_drying = mo_rain > ed
     ko = np.where(is_drying, 1.0, ew / np.maximum(ed, 1e-6))
 
-    k0 = (
-        0.424 * (1.0 - np.power(rh / 100.0, 1.7))
-        + 0.0694 * sqrt_or_zero(wind_kmh)
-        * (1.0 - np.power(rh / 100.0, 8.0))
+    k0 = 0.424 * (1.0 - np.power(rh / 100.0, 1.7)) + 0.0694 * sqrt_or_zero(wind_kmh) * (
+        1.0 - np.power(rh / 100.0, 8.0)
     )
     kd = ko * k0 * 0.581 * np.exp(21.06 - 0.0495 * mo_rain)
 
@@ -285,23 +292,23 @@ def sqrt_or_zero(x):
 # Normalization constants (must match wildfire_front.ml.normalization)
 # --------------------------------------------------------------------------- #
 _NORM = [
-    (0.0, 1.5708),    # 0: slope (rad)
+    (0.0, 1.5708),  # 0: slope (rad)
     (3.14159, 6.28318),  # 1: aspect (rad) -> [0,1]
-    (15.0, 20.0),     # 2: temperature (C)
-    (0.0, 100.0),     # 3: humidity (%)
-    (0.0, 20.0),      # 4: wind speed (m/s)
-    (0.0, 360.0),     # 5: wind direction (deg)
-    (0.0, 10.0),      # 6: precipitation (mm)
-    (1000.0, 50.0),   # 7: pressure (hPa)
-    (0.0, 100.0),     # 8: cloud (%)
-    (0.0, 20.0),      # 9: visibility (km)
-    (5.0, 15.0),      # 10: dew point (C)
-    (0.0, 1.0),       # 11: NDVI / thermal
-    (0.0, 1.0),       # 12: FSM
-    (0.0, 1.0),       # 13: FSM
-    (0.0, 1.0),       # 14: FSM
-    (0.0, 1.0),       # 15: FSM
-    (50.0, 51.0),     # 16: FFMC -> [0,1]
+    (15.0, 20.0),  # 2: temperature (C)
+    (0.0, 100.0),  # 3: humidity (%)
+    (0.0, 20.0),  # 4: wind speed (m/s)
+    (0.0, 360.0),  # 5: wind direction (deg)
+    (0.0, 10.0),  # 6: precipitation (mm)
+    (1000.0, 50.0),  # 7: pressure (hPa)
+    (0.0, 100.0),  # 8: cloud (%)
+    (0.0, 20.0),  # 9: visibility (km)
+    (5.0, 15.0),  # 10: dew point (C)
+    (0.0, 1.0),  # 11: NDVI / thermal
+    (0.0, 1.0),  # 12: FSM
+    (0.0, 1.0),  # 13: FSM
+    (0.0, 1.0),  # 14: FSM
+    (0.0, 1.0),  # 15: FSM
+    (50.0, 51.0),  # 16: FFMC -> [0,1]
 ]
 
 
@@ -315,23 +322,24 @@ def normalize_channels(channels: np.ndarray) -> np.ndarray:
 
 def build_channels(record):
     """Build feature tensor from a parsed TFRecord (schema-aware)."""
+
     def get_field(name, default_val=0.0):
         if name in mapped_keys:
             return record[mapped_keys[name]].numpy()
         return np.full((64, 64), default_val, dtype=np.float32)
 
-    elevation = get_field('elevation')
-    wind_dir = get_field('wind_direction')
-    wind_speed = get_field('wind_speed')
-    max_temp = get_field('max_temp', 25.0)
-    min_temp = get_field('min_temp', 15.0)
-    humidity = get_field('humidity', 40.0)
-    precip = get_field('precipitation')
-    veg = get_field('vegetation', 0.6)
-    erc = get_field('erc', 40.0)
-    drought = get_field('drought_index', 0.0) if 'drought_index' in mapped_keys else None
-    prev_fire = get_field('prev_fire_mask')
-    fire = get_field('fire_mask')
+    elevation = get_field("elevation")
+    wind_dir = get_field("wind_direction")
+    wind_speed = get_field("wind_speed")
+    max_temp = get_field("max_temp", 25.0)
+    min_temp = get_field("min_temp", 15.0)
+    humidity = get_field("humidity", 40.0)
+    precip = get_field("precipitation")
+    veg = get_field("vegetation", 0.6)
+    erc = get_field("erc", 40.0)
+    drought = get_field("drought_index", 0.0) if "drought_index" in mapped_keys else None
+    prev_fire = get_field("prev_fire_mask")
+    fire = get_field("fire_mask")
 
     schema = getattr(args, "schema", "legacy17")
 
@@ -452,9 +460,9 @@ def extract_patches(channels, prev_fire, fire, patch_size, stride):
 
     for row in range(0, 64 - patch_size + 1, stride):
         for col in range(0, 64 - patch_size + 1, stride):
-            patch_ch = channels[:, row:row+patch_size, col:col+patch_size]
-            patch_prev = prev_fire[row:row+patch_size, col:col+patch_size]
-            patch_fire = fire[row:row+patch_size, col:col+patch_size]
+            patch_ch = channels[:, row : row + patch_size, col : col + patch_size]
+            patch_prev = prev_fire[row : row + patch_size, col : col + patch_size]
+            patch_fire = fire[row : row + patch_size, col : col + patch_size]
             yield patch_ch, patch_prev, patch_fire
 
 
@@ -472,7 +480,7 @@ for file_path in tfrecord_files:
     print(f"Processing: {os.path.basename(file_path)}")
     try:
         if is_gzip:
-            raw_dataset = tf.data.TFRecordDataset(file_path, compression_type='GZIP')
+            raw_dataset = tf.data.TFRecordDataset(file_path, compression_type="GZIP")
         else:
             raw_dataset = tf.data.TFRecordDataset(file_path)
 
@@ -492,7 +500,7 @@ for file_path in tfrecord_files:
                 buffer.append((channels, prev_fire, fire))
                 if len(buffer) >= args.sequence_length:
                     # Use last `sequence_length` frames
-                    window = buffer[-args.sequence_length:]
+                    window = buffer[-args.sequence_length :]
                     # Stack channels across time: (T, C, 64, 64)
                     seq_data = np.stack([w[0] for w in window], axis=0)
                     # Current fire = prev_fire of the LAST frame in window
@@ -503,7 +511,10 @@ for file_path in tfrecord_files:
                     if should_keep_patch(curr_fire, tgt_fire, args.filter_mode):
                         for patch_ch, patch_prev, patch_fire in extract_patches(
                             seq_data if args.patch_size >= 64 else None,
-                            curr_fire, tgt_fire, args.patch_size, args.stride
+                            curr_fire,
+                            tgt_fire,
+                            args.patch_size,
+                            args.stride,
                         ):
                             if patch_ch is None:
                                 # patch_size < 64 temporal: extract from seq
@@ -533,6 +544,8 @@ for file_path in tfrecord_files:
     except Exception as e:
         print(f"Error reading file {file_path}: {e}")
 
-print(f"=== Preprocessing v2 Completed ===")
+print("=== Preprocessing v2 Completed ===")
 print(f"Processed {sequence_count} full sequences.")
-print(f"Generated {patch_count} patches ({args.patch_size}x{args.patch_size}) saved to {output_dir}.")
+print(
+    f"Generated {patch_count} patches ({args.patch_size}x{args.patch_size}) saved to {output_dir}."
+)

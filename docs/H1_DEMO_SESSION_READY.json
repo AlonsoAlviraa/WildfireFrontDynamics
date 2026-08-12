@@ -1,0 +1,65 @@
+{
+  "schema": "wfd_h1_demo_session_ready_v1",
+  "prepared_at_utc": "2026-08-11T05:10:01.417041+00:00",
+  "product_unlock": false,
+  "go_q_met": false,
+  "go_q_note": "Human third-party demo + signed acta still required",
+  "go_q_invent_forbidden": true,
+  "eng_session_ready": true,
+  "suggested_slot_utc": "2026-08-14T10:00:00+00:00",
+  "demo_entry": {
+    "primary": "python -m wildfire_front app --fire _sla_measure --open",
+    "serve": "python -m wildfire_front app --fire _sla_measure --serve",
+    "artifact": "outputs/app/index.html",
+    "surface": "industrial_spa_c2",
+    "primary_acts": [
+      "Estado",
+      "Decidir",
+      "Acta"
+    ],
+    "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
+    "runbook": "docs/H1_GO_Q_RUNBOOK.md"
+  },
+  "artifacts": {
+    "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
+    "runbook": "docs/H1_GO_Q_RUNBOOK.md",
+    "calendar_invite": "docs/H1_CALENDAR_INVITE.md",
+    "acta_draft": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md",
+    "spa_app": "outputs/app/index.html",
+    "record_cli": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md"
+  },
+  "human_next": [
+    "Agendar tercero externo (copiar docs/H1_CALENDAR_INVITE.md)",
+    "Correr SPA industrial: python -m wildfire_front app --fire _sla_measure --open",
+    "Correr demo 12 min con cheatsheet (docs/CHEATSHEET_DEMO_12MIN.md)",
+    "Rellenar acta real (no PENDING)",
+    "python scripts/record_h1_demo_complete.py --acta <acta_firmada>"
+  ],
+  "steps": [
+    {
+      "id": "prepare_acta_draft",
+      "exit_code": 0,
+      "ok": true,
+      "draft": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md"
+    },
+    {
+      "id": "record_refuses_pending_draft",
+      "exit_code": 2,
+      "ok": true,
+      "note": "exit 2 expected — must not mutate GO_Q from draft"
+    },
+    {
+      "id": "check_release_flags",
+      "exit_code": 0,
+      "ok": true
+    }
+  ],
+  "rails": {
+    "GO_MES": true,
+    "GO_Q": "partial",
+    "go_q_met": false,
+    "go_q_invent_forbidden": true,
+    "ml_product_go": "true_lab_only",
+    "field_ops_fusion": "OFF"
+  }
+}

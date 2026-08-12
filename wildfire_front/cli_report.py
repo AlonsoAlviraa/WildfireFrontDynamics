@@ -14,9 +14,87 @@ _MISS = "·"
 _WARN = "!"
 _ERR = "✗"
 
+_UTF8_STDIO_READY = False
+
+
+def ensure_utf8_stdio() -> None:
+    """Force UTF-8 on stdout/stderr (Windows cp1252/charmap breaks box art and ≠).
+
+    Safe to call multiple times. When reconfigure is unavailable, wraps the
+    underlying buffer. Uses errors='replace' so a bad console never crashes the CLI.
+    """
+    global _UTF8_STDIO_READY
+    if _UTF8_STDIO_READY:
+        return
+    for stream in (sys.stdout, sys.stderr):
+        if stream is None:
+            continue
+        try:
+            reconf = getattr(stream, "reconfigure", None)
+            if callable(reconf):
+                reconf(encoding="utf-8", errors="replace")
+                continue
+        except Exception:
+            pass
+        try:
+            buf = getattr(stream, "buffer", None)
+            if buf is None:
+                continue
+            import io
+
+            wrapper = io.TextIOWrapper(
+                buf,
+                encoding="utf-8",
+                errors="replace",
+                line_buffering=True,
+                write_through=True,
+            )
+            if stream is sys.stdout:
+                sys.stdout = wrapper  # type: ignore[assignment]
+            elif stream is sys.stderr:
+                sys.stderr = wrapper  # type: ignore[assignment]
+        except Exception:
+            pass
+    _UTF8_STDIO_READY = True
+
+
+def safe_write(text: str = "", *, file: TextIO | None = None, end: str = "\n") -> None:
+    """Write text without raising UnicodeEncodeError on Windows pipes/consoles."""
+    f = file or sys.stdout
+    payload = f"{text}{end}"
+    try:
+        f.write(payload)
+        try:
+            f.flush()
+        except Exception:
+            pass
+        return
+    except UnicodeEncodeError:
+        pass
+    # Fallback: encode with replace via binary buffer or re-print ASCII-safe
+    enc = getattr(f, "encoding", None) or "utf-8"
+    data = payload.encode(enc, errors="replace")
+    buf = getattr(f, "buffer", None)
+    if buf is not None:
+        try:
+            buf.write(data)
+            buf.flush()
+            return
+        except Exception:
+            pass
+    try:
+        f.write(payload.encode(enc, errors="replace").decode(enc, errors="replace"))
+        f.flush()
+    except Exception:
+        # last resort: strip to ascii
+        try:
+            f.write(payload.encode("ascii", errors="replace").decode("ascii"))
+        except Exception:
+            pass
+
 
 def _out(text: str = "", *, file: TextIO | None = None) -> None:
-    print(text, file=file or sys.stdout)
+    safe_write(text, file=file or sys.stdout)
 
 
 def _fmt(value: Any, *, na: str = "—") -> str:
@@ -51,7 +129,11 @@ def section(title: str, *, file: TextIO | None = None) -> None:
 
 
 def print_json(obj: Any, *, file: TextIO | None = None) -> None:
-    print(json.dumps(obj, indent=2, default=str, ensure_ascii=False), file=file or sys.stdout)
+    # ensure_ascii=False keeps readable UTF-8; safe_write tolerates bad consoles
+    safe_write(
+        json.dumps(obj, indent=2, default=str, ensure_ascii=False),
+        file=file or sys.stdout,
+    )
 
 
 def print_error(message: str, *, hint: str | None = None) -> None:

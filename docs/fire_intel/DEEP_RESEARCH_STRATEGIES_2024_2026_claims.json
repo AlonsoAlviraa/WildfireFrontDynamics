@@ -1,0 +1,469 @@
+{
+  "as_of": "2026-08-05",
+  "claims": [
+    {
+      "claim": "Soft Dice Confidence (SDC) is a near-optimal post-hoc, image-level confidence estimator for selective prediction (abstention) in semantic segmentation when Dice is the evaluation metric; a plug-in SDC outperforms prior confidence measures on six medical segmentation tasks including OOD settings, and the work was published in Machine Learning (2026) after arXiv 2402.10665.",
+      "source": "arXiv: Soft Dice Confidence: A Near-Optimal Confidence Estimator for Selective Prediction in Semantic Segmentation (Borges, Pacheco, Silva)",
+      "url": "https://arxiv.org/abs/2402.10665",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "In selective prediction for semantic segmentation, coverage is the probability mass of accepted inputs and selective risk is the conditional risk on accepted samples; empirical selective risk is the loss average restricted to samples with confidence above a threshold, enabling risk\u2013coverage evaluation of abstention gates.",
+      "source": "arXiv HTML: Selective Prediction for Semantic Segmentation using Post-Hoc Confidence Estimation (v2 of Soft Dice Confidence lineage)",
+      "url": "https://arxiv.org/html/2402.10665v2",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Conformal Semantic Image Segmentation constructs post-hoc multi-label prediction sets per pixel from softmax scores and uses Conformalized Risk Control (CRC) so that the expected loss of the set-valued prediction is bounded by a user-specified risk level alpha under i.i.d. calibration/test data, with varisco heatmaps for visual risk assessment (Cityscapes and other benchmarks).",
+      "source": "arXiv: Conformal Semantic Image Segmentation: Post-hoc Quantification of Predictive Uncertainty (Mossina, Dalmau, And\u00e9ol, 2024)",
+      "url": "https://arxiv.org/abs/2405.05145",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "For binary medical image segmentation, morphological conformal prediction builds prediction sets by dilating predicted masks on held-out calibration data so the dilated set contains the ground-truth mask with user-chose\u25b8 done   verify:source quality\n\u25b8 stage 3: 75 claims survived; 0 refuted, 0 verifier-failed, 0 duplicate (total dropped: 0)\n\u25b8 stage 4: synthesizing report from 75 verified claims\n\u25b8 spawn  synthesize\n\u25b8 fail   synthesize: failed to spawn grok: spawn ENAMETOOLONG\n\u25b8 spawn  synthesize (retry 1)\n\u25b8 fail   synthesize (retry 1): failed to spawn grok: spawn ENAMETOOLONG\n\u25b8 spawn  synthesize (retry 2)\n\u25b8 fail   synthesize (retry 2): failed to spawn grok: spawn ENAMETOOLONG\n\u25b8 giveup synthesize: failed to spawn grok: spawn ENAMETOOLONG\n\u25b8 stage 4: synthesis agent failed; returning raw claims as the report\nn finite-sample coverage; only predicted masks are required (no model logits), making it model-agnostic (arXiv 2503.05618; MICCAI 2025 code/release).",
+      "source": "arXiv: Conformal Prediction for Image Segmentation Using Morphological Prediction Sets (Mossina & Friedrich, 2025)",
+      "url": "https://arxiv.org/abs/2503.05618",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Kandinsky Conformal Prediction (CVPR 2024) calibrates segmentation as spatially correlated pixel classifiers by aggregating non-conformity scores over similar image regions, improving coverage efficiency versus pure pixelwise or imagewise inductive CP when calibration data are scarce; the paper also discusses binned Expected Calibration Error (ECE) for segmentation.",
+      "source": "CVPR 2024 Open Access: Kandinsky Conformal Prediction: Efficient Calibration of Image Segmentation Algorithms (Brunekreef et al.)",
+      "url": "https://openaccess.thecvf.com/content/CVPR2024/papers/Brunekreef_Kandinsky_Conformal_Prediction_Efficient_Calibration_of_Image_Segmentation_Algorithms_CVPR_2024_paper.pdf",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "An uncertainty-aware deep learning framework for Mediterranean next-day wildfire danger forecasting jointly models epistemic and aleatoric uncertainty; the best model improves F1 by 2.3% and reduces Expected Calibration Error (ECE) by 2.1% versus a deterministic baseline, and supports uncertainty-threshold rejection of low-confidence predictions for decision support.",
+      "source": "arXiv HTML: Uncertainty-Aware Deep Learning for Wildfire Danger Forecasting (Kondylatos, Camps-Valls, Papoutsis, 2025)",
+      "url": "https://arxiv.org/html/2509.25017v1",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "SHRUG-FM is a selective prediction framework for geospatial foundation models that fuses geophysical input-space OOD, embedding-space OOD, and task predictive uncertainty via an interpretable decision tree to accept or abstain; evaluated on burn scar segmentation, flood mapping, and landslide detection, it lowers risk at comparable coverage versus single-signal baselines (e.g., predictive entropy) and is accepted at CVPR EarthVision 2026.",
+      "source": "arXiv: SHRUG-FM: Reliability-Aware Foundation Models for Earth Observation (Gonzalez-Calabuig et al.)",
+      "url": "https://arxiv.org/abs/2511.10370",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "SHRUG-FM formalizes coverage and selective risk for EO failure indicators (e.g., F1 below a threshold) and evaluates selection via risk\u2013coverage trade-offs (including AURC), explicitly routing abstained cases toward human inspection for safety-critical remote-sensing decisions.",
+      "source": "arXiv HTML: SHRUG-FM v2 (Gonzalez-Calabuig et al.)",
+      "url": "https://arxiv.org/html/2511.10370v2",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "UnCoL (uncertainty-informed collaborative learning for semi-supervised medical segmentation) reports strong voxel-level calibration (ECE < 0.5%, NLL < 0.03, Brier < 0.02) and evaluates selective prediction reliability with risk\u2013coverage curves, where entropy-based uncertainty achieves lower selective risk at given coverage than energy scores and MC Dropout variants.",
+      "source": "arXiv HTML: Uncertainty-Informed Collaborative Learning for Semi-supervised Medical Image Segmentation (UnCoL, 2025)",
+      "url": "https://arxiv.org/html/2512.13101v1",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Monte-Carlo Frequency Dropout extends MC Dropout into the frequency domain for semantic segmentation uncertainty, improving calibration and semantic uncertainty versus signal-space dropout on MRI/CT/X-ray tasks, and is explicitly indexed under Selective Prediction for scrutinizing predictions and boundaries.",
+      "source": "arXiv HTML: Enhancing Uncertainty Estimation in Semantic Segmentation via Monte-Carlo Frequency Dropout (2025)",
+      "url": "https://arxiv.org/html/2501.11258v1",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "A 2026 AEiC paper presents a model-agnostic pipeline that fine-tunes per-pixel probabilities with evidential deep learning, then applies pixel-wise class-conditional split-conformal calibration to set acceptance thresholds for target error rates; keywords explicitly include conformal prediction, risk control, and selective prediction, with results showing dataset shift weakens uncertainty filtering and conformal risk control.",
+      "source": "Dagstuhl OASIcs AEiC 2026: Model-Agnostic Uncertainty-Aware Semantic Segmentation with Conformal Risk Guarantees for Scene Understanding (Badjie et al.)",
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.AEiC.2026.1",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Learning to Abstain / Reliable Medical Image Segmentation With Rejection Option (IEEE, 2026) trains models to identify and flag uncertain pixels in real time so unreliable regions can be rejected or sent for manual review, treating selective prediction as a reject-option reliability tool beyond pure IoU holdout reporting.",
+      "source": "IEEE Xplore abstract: Reliable Medical Image Segmentation With Rejection Option (Sanisoglu et al., 2026)",
+      "url": "https://ieeexplore.ieee.org/document/11415582/",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Post-hoc image-level selective prediction for segmentation is framed as a human-in-the-loop cost gate: when confidence is low the model abstains and an expert is invoked, reducing reliance on continuous expert supervision under distribution shift (medical segmentation experiments).",
+      "source": "arXiv HTML: Selective Prediction for Semantic Segmentation using Post-Hoc Confidence Estimation (Borges et al.)",
+      "url": "https://arxiv.org/html/2402.10665v2",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Explainable human-in-the-loop segmentation (arXiv 2510.09945, 2025) proposes an interactive framework where targeted human corrections of model outputs drive interventional learning, implementing a decision gate between automated segmentation and expert revision.",
+      "source": "arXiv: Explainable Human-in-the-Loop Segmentation via Critic (Shaeri et al., 2025)",
+      "url": "https://arxiv.org/abs/2510.09945",
+      "subquery": "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)"
+    },
+    {
+      "claim": "Van & Lee (Remote Sensing, 2025) define a dual spatially blocked protocol for burn-severity mapping that pairs Leave-One-Cluster-Out (LOCO) for within-fire spatial generalization with Leave-One-Fire-Out (LOFO) for true cross-fire transfer, explicitly measuring the LOCO\u2192LOFO transfer penalty practitioners face when applying a model to a new fire event.",
+      "source": "Tree-Based Regressor Comparison for Burn Severity Mapping: Spatially Blocked Validation Within and Across Fires (MDPI Remote Sensing 17(22):3756)",
+      "url": "https://www.mdpi.com/2072-4292/17/22/3756",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Under strict LOFO cross-fire transfer in that burn-severity study, Extra Trees (ET) generalizes best among compared tree regressors (R\u00b2 = 0.616, MAE = 0.450, RMSE = 0.571), followed by Gradient Boosting (R\u00b2 = 0.564) and Random Forest (R\u00b2 = 0.543), quantifying model-dependent hard-fire transfer success/failure.",
+      "source": "Tree-Based Regressor Comparison for Burn Severity Mapping (MDPI Remote Sensing / SciProfiles abstract)",
+      "url": "https://www.mdpi.com/2072-4292/17/22/3756",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Wong et al. (Environmental Research: Ecology, 2025) implement leave-one-fire-out cross-validation for post-fire live-tree presence from Sentinel-2 across three 2021 California fires (Caldor, Dixie, KNP): pooling two fires to predict the held-out third yields 76\u201381% accuracy and F-scores 0.64\u20130.78, a modest drop versus site-optimized models (80\u201385% accuracy; F-scores 0.66\u20130.82).",
+      "source": "Sentinel imagery detects the presence of live trees following large wildfires in California (IOP Environmental Research: Ecology)",
+      "url": "https://iopscience.iop.org/article/10.1088/2752-664X/add5fd",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "In the same LOFO design, Dixie Fire held-out predictions show the largest false-positive rate, attributed to its larger extent and higher proportions of no-vegetation and understory-only pixels relative to live-tree pixels\u2014an operational hard-fire transfer failure mode for multi-domain generalization.",
+      "source": "Sentinel imagery detects the presence of live trees following large wildfires in California (IOP)",
+      "url": "https://iopscience.iop.org/article/10.1088/2752-664X/add5fd",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Huang, Jiang & Liu (arXiv:2607.07951, 2026) introduce a severity-stratified leave-one-incident-out (LOIO) protocol on 1,375 California wildfire incidents (2013\u20132025) so entire fire\u2013site episodes are held out, preventing chronological leakage within long-lived fires and evaluating true generalization to unseen fire events.",
+      "source": "Evaluating the Generalizability of Foundation Models for Extreme Environmental Events: Case Study of California Wildfire PM2.5 (arXiv)",
+      "url": "https://arxiv.org/html/2607.07951v1",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Under LOIO, zero-shot Chronos-2 exhibits severe RMSE tail instability (23.4 \u03bcg/m\u00b3, negative R\u00b2) from sporadic large-magnitude errors\u2014an explicit transfer-failure diagnostic invisible to MAE alone\u2014while LoRA fold-wise fine-tuning largely repairs the instability, yet no foundation model surpasses a fully trained BiLSTM (MAE 5.16 \u03bcg/m\u00b3; Hazardous exceedance F1 0.63 vs \u22640.54).",
+      "source": "Evaluating the Generalizability of Foundation Models for Extreme Environmental Events (arXiv:2607.07951)",
+      "url": "https://arxiv.org/abs/2607.07951",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Gahtan, Shpund & Bronstein (arXiv:2603.00035) evaluate wildfire propagation on Sim2Real-Fire with within-scene generalization (mean correlation 0.824 across 15 scenes) versus multi-domain geographic transfer (train 11 scenes, test 4 held-out scenes; overall correlation 0.766), documenting a 7% relative correlation drop and a sharper IoU@50 drop (0.609 \u2192 0.295) as the transfer penalty for hard landscape hold-outs.",
+      "source": "Wildfire Simulation with Differentiable Randers-Finsler Eikonal Solvers (arXiv)",
+      "url": "https://arxiv.org/html/2603.00035v1",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Cross-scene LOFO-style hard transfer is heterogeneous: held-out scene 0005_00725 is hardest (correlation 0.675\u00b10.174) while 0023_00995 reaches 0.804\u00b10.172 correlation but high Rel. RMSE (1.078), showing that high correlation alone does not guarantee successful absolute-timing transfer.",
+      "source": "Wildfire Simulation with Differentiable Randers-Finsler Eikonal Solvers (arXiv:2603.00035)",
+      "url": "https://arxiv.org/html/2603.00035v1",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Markov et al. FireScope-Bench (arXiv:2511.17171v3, 2026) is a multi-domain wildfire-risk benchmark training on USA expert risk rasters and evaluating OOD on European real wildfire events (2018\u20132025) plus control regions, using Brier, ROC AUC, ECE, and IoU to score failed vs successful cross-continental transfer.",
+      "source": "FireScope: Wildfire Risk Prediction with a Chain-of-Thought Oracle (arXiv)",
+      "url": "https://arxiv.org/html/2511.17171v3",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "On FireScope-Bench, image-only and climate-conditioned vision models often fail OOD (e.g., climate-conditioned SegFormer ROC AUC 0.557 on events), while CoT-Oracle conditioning yields the best OOD event discrimination (U-Net+CoT Brier 0.191, ROC AUC 0.750), demonstrating a transferable multi-domain protocol where language-based reasoning reduces failed geographic transfer.",
+      "source": "FireScope: Wildfire Risk Prediction with a Chain-of-Thought Oracle (arXiv:2511.17171v3)",
+      "url": "https://arxiv.org/html/2511.17171v3",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Li et al. (Sensors, 2026) formalize multi-domain fire detection as Indoor\u2194Outdoor unsupervised domain adaptation on a 123,696-image benchmark; transfer is asymmetric\u2014best Indoor\u2192Outdoor accuracy reaches 89.44% (DANN) while Outdoor\u2192Indoor peaks at only 79.10% (DANN/MK-MMD)\u2014and weak single-kernel MMD fails harder (\u224870\u201371% accuracy), providing concrete transfer-failure baselines without an explicit named kill criterion.",
+      "source": "Cross-Domain Fire Detection Across Indoor and Outdoor Scenes (PMC / Sensors)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13211044/",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Across 2024\u20132026 wildfire LOFO/LOIO/domain-generalization literature consulted here, transferable evaluation designs emphasize whole-fire (or whole-incident/scene/continent) hold-outs, dual within- vs across-fire metrics, and transfer-penalty or tail-instability diagnostics (negative R\u00b2, large accuracy/IoU drops, asymmetric domain difficulty); no paper consulted published an explicit standardized \u201ckill criterion\u201d (hard fail threshold that aborts deployment) for failed multi-domain fire transfer.",
+      "source": "Synthesis of sources actually consulted (MDPI RS 3756; IOP ERE add5fd; arXiv 2607.07951; arXiv 2603.00035; arXiv 2511.17171; PMC Sensors 26:3008)",
+      "url": "https://www.mdpi.com/2072-4292/17/22/3756",
+      "subquery": "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer"
+    },
+    {
+      "claim": "Lampman et al. (International Journal of Wildland Fire, 2026; FRAMES record) quantify wildland fire ROS, fireline intensity, and FRP from repeat-pass UAS thermal infrared (TIR) imagery, then train ANN and random-forest models for short-term ROS prediction on a single prescribed grassland fire (MAE below 0.04 m/s, RMSE below 0.06 m/s, R\u00b2 above 0.90), explicitly framing the work as a short-term-horizon proof of concept rather than a general multi-site ops system.",
+      "source": "FRAMES catalog / International Journal of Wildland Fire (Lampman et al., WF25133, 2026)",
+      "url": "https://www.frames.gov/catalog/71652",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "O\u2019Neill et al. (International Journal of Wildland Fire, 2024) derive spatially explicit pyrometrics\u2014including rate of spread\u2014from continuous UAS long-wave IR stacks (0.2 Hz) by building an arrival-time/progression raster of when each pixel first reaches a flaming FRP threshold and converting the local slope of that progression field to ROS via ROS = tan(slope)\u00d760 (m/min), i.e., ROS as a geometric gradient of fire arrival rather than as a segmentation overlap score.",
+      "source": "Northwest Fire Science Consortium / O\u2019Neill et al. WF24067 PDF (2024)",
+      "url": "https://www.nwfirescience.org/sites/default/files/publications/WF24067.pdf",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "O\u2019Neill et al. report that prescribed fire is a fine-scale process and recommend a ground sampling distance under about 2.3 m for UAS-IR pyrometrics, while noting that consumer-grade UAS IR sensors can saturate, require stabilisation/georectification, and may omit post-frontal combustion because of limited flight endurance\u2014constraints that shape ops-compatible multi-pass thermal front tracking.",
+      "source": "Northwest Fire Science Consortium / O\u2019Neill et al. WF24067 PDF (2024)",
+      "url": "https://www.nwfirescience.org/sites/default/files/publications/WF24067.pdf",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "FLAME 3 (Hopkins et al., arXiv:2412.02831) provides paired visual-spectrum and radiometric long-wave infrared UAV imagery from prescribed burns, including radiometric thermal TIFFs and nadir thermal plot time series intended to support fire behavior modeling, segmentation, and centimeter-to-meter front-progression analyses beyond palette-only TIR products.",
+      "source": "arXiv (FLAME 3 Dataset paper, Hopkins et al.)",
+      "url": "https://arxiv.org/html/2412.02831v2",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "In FLAME 3, temporal sampling is treated as adequate when revisit resolves flaming-front displacement: with typical prescribed surface-fuel ROS of roughly 0.1\u20131.0 m/min, about a 1-minute revisit is described as providing enough overlap to track front progression while limiting redundancy; calibrated nadir thermal plots are linked to centimeter-grade ROS and energy-release evaluation.",
+      "source": "arXiv (FLAME 3 Dataset paper, Hopkins et al.)",
+      "url": "https://arxiv.org/html/2412.02831v2",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "FLAME 3 situates UAV thermal monitoring as division-level / local ops intelligence under Interagency UAS constraints (roughly 25\u201345 min endurance, altitude and airspace deconfliction), distinct from NIROPS-style incident-wide IR products\u2014i.e., multi-pass front dynamics must be designed for short local loiter windows rather than continuous satellite-like coverage.",
+      "source": "arXiv (FLAME 3 Dataset paper, Hopkins et al.)",
+      "url": "https://arxiv.org/html/2412.02831v2",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "FireCast-Fusion (Abbas et al., 2026) is described as a physics-guided deep learning framework for short-horizon wildfire spread prediction from high-resolution UAV RGB\u2013thermal sequences fused with environmental data, outputting both probabilistic fire-front maps and per-pixel arrival-time estimates rather than equating front skill solely to segmentation IoU.",
+      "source": "Science of Remote Sensing / ScienceDirect abstract (FireCast-Fusion, Abbas et al., 2026)",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2666017226000672",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "FireCast-Fusion\u2019s multi-objective training is reported to jointly optimize fire segmentation accuracy, arrival-time prediction, and physical consistency\u2014separating geometric front-arrival dynamics from pure mask-overlap metrics.",
+      "source": "Science of Remote Sensing / ScienceDirect abstract (FireCast-Fusion, Abbas et al., 2026)",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2666017226000672",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "Carbonell-Rivera et al. (Fire, 2024) relate prescribed-burn fire rate of spread to pre-burn UAV photogrammetric point-cloud geometric and spectral features (e.g., planarity, NBRDI, eigenentropy), with Random Forest regressions reaching up to R\u00b2 \u2248 0.56 across seven grassland/open-forest plots and grid sizing guided by the RoS semivariogram\u2014linking fuel geometry to ROS independently of segmentation IoU.",
+      "source": "USFS Treesearch / Fire journal (Carbonell-Rivera et al., 2024)",
+      "url": "https://research.fs.usda.gov/treesearch/68237",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "NASA ESTO FireTech project \u201cAI-Enabled Drone Swarms for Fire Detection, Mapping, and Modeling\u201d (PI Fatemeh Afghah) plans edge-distributed segmentation of ignited areas, a fire growth indicator (FGI), and a rapid short-term AI-based physics-aware fire-spread prediction model driven by UAS fire-mapping data under highly dynamic environmental change\u2014explicit short-horizon front dynamics beyond single-pass mapping.",
+      "source": "NASA Earth Science Technology Office (FireTech project page)",
+      "url": "https://esto.nasa.gov/firetech/ai-enabled-drone-swarms-for-fire-detection-mapping-and-modeling/",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "USDA/NIFC Fire Imaging Technologies guidance states that MWIR and/or LWIR are the primary bands for wildland fire operations; line-scanner and step-stare systems build multi-pass mosaics of heat detection into map products (perimeter, heat intensity, isolated heat sources) by flying successive swaths, while EO/IR gimbals support overwatch, spot-fire detection, and trigger-point monitoring\u2014ops multi-pass thermal front products without treating mask IoU as ROS.",
+      "source": "National Interagency Fire Center (Fire Imaging Technologies Users Guide PDF)",
+      "url": "https://www.nifc.gov/sites/default/files/document-media/Fire%20Imaging%20Technologies%20Users%20Guide.pdf",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "Shadrin et al. (Scientific Reports, 2024) note that many approaches target short-term fire-spread prediction with UAV data, while their own 1\u20135 day satellite-scale model reports both segmentation metrics (F1 \u2248 0.64\u20130.68; IoU \u2248 0.50\u20130.54) and separate burned-area error metrics (MAE/MAPE), showing that IoU/F1 and area/spread error are distinct evaluation axes and that IoU alone is not a rate-of-spread estimate.",
+      "source": "Scientific Reports (Shadrin et al., 2024)",
+      "url": "https://www.nature.com/articles/s41598-024-52821-x",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "McFadden et al. (Fire, 2024) assess landscape-scale fire radiative energy density using repeat-pass aerial thermal-infrared imaging of actively progressing wildfires and relate time-sequential ATIR FRED estimates to rate-of-spread magnitudes\u2014another multi-pass thermal geometry path from successive overpasses to energy and spread, complementary to UAS TIR-ROS pipelines.",
+      "source": "MDPI Fire journal abstract (McFadden et al., 2024)",
+      "url": "https://www.mdpi.com/2571-6255/7/6/179",
+      "subquery": "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS"
+    },
+    {
+      "claim": "A 2024\u20132025 physics-informed neural network (PiNN) learns unknown parameters of an interpretable wildfire spreading model by combining neural networks with mass/energy conservation constraints; authors frame it as enabling a physics-informed digital twin for wildfire prevention, monitoring, and real-time response, trained on synthetic firefronts and Troy Fire (California, 2002) thermal imagery.",
+      "source": "arXiv (Vogiatzoglou et al., Physics-informed neural networks for parameter learning of wildfire spreading)",
+      "url": "https://arxiv.org/html/2406.14591v3",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "McNorton and Di Giuseppe (Biogeosciences, 2024) propose a mid-complexity hybrid fuel model combining data-driven and analytical methods for live/dead fuel load and moisture (wood and foliage), integrated into ECMWF operations, yielding a ~9 km daily global fuel dataset (2010\u20132019) intended as a step toward global mid-complexity fire rate-of-spread modelling.",
+      "source": "Biogeosciences (Copernicus) \u2013 A global fuel characteristic model and dataset for wildfire prediction",
+      "url": "https://bg.copernicus.org/articles/21/279/2024/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "A 2025 hybrid LFMC framework for Portugal (Mediterranean Iberia) couples the ISBA land-surface model in SURFEX with a Random Forest regressor (LFMC-SFX), integrating remote sensing and LSM outputs to estimate live fuel moisture with reported r\u00b2 = 0.72 and RMSE = 11.6%, designed as input for wildfire propagation models such as MesoNH/ForeFire and WRF/SFire.",
+      "source": "Modeling Earth Systems and Environment (Springer) \u2013 A hybrid framework to estimate live fuel moisture content through land surface modelling",
+      "url": "https://link.springer.com/article/10.1007/s40808-025-02561-2",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "Mesogeos is a large-scale Mediterranean wildfire datacube (2006\u20132022, 1 km \u00d7 1 km \u00d7 1 day) harmonizing meteorology, vegetation, human activity, ignitions and burned areas, with ML-ready tracks for short-term fire danger forecasting and burned-area estimation and published baselines (LSTM, Transformer, GTN, U-Net).",
+      "source": "Orion Lab / National Observatory of Athens \u2013 Mesogeos Dataset",
+      "url": "https://orionlab.space.noa.gr/mesogeos/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "FIRE-RES Pan-European Fuel Map Server (publicized Dec 2024) provides open web-GIS canopy and surface fuel models, aboveground biomass (satellite + AI), topography and uncertainty layers at 100 m resolution for wildfire simulation and risk assessment across Europe, including Mediterranean living-lab contexts.",
+      "source": "FIRE-RES project news (Euromontana / CTFC / University of Padova)",
+      "url": "https://fire-res.eu/fire-res-pan-european-fuel-mapping-in-the-spotlight-in-latest-scientific-publication/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "NASA\u2019s Wildfire Digital Twin (FireSense / ESTO, reported May 2024) targets real-time AI/ML burn-path forecasts by fusing in situ, airborne and spaceborne sensors; project lead states field use often has no internet or supercomputers, so an API version is intended to run on a laptop or tablet, with regional ensemble resolution of ~10\u201330 m vs ~10 km for current global models.",
+      "source": "NASA Science \u2013 Wildfire Digital Twin article",
+      "url": "https://science.nasa.gov/science-research/science-enabling-technology/nasa-wildfire-digital-twin-pioneers-new-ai-models-and-streaming-data-techniques-for-forecasting-fire-and-smoke/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "Horizon Europe TEMA digital twins for Sardinia (Mediterranean) civil protection (reported Oct 2024) integrate drones, GPS and fire propagation models to give field\u2013ops-room two-way decision support: real-time terrain/fire visualization, propagation simulation from ignition for evacuation timing, and GPS tracking of teams and equipment.",
+      "source": "EU Civil Protection Knowledge Network \u2013 TEMA\u2019s Digital Twins for fire field operations in Sardinia",
+      "url": "https://civil-protection-knowledge-network.europa.eu/news/temas-digital-twins-game-changer-fire-field-operations-sardinia",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "FIRETWIN (arXiv 2025) is a cyber-physical wildfire digital twin that visualizes evolving fire behavior in a 3D virtual globe driven by physics-based CAWFE model outputs, fuses multi-modal satellite/drone viewpoints, and supports interactive tactical decision-making and resource assessment (demonstrated on the 2014 King Fire reconstruction).",
+      "source": "arXiv \u2013 FIRETWIN: Digital Twin Advancing Multi-Modal Sensing, Interactive Analytics for Tactical Wildfire Response",
+      "url": "https://arxiv.org/html/2510.18879v1",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "Di Giuseppe et al. (Nature Communications, 2025) show ECMWF operational data-driven fire-activity prediction (running since 2023) that fuses physically modelled fuel characteristics (load and moisture from the McNorton\u2013Di Giuseppe fuel model) with weather and ignition predictors; fuel is the most relevant control globally, including Mediterranean and fuel-limited ecosystems, and data quality matters more than ML architecture complexity.",
+      "source": "Nature Communications / PMC \u2013 Global data-driven prediction of fire activity",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11962136/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "Benhamza et al. (IEEE Access, 2025) propose an intelligent hybrid wildfire model that tightly couples a Deep Neural Network ignition predictor with a physics-based cellular automata propagation simulator for environmental risk management.",
+      "source": "IEEE Xplore \u2013 An Intelligent Hybrid Model for Wildfire Prediction and Environmental Risk Management",
+      "url": "https://ieeexplore.ieee.org/document/11296809/",
+      "subquery": "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote"
+    },
+    {
+      "claim": "TS-SatFire (Scientific Data, published 19 November 2025) is a multi-task multi-temporal remote-sensing dataset for (a) active fire detection, (b) daily burned-area mapping, and (c) next-day/daily wildfire progression prediction, covering 179 wildfire events (majority in the US) from January 2017 to October 2021 with 3552 surface-reflectance images plus weather, topography, and fuel auxiliaries; AF/BA labels are provided per image with manual QA on AF labels and BA test labels.",
+      "source": "Nature Scientific Data / TS-SatFire GitHub README (Zhao, Gerard, Ban)",
+      "url": "https://github.com/zhaoyutim/TS-SatFire",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "TS-SatFire GeoTIFF data are openly downloadable on Kaggle, and official processing/benchmark code is on GitHub; training AF labels use NASA VIIRS active-fire (FIRMS) products and related sources, positioning the dataset as a multi-task complement to single-task next-day spread benchmarks such as NDWS/WildfireSpreadTS.",
+      "source": "TS-SatFire GitHub README; Nature Scientific Data article abstract",
+      "url": "https://www.nature.com/articles/s41597-025-06271-3",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "The Canadian Fire Spread Dataset (CFSDS) provides open interpolated daily fire-progression points and covariates for large Canadian wildfires; the July 2, 2025 OSF update raised resolution to 90 m (from 180 m), lowered the size threshold to fires >500 ha (from >1000 ha), and added 2022\u20132024 fires.",
+      "source": "OSF \u2013 The Canadian Fire Spread Dataset",
+      "url": "https://osf.io/f48ry/overview",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "CFSDS v1.0 (peer-reviewed 2024) covered interpolated progressions for fires >1000 ha in Canada 2002\u20132021 at 180 m, built from National Burned Area Composite (NBAC) perimeters and FIRMS hotspots via kriging; open data and R code are at OSF DOI 10.17605/OSF.IO/F48RY.",
+      "source": "Scientific Data / PMC data descriptor (Barber et al.)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11239873/",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "FireSpread_MedEU (Scientific Data, published 11 March 2026; M\u00fcller et al.) is a high-resolution spatiotemporal wildfire propagation dataset for the Mediterranean and Europe comprising 320 consecutive burned-area maps from 103 wildfire events between 2017 and 2023, aimed at fire-behavior modeling and validation of burned-area products.",
+      "source": "Nature Scientific Data abstract / citation page",
+      "url": "https://www.nature.com/articles/s41597-026-06965-2",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "State of Wildfires 2024\u20132025 (Earth System Science Data, 16 October 2025) updates global fire metrics through February 2025 using MODIS MCD64A1 burned area and an extended Global Fire Atlas of individual-fire size, duration, speed, and daily growth; thirteen new open datasets/codebases are released via the project Zenodo community (e.g., annual wildfire-extent statistics DOI 10.5281/zenodo.15525674).",
+      "source": "Earth System Science Data (Kelley et al., 2025)",
+      "url": "https://essd.copernicus.org/articles/17/5377/2025/",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "EFFIS (Copernicus Emergency Management Service) Rapid Damage Assessment maps European burnt-area perimeters from MODIS ~250 m imagery and, since 2018, Sentinel-2 ~20 m imagery, enabling mapping of fires below the historical ~30 ha MODIS threshold and refining final perimeters; mapped EFFIS fires represent about 95% of total annual burned area in the EU.",
+      "source": "EFFIS technical background \u2013 Rapid Damage Assessment",
+      "url": "https://forest-fire.emergency.copernicus.eu/about-effis/technical-background/rapid-damage-assessment",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "EFFIS provides open near-real-time burnt-area polygon downloads (WFS) as Shapefile and SpatiaLite for the real-time updated Burnt Areas database (typename ms:modis.ba.poly), plus annual fire-severity GeoTIFF products for 2024 and 2025; historic extracts or raw perimeter requests use the EFFIS data-request form under the published EFFIS data license.",
+      "source": "EFFIS Data and services",
+      "url": "https://forest-fire.emergency.copernicus.eu/applications/data-and-services",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "EFFIS burnt-area geometry is produced by a semi-automatic pipeline (band thresholds, CORINE land cover, MODIS/VIIRS active-fire detections, fire news) followed by visual verification/correction on MODIS and Sentinel-2; product caveats for open-perimeter benchmarking include mixed fire types, possible omission of sub-resolution unburned islands, and start/last-update dates that may not equal true ignition/extinction.",
+      "source": "EFFIS technical background \u2013 Rapid Damage Assessment",
+      "url": "https://forest-fire.emergency.copernicus.eu/about-effis/technical-background/rapid-damage-assessment",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "EFFIS also generates VIIRS-based fire perimeters by polygonizing active-fire detections from SNPP/NOAA-20 (nominal ~375 m), enabling near-real-time updates under light cloud/smoke; these VIIRS perimeters are displayed in the Current Situation Viewer but are not yet used for official EFFIS burnt-area statistics.",
+      "source": "EFFIS technical background \u2013 Rapid Damage Assessment",
+      "url": "https://forest-fire.emergency.copernicus.eu/about-effis/technical-background/rapid-damage-assessment",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "NASA FIRMS distributes near-real-time global active-fire/hotspot data from MODIS and VIIRS in shapefile, KML, and text formats for the last 24/48 hours and 7 days, with archive downloads for older periods; FIRMS is a primary open active-fire product used for detection labels and for helping delineate perimeters of large ongoing fires (especially VIIRS 375 m).",
+      "source": "NASA LANCE FIRMS \u2013 Active Fire Data",
+      "url": "https://firms.modaps.eosdis.nasa.gov/active_fire/",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "In January 2026, NOAA NESDIS launched the public Wildland Fire Data Portal (fire.data.nesdis.noaa.gov) providing open access to experimental Next Generation Fire System (NGFS) products that detect heat anomalies from GOES-East/West even through clouds and smoke, supporting near-continuous intensity monitoring; NGFS is expected to reach full operational status later in 2026.",
+      "source": "NOAA NESDIS news \u2013 Wildfire Data Portal launch (26 Jan 2026)",
+      "url": "https://www.nesdis.noaa.gov/news/noaa-launches-wildfire-data-portal-expanding-public-access-satellite-fire-information",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "WildfireSpreadTS remains an actively used open multi-modal time-series wildfire-spread dataset (Zenodo DOI 10.5281/zenodo.8006177, CC-BY-4.0); its GitHub repository recorded maintenance notes as recently as February 2026, so 2024\u20132026 releases such as TS-SatFire and CFSDS function as complements/successors in the same research lineage rather than full replacements.",
+      "source": "GitHub \u2013 SebastianGer/WildfireSpreadTS",
+      "url": "https://github.com/SebastianGer/WildfireSpreadTS",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "Community extensions of the Google Next Day Wildfire Spread (NDWS) benchmark include the Kaggle \u201cmodified Next Day Wildfire Spread\u201d (mNDWS, September 2024), which adds higher-resolution satellite and fuel-embedding features to improve on the original NDWS 2012\u20132020 US 1 km grid benchmark.",
+      "source": "Kaggle \u2013 (modified) Next Day Wildfire Spread",
+      "url": "https://www.kaggle.com/datasets/georgehulsey/modified-next-day-wildfire-spread",
+      "subquery": "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking"
+    },
+    {
+      "claim": "Prithvi-EO-2.0 (NASA/IBM, arXiv 2412.02732v3, Mar 2026) is a multi-temporal geospatial foundation model pretrained with MAE on ~4.2M global HLS samples (6-band, 30 m, 2014\u20132023 sequences of 4 timestamps) at 300M/600M ViT scale; disaster-response fine-tuning tasks explicitly include wildfire scar detection (805 HLS patches, 2018\u20132021) and burn-scar intensity mapping from BAER classes 0\u20134 on 5,692 pre/during/post-burn HLS images (western CONUS 2018\u20132023), with LoRA used for intensity mapping.",
+      "source": "Prithvi-EO-2.0 arXiv HTML (Szwarcman et al.)",
+      "url": "https://arxiv.org/html/2412.02732v3",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "On GEO-Bench, Prithvi-EO-2.0 outperforms its predecessor Prithvi-EO-1.0 by about 8% aggregated performance and is released open-source (Hugging Face ibm-nasa-geospatial/Prithvi-EO-2.0; TerraTorch/GitHub NASA-IMPACT), establishing a post-2023 multi-temporal GFM baseline for burn-scar and related EO tasks beyond single-scene CNN stacks.",
+      "source": "Prithvi-EO-2.0 arXiv HTML (Szwarcman et al.)",
+      "url": "https://arxiv.org/html/2412.02732v3",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "NASA Science Data Portal (Mar 2026) reports operational-style use of Prithvi burn-scar fine-tunes on the Gifford Fire (northwest of Los Angeles, 17 Aug 2025) and documents the HLS burn-scars dataset (2018\u20132021 intentional/wildfires) plus BAER-paired burn intensity data as community training resources for fire-impact mapping.",
+      "source": "NASA Science Data Portal \u2014 Prithvi applications blog",
+      "url": "http://science.data.nasa.gov/blog/prithvi-geospatial-model-applications",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Shibli, Nascetti & Ban (arXiv 2605.04989, May 2026) systematically adapt three GFMs\u2014TerraMind, DINOv3, and Prithvi-v2\u2014for bi-temporal Sentinel-2 burned-area change detection on ~3,820 wildfires >100 ha across the US and Canada (2017\u20132023; MTBS/NBAC labels; 2017\u20132020 train vs 2021\u20132023 + Boreal/Tundra holdouts). LoRA (updating <1% of encoder params) beats full fine-tuning and decoder-only tuning for all backbones; Prithvi-v2+LoRA reaches the best scores (IoU 78.78, F1 88.13) vs full FT IoU 69.43.",
+      "source": "arXiv 2605.04989v1 \u2014 Low-Rank Adaptation of Geospatial Foundation Models for Wildfire Mapping",
+      "url": "https://arxiv.org/html/2605.04989v1",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "ESA \u03a6-lab reports TerraMind (launched Apr 2025 with IBM Research Europe under FAST-EO) as a multimodal Earth-observation foundation model ranked top on the open PANGAEA benchmark, including frozen-encoder settings; applications listed include disaster response and wildfire spread forecasting, with model weights hosted at Hugging Face ibm-esa-geospatial.",
+      "source": "ESA \u03a6-lab \u2014 Less is more: the power of TerraMind",
+      "url": "https://philab.esa.int/less-is-more-the-power-of-terramind-in-your-pocket-and-in-space/",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "TS-SatFire (Zhao, Gerard & Ban, Scientific Data, 19 Nov 2025; PMC12630597) is a multi-task VIIRS time-series wildfire dataset covering contiguous-US events Jan 2017\u2013Oct 2021 (3,552 surface-reflectance images + weather/topography/land-cover/fuel, ~71 GB) with three tasks: active-fire detection, daily burned-area mapping, and next-day progression prediction (labels = newly burned area only). Spatiotemporal baselines: UNETR-3D best AF (F1 0.811, IoU 0.706); SwinUNETR-3D best BA (F1 0.855, IoU 0.768); progression remains hard (best F1 ~0.375).",
+      "source": "Scientific Data / PMC \u2014 TS-SatFire",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12630597/",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Rajagopal et al. (Scientific Reports, 29 Nov 2025; PubMed 41318733) propose a hybrid multi-modal wildfire surveillance stack: wide-area SAR segmentation with Vision Transformer FPANet (F1 0.830, IoU 0.750 under cloud/smoke) fused with UAV DualSegFormer RGB\u2013thermal fusion for fire-front delineation (F1 0.946), plus a vision\u2013language component (BERTScore 0.953) for human-readable situational summaries\u2014explicit SAR + optical/thermal fusion beyond optical-only or SAR-only classical pipelines.",
+      "source": "PubMed abstract \u2014 Hybrid learning framework for synergistic fusion of SAR and optical UAV data in wildfire surveillance",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41318733/",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Fire-YOLO26 (Zhang et al., Frontiers in Environmental Science, 21 May 2026) is an NMS-free dual-stream RGB\u2013TIR detector on YOLO26 for UAV forest fire monitoring, with Thermal-guided Feature Alignment (T-FAM) and Dual-STAL small-target labeling. On FLAME 2, Fire-YOLO26-s reaches 94.6% mAP@0.5 and 74.2% mAP@0.5:0.95 (+6.5 mAP@0.5 vs RGB-only YOLO26-s); heavy-smoke mAP@0.5 rises from 71.5% (RGB) to 95.1%; Fire-YOLO26-n runs ~23 FPS on Jetson Orin NX.",
+      "source": "Frontiers in Environmental Science \u2014 Fire-YOLO26",
+      "url": "https://www.frontiersin.org/journals/environmental-science/articles/10.3389/fenvs.2026.1824597/full",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Zhang et al. (Remote Sensing 2025; MDPI 17/15/2593 abstract in search index) release RGBT-3M, a time-synchronized multi-scene multi-angle aerial RGB\u2013Thermal dataset with Smoke\u2013Fire\u2013Person labels (M-RIFT alignment), and CP-YOLOv11-MF dual-backbone progressive fusion, reporting precision 92.5%, recall 93.5%, mAP50 96.3%, mAP50-95 62.9% for early forest fire detection\u2014new RGB-TIR UAV fusion benchmark data relative to FLAME-only stacks.",
+      "source": "MDPI Remote Sensing \u2014 UAV RGB-Thermal dataset and fusion model (indexed abstract)",
+      "url": "https://www.mdpi.com/2072-4292/17/15/2593",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Wang et al. (Geo-spatial Information Science / Taylor & Francis, 2024\u20132025) introduce FASDD, a large open flame-and-smoke detection dataset with >120,000 heterogeneous images spanning CV, UAV, and remote-sensing domains; FASDD_RS provides RGB, SWIR false-color, and all-bands satellite chips for flame/smoke object detection, with reported ST/CVPT-ST mAP50 up to ~81.7% on SWIR RS splits\u2014supporting space\u2013air\u2013ground multi-source active-fire detection training beyond classical AF products alone.",
+      "source": "Taylor & Francis \u2014 An open flame and smoke detection dataset for deep learning in remote sensing based fire detection",
+      "url": "https://www.tandfonline.com/doi/full/10.1080/10095020.2024.2347922",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Liu et al. (Remote Sensing 2025, SAFE) present Segmentation of Any Fire Event: a rapid high-precision burned-area extraction approach on Sentinel-2 that uses a two-step localization strategy to incrementally identify burned areas/pixels in post-fire imagery, reducing compute load versus full-scene dense segmentation\u2014a 2024\u20132025 optical BA pipeline distinct from fixed-threshold dNBR/U-Net stacks.",
+      "source": "MDPI Remote Sensing \u2014 Segmentation of Any Fire Event (SAFE)",
+      "url": "https://www.mdpi.com/2072-4292/17/1/54",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    },
+    {
+      "claim": "Collectively, 2025\u20132026 literature shifts wildfire RS practice beyond pre-2024 SOTA (hand-crafted indices, single-sensor U-Nets, threshold AF products) toward: (i) multi-temporal / multimodal geospatial foundation models fine-tuned with PEFT (LoRA) for continental BA mapping; (ii) multi-task time-series datasets coupling AF, daily BA, and next-day spread; (iii) hierarchical SAR wide-area + UAV RGB\u2013TIR fine segmentation with optional VLMs; and (iv) dual-stream RGB\u2013TIR real-time UAV detectors with thermal-guided fusion under smoke.",
+      "source": "Synthesis of consulted sources (Prithvi-EO-2.0 arXiv; TS-SatFire PMC; LoRA GFM arXiv; Fire-YOLO26 Frontiers; Hybrid SAR\u2013optical PubMed)",
+      "url": "https://arxiv.org/html/2412.02732v3",
+      "subquery": "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+    }
+  ],
+  "dropped": 0,
+  "droppedBreakdown": {
+    "duplicates": 0,
+    "refuted": 0,
+    "verifierFailed": 0
+  },
+  "subqueries": [
+    "2024-2026 peer-reviewed and arXiv methods for selective prediction, reject option, conformal prediction, and abstention in semantic segmentation or wildfire mapping, including ECE/selective-risk metrics and human-in-the-loop decision gates (exclude plain U-Net IoU holdout thrash)",
+    "2024-2026 multi-domain leave-one-fire-out, domain generalization, and hard-fire transfer protocols for wildfire spread or perimeter segmentation; transferable LOFO evaluation designs with kill criteria for failed transfer",
+    "2024-2026 multi-pass thermal/LWIR UAV fire-front tracking beyond Lampman TIR-ROS: short-horizon envelopes, ROS estimation geometry, and ops-compatible front dynamics without claiming IoU equals ROS",
+    "2024-2026 hybrid physics-ML fuel and ROS models for Mediterranean fuels; digital-twin-light decision support that stays offline from field ML fusion promote",
+    "2024-2026 open wildfire datasets and active-fire products succeeding or complementing WildfireSpreadTS/NDWS (incl. 2025-2026 releases); EFFIS/CEMS/FIRMS perimeter and validation geometry for open-perimeter benchmarking",
+    "2024-2026 remote sensing foundation models and SAR-optical (or RGB-TIR) fusion systems applied to active fire, burned area, or spread\u2014what is new beyond prior WFD SOTA stack notes"
+  ]
+}

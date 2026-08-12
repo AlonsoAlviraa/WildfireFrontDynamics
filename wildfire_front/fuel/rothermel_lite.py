@@ -20,7 +20,7 @@ from typing import Any
 
 import numpy as np
 
-from .models import FUEL_CATALOG, FuelModel, get_fuel
+from .models import FuelModel, get_fuel
 from .terrain import slope_factor_phi_s, upslope_alignment
 
 _ROS_CAP = 120.0
@@ -449,14 +449,10 @@ def estimate_sector_ros_from_fuel_map(
                 sector_fuels.get("head_fuel_id") or fallback_fuel_id or "UNKNOWN"
             ),
             flank_fuel_id=canonicalize_fuel_id(
-                sector_fuels.get("flank_fuel_id")
-                or sector_fuels.get("head_fuel_id")
-                or "UNKNOWN"
+                sector_fuels.get("flank_fuel_id") or sector_fuels.get("head_fuel_id") or "UNKNOWN"
             ),
             rear_fuel_id=canonicalize_fuel_id(
-                sector_fuels.get("rear_fuel_id")
-                or sector_fuels.get("head_fuel_id")
-                or "UNKNOWN"
+                sector_fuels.get("rear_fuel_id") or sector_fuels.get("head_fuel_id") or "UNKNOWN"
             ),
             head_mix=dict(sector_fuels.get("head_mix") or {}),
             flank_mix=dict(sector_fuels.get("flank_mix") or {}),
@@ -469,9 +465,7 @@ def estimate_sector_ros_from_fuel_map(
         )
     elif fuel_map is not None:
         try:
-            summary = sector_fuel_summary_from_product(
-                fuel_map, head_bearing_deg=head_b
-            )
+            summary = sector_fuel_summary_from_product(fuel_map, head_bearing_deg=head_b)
         except Exception:
             summary = None
     elif fuel_id_grid is not None:
@@ -921,9 +915,7 @@ def physics_prior_report(
                 weather_merge.fields_filled_from_defaults
             )
         if weather_merge.fields_missing_cleared:
-            drivers["weather_fields_missing_cleared"] = list(
-                weather_merge.fields_missing_cleared
-            )
+            drivers["weather_fields_missing_cleared"] = list(weather_merge.fields_missing_cleared)
     else:
         # No WeatherScenario: library/caller wind is not station-observed
         drivers["library_wind_defaults_note"] = (

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diccionario - WFD Consola Incendios</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {},
+              "borderRadius": {
+                      "DEFAULT": "0.5rem",
+                      "lg": "1rem",
+                      "xl": "1.5rem",
+                      "full": "9999px"
+              },
+              "spacing": {},
+              "fontFamily": {
+                      "headline": [
+                              "Public Sans", "sans-serif"
+                      ],
+                      "display": [
+                              "Public Sans", "sans-serif"
+                      ],
+                      "body": [
+                              "Public Sans", "sans-serif"
+                      ],
+                      "label": [
+                              "Public Sans", "sans-serif"
+                      ]
+              },
+              "fontSize": {}
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-[#F7F4ED] text-gray-900 font-body min-h-screen flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-[#FFFDF5] dark:bg-surface-container-highest border-b-4 border-[#0B7A4B] shadow-sm sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-8 h-20 max-w-[1440px] mx-auto">
+<!-- Brand -->
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0B7A4B] text-[32px]">local_fire_department</span>
+<span class="font-headline text-[28px] font-black tracking-tight text-[#0B7A4B] dark:text-primary-container">WFD Consola Incendios</span>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-8 font-body text-[18px]">
+<a class="text-gray-600 pb-2 hover:bg-[#0B7A4B]/10 transition-colors px-2 rounded-t-sm" href="#">Resumen</a>
+<a class="text-gray-600 pb-2 hover:bg-[#0B7A4B]/10 transition-colors px-2 rounded-t-sm" href="#">Decisión</a>
+<a class="text-gray-600 pb-2 hover:bg-[#0B7A4B]/10 transition-colors px-2 rounded-t-sm" href="#">Acciones</a>
+<a class="text-gray-600 pb-2 hover:bg-[#0B7A4B]/10 transition-colors px-2 rounded-t-sm" href="#">Incendios</a>
+<a class="text-[#0B7A4B] border-b-4 border-[#0B7A4B] pb-2 font-bold px-2" href="#">Diccionario</a>
+</nav>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="text-gray-600 hover:bg-[#0B7A4B]/10 transition-colors px-4 py-2 rounded-lg font-bold text-[18px] active:scale-95 duration-150">Modo Fácil</button>
+<button class="bg-[#0B7A4B] text-white px-6 py-3 rounded-xl font-bold text-[18px] hover:bg-[#09633c] transition-colors active:scale-95 duration-150 shadow-sm">Avanzado</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1200px] mx-auto px-8 py-16">
+<!-- Header Section -->
+<div class="mb-16 max-w-3xl">
+<h1 class="font-headline text-[40px] font-black text-[#0B7A4B] leading-tight mb-4">
+                Palabras difíciles explicadas en español llano
+            </h1>
+<p class="text-[22px] text-gray-700 leading-relaxed">
+                Este diccionario traduce los términos técnicos a un lenguaje claro para apoyar la toma de decisiones rápidas y seguras durante las emergencias forestales.
+            </p>
+</div>
+<!-- Dictionary Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<!-- Term: GO -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-[#0B7A4B]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#0B7A4B] text-3xl">check_circle</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">GO</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed mb-6">
+                    El sistema se atreve a proponer una orientación segura basada en los datos actuales. Las condiciones permiten avanzar.
+                </p>
+<div class="bg-[#F7F4ED] p-6 rounded-xl border-l-4 border-[#C47A00]">
+<strong class="block text-[#C47A00] text-[18px] mb-2 font-bold">Para el fuego:</strong>
+<span class="text-[18px] text-gray-800">Indica que es seguro proceder con las tácticas planeadas en ese sector.</span>
+</div>
+</article>
+<!-- Term: HOLD -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-[#C47A00]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#C47A00] text-3xl">pause_circle</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">HOLD</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed">
+                    Hay datos pero no bastan para dar una indicación segura. <strong class="font-bold">Espera / revisa</strong> la situación.
+                </p>
+<p class="text-[18px] text-gray-600 mt-4 bg-gray-50 p-4 rounded-lg">
+                    Requiere evaluación humana adicional antes de tomar una decisión.
+                </p>
+</article>
+<!-- Term: ABSTAIN -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-[#B3261E]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#B3261E] text-3xl">cancel</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">ABSTAIN</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed">
+                    El sistema se calla a propósito. La incertidumbre es demasiado alta o los datos son contradictorios.
+                </p>
+<p class="text-[18px] text-gray-600 mt-4 bg-gray-50 p-4 rounded-lg">
+                    No se asume ningún riesgo automatizado. La decisión recae completamente en el mando humano.
+                </p>
+</article>
+<!-- Term: Frente -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-[#0E7C8A]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#0E7C8A] text-3xl">landscape</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">Frente</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed">
+                    Línea del borde del fuego que avanza con mayor intensidad y velocidad.
+                </p>
+<p class="text-[18px] text-gray-600 mt-4 bg-gray-50 p-4 rounded-lg">
+                    Es la zona principal de propagación del incendio forestal.
+                </p>
+</article>
+<!-- Term: FIRMS NRT -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-[#D9480F]/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#D9480F] text-3xl">satellite_alt</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">FIRMS NRT</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed">
+                    Puntos calientes detectados por satélite en tiempo casi real.
+                </p>
+<div class="bg-red-50 p-6 rounded-xl border-l-4 border-red-500 mt-6">
+<strong class="block text-red-700 text-[18px] font-bold">Atención:</strong>
+<span class="text-[18px] text-red-900 font-bold">(NO es el área quemada)</span>
+<span class="text-[18px] text-gray-800 block mt-2">Solo indica anomalías térmicas; puede tener desfase temporal o espacial.</span>
+</div>
+</article>
+<!-- Term: Decision Card -->
+<article class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-700 text-3xl">smart_display</span>
+</div>
+<h2 class="font-headline text-[28px] font-bold text-[#0B7A4B]">Decision Card</h2>
+</div>
+<p class="text-[20px] text-gray-800 leading-relaxed">
+                    Tarjeta visual que resume la recomendación del sistema en un sector específico.
+                </p>
+<p class="text-[18px] text-gray-600 mt-4 bg-gray-50 p-4 rounded-lg">
+                    Muestra claramente el estado GO, HOLD o ABSTAIN con colores semáforo para una lectura inmediata.
+                </p>
+</article>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#FFFDF5] dark:bg-surface border-t border-gray-200 mt-auto w-full">
+<div class="max-w-[1440px] mx-auto w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center text-center gap-6">
+<p class="font-body text-lg text-gray-900 font-bold max-w-2xl text-left">
+                Aviso: Los datos de satélite (FIRMS) pueden tener desfase. El perímetro oficial prevalece.
+            </p>
+<nav class="flex flex-wrap justify-center gap-8">
+<a class="font-body text-lg text-gray-600 hover:text-[#0B7A4B] cursor-pointer transition-colors" href="#">Soporte Técnico</a>
+<a class="font-body text-lg text-gray-600 hover:text-[#0B7A4B] cursor-pointer transition-colors" href="#">Protocolo Emergencias</a>
+<a class="font-body text-lg text-gray-600 hover:text-[#0B7A4B] cursor-pointer transition-colors" href="#">Privacidad</a>
+</nav>
+</div>
+</footer>
+</body></html>

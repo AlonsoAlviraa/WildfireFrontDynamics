@@ -80,16 +80,8 @@ def hybrid_ros_prior(
     )
     wind_10m_ms = weather_merge.wind_10m_ms
     wind_from_filled_default = weather_merge.wind_from_deg is None
-    wind_from_deg = (
-        weather_merge.wind_from_deg
-        if weather_merge.wind_from_deg is not None
-        else 0.0
-    )
-    dead_fmc_pct = (
-        weather_merge.dead_fmc_pct
-        if weather_merge.dead_fmc_pct is not None
-        else 7.0
-    )
+    wind_from_deg = weather_merge.wind_from_deg if weather_merge.wind_from_deg is not None else 0.0
+    dead_fmc_pct = weather_merge.dead_fmc_pct if weather_merge.dead_fmc_pct is not None else 7.0
 
     use_spatial = fuel_map is not None or sector_fuels is not None
     if use_spatial:
@@ -235,9 +227,7 @@ def hybrid_ros_prior(
 
     out: dict[str, Any] = {
         "status": status,
-        "method": (
-            "hybrid_obs_physics_spatial_v1" if use_spatial else "hybrid_obs_physics_v1"
-        ),
+        "method": ("hybrid_obs_physics_spatial_v1" if use_spatial else "hybrid_obs_physics_v1"),
         "alpha_obs": round(alpha, 4),
         "sectors": {
             "head_m_min": head,
@@ -272,9 +262,7 @@ def hybrid_ros_prior(
     out["weather_scenario_assumed"] = bool(weather_merge.weather_scenario_assumed)
     out["weather_drivers_merge"] = weather_merge.to_audit_dict()
     if weather_merge.weather_partially_filled_from_defaults:
-        out["reasons"] = list(out.get("reasons") or []) + [
-            "weather_partially_filled_from_defaults"
-        ]
+        out["reasons"] = list(out.get("reasons") or []) + ["weather_partially_filled_from_defaults"]
     if weather_merge.fields_missing_cleared:
         out["reasons"] = list(out.get("reasons") or []) + [
             "weather_station_incomplete_wind_cleared"

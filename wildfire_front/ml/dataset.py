@@ -7,6 +7,7 @@ them into 30x30 patches for the A3C-LSTM architecture.
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -158,6 +159,41 @@ class WildfireDataset(Dataset):
         self.width = min(widths)
         self.transform = None
         self.crs = None
+
+        # Research-only crop telemetry (default path never reaches here with spans).
+        # When allow_unaligned_crop=True, top-left truncates each frame to min H/W;
+        # surface dropped-pixel counts so callers are not silent about alignment debt.
+        self.crop_telemetry: dict[str, Any] = {
+            "allow_unaligned_crop": self.allow_unaligned_crop,
+            "shape_align_tolerance_px": self.shape_align_tolerance_px,
+            "common_height": self.height,
+            "common_width": self.width,
+            "h_span_px": h_span,
+            "w_span_px": w_span,
+            "frames_with_dropped_pixels": 0,
+            "total_pixels_dropped": 0,
+        }
+        if self.allow_unaligned_crop and (h_span > 0 or w_span > 0):
+            dropped_frames = 0
+            dropped_px = 0
+            for h, w in raw_shapes:
+                lost = max(0, h * w - self.height * self.width)
+                if lost:
+                    dropped_frames += 1
+                    dropped_px += lost
+            self.crop_telemetry["frames_with_dropped_pixels"] = dropped_frames
+            self.crop_telemetry["total_pixels_dropped"] = dropped_px
+            warnings.warn(
+                (
+                    "WildfireDataset allow_unaligned_crop=True: top-left crop to "
+                    f"{self.height}x{self.width} (H span={h_span}px W span={w_span}px); "
+                    f"frames_with_dropped_pixels={dropped_frames} "
+                    f"total_pixels_dropped={dropped_px}. Research-only; prefer "
+                    "reproject/align (align_geotiff_stack) for operational stacks."
+                ),
+                UserWarning,
+                stacklevel=2,
+            )
 
         self.dem_slope, self.dem_aspect = self._load_or_synthesize_dem()
         self.ndvi = self._load_or_synthesize_ndvi()

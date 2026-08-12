@@ -1,5 +1,16 @@
 # Contrato de entrada GeoTIFF
 
+**Graph v6.1 E4** — contrato multi-provider (CN UAV / Heligrafics / genérico).  
+Invalid metadata → ingest **reject/review** y, en el producto de decisión, suele mapear a **ABSTAIN** (sin ROS de campo confiable).
+
+Smoke de metadatos (opcional):
+
+```powershell
+$env:PYTHONPATH = "."
+python scripts/validate_geotiff_contract.py path/to/scene.tif
+python scripts/validate_geotiff_contract.py path/to/images_dir --json
+```
+
 ## Estructura
 
 Con máscaras suministradas:
@@ -21,9 +32,11 @@ Sin máscaras se utiliza `--band` con `--threshold` o `--mad-z`.
 
 - GeoTIFF legible.
 - Una o más bandas, conservadas en dtype nativo.
-- CRS y affine transform explícitos.
-- Timestamp UTC inferible del nombre.
-- Para resultados métricos, CRS proyectado.
+- **CRS** y affine transform explícitos.
+- **Timestamp UTC** inferible del nombre (o metadata sidecar).
+- Para resultados métricos (ROS m/min), **CRS proyectado** (métrico).
+- **Resolución** reportable (`resolution_m` cuando CRS proyectado).
+- **provider_id** / **platform** recomendados (sidecar o convención de path) para multi-vendor.
 
 Formatos de timestamp aceptados:
 
@@ -32,6 +45,42 @@ Formatos de timestamp aceptados:
 - Unix timestamp de diez dígitos separado por `_`.
 
 No se inventa timestamp cuando falta.
+
+## Metadatos multi-provider (E4 harden)
+
+| Campo | Obligatorio para ops ROS | Dónde | Si falta / inválido |
+|-------|--------------------------|-------|---------------------|
+| **platform** | recomendado | sidecar JSON / path (`dji_m3t`, `helicopter_lwir`, `cn_uav`, …) | review; no bloquea máscara sola |
+| **resolution_m** | sí para ROS métrico | derivado de transform si CRS proyectado | **reject** métricas de velocidad; ABSTAIN ops |
+| **provider_id** | recomendado | sidecar / `sensor_id` CLI | review; trazabilidad débil |
+| **timestamp** (UTC) | **sí** | nombre de archivo o metadata | **review/reject** — sin observación ordenable |
+| **CRS** | **sí** | GeoTIFF tags | **reject** sin georref; sin ROS |
+| **affine / georef** | **sí** | GeoTIFF | **reject** si identity sin CRS |
+
+Sidecar opcional (mismo stem que el `.tif`):
+
+```json
+{
+  "platform": "helicopter_lwir",
+  "provider_id": "heligrafics",
+  "sensor_id": "lwir_band",
+  "timestamp_utc": "2024-08-02T16:15:07Z",
+  "notes": "optional free text"
+}
+```
+
+### Visibilidad ABSTAIN / reject
+
+| Fallo de contrato | Ingest (`ingest_manifest`) | Producto decisión |
+|-------------------|----------------------------|-------------------|
+| Sin CRS / sin georref | `rejected` · reason `no_georeferencing` / similar | ops unavailable → field_ops **ABSTAIN** o open-only HOLD |
+| Sin timestamp | `review` (no se inventa) | frame no entra en serie → puede bajar n_frames / ABSTAIN |
+| CRS geográfico solo | `review` (`crs_not_projected_metric_ros_abstain` in validate helper; ingest may accept with caveat) | ROS métrica **abstiene** (necesita proyectado) |
+| Máscara vacía / mismatch dims | `rejected` | sin obs → ABSTAIN |
+| provider/platform ausente | accepted + reason review opcional | no ABSTAIN por sí solo; audit más débil |
+
+Razones tipicas en manifest: ver columna `reason` de `ingest_manifest.csv`.  
+Decision Card reasons legibles: `docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md` §3 (Orion UQ → ABSTAIN).
 
 ## Requisitos de máscara
 

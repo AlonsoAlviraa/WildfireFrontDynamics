@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""One command to understand and show the whole product.
+"""Heavy eng rebuild of portal / hub / commander (NOT the operator path).
 
-cd C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics
-$env:PYTHONPATH = "."
-python scripts/show_all.py
+Operator-first (recommended for non-code users)::
+
+    $env:PYTHONPATH = "."
+    python -m wildfire_front operator
+    python -m wildfire_front operator do --all
+
+This script rebuilds metrics + PORTAL + commander and opens browsers::
+
+    python scripts/show_all.py
 """
 
 from __future__ import annotations
@@ -26,8 +32,19 @@ def run(cmd: list[str], timeout: int = 180) -> bool:
 
 
 def main() -> int:
-    print("\n=== WildfireFrontDynamics — SHOW ALL ===\n", flush=True)
+    print("\n=== WildfireFrontDynamics — SHOW ALL (eng portal rebuild) ===\n", flush=True)
+    print(
+        "Nota: camino operario (preferido) → python -m wildfire_front operator\n"
+        "      ensayo 4 actos → python -m wildfire_front operator do --all\n"
+        "      este script es rebuild pesado de portal/hub/commander.\n",
+        flush=True,
+    )
     ok = True
+    # Operator board first (fast; does not replace show_all rebuild)
+    ok &= run(
+        [sys.executable, "-m", "wildfire_front", "operator", "checklist"],
+        timeout=60,
+    )
     ok &= run([sys.executable, str(ROOT / "scripts" / "reliability_gate.py")])
     ok &= run([sys.executable, str(ROOT / "scripts" / "build_metrics_hub.py")])
     ok &= run([sys.executable, str(ROOT / "scripts" / "build_open_if_index.py")])
@@ -67,8 +84,13 @@ def main() -> int:
                     str(commander),
                     str(portal),
                     "docs/START_HERE.md",
+                    "docs/OPERATOR_UX_LOOP_LOG.md",
                 ],
-                "message": "App de sala de mando abierta (docs/commander). F=fullscreen, 1-4=packs.",
+                "operator": "python -m wildfire_front operator",
+                "message": (
+                    "Portal/commander abiertos. Camino operario: "
+                    "python -m wildfire_front operator (no este script)."
+                ),
             },
             indent=2,
         ),

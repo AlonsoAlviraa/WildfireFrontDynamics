@@ -171,3 +171,8 @@ htmlcov/
 .cdsapirc
 **/.cdsapirc
 
+
+# Large LOFO spatial packs (use Kaggle / local only)
+kaggle_job/datasets/**/*.zip
+kaggle_job/datasets/**/lofo_mix_spatial_*.zip
+

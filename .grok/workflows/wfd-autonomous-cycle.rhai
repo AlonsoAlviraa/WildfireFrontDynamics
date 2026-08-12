@@ -199,7 +199,8 @@ sp += "Synthesize WFD autonomous cycle " + cycle_id + ". Write report_markdown f
 sp += "Sense:\n" + sense_text + "\n";
 sp += "Confirmed findings JSON:\n" + json_encode(confirmed) + "\n";
 sp += "Rejected/unverified count: " + (to_verify.len() - confirmed.len()).to_string() + "\n";
-sp += "Decide next_action one of: fix_confirmed_locally | evolve_graph_add_pilot_regression | re_run_same | open_pack_audit | idle_monitor_ci. ";
+sp += "Decide next_action one of: fix_confirmed_locally | evolve_graph_add_pilot_regression | re_run_same | open_pack_audit | idle_monitor_ci | run_external_unblock | status_sync. ";
+sp += "If confirmed_count==0 bugs and integrity clean, prefer idle_monitor_ci or run_external_unblock (O1/third-party), NOT endless re-scans. ";
 sp += "graph_evolve: one sentence mutation to the graph topology if needed. ";
 sp += "summary: 2-4 sentences. confirmed_count integer. No questions to humans. Dual-product honesty preserved.";
 let synth = agent(sp, #{

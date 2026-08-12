@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WFD Consola Incendios - Acciones</title>
+<!-- Google Fonts: Material Symbols & Atkinson Hyperlegible for accessibility -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with specific configuration -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0B7A4B", // Design System GO Green
+              surface: "#FFFDF5", // JSON bg color
+              "surface-alt": "#F7F4ED", // Requested cream background for content
+              on_surface: "#111827",
+              on_surface_variant: "#4B5563"
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "1rem",
+              "xl": "1.5rem",
+              "full": "9999px"
+            },
+            fontFamily: {
+              headline: ["Atkinson Hyperlegible", "sans-serif"],
+              display: ["Atkinson Hyperlegible", "sans-serif"],
+              body: ["Atkinson Hyperlegible", "sans-serif"],
+              label: ["Atkinson Hyperlegible", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Base styles to ensure large text minimums */
+        body {
+            font-size: 18px; /* Accessibility: text >= 18px */
+            background-color: #FFFDF5;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for large touch targets */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; border: 3px solid #F7F4ED; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-gray-900 font-body overflow-hidden">
+<!-- TopAppBar (from JSON) -->
+<header class="bg-[#FFFDF5] dark:bg-surface-container-highest border-b-4 border-[#0B7A4B] shadow-sm flex justify-between items-center w-full px-8 h-20 docked full-width top-0 z-50 shrink-0">
+<!-- Brand -->
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[32px] text-[#0B7A4B] dark:text-primary-container">local_fire_department</span>
+<h1 class="text-[32px] font-black text-[#0B7A4B] dark:text-primary-container tracking-tight font-headline">WFD Consola Incendios</h1>
+</div>
+<!-- Navigation (Active: Acciones) -->
+<nav class="hidden md:flex items-center gap-8 h-full pt-4">
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 font-headline text-[28px] hover:bg-[#0B7A4B]/10 transition-colors px-4 rounded-t-lg" href="#">Resumen</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 font-headline text-[28px] hover:bg-[#0B7A4B]/10 transition-colors px-4 rounded-t-lg" href="#">Decisión</a>
+<a class="text-[#0B7A4B] border-b-4 border-[#0B7A4B] pb-2 font-bold font-headline text-[28px] px-4" href="#">Acciones</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 font-headline text-[28px] hover:bg-[#0B7A4B]/10 transition-colors px-4 rounded-t-lg" href="#">Incendios</a>
+<a class="text-on-surface-variant dark:text-surface-variant pb-2 font-headline text-[28px] hover:bg-[#0B7A4B]/10 transition-colors px-4 rounded-t-lg" href="#">Diccionario</a>
+</nav>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="px-6 py-3 rounded-lg text-lg font-bold text-gray-600 hover:bg-gray-100 transition-colors active:scale-95 duration-150">Modo Fácil</button>
+<button class="px-6 py-3 rounded-lg text-lg font-bold bg-[#0B7A4B] text-white hover:bg-[#085a37] transition-colors active:scale-95 duration-150 shadow-md">Avanzado</button>
+</div>
+</header>
+<!-- Main Content Split Layout -->
+<main class="flex flex-1 overflow-hidden w-full relative">
+<!-- Left Panel: Large Map Context (55%) -->
+<div class="w-[55%] h-full relative border-r-2 border-[#0B7A4B]/20 bg-gray-200 shrink-0">
+<!-- Map Placeholder Image -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A highly detailed, professional satellite map interface showing a topographical view of a forest region. The map uses a high-contrast palette with deep cyan (#0E7C8A) for official perimeters and vivid orange (#D9480F) for satellite heat detections. The interface has a clean, accessible, light-mode aesthetic suitable for emergency response." data-location="Sierra Nevada" style="background-image: url('https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg')"></div>
+<!-- Map Legend (Accessibility Context) -->
+<div class="absolute top-6 left-6 bg-white/95 backdrop-blur p-6 rounded-xl shadow-lg border-2 border-gray-200">
+<h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[#0B7A4B]">map</span> Leyenda del Mapa</h3>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3"><div class="w-6 h-6 rounded bg-[#0E7C8A]"></div><span class="text-lg font-bold">Perímetro Oficial</span></div>
+<div class="flex items-center gap-3"><div class="w-6 h-6 rounded bg-[#D9480F]"></div><span class="text-lg font-bold">Aviso Satélite (FIRMS)</span></div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Actions/Qué puedo hacer (45%) -->
+<div class="w-[45%] h-full flex flex-col bg-surface-alt relative z-10 shrink-0">
+<!-- Context Header -->
+<div class="px-8 pt-8 pb-4">
+<h2 class="text-[32px] font-bold text-gray-900 tracking-tight leading-tight mb-2">¿Qué puedo hacer?</h2>
+<p class="text-xl text-gray-700">Seleccione una acción para obtener orientación técnica sobre este incidente.</p>
+</div>
+<!-- Filters (Chips) -->
+<div class="px-8 pb-4">
+<div class="flex flex-wrap gap-3">
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-[#0B7A4B] text-white border-2 border-[#0B7A4B] shadow-sm hover:opacity-90 active:scale-95 transition-all">Todos</button>
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0B7A4B] active:scale-95 transition-all">Operario</button>
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0B7A4B] active:scale-95 transition-all">Campo</button>
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0B7A4B] active:scale-95 transition-all">Decisión</button>
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0B7A4B] active:scale-95 transition-all">Mapa</button>
+<button class="px-6 py-3 rounded-full text-lg font-bold bg-white text-gray-700 border-2 border-gray-300 hover:border-[#0B7A4B] active:scale-95 transition-all flex items-center gap-2"><span class="material-symbols-outlined text-[20px]">science</span> ML lab</button>
+</div>
+</div>
+<!-- Action Cards List -->
+<div class="flex-1 overflow-y-auto px-8 pb-8 space-y-4">
+<!-- Card 1 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Ver el semáforo del producto</h3>
+<p class="text-lg text-gray-600 mt-1">Revisa el estado de viabilidad de las operaciones según el sistema.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Muestra si podemos actuar ahora (GO) o debemos esperar (HOLD).</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Consultar calidad del dato</h3>
+<p class="text-lg text-gray-600 mt-1">Verifica si la información meteorológica y satelital es reciente y fiable.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Ayuda a saber si podemos confiar en el mapa actual.</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+<!-- Card 3 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Ver capas del mapa</h3>
+<p class="text-lg text-gray-600 mt-1">Activa visualizaciones de viento, topografía o historial de quema.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Permite ver por dónde es más probable que avance.</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+<!-- Card 4 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Revisar predicción ML</h3>
+<p class="text-lg text-gray-600 mt-1">Consulta el modelo de Machine Learning sobre comportamiento a 4 horas.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Estima si el incendio ganará intensidad pronto.</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+<!-- Card 5 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Sincronizar con campo</h3>
+<p class="text-lg text-gray-600 mt-1">Envía el perímetro actual a las tablets de los equipos en tierra.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Asegura que todos ven el mismo escenario de riesgo.</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+<!-- Card 6 -->
+<div class="bg-white rounded-[12px] p-6 border-2 border-gray-200 shadow-sm flex flex-col gap-4 min-h-[72px] hover:border-[#0B7A4B] transition-colors group">
+<div>
+<h3 class="text-2xl font-bold text-gray-900 group-hover:text-[#0B7A4B] transition-colors">Ver diccionario técnico</h3>
+<p class="text-lg text-gray-600 mt-1">Abre el glosario de términos usados por el sistema.</p>
+</div>
+<div class="bg-[#0B7A4B]/10 p-4 rounded-lg">
+<p class="text-xl font-bold text-[#0B7A4B]">Para el fuego: Aclara dudas sobre siglas y estados de emergencia.</p>
+</div>
+<button class="copy-btn mt-2 w-full h-[56px] min-h-[56px] bg-white border-2 border-[#0B7A4B] text-[#0B7A4B] font-bold text-xl rounded-[12px] hover:bg-[#0B7A4B] hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined icon-default">content_copy</span>
+<span class="btn-text">Copiar instrucción</span>
+</button>
+</div>
+</div>
+<!-- Help Block (Docked to bottom of right panel) -->
+<div class="bg-gray-100 p-6 border-t-2 border-gray-300 flex gap-4 items-start shrink-0">
+<span class="material-symbols-outlined text-[32px] text-[#0B7A4B] mt-1">info</span>
+<p class="text-xl text-gray-800 font-bold leading-relaxed">
+                    En modo Fácil solo se explican las funciones. En Avanzado aparece el comando técnico listo para ejecución.
+                </p>
+</div>
+</div>
+</main>
+<!-- Footer (from JSON) -->
+<footer class="bg-[#FFFDF5] dark:bg-surface border-t border-outline-variant w-full py-6 px-8 flex justify-between items-center text-center docked full-width bottom-0 shrink-0 z-50">
+<p class="text-on-surface dark:text-on-surface-variant font-body text-lg font-bold">Aviso: Los datos de satélite (FIRMS) pueden tener desfase. El perímetro oficial prevalece.</p>
+<div class="flex gap-8">
+<a class="text-on-surface-variant font-body text-lg hover:text-[#0B7A4B] cursor-pointer transition-colors font-bold" href="#">Soporte Técnico</a>
+<a class="text-on-surface-variant font-body text-lg hover:text-[#0B7A4B] cursor-pointer transition-colors font-bold" href="#">Protocolo Emergencias</a>
+<a class="text-on-surface-variant font-body text-lg hover:text-[#0B7A4B] cursor-pointer transition-colors font-bold" href="#">Privacidad</a>
+</div>
+</footer>
+<!-- Interactive Script for clear feedback (Accessibility) -->
+<script>
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('.icon-default');
+                const text = this.querySelector('.btn-text');
+                const originalText = text.innerText;
+                
+                // State change for clear feedback
+                this.classList.remove('bg-white', 'text-[#0B7A4B]');
+                this.classList.add('bg-[#0B7A4B]', 'text-white');
+                icon.innerText = 'check_circle';
+                text.innerText = 'Instrucción copiada';
+                
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    this.classList.add('bg-white', 'text-[#0B7A4B]');
+                    this.classList.remove('bg-[#0B7A4B]', 'text-white');
+                    icon.innerText = 'content_copy';
+                    text.innerText = originalText;
+                }, 2000);
+            });
+        });
+    </script>
+</body></html>

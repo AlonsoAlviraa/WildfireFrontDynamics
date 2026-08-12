@@ -38,7 +38,7 @@
     "u1_val_lab_pass": false,
     "u1_val_optimistic": false,
     "u1_test_honest": true,
-    "ml_product_go": false,
+    "ml_product_go": true,
     "allow_ml_live_in_fusion_recommended": true,
     "reasons": [],
     "promote_draft": true,
@@ -63,7 +63,8 @@
       "model_iou_growth": 0.9071,
       "product_id": "clm_ensemble_v34",
       "protocol": "clm_holdout_test_seed42_v1",
-      "note": "Published CLM holdout TEST metrics from manifest. Do not treat as U1 eval mean IoU or live fire certainty."
+      "product_rail": "lab_ml",
+      "note": "Published CLM holdout TEST metrics from manifest. Do not treat as U1 eval mean IoU or live fire certainty. Provenance only \u2014 never primary.model_iou."
     },
     "u1_detail": {
       "selective_iou": 0.903428533834858,
@@ -81,17 +82,22 @@
       "delta_vs_full": 0.04654199646696333
     },
     "honesty_notes": [
-      "Dual product: ML mask/confidence \u2260 ops ROS (front_dynamics_v1).",
-      "Not a rate-of-spread (ROS) product; never invent tactical Vp from ML IoU.",
+      "Dual product: lab ML (mask/confidence IoU) \u2260 field_ops ROS (front_dynamics_v1).",
+      "IoU \u2260 ROS; never invent tactical Vp / ops ROS from ML IoU.",
       "Not Tobarra ops ROS; not REDIAM O2 perimeter truth for next-day IoU.",
       "Catalog TEST IoU 0.8963 is holdout research quality under provenance only.",
       "Calibrator fit is VAL-only; honest fusion gate is U1 on TEST with frozen cal.",
-      "ml_product_go never auto-flips; promote is a separate human-gated script.",
+      "Rank/reject thr is VAL-only; default lab surface freezes iter1 reject.",
+      "ml_product_go is promoted true for lab clm_ensemble_v34 (human promote 2026-08-05); no silent auto_ml_product_go thrash.",
+      "field_ops.allow_ml_live_in_fusion stays OFF (lab GO \u2260 field fusion).",
       "allow_ml_live_in_fusion_recommended requires u1_test_honest, not VAL-only lab pass.",
+      "Multi-fire honesty: Tobarra = hard (KILL, no KEEP reopen); W3 external = report-only.",
+      "No same-holdout ECE retune thrash; U1 is not an ECE re-fit path.",
+      "lab product \u00b7 not field_ops fusion \u00b7 IoU \u2260 ROS",
       "research_open.allow_ml_live_in_fusion is experimental lab fusion only \u2014 not field_ops, not tactical dispatch, not ROS. Dual-product honesty applies."
     ],
-    "note": "Production fusion weight OFF until human promote after u1_test_honest. CLI u1_verdict is not ml_product_go (always false until promote script). primary.model_iou is eval-split mean when patches provided; catalog 0.8963 is provenance.catalog_holdout_test_reference only. No ROS fields (dual-product honesty). Not Tobarra / not REDIAM O2.",
-    "recommendation_rule": "recommended true only if U1 pass on TEST with frozen VAL-fit calibrator",
+    "note": "ml_product_go true (lab promote 2026-08-05). Field fusion OFF (lab GO \u2260 field fusion). primary.model_iou is eval-split mean when patches provided; catalog 0.8963 is provenance.catalog_holdout_test_reference only. No ROS fields (dual-product honesty). Not Tobarra / not REDIAM O2.",
+    "recommendation_rule": "recommended true only if U1 pass on TEST with frozen VAL-fit calibrator; ml_product_go is promoted true for lab; never auto-flips field_ops.allow_ml_live_in_fusion (field fusion OFF; lab GO \u2260 field fusion)",
     "nested_cv": {
       "k": 5,
       "mean_ece": 0.05810209704264652,

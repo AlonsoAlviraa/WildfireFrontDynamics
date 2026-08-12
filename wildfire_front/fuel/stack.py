@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any  # noqa: TC003 — used at runtime in annotations
 
@@ -27,7 +27,7 @@ class FuelTerrainStack:
 
     fire_id: str
     protocol: str = "fuel_terrain_stack_v1"
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     bbox_wgs84: list[float] | None = None  # [west, south, east, north]
     cell_size_m: float = 25.0
     n_rows: int = 0
@@ -112,9 +112,7 @@ def build_stack_from_dem(
     else:
         # ensure shape match (caller should align; re-check)
         if fuel_map.landcover_code.shape != elev.shape:
-            raise ValueError(
-                f"fuel_map shape {fuel_map.landcover_code.shape} != dem {elev.shape}"
-            )
+            raise ValueError(f"fuel_map shape {fuel_map.landcover_code.shape} != dem {elev.shape}")
         fuel_label = fuel_map.source
 
     codes = np.asarray(fuel_map.landcover_code, dtype=np.float64)
@@ -257,11 +255,7 @@ def write_stack(
     paths["catalog"] = str(catalog_path)
 
     if save_npz:
-        arrays = {
-            k: v
-            for k, v in stack.layers.items()
-            if isinstance(v, np.ndarray)
-        }
+        arrays = {k: v for k, v in stack.layers.items() if isinstance(v, np.ndarray)}
         if arrays:
             npz_path = out_dir / "fuel_terrain_grids.npz"
             np.savez_compressed(npz_path, **arrays)

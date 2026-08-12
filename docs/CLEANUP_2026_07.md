@@ -1,5 +1,17 @@
 ﻿# Limpieza de repositorio (2026-07-16)
 
+## Pass 3 — 2026-07-29 (status + graph v2)
+
+| Acción | Detalle |
+|--------|---------|
+| Canonical status | `docs/PROJECT_STATUS.md` |
+| Stale scorecards refreshed | `SCORECARD_MES_1`, `DATA_INTAKE_STATUS`, `INDUSTRIAL_READINESS_STATUS`, `MEMORY`, `START_HERE` |
+| Form-fill scratch | `data/open_if/extremadura_rai_2025/_*.py` → `scripts/archive/ext_rai_form_2025/` |
+| Temp fixtures | removed `tests/fixtures/ext_rai_tmp/` |
+| gitignore | `wfs_cache/`, form-fill patterns |
+| Graph | `wfd-external-unblock`, `wfd-status-sync`; integrity weekly not 2h primary |
+| plan cycle | detects pilot honesty, multi-CCAA, anchor counts |
+
 ## Borrado local (~1.5+ GB residual + dumps)
 
 | Eliminado | Motivo |

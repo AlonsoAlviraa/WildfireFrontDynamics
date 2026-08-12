@@ -152,10 +152,66 @@ def assess() -> dict:
             else "PENDING",
             "evidence": "docs/commander/index.html WFD COMMAND HUD",
         },
+        "M2.12_pilot_honesty": {
+            "status": "DONE"
+            if _exists("docs", "PILOT_HONESTY_CARD.md")
+            and _exists("scripts", "run_pilot_honesty_card.py")
+            else "PENDING",
+            "evidence": "docs/PILOT_HONESTY_CARD.md + run_pilot_honesty_card.py",
+        },
+        "M2.13_demo_multi_ccaa": {
+            "status": "DONE"
+            if _exists("scripts", "build_demo_multi_ccaa.py")
+            and _exists("docs", "design", "DEMO_MULTI_CCAA_TOBARRA_NIJAR_CAMINOMORISCO.md")
+            else "PENDING",
+            "evidence": "Tobarra·Níjar·Caminomorisco demo + design doc",
+        },
+        "M2.14_ml_live_card": {
+            "status": "DONE"
+            if _exists("scripts", "run_ml_live_card_demo.py")
+            and _exists("docs", "ML_PRODUCT_SCORECARD.json")
+            else "PENDING",
+            "evidence": "run_ml_live_card_demo + ML_PRODUCT_SCORECARD (U1 honest)",
+        },
+        "M3.2_third_party_demo": {
+            "status": "PENDING",
+            "evidence": "need 1 demo with external person + 1-page acta",
+        },
         "M3.3_GO_Q": {"status": "PENDING", "evidence": None},
+        "M3.4_quarter_report": {
+            "status": "PENDING",
+            "evidence": "8-12 pp trimester / TFG product chapters",
+        },
     }
 
     reliability = _load(ROOT / "docs" / "RELIABILITY_GATE_REPORT.json") or {}
+    scorecard = _load(ROOT / "docs" / "ML_PRODUCT_SCORECARD.json") or {}
+    gates = scorecard.get("gates") or {}
+    anchors = _load(ROOT / "data" / "infocam_anchors.json") or {}
+    n_confirmed_anchors = sum(
+        1
+        for a in (anchors.get("anchors") or {}).values()
+        if isinstance(a, dict) and a.get("status") == "confirmed"
+    )
+    pilot_doc = items["M2.12_pilot_honesty"]["status"] == "DONE"
+    outreach_csv = ROOT / "docs" / "CONTACTOS_OUTREACH.csv"
+    outreach_hits = 0
+    if outreach_csv.is_file():
+        try:
+            text = outreach_csv.read_text(encoding="utf-8", errors="replace").lower()
+            for token in (
+                "respondido",
+                "respondido_go",
+                "enviado",
+                "follow_up",
+                "pendiente",
+            ):
+                if token in text:
+                    outreach_hits += text.count(token)
+        except OSError:
+            outreach_hits = 0
+    pilot_or_outreach = pilot_doc or outreach_hits >= 10
+
     go_q_progress = {
         "decision_card_cli": items["M1.2_decide_cli"]["status"] == "DONE",
         "fdc_in_incident": items["M2.1_fdc_in_incident"]["status"] == "DONE",
@@ -165,8 +221,14 @@ def assess() -> dict:
         "open_packs_ge_4": n_packs >= 4,
         "ml_hold": ml_iou >= 0.89,
         "incident_sla": items["M2.5_incident_sla"]["status"] == "DONE",
-        "pilot_or_outreach": False,
+        "pilot_or_outreach": pilot_or_outreach,
         "quarter_report": False,
+        "u1_test_honest": bool(gates.get("u1_test_honest")),
+        "ml_product_go": bool(gates.get("ml_product_go")),
+        "field_ops_live_fusion": False,
+        "confirmed_anchors": n_confirmed_anchors,
+        "second_anchor": n_confirmed_anchors >= 2,
+        "third_party_demo": items["M3.2_third_party_demo"]["status"] == "DONE",
     }
     go_q_ready = all(
         [
@@ -176,20 +238,33 @@ def assess() -> dict:
             go_q_progress["reliability_gate"],
             go_q_progress["open_packs_ge_4"],
             go_q_progress["ml_hold"],
+            go_q_progress["pilot_or_outreach"],
         ]
     )
 
     # adaptations
     adaptations = []
-    if n_packs >= 4 and items["M1.6_open_packs_ge_5"]["status"] != "DONE":
+    if items["M1.6_open_packs_ge_5"]["status"] == "DONE":
+        adaptations.append(f"M1.6 DONE: open packs n={n_packs} (demo multi-CCAA ready)")
+    elif n_packs >= 4:
         adaptations.append(
             "M1.6: 4 packs sufficient for demo; raise to 5 when next CEMS build is free"
         )
     if items["M1.5_cems_delta_t"]["status"] == "AT_RISK":
-        adaptations.append("M1.5 deferred: keep 24h assumption + document; focus M1.2/M1.4")
-    if not go_q_progress["pilot_or_outreach"]:
+        adaptations.append("M1.5 deferred: keep 24h assumption + document; focus external anchors")
+    if n_confirmed_anchors < 2:
         adaptations.append(
-            "Mes 2 priority shift: outreach list earlier if product gate stays green"
+            "BLOCKER O1: only Tobarra confirmed — Cardoso Vp/ha (INFOCAM/CMA) unlocks GO_MES"
+        )
+    if not go_q_progress["third_party_demo"]:
+        adaptations.append("Mes 3 focus: 1 external demo + acta (not more honesty graph cycles)")
+    if go_q_progress["u1_test_honest"] and not go_q_progress["ml_product_go"]:
+        adaptations.append(
+            "ML lab GO rails OK (U1 honest); ml_product_go=false; field_ops fusion OFF"
+        )
+    if go_q_ready and not go_q_progress["quarter_report"]:
+        adaptations.append(
+            "GO_Q almost: write quarter report / freeze tag when third_party_demo lands"
         )
 
     card = (hub or {}).get("decision_card") or {}

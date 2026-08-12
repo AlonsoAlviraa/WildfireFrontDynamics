@@ -14,8 +14,27 @@ def test_root_help_lists_commands() -> None:
     assert "demo" in help_text
     assert "ingest-geotiff" in help_text
     assert "incident" in help_text
+    assert "commands" in help_text
+    assert "doctor" in help_text
+    assert "brief" in help_text
+    assert "app" in help_text
     assert "examples:" in help_text
     assert "NOT" in help_text or "not" in help_text
+
+
+def test_parser_registers_commands_and_doctor() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["commands"])
+    assert args.command == "commands"
+    args2 = parser.parse_args(["doctor", "--target", "hub"])
+    assert args2.command == "doctor"
+    assert args2.target == "hub"
+    args3 = parser.parse_args(["brief", "--role", "decision"])
+    assert args3.command == "brief"
+    assert args3.role == "decision"
+    args4 = parser.parse_args(["app", "--work-dir", "x", "--open"])
+    assert args4.command == "app"
+    assert args4.open is True
 
 
 def test_incident_subcommands_in_help() -> None:

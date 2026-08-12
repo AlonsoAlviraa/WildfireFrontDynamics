@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -78,7 +79,11 @@ def extract_sector_ros(
     primary = _get_sector(sectors, "primary")
 
     if any(v is None for v in (head, flank, rear)):
-        if observed_ros_m_min is not None and math.isfinite(float(observed_ros_m_min)) and float(observed_ros_m_min) > 0:
+        if (
+            observed_ros_m_min is not None
+            and math.isfinite(float(observed_ros_m_min))
+            and float(observed_ros_m_min) > 0
+        ):
             reasons.append("hybrid_sectors_null_obs_only")
             return obs_only_sector_ros(float(observed_ros_m_min)), reasons
         reasons.append("no_usable_sectors")
@@ -138,9 +143,7 @@ def radii_from_sector_ros(
     return out
 
 
-def radius_at_bearing(
-    delta_deg: float, head: float, flank: float, rear: float
-) -> float:
+def radius_at_bearing(delta_deg: float, head: float, flank: float, rear: float) -> float:
     """Normative polar radius at angle delta from head bearing (deg)."""
     d = math.radians(float(delta_deg))
     H = max(0.0, math.cos(d)) ** 2
@@ -292,7 +295,7 @@ def physics_only_sector_ros_samples(
     wind_factors: Sequence[float] = (0.8, 1.0, 1.2),
     fmc_deltas_pct: Sequence[float] = (-2.0, 0.0, 2.0),
 ) -> list[dict[str, float]]:
-    from .calibration import apply_calibration, load_recipe, CalibrationRecipe
+    from .calibration import CalibrationRecipe, apply_calibration, load_recipe
     from .rothermel_lite import estimate_sector_ros_physics
 
     recipe = calibration_recipe
@@ -362,27 +365,18 @@ def attach_ensemble_to_envelopes(
         h = int(env["horizon_min"])
         hy: dict[str, Any] = {}
         for sector in ("head", "flank", "rear"):
-            radii = [
-                cap_ros(s[sector], cap_m_min) * h
-                for s in hybrid_samples
-                if sector in s
-            ]
+            radii = [cap_ros(s[sector], cap_m_min) * h for s in hybrid_samples if sector in s]
             if radii:
                 pct = _percentiles(radii)
                 hy[f"{sector}_radius_m"] = pct
-                if abs(pct["p90"] - pct["p10"]) < 1e-6:
-                    if sector not in locked:
-                        locked.append(sector)
+                if abs(pct["p90"] - pct["p10"]) < 1e-6 and sector not in locked:
+                    locked.append(sector)
         env["ensemble"] = hy
 
         if physics_samples:
             ph: dict[str, Any] = {"not_product_p50": True}
             for sector in ("head", "flank", "rear"):
-                radii = [
-                    cap_ros(s[sector], cap_m_min) * h
-                    for s in physics_samples
-                    if sector in s
-                ]
+                radii = [cap_ros(s[sector], cap_m_min) * h for s in physics_samples if sector in s]
                 if radii:
                     ph[f"{sector}_radius_m"] = _percentiles(radii)
             env["ensemble_physics_only"] = ph
@@ -508,7 +502,7 @@ def compute_hybrid_envelope(
 
     bearing = head_bearing_deg
     if bearing is None:
-        drivers = ((hybrid_doc.get("physics") or {}).get("drivers") or {})
+        drivers = (hybrid_doc.get("physics") or {}).get("drivers") or {}
         if "head_bearing_deg" in drivers:
             bearing = float(drivers["head_bearing_deg"])
         elif "wind_from_deg" in drivers:
@@ -526,7 +520,10 @@ def compute_hybrid_envelope(
     status = "ok"
     if weather_scenario_assumed:
         status = "inputs_assumed"
-    if hybrid_doc.get("status") == "estimated_obs_only" or "hybrid_sectors_null_obs_only" in reasons:
+    if (
+        hybrid_doc.get("status") == "estimated_obs_only"
+        or "hybrid_sectors_null_obs_only" in reasons
+    ):
         status = "inputs_assumed" if weather_scenario_assumed else "ok"
         reasons = list(reasons) + ["hybrid_obs_only_path"]
 
@@ -710,9 +707,7 @@ def hybrid_envelope_to_geojson(
                     }
                 )
         if include_polar and bearing is not None and r_head > 0:
-            ring = ellipse_polar_ring(
-                cx, cy, r_head, r_flank, r_rear, float(bearing)
-            )
+            ring = ellipse_polar_ring(cx, cy, r_head, r_flank, r_rear, float(bearing))
             features.append(
                 {
                     "type": "Feature",
@@ -815,9 +810,7 @@ def write_hybrid_envelope_geojson(
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    gj = hybrid_envelope_to_geojson(
-        envelope, center_xy=center_xy, fire_id=fire_id, **geo_kwargs
-    )
+    gj = hybrid_envelope_to_geojson(envelope, center_xy=center_xy, fire_id=fire_id, **geo_kwargs)
 
     is_utm = False
     if center_xy is not None:

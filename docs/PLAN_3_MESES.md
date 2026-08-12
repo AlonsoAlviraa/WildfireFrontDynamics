@@ -69,7 +69,7 @@ GO_Q+ = GO_Q AND
 | M1.3 | Metrics hub en `make product-gate` | always green | **DONE** |
 | M1.4 | FIRMS overlay bbox open packs | geojson + count | **DONE** (script; 0 hotspots si CSV 24h vacío en bbox histórico) |
 | M1.5 | Parse CEMS acquisition time si existe en XML | Δt real en ≥1 pack | **AT_RISK** → diferido (props CEMS sin tiempo útil) |
-| M1.6 | 6ª activación CEMS o 5ª con multi-MONIT | n_packs ≥ 5 | **ADAPT:** 4 packs OK demo; 5ª bajo demanda |
+| M1.6 | 6ª activación CEMS o 5ª con multi-MONIT | n_packs ≥ 5 | **DONE** (n_packs=5; demo multi-CCAA) |
 | M1.7 | One-pager + pricing plantilla | doc | **DONE** |
 | M1.8 | Review M1 + adaptar Mes 2 | status | **DONE** (cycle runner) |
 
@@ -90,13 +90,16 @@ GO_Q+ = GO_Q AND
 | M2.9 | **Acta forense + radio-bridge + replay** | outbox acta/radio + `replay-decide` | **DONE** (sueño §3.1) |
 | M2.10 | **Política de decisión por organismo** | `config/decision_policies.json` + `--policy` | **DONE** (sueño §3.1) |
 | M2.11 | **App sala de mando (WFD COMMAND)** | `docs/commander/index.html` HUD | **DONE** (front + demo mando) |
+| M2.12 | Piloto honesty multi-pack | `PILOT_HONESTY_CARD.md` | **DONE** |
+| M2.13 | Demo multi-CCAA Tobarra·Níjar·Caminomorisco | portal + design | **DONE** |
+| M2.14 | ML live → Decision Card (U1 honest) | scorecard + demo | **DONE** |
 
 ### Mes 3 — Piloto y cierre (sem 9–13)
 
 | ID | Entrega | Métrica | Status |
 |----|---------|---------|--------|
 | M3.1 | Congelar OpenAPI `decide_api_v1` + tag + hub CLI | version tag | pending (API ya en M2.8) |
-| M3.2 | 1 demo con tercero (acta 1 página) | doc | pending |
+| M3.2 | 1 demo con tercero (acta 1 página) | doc | **PENDING** — primary GO_Q human gate |
 | M3.3 | GO_Q scorecard final | JSON | pending |
 | M3.4 | Memoria trimestre / TFG capítulos producto | 8–12 pp | pending |
 | M3.5 | Backlog Q2 (solo si GO_Q) | 1 página | pending |
@@ -139,8 +142,10 @@ GO_Q+ = GO_Q AND
 
 ## 6. Enlaces vivos
 
-- Status: `docs/PLAN_3_MESES_STATUS.json`  
+- **Canonical project truth:** `docs/PROJECT_STATUS.md`  
+- Status cycle: `docs/PLAN_3_MESES_STATUS.json` (`python scripts/run_plan_cycle.py --execute-m1`)  
 - Metrics: `docs/METRICS_HUB.md` / `METRICS_DASHBOARD.html`  
+- Graph: `.grok/graph_engineering/STATE.md`  
 - Producto: `docs/PRODUCT_REDESIGN_PAID_VALUE.md`  
 - Open IF: `docs/PISTA_B_OPEN_IF.md`  
 - Comercial: `docs/ONEPAGER_COMERCIAL_ES.md`  

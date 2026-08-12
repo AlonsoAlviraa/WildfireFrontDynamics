@@ -15,7 +15,6 @@ from wildfire_front.fuel.weather import (
     weather_scenario_from_aemet_daily,
 )
 
-
 # Raw AEMET daily record shape (camelCase fields as returned by open-data)
 _RAW_TOBARRA_LIKE = {
     "fecha": "2024-08-02",
@@ -69,9 +68,7 @@ class TestAemetScenarioFromDaily:
         assert "wind_dir_variable_aemet_code_99" in (ws.notes or [])
 
     def test_merge_fills_dir_and_stamps_assumed(self) -> None:
-        ws = weather_scenario_from_aemet_daily(
-            _RAW_TOBARRA_LIKE, station_id="8175"
-        )
+        ws = weather_scenario_from_aemet_daily(_RAW_TOBARRA_LIKE, station_id="8175")
         m = merge_weather_drivers(ws, wind_from_deg=270.0, dead_fmc_pct=7.0)
         assert m.wind_10m_ms == pytest.approx(5.0)
         assert m.wind_from_deg == pytest.approx(270.0)
@@ -90,7 +87,9 @@ class TestAemetScenarioFromDaily:
 
 
 class TestDotenv:
-    def test_load_dotenv_no_overwrite(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_load_dotenv_no_overwrite(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         envf = tmp_path / ".env"
         envf.write_text("AEMET_API_KEY=from_file\nOTHER=1\n", encoding="utf-8")
         monkeypatch.delenv("AEMET_API_KEY", raising=False)

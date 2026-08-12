@@ -461,18 +461,36 @@ def render_portal(
         "nav_provenance": {"es": "Provenance", "en": "Provenance"},
         "nav_cta": {"es": "CTA", "en": "CTA"},
         "nav_honesty": {"es": "Honestidad", "en": "Honesty"},
-        "sec_charts": {"es": "Estadísticas · ha · gates · timeline", "en": "Stats · ha · gates · timeline"},
-        "sec_scoreboard": {"es": "Scoreboard industrial (gates)", "en": "Industrial scoreboard (gates)"},
-        "sec_compare": {"es": "Comparar tracks (OPS vs OPEN O2)", "en": "Compare tracks (OPS vs OPEN O2)"},
+        "sec_charts": {
+            "es": "Estadísticas · ha · gates · timeline",
+            "en": "Stats · ha · gates · timeline",
+        },
+        "sec_scoreboard": {
+            "es": "Scoreboard industrial (gates)",
+            "en": "Industrial scoreboard (gates)",
+        },
+        "sec_compare": {
+            "es": "Comparar tracks (OPS vs OPEN O2)",
+            "en": "Compare tracks (OPS vs OPEN O2)",
+        },
         "sec_decision": {"es": "Decision Card viewer", "en": "Decision Card viewer"},
-        "sec_silver": {"es": "Packs silver EXT (misma tubería)", "en": "EXT silver packs (same pipeline)"},
+        "sec_silver": {
+            "es": "Packs silver EXT (misma tubería)",
+            "en": "EXT silver packs (same pipeline)",
+        },
         "sec_open_more": {
             "es": "Más IF open (opcional · no diluye pitch)",
             "en": "More open IF (optional · does not dilute pitch)",
         },
         "sec_guion": {"es": "Guion interactivo 12 min", "en": "Interactive 12-min script"},
-        "sec_pitch": {"es": "Pitch 60 s + reliability story", "en": "60s pitch + reliability story"},
-        "sec_provenance": {"es": "Provenance · contactos fuente", "en": "Provenance · source contacts"},
+        "sec_pitch": {
+            "es": "Pitch 60 s + reliability story",
+            "en": "60s pitch + reliability story",
+        },
+        "sec_provenance": {
+            "es": "Provenance · contactos fuente",
+            "en": "Provenance · source contacts",
+        },
         "sec_sell": {"es": "Sell kit · CTAs", "en": "Sell kit · CTAs"},
         "sec_honest": {"es": "Honestidad · Q&A", "en": "Honesty · Q&A"},
         "mode_guion": {"es": "Guion", "en": "Script"},

@@ -1,0 +1,16 @@
+{
+  "id": "alonsoalviraaaa/wfd-lofo-v2-hellin-promote",
+  "title": "WFD LOFO V2 Hellin Promote",
+  "code_file": "run_lofo_v2_hellin_promote.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalviraaaa/wfd-lofo-v2-hellin"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

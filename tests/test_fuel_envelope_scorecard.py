@@ -10,8 +10,8 @@ from wildfire_front.fuel.envelope_scorecard import (
     SCHEMA,
     attach_envelope_to_decision_card,
     build_tobarra_envelope_scorecard,
-    check_envelope_structure,
     check_ensemble_honesty,
+    check_envelope_structure,
     check_multi_window_consistency,
 )
 
