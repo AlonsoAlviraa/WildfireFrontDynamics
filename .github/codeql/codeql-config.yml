@@ -1,6 +1,6 @@
-﻿# CodeQL config — WildfireFrontDynamics
+# CodeQL config for WildfireFrontDynamics
 #
-# Path safety is enforced in code by wildfire_front/product/path_sandbox.py
+# Path safety is enforced by wildfire_front/product/path_sandbox.py
 # (realpath + commonpath allowlist before every open/exists/makedirs).
 # CodeQL py/path-injection does not model that multi-step sanitizer.
 name: "wfd-codeql"
