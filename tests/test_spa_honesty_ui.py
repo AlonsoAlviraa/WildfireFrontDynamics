@@ -7,10 +7,12 @@ from pathlib import Path
 
 from wildfire_front.product.app_spa import build_product_app_payload, render_product_app_html
 from wildfire_front.product.spa_honesty_ui import (
+    SPLIT_CONF_BANNER,
     SR_NON_CLAIMS,
     UNCERTAINTY_BAR_LABEL,
     UNCERTAINTY_BAR_NOTE,
     build_h1_eng_rehearsal,
+    build_split_conf_view,
     build_sr_ladder,
     build_uncertainty_bar_view,
     load_decision_log_surface,
@@ -81,11 +83,53 @@ def test_h1_eng_rehearsal_never_sets_go_q_met():
     assert block["go_q_met"] is False
     assert block["product_unlock"] is False
     assert block["field_ops_ml_live_fusion"] == "OFF"
+    assert block["go_q_invent_forbidden"] is True
+    assert block["eng_only"] is True
+    assert block["not_third_party_acta"] is True
     assert "serve" in block["serve_cmd"]
     assert "demo-day" in block["demo_day_cmd"]
     assert any(
         "GO_Q" in s.get("detail", "") or "Rails" in s.get("title", "") for s in block["steps"]
     )
+
+
+def test_split_conf_ml_neq_ros_no_invent():
+    """Mes2 PR3-A: split conf from existing fields; missing ops → sin conf ROS."""
+    empty = build_split_conf_view()
+    assert empty["marker"] == "split-conf"
+    assert empty["ml_neq_ros"] is True
+    assert empty["iou_is_not_ros"] is True
+    assert empty["invents_scores"] is False
+    assert empty["field_ops_ml_live_fusion"] == "OFF"
+    assert empty["go_q_invent_forbidden"] is True
+    assert empty["go_q_met"] is False
+    assert empty["banner"] == SPLIT_CONF_BANNER
+    assert empty["ros"]["empty"] is True
+    assert "sin conf ROS" in empty["ros"]["display"]
+    assert empty["ml"]["is_ros"] is False
+    assert empty["ml"]["confidence_pred"] is None
+
+    mid = build_split_conf_view(confidence_pred=0.42, confidence_label="LOW")
+    assert mid["ml"]["confidence_pred"] == 0.42
+    assert "42%" in mid["ml"]["display"]
+    assert mid["ros"]["empty"] is True
+
+    with_ops = build_split_conf_view(
+        confidence_pred=0.7,
+        ops_metrics={"quality_grade": "A"},
+    )
+    assert with_ops["ros"]["empty"] is False
+    assert "grade A" in with_ops["ros"]["display"]
+    assert "no ML" in with_ops["ros"]["display"]
+    assert with_ops["ml"]["is_ros"] is False
+
+    with_ros = build_split_conf_view(
+        confidence_pred=0.5,
+        ops_metrics={"ros_confidence": 0.8},
+    )
+    assert with_ros["ros"]["ros_confidence"] == 0.8
+    assert "80%" in with_ros["ros"]["display"]
+    assert with_ros["invents_scores"] is False
 
 
 def test_decision_log_empty_no_invented_id():
@@ -183,6 +227,13 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
 
     assert payload["h1_eng_rehearsal"]["go_q_met"] is False
     assert payload["h1_eng_rehearsal"]["marker"] == "h1-rehearsal"
+    assert payload["h1_eng_rehearsal"]["not_third_party_acta"] is True
+    sc = payload["split_conf"]
+    assert sc["marker"] == "split-conf"
+    assert sc["ml_neq_ros"] is True
+    assert sc["field_ops_ml_live_fusion"] == "OFF"
+    assert sc["go_q_met"] is False
+    assert "Conf. ML ≠ Conf. ROS" in sc["banner"]
     assert payload["sr_ladder"]["marker"] == "sr-ladder"
     assert payload["sr_ladder"]["field_ops_ml_live_fusion"] == "OFF"
     assert payload["decision_log"]["go_q_met"] is False
@@ -197,8 +248,15 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert 'data-marker="uncertainty-no-ros"' in html
     assert "uncertainty_bar" in html or "uncertaintyBar" in html
     assert 'data-marker="h1-rehearsal"' in html
+    assert "no es acta H1" in html
+    assert "btn-h1-copy-cmd" in html
     assert 'data-marker="sr-ladder"' in html
     assert 'data-marker="decision-log"' in html
+    assert 'data-marker="split-conf"' in html
+    assert 'data-marker="split-conf-ml"' in html
+    assert 'data-marker="split-conf-ros"' in html
+    assert "Conf. ML ≠ Conf. ROS" in html
+    assert "no es despacho táctico" in html
     assert "runDlogAck" in html or "ack_decision" in html
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
