@@ -285,11 +285,10 @@ def write_forensic_bundle(
     lang: str = "es",
 ) -> dict[str, str]:
     """Write acta + radio + card + replay sources + manifest. Returns paths."""
-    # out_dir is caller-controlled; resolve + create via realpath parent writes
-    out_s = realpath(out_dir)
-    import os as _os
+    # out_dir is caller-controlled; resolve + create via path_sandbox
+    from .path_sandbox import ensure_dir
 
-    _os.makedirs(out_s, exist_ok=True)
+    out_s = ensure_dir(out_dir)
 
     card_dict = dict(card)
     radio = render_radio_bridge(card_dict, lang=lang)

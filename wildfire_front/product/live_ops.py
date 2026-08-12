@@ -26,6 +26,7 @@ from wildfire_front.product.decide_service import (
 )
 from wildfire_front.product.path_sandbox import (
     as_path,
+    ensure_dir,
     exists_file,
     join_fixed,
     read_json,
@@ -371,7 +372,7 @@ def handle_export_acta(
             }
         card = decided.get("result") or {}
         # Persist card so outbox is usable next time (fixed basename only)
-        os.makedirs(outbox_s, exist_ok=True)
+        ensure_dir(outbox_s)
         write_json(outbox_s, "fire_decision_card.json", card)
     else:
         card = _read_json_file(card_s) or {}
