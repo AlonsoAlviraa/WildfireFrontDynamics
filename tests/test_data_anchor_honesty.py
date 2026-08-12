@@ -29,6 +29,20 @@ def test_only_tobarra_confirmed_for_o1():
     assert tb.get("vp_m_min") == 7.0
     assert tb.get("area_ha") == 39.0
     assert tb.get("source")
+    assert doc.get("grade_a_requires_confirmed_anchor") is True
+
+
+def test_confirmed_anchors_require_numeric_and_source():
+    """Schema honesty: confirmed rows must carry Vp/ha/source (no empty promote)."""
+    doc = _anchors()
+    for fid, row in doc["anchors"].items():
+        if str(row.get("status", "")).lower() != "confirmed":
+            continue
+        assert isinstance(row.get("vp_m_min"), (int, float)), f"{fid} missing vp"
+        assert isinstance(row.get("area_ha"), (int, float)), f"{fid} missing ha"
+        assert float(row["vp_m_min"]) > 0, f"{fid} vp must be positive"
+        assert float(row["area_ha"]) > 0, f"{fid} ha must be positive"
+        assert str(row.get("source") or "").strip(), f"{fid} missing source"
 
 
 def test_hellin_stays_pending_external_without_vp():
@@ -58,6 +72,7 @@ def test_ssot_doc_blocks_silent_hellin_promote():
     # Checklist gates must be explicit
     assert "Literal cite" in text or "literal cite" in text.lower()
     assert "Do not invent" in text or "do not invent" in text.lower()
+    assert "FREEZE_ML" in text or "No ML retrain" in text
 
 
 def test_data_intake_and_current_state_keep_hellin_pending_narrative():
@@ -66,6 +81,7 @@ def test_data_intake_and_current_state_keep_hellin_pending_narrative():
     assert "Hellín" in intake or "hellin" in intake.lower()
     # Must not claim Hellín confirmed in the honesty banner era
     assert "Hellín confirmed" not in intake
+    assert "cite" in intake.lower() or "DATA_ANCHOR_SSOT" in intake
     cs = CURRENT_STATE.read_text(encoding="utf-8")
     assert "pending_external" in cs or "Hellín" in cs
-    assert "**GO_Q** | **partial**" in cs or "GO_Q partial" in cs
+    assert "| **GO_Q** | **partial** |" in cs

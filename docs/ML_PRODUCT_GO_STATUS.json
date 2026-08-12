@@ -7,7 +7,7 @@
   "GO_MES_plus": false,
   "GO_Q": "partial",
   "product_id": "clm_ensemble_v34",
-  "alignment_note": "B2 2026-08-12 Agent B W1: GO_MES true; GO_MES+ false; GO_Q partial (never invent true); ml_product_go=lab only; fusion OFF; Hellín pending_external.",
+  "alignment_note": "B 2026-08-12 W1+: GO_MES true; GO_MES+ false; GO_Q partial (never invent true); FREEZE tobarra_keep_reopen=false; ml_product_go=lab only; fusion OFF; Hellín pending_external; SPA #19 shipped.",
   "evidence": {
     "u1_test_honest": true,
     "U1a": true,
