@@ -2,8 +2,10 @@
 
 Minimal working memory for the dual-product loop.  
 Full experiment log: `docs/EXPERIMENT_TRACKER.md`.  
-**Canonical snapshot:** `docs/CURRENT_STATE.md` (2026-08-05).  
-**Long form:** `docs/PROJECT_STATUS.md`. **Goals:** `docs/goals/README.md`.
+**Canonical snapshot:** `docs/CURRENT_STATE.md` (**2026-08-12**).  
+**Long form:** `docs/PROJECT_STATUS.md`. **Goals:** `docs/goals/README.md`.  
+**SPA / Live Ops:** `docs/APP.md` · `docs/design/LIVE_OPS_DEMO_KERNEL.md`.  
+**Grok Bot org:** `docs/EMPRESA_BOTS_TRABAJADORES.md`.
 
 ## Current product baselines (do not regress without evidence)
 
@@ -15,29 +17,33 @@ Full experiment log: `docs/EXPERIMENT_TRACKER.md`.
 | ML Spain catalog | `clm_ensemble_v34` | holdout IoU provenance only | **0.8963** / +0.2545 — not live certainty |
 | ML lab surface | same | reject thr ~0.80 | **iter1 reject only** (ECE thrash stopped) |
 | ML multi-fire | Head A / LOFO | pack LOFO ~0.76; Tobarra Head A ~0.49 | hard fire honesty |
+| ML sealed LOFO | `exact_force_ema_long` | mean / min IoU | **0.788** / **0.707** |
 | Ops | `front_dynamics_v1` | ROS from observed LWIR | geometry only (not IoU) |
-| Decision | Decision Card | GO / HOLD / ABSTAIN | holdout conf cap **0.75**; field_ops fusion **OFF** |
+| Decision | Decision Card | GO / HOLD / ABSTAIN | field_ops fusion **OFF** |
+| Product SPA | Live Ops + demo-day | loopback POST `/live/v1/*` | eng shippable; GO_Q human |
 
 Catalog: `models/catalog.json`. Weights are local (`*.pt` gitignored).
 
-## Gates (2026-08-05)
+## Gates (2026-08-12)
 
 - **GO_ENG** true · **GO_MES** true (mínimo; O1 Tobarra+Hellín; P1 two-real smoke)
-- **GO_Q** partial (**H1** demo+acta tercero pending — primary product residual)
-- `ml_product_go` **true** (lab; U1 TEST honest + promote 2026-08-07) · `u1_test_honest` true · field_ops fusion **OFF** · GO_MES still H1-blocked
-- Graph **v6.1**: primary = human demo + E1–E3; research R\* (**0 h retrain** as main)
-- **ML mega goals CLOSED:** W3 **MET** · Tobarra KEEP-or-KILL → **KILL** (fresh IoU 0.4776, K1 fail)
+- **GO_Q** partial (**H1** demo+acta tercero — **primary residual**)
+- `ml_product_go` **true** (lab only) · field_ops fusion **OFF** · ML **FREEZE_ML_AND_REQUEST_DATA**
+- Graph **v6.1**: primary = human demo H1; eng evidence via `app --demo-day` + replay
+- **ML mega goals CLOSED:** W3 **MET** · Tobarra KEEP → **KILL** (IoU 0.4776, K1 fail)
+- **SPA C2 + Live Ops eng OK** (branch tip includes product stack)
 
 ## What works
 
+- **SPA industrial C2 + Live Ops:** `app --demo-day` / `--serve` · primary acts live · fusion OFF
 - Residual U-Net train path: `kaggle_job/run_unet_training_v21.py` + `kernel-metadata-v21.json`
 - CLM ensemble soft-vote with VAL-only temperature/mix calibration
 - Incident runtime outbox + Decision Card fuse ops / open / ML without training on fused labels
 - Open CEMS + REDIAM AND + RAI EXT packs; demo multi-CCAA + piloto honesty
 - Integrity graph c0–c2 shipped holdout/fusion honesty rails
-- **Operator UX PLATEAU** (iters 1–17): bare CLI → operator; residual = H1 human. Log: `docs/OPERATOR_UX_LOOP_LOG.md`
-- **ML lab product CLI** + loop freeze/smoke/lofo/next · W3 multi-fire Head A · Tobarra kill protocol
-- Entry: `docs/ML_PRODUCT_START_HERE.md` · status: `docs/PLAN_ML_PRODUCT_STATUS.json`
+- **Operator UX PLATEAU** (iters 1–17): bare CLI → operator; residual = H1 human
+- **ML lab product CLI** + loop freeze/smoke/lofo/next · W3 · Tobarra kill protocol
+- Entry: `docs/ML_PRODUCT_START_HERE.md` · SPA: `docs/APP.md` · Bots: `docs/EMPRESA_BOTS_TRABAJADORES.md`
 
 ## What does not (do not re-promote)
 

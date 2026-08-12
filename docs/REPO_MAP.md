@@ -1,7 +1,7 @@
 # Mapa del repositorio (profesional)
 
 > **Autoridad:** este mapa + `docs/CURRENT_STATE.md` + `docs/START_HERE.md`.  
-> **Última limpieza:** 2026-08-10 (ruido de agent en raíz eliminado; ML closeout canónico).
+> **Última actualización:** 2026-08-12 (SPA Live Ops + demo-day ship; Grok Bot org doc).
 
 ---
 
@@ -13,17 +13,32 @@
 | `ARCHITECTURE.md` · `VISION.md` · `RULES.md` · `MEMORY.md` | Diseño y memoria de proyecto |
 | `wildfire_front/` | **Código de producto** (paquete Python) |
 | `scripts/` | CLI operativas y lab (no basura de agent) |
-| `tests/` | Tests |
-| `kaggle_job/` | Kernels y datasets Kaggle (código de train remoto) |
+| `tests/` | Tests (`test_spa_*`, live ops, product) |
+| `kaggle_job/` | Kernels Kaggle (código de train remoto) |
 | `docs/` | Documentación |
 | `data/` | Datos locales (tif/raw gitignored en gran parte) |
 | `artifacts/` | Parches/train regenerables (**gitignored**) |
 | `outputs/` | Resultados de runs (**gitignored**; canónicos bajo `outputs/ml_eval/canonical/`) |
 | `models/` | Pesos locales (**gitignored** `*.pt`) |
 | `config/` | Config |
-| `Makefile` · `pyproject.toml` · `Dockerfile` | Build / CI |
+| `Makefile` · `pyproject.toml` · `Dockerfile` | Build / CI (`make test-spa`) |
 
 **No debe haber** en raíz: `_FINAL_*`, `_OUT_*`, diffs de migration, JSON de agent, etc. (ver `.gitignore`).
+
+---
+
+## Producto SPA / Live Ops (código)
+
+| Ruta | Rol |
+|------|-----|
+| `wildfire_front/cli_app.py` | CLI `app` / `spa` / `console` · `--serve` · `--demo-day` |
+| `wildfire_front/product/app_spa.py` | Payload `wfd_product_app_v1` |
+| `wildfire_front/product/app_spa_html.py` | HTML industrial C2 |
+| `wildfire_front/product/live_ops.py` | Live Ops Kernel handlers |
+| `wildfire_front/product/fire_catalog.py` | Catálogo IF + product_actions |
+| `wildfire_front/product/operator_ux.py` | Brief / gates / next |
+| `wildfire_front/map_status/` | Mapa Leaflet layers + FIRMS |
+| `tests/test_spa_live_ops.py` · `test_product_app.py` · `test_app_spa_security.py` | SPA / live / security |
 
 ---
 
@@ -32,13 +47,18 @@
 | Ruta | Contenido |
 |------|-----------|
 | `docs/START_HERE.md` | Onboarding 2 min |
-| `docs/CURRENT_STATE.md` | Snapshot de gates y freeze |
+| `docs/CURRENT_STATE.md` | **Snapshot canónico** gates + freeze + Live Ops |
+| `docs/APP.md` | SPA + Live Ops API/flags |
+| `docs/design/LIVE_OPS_DEMO_KERNEL.md` | Diseño Live Ops |
+| `docs/EMPRESA_BOTS_TRABAJADORES.md` | Grok Bot teammates (empresa) |
+| `docs/PLAN_PR_POST_LIVE_OPS.md` | PRs land + residual |
 | `docs/REPO_MAP.md` | Este mapa |
 | `docs/GOAL_ML_CLOSEOUT.md` | Criterio de cierre ML |
-| `docs/ml/README.md` | **ML lab: qué está probado y cómo** |
+| `docs/ml/README.md` | ML lab: qué está probado |
+| `docs/H1_*` · `docs/CHEATSHEET_DEMO_12MIN.md` | Demo H1 |
 | `docs/goals/` | Mega-goals cerrados |
-| `docs/commander/` | App sala de mando |
-| `docs/archive/` | Docs históricos (no borrar sin revisión) |
+| `docs/commander/` | App sala de mando (**legacy** vs SPA) |
+| `docs/archive/` | Docs históricos |
 
 ---
 
@@ -79,10 +99,11 @@ No uses `outputs/kaggle_*` como “verdad de producto” sin el stamp canónico.
 |-----------|-----|
 | `run_*.py` | Scripts de train en Kaggle |
 | `kernel-metadata-*.json` | Metadatos de kernel |
-| `datasets/` | Zips/metadata de datasets subidos |
+| `datasets/` | Metadata local; **zips LOFO spatial grandes gitignored** (límite GitHub 100 MB) |
 | `archive/` | Kernels viejos archivados |
 
-No reintroducir carpetas `_push_*` (staging efímero).
+No reintroducir carpetas `_push_*` (staging efímero).  
+No commitear `data/real_if/pablo_geacam_20260803_drop/` (~159 MB raw).
 
 ---
 

@@ -1,29 +1,32 @@
 # Current state — WildfireFrontDynamics
 
-> **As of:** 2026-08-11  
+> **As of:** 2026-08-12  
+> **Branch tip (eng):** `fix/b2-b3-flags-noise-20260810` @ `1a709a3` (SPA Live Ops + product stack pushed)  
 > **Authority:** this file + live scorecards + `outputs/ml_eval/canonical/`.  
 > Long form: `docs/PROJECT_STATUS.md`. Goals hub: `docs/goals/README.md`.  
 > Repo map: `docs/REPO_MAP.md` · ML proven: `docs/ml/README.md`.  
-> **SPA SSOT:** `docs/APP.md` · audit + 10-PR residual plan:  
-> [`docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811.md`](AUDIT_AND_PR_PLAN_SPA_C2_20260811.md)
+> **SPA SSOT:** [`docs/APP.md`](APP.md) · Live Ops: [`docs/design/LIVE_OPS_DEMO_KERNEL.md`](design/LIVE_OPS_DEMO_KERNEL.md)  
+> **Grok Bot org (teammates):** [`docs/EMPRESA_BOTS_TRABAJADORES.md`](EMPRESA_BOTS_TRABAJADORES.md)  
+> **Post–Live Ops PR plan:** [`docs/PLAN_PR_POST_LIVE_OPS.md`](PLAN_PR_POST_LIVE_OPS.md)  
+> SPA audit residual: [`docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811.md`](AUDIT_AND_PR_PLAN_SPA_C2_20260811.md)
 
 ---
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1) · SPA industrial C2 shippable eng · ML thrash FREEZE + REQUEST_DATA · sealed LOFO 0.788 · weather ERA5 long +0.019 · Tobarra KEEP KILL · fusion OFF · `ml_product_go` true.**
+**GO_MES true · GO_Q partial (H1 human) · SPA industrial C2 + Live Ops eng-shipped · `app --demo-day` primary third-party surface · ML FREEZE + REQUEST_DATA · sealed LOFO 0.788 · Tobarra KEEP KILL · fusion OFF · `ml_product_go` true (lab only).**
 
 | Gate | Value | Notes |
 |------|--------|--------|
-| **GO_ENG** | **true** | CI, dual product, Decision Card, demos |
+| **GO_ENG** | **true** | CI, dual product, Decision Card, demos, Live Ops |
 | **GO_MES** | **true** | O1∧O4∧P1∧M2∧E1 mínimo · `docs/GO_MES_VERDICT.md` |
-| **GO_MES+** | **false** | O5 2º grade A / O2 nacional / demo |
-| **GO_Q** | **partial** | stack green; **H1** demo+acta tercero pending — **not true** without H1 |
+| **GO_MES+** | **false** | O5 2º grade A / O2 nacional / demo firmada |
+| **GO_Q** | **partial** | stack green; **H1** demo+acta tercero — **not true** without H1 |
 | **ml_product_go** | **true** | lab GO ≠ field fusion |
 | **field_ops ML fusion** | **OFF** | non-negotiable without human promote |
 | **ML closeout** | **FREEZE_ML_AND_REQUEST_DATA** | `docs/GOAL_ML_CLOSEOUT.md` · canonical stamp |
 | **SPA industrial C2** | **eng OK** | dual-mode · primary acts · `#0B1220` · Live Ops on `--serve` |
-| **Live Ops / demo-day** | **eng OK** | `app --demo-day` · fusion OFF · residual = H1 human (G10) |
+| **Live Ops / demo-day** | **eng OK** | `POST /live/v1/{status,decide,export-acta,replay-third-party}` · `go_q_met=false` always from eng |
 | **Confirmed anchors** | **2** | Tobarra + Hellín 2024-07-19 |
 
 ---
@@ -39,8 +42,9 @@
 | ML multi-fire | LOFO + Head A | Tobarra KEEP **KILL**; Hellín held useful |
 | Ops | `front_dynamics_v1` | Tobarra grade **A**, ROS ~5.71 vs Vp 7 |
 | Decision | Decision Card | GO / HOLD / **ABSTAIN** |
+| Product SPA | `wfd_product_app_v1` | Live Ops loopback · fusion OFF · no GO_Q invent |
 
-**Do not promote:** Open-Meteo weather, era5 multi-fire pack, era5 finetune, lofo_v4 as sealed replacement.
+**Do not promote:** Open-Meteo weather, era5 multi-fire pack, era5 finetune, lofo_v4 as sealed replacement · field_ops ML live fusion ON.
 
 ---
 
@@ -70,28 +74,41 @@ Boards:
 
 ---
 
-## What works (shippable eng)
+## What works (shippable eng) — 2026-08-12
 
-- **Product SPA industrial C2 + Live Ops** (`app` / `spa` / `console`): map-first, dual-mode Fácil|Pro, primary acts Estado·Decidir·Acta **execute on loopback** (`--serve` / `--demo-day` → `POST /live/v1/*`), role switcher, multi-fire pack, third-party pack checks · doc `docs/APP.md` · `docs/design/LIVE_OPS_DEMO_KERNEL.md`
+### Product surface (primary for third parties)
+
+- **SPA industrial C2 + Live Ops Kernel**
+  - CLI: `python -m wildfire_front app` · aliases `spa` · `console`
+  - **Presentador one-shot:** `python -m wildfire_front app --demo-day`
+  - Loopback serve: `--serve` → same-origin  
+    `POST /live/v1/status` · `/decide` · `/export-acta` · `/replay-third-party`
+  - Dual-mode Fácil|Pro · primary acts Estado · Decidir · Acta  
+  - Multi-fire pack (`--all-fires` / `--pack-fires`, cap 8)  
+  - Docs: `docs/APP.md` · `docs/design/LIVE_OPS_DEMO_KERNEL.md` · `docs/CHEATSHEET_DEMO_12MIN.md`
+- **H1 eng prep (no GO_Q flip):** `scripts/prepare_h1_demo_session.py` · `docs/H1_*` · acta draft PENDING  
+- **Release hygiene:** `scripts/check_release_flags.py` (SPA markers + Live Ops + demo-day) · `make test-spa`
+
+### Core product
+
 - Operator UX: `python -m wildfire_front operator` (plateau eng; residual = H1 human)
-- Decision Card + incident outbox + `serve-decide` (optional SPA bridge when flagged)
-- Open packs CEMS / AND / EXT + third-party pack + replay
+- Decision Card + incident outbox + `serve-decide` (optional `--bridge-decide`; prefer Live Ops)
+- Open packs CEMS / AND / EXT + third-party pack + replay (`scripts/run_third_party_replay.py`)
 - ML lab CLI: `ml list|show|cases|curve|freeze|smoke|lofo|next|doctor|card|predict`
 - Tobarra AEMET envelope path (fusion weight 0)
-- Graph v6.1: primary = H1 + E1–E3; research R\* **0 h retrain** as main engine
+- Graph v6.1: primary = **H1 human** + evidence show; research R\* **0 h retrain**
 
-### SPA residual gates (audit 2026-08-11)
+### SPA / Live Ops residual gates
 
 | Gate | Eng control | Residual |
 |------|-------------|----------|
 | GO_Q | **must stay partial** unless H1 closes | human demo+acta |
 | field_ops fusion | **OFF** | no flip without promote |
-| SPA markers | CI pack `make test-spa` + release flags | G7 closed |
-| Multi-IF live switch | optional `--pack-fires` / `--all-fires` | size cap N=8 |
-| Live Decision Card | **`/live/v1/decide`** (preferred) · optional `--bridge-decide` | offline embed if no serve |
-| Demo-day | `app --demo-day` | pack + reliability presence; `go_q_met=false` |
-
-Full gap table G1–G10 + 10-PR stack: **`docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811.md`**.
+| SPA markers | `make test-spa` + release flags | closed eng |
+| Multi-IF switch | `--pack-fires` / `--all-fires` | cap N=8 |
+| Live Decision Card | **`/live/v1/decide`** (`live_ops_loopback`) | outbox may differ; ABSTAIN valid |
+| Demo-day | `app --demo-day` | pack/reliability **presence**; human show |
+| E1–E3 evidence | eng surface via demo-day + Replay | human presents to third party |
 
 ---
 
@@ -99,22 +116,25 @@ Full gap table G1–G10 + 10-PR stack: **`docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811
 
 | Priority | Item | Owner |
 |----------|------|--------|
-| **P0 product** | **H1** demo tercero + acta → GO_Q (**not eng-closable**) | human calendar |
-| **P0 evidence** | E1–E3 pack + Reliability + replay — **eng surface:** `app --demo-day` + live Replay (presence + `replay_ok`); residual = human show | eng done / human demo |
-| **P0 lab (done 2026-08-05)** | S1 SDC **KILL promote** (keep iter1 reject) · S3 open H-lite board · S4 arrival multipass Tobarra **OK** (`outputs/tobarra_multipass_s4/`) | lab |
-| **P1 data** | O2 perímetro nacional / O5 2º grade A | external |
-| **P1 ML data** | **Chain_honest multi-day IF** (FOV alineado + timestamps ERA5) — no thrash recipe | data + lab |
-| **P2 ML** | Frozen residual-small thrash; only re-open with new data class | lab |
+| **P0 product** | **H1** demo tercero + acta firmada → GO_Q (**not eng-closable**) | human calendar |
+| **P0 evidence show** | Run `app --demo-day` + pack + reliability in front of third party | human + eng prep done |
+| **P0 lab (done)** | S1 SDC KILL promote · S3 open H-lite · S4 multipass Tobarra OK | lab closed |
+| **P1 data** | O2 perímetro nacional / O5 2º grade A (B4/B5) | external |
+| **P1 ML data** | **Chain_honest multi-day IF** (FOV + timestamps ERA5) | data + lab |
+| **P2 ML** | Residual-small thrash only with **new data class** | lab |
+| **P2 ops** | Grok Bot teammates onboarding (optional): `docs/EMPRESA_BOTS_TRABAJADORES.md` | human |
 | — | CyL 4082 / GAL Extinción waits | transparency |
 
-**Research expansion (2026-08-05):** `docs/fire_intel/DEEP_RESEARCH_STRATEGIES_2024_2026.md` (75 claims verified, 0 dropped).
+**Research:** `docs/fire_intel/DEEP_RESEARCH_STRATEGIES_2024_2026.md` (75 claims verified).
 
-Explicit non-goals while blocked:
+### Explicit non-goals
 
-- Flip field_ops fusion without human promote (`ml_product_go` already promoted 2026-08-05; lab GO ≠ field fusion)  
-- ECE post-hoc on U1 / Tobarra TEST  
-- Claim IoU = ROS  
-- More autonomous honesty cycles as substitute for H1  
+- Flip field_ops fusion without human promote  
+- ECE post-hoc thrash on U1 / Tobarra TEST  
+- Claim IoU = ROS · FIRMS = perímetro oficial  
+- Invent GO_Q / `go_q_met=true` from eng scripts  
+- Substitute autonomous honesty cycles for H1  
+- Commit oversized Kaggle spatial zips / raw 20260803 drop (local only; gitignored)
 
 ---
 
@@ -123,16 +143,34 @@ Explicit non-goals while blocked:
 ```powershell
 cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
 $env:PYTHONPATH = "."
+
+# Presentador H1 / third party (primary)
+python -m wildfire_front app --demo-day
+# Snapshot CI (no hang):  python -m wildfire_front app --demo-day --json
+
 python -m wildfire_front operator
-python -m wildfire_front app --fire _sla_measure --open
 python -m wildfire_front ml freeze
 python -m wildfire_front ml show
 python scripts/check_release_flags.py
 make test-spa
+python scripts/prepare_h1_demo_session.py
 ```
 
-Goals detail: **`docs/goals/README.md`**.  
-SPA product: **`docs/APP.md`**.  
-SPA audit / residual: **`docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811.md`**.  
-ML lab entry: **`docs/ML_PRODUCT_START_HERE.md`**.  
-**Mega auditoría venta:** **`docs/MEGA_AUDIT_SELL_20260805.md`** (qué falta para vender piloto).
+---
+
+## Doc map (SSOT)
+
+| Doc | Role |
+|------|------|
+| **`docs/CURRENT_STATE.md`** | **This file — gates + freeze** |
+| `docs/START_HERE.md` | Onboarding 2 min |
+| `docs/APP.md` | SPA + Live Ops flags/API |
+| `docs/design/LIVE_OPS_DEMO_KERNEL.md` | Live Ops design |
+| `docs/EMPRESA_BOTS_TRABAJADORES.md` | Grok Bot teammates (product 2026-08-11) |
+| `docs/PLAN_PR_POST_LIVE_OPS.md` | Land + residual PR stack |
+| `docs/H1_GO_Q_RUNBOOK.md` · `docs/CHEATSHEET_DEMO_12MIN.md` | H1 human path |
+| `docs/GOAL_ML_CLOSEOUT.md` · `docs/ml/README.md` | ML freeze |
+| `docs/REPO_MAP.md` | Folder map |
+| `docs/MEGA_AUDIT_SELL_20260805.md` | Sell residual (H1) |
+
+Goals detail: **`docs/goals/README.md`**.

@@ -2,12 +2,14 @@
 
 | Campo | Valor |
 |-------|--------|
-| **As of** | 2026-08-11 |
-| **Entry** | `python -m wildfire_front app` |
+| **As of** | 2026-08-12 |
+| **Entry** | `python -m wildfire_front app` · **demo:** `app --demo-day` |
 | **Schema** | `wfd_product_app_v1` |
-| **UI** | Stitch «WFD Industrial C2» · dual-mode Fácil/Pro |
-| **Builders** | `operator_ux` brief · `map_status` Leaflet payload · `fire_catalog` |
-| **Rails** | field_ops ML fusion **OFF** · not tactical dispatch · no GO_Q invent · IoU ≠ ROS |
+| **UI** | Stitch «WFD Industrial C2» · dual-mode Fácil/Pro · Live Ops |
+| **Builders** | `operator_ux` · `map_status` · `fire_catalog` · `live_ops` |
+| **Rails** | field_ops ML fusion **OFF** · not tactical · no GO_Q invent · IoU ≠ ROS |
+| **SSOT gates** | [`docs/CURRENT_STATE.md`](CURRENT_STATE.md) |
+| **Design** | [`docs/design/LIVE_OPS_DEMO_KERNEL.md`](design/LIVE_OPS_DEMO_KERNEL.md) |
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Rails (decir en voz alta)
 
-GO_MES **true** (mínimo) · GO_Q **partial** (H1 demo) · field_ops ML fusion **OFF** · ml_product_go **true** (lab only) · Tobarra LOFO **KILL** (lab) · **ABSTAIN = feature**
+GO_MES **true** (mínimo) · GO_Q **partial** (H1 demo) · field_ops ML fusion **OFF** · ml_product_go **true** (lab only) · Tobarra LOFO **KILL** (lab) · **ABSTAIN = feature** · SPA **Live Ops** eng OK (`app --demo-day`) · eng **no** cierra GO_Q
 
 ## Setup
 

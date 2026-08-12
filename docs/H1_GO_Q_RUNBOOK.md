@@ -2,7 +2,7 @@
 
 > **Gate:** M3.2 → cierra el bloqueante humano de **GO_Q** (junto con M3.4 eng-filled).  
 > **Eng no cierra GO_Q.** Este runbook es para el presentador humano.  
-> **As of:** 2026-08-11 · Graph v6.1 · GO_MES **true** · GO_Q **partial** · SPA industrial C2 primary
+> **As of:** 2026-08-12 · Graph v6.1 · GO_MES **true** · GO_Q **partial** · SPA C2 + Live Ops eng OK · primary `app --demo-day`
 
 ---
 

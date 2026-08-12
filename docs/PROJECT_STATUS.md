@@ -1,31 +1,33 @@
 # Project status — WildfireFrontDynamics
 
-> **Updated:** 2026-08-05  
-> **Snapshot 1-page:** `docs/CURRENT_STATE.md`  
+> **Updated:** 2026-08-12  
+> **Snapshot 1-page (authority for gates):** `docs/CURRENT_STATE.md`  
 > **Goals hub:** `docs/goals/README.md`  
-> **HEAD baseline:** regenerate with `python scripts/run_plan_cycle.py --execute-m1`  
-> **Authority:** live scorecards + this file; **plan mes:** `docs/REUNION_RESUMEN_Y_ANALISIS_ACCIONES.md`  
+> **SPA / Live Ops:** `docs/APP.md` · `docs/design/LIVE_OPS_DEMO_KERNEL.md`  
+> **Grok Bot org:** `docs/EMPRESA_BOTS_TRABAJADORES.md`  
+> **HEAD baseline eng:** branch `fix/b2-b3-flags-noise-20260810` (Live Ops + product stack)  
 > Archive / residual mes anterior: `docs/PLAN_1_MES_POST_O1_UNLOCK.md`
 
 ---
 
 ## One-line truth
 
-**GO_MES mínimo true. Cuello de botella: H1 demo a tercero (GO_Q). ML lab closed W3 MET + Tobarra KILL. No reclamar GO_MES+ ni fusión field_ops ni `ml_product_go`.**
+**GO_MES mínimo true. Cuello de botella: H1 demo a tercero (GO_Q). SPA C2 + Live Ops eng-shipped (`app --demo-day`). ML lab closed W3 MET + Tobarra KILL + FREEZE. Fusion field_ops OFF. `ml_product_go` true solo lab.**
 
 | Gate | Value |
 |------|--------|
-| **GO_ENG** | **true** — CI, dual product, Decision Card, demos |
+| **GO_ENG** | **true** — CI, dual product, Decision Card, demos, Live Ops |
 | **GO_MES** | **true** — O1∧O4∧P1∧M2∧E1 (plan mínimo); ver `docs/GO_MES_VERDICT.md` |
-| **GO_MES+** | **false** — O5 2º grade A / O2 nacional / demo |
+| **GO_MES+** | **false** — O5 2º grade A / O2 nacional / demo firmada |
 | **GO_Q** | **partial** — product stack green; **H1** demo+acta tercero pending |
-| **ml_product_go** | **false** (U1 TEST honest true; ECE ~0.15; lab freeze ≠ field) |
+| **ml_product_go** | **true** (lab; ≠ field fusion) · ML closeout **FREEZE_ML_AND_REQUEST_DATA** |
 | **field_ops live fusion** | **OFF** |
+| **SPA / Live Ops** | **eng OK** — industrial C2 · `app --demo-day` · residual = H1 human |
 | **Confirmed anchors** | **2** (Tobarra + **Hellín** 2024-07-19 Vp=50 m/min) |
 | **AEMET Tobarra path** | **live** — station 8175 · 2024-08-02 · envelope scorecard **PASS** |
 | **ML mega W3** | **MET** — multi-fire Head A · leak 0 · rails cold |
 | **ML Tobarra KEEP** | **KILL** — fresh LOFO IoU **0.4776** · K1 fail vs Head A 0.489 |
-| **PR land stack** | **PR-α** core physics **ready** · **PR-β** envelope+AEMET **ready** · PR-11 optional |
+| **PR land stack** | fuel PR-α/β ready · SPA audit 10-PR eng residual closed · post–Live Ops: `docs/PLAN_PR_POST_LIVE_OPS.md` |
 
 ### Fuel / weather / envelope (Tobarra, 2026-08-03)
 
@@ -61,15 +63,18 @@ Policies: `config/decision_policies.json` — `research_open` fusion experimenta
 
 ## What is done (shippable eng)
 
-- Decision Card CLI + incident outbox + HTTP `/v1/decide`
-- Metrics Hub + reliability gate + commander HUD
+- **SPA industrial C2 + Live Ops Kernel (2026-08-11/12)** — `app` / `spa` / `console`; `--serve` + `--demo-day`; primary acts live on `POST /live/v1/*`; docs `docs/APP.md` · design `docs/design/LIVE_OPS_DEMO_KERNEL.md`; tests `make test-spa` + release-flag Live Ops markers
+- Decision Card CLI + incident outbox + HTTP `/v1/decide` (+ optional SPA bridge; prefer Live Ops)
+- Metrics Hub + reliability gate + commander HUD (**legacy** vs SPA primary)
 - Open packs: CEMS + REDIAM AND + RAI EXT + demo multi-CCAA (Tobarra · Níjar · Caminomorisco)
 - Piloto honesty card (research_open vs field_ops contrast)
 - ML live card demo + U1 honest scorecard rails
-- **ML lab product CLI** — `wildfire-front ml list|show|predict|card|doctor|cases|curve|freeze|smoke|lofo|next` (lab · not field_ops fusion · IoU ≠ ROS); plan `docs/PLAN_ML_PRODUCT_USABLE.md` · status `docs/PLAN_ML_PRODUCT_STATUS.json` · entry `docs/ML_PRODUCT_START_HERE.md`
-- **ML lab loop closed (2026-08-05)** — freeze surface **iter1 reject**; W3 multi-fire Head A (Hellín/Brazatortas/Retuerta); Tobarra fresh LOFO **KILL** (K1); goals hub `docs/goals/README.md`
-- **Operator UX mode** — `wildfire-front operator` (semáforo + 4 actos + GO_Q gap plain); `operator do --act N` · **`do --all`** · session stamp · `checklist` (`session_ran`); Make `operator*`; log `docs/OPERATOR_UX_LOOP_LOG.md` (iters **1–17** · **PLATEAU eng**); bare → operator; residual = **H1 humano** (GO_Q partial)
-- Graph integrity cycles c0–c2 + open-pack honesty (holdout conf cap 0.75)
+- **ML lab product CLI** — `wildfire-front ml list|show|predict|card|doctor|cases|curve|freeze|smoke|lofo|next` (lab · not field_ops fusion · IoU ≠ ROS); entry `docs/ML_PRODUCT_START_HERE.md`
+- **ML lab loop closed (2026-08-05)** — freeze **iter1 reject**; W3 **MET**; Tobarra **KILL**; `FREEZE_ML_AND_REQUEST_DATA`
+- **Operator UX mode** — plateau eng; residual = **H1 humano** (GO_Q partial)
+- Graph integrity cycles c0–c2 + open-pack honesty
+- **H1 eng prep** — `scripts/prepare_h1_demo_session.py` · cheatsheet · runbook (no GO_Q invent)
+- **Grok Bot company playbook** — `docs/EMPRESA_BOTS_TRABAJADORES.md` (teammates product, not TUI agents)
 
 ---
 

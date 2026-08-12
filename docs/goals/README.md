@@ -1,8 +1,9 @@
 # Goals hub — WildfireFrontDynamics
 
-> **As of:** 2026-08-10  
+> **As of:** 2026-08-12  
 > **Live snapshot:** `docs/CURRENT_STATE.md`  
 > **ML proven path:** `docs/ml/README.md` · **Repo map:** `docs/REPO_MAP.md`  
+> **Product SPA:** `docs/APP.md` · residual product = **H1 human** (GO_Q)  
 > Mega goals are **closed** unless re-opened with new signal. Do not thrash closed KILL/MET.
 
 ---

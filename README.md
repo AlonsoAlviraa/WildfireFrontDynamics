@@ -19,39 +19,42 @@
 
 ---
 
-## Empieza aquí (1 comando — modo operario)
+## Empieza aquí
 
-Si no conoces el código, **solo esto**:
+### Demo terceros / presentador H1 (superficie primaria)
 
 ```powershell
 cd C:\Users\Mariano\Documents\ALONSOO\WildfireFrontDynamics
 $env:PYTHONPATH = "."
-python -m wildfire_front operator
+python -m wildfire_front app --demo-day
 ```
 
-Semáforo **VERDE / AMARILLO / ROJO** · 4 actos (Ver → Callarse → Decidir → Probar) · qué falta para **GO_Q**.
+SPA industrial C2 + **Live Ops** (Estado · Decidir · Acta en loopback) · fusion **OFF** · GO_Q **partial** (humano).  
+Doc: **[`docs/APP.md`](docs/APP.md)** · cheatsheet: **[`docs/CHEATSHEET_DEMO_12MIN.md`](docs/CHEATSHEET_DEMO_12MIN.md)**
+
+### Modo operario (tablero)
 
 ```powershell
+python -m wildfire_front operator
 python -m wildfire_front operator do --act 1   # … 2, 3, 4
 python -m wildfire_front operator checklist
 python -m wildfire_front operator explain-abstain   # ABSTAIN ≠ bug
 ```
 
-Log del loop UX: **[`docs/OPERATOR_UX_LOOP_LOG.md`](docs/OPERATOR_UX_LOOP_LOG.md)** · lectura: **[`docs/START_HERE.md`](docs/START_HERE.md)**  
-Estado: **[`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)** · Mapa: **[`docs/REPO_MAP.md`](docs/REPO_MAP.md)** · ML probado: **[`docs/ml/README.md`](docs/ml/README.md)**
+Semáforo **VERDE / AMARILLO / ROJO** · 4 actos · residual **H1**.
 
-### Portal / sala de mando (opcional, eng)
+Lectura: **[`docs/START_HERE.md`](docs/START_HERE.md)** · Estado: **[`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md)** ·  
+Mapa: **[`docs/REPO_MAP.md`](docs/REPO_MAP.md)** · ML: **[`docs/ml/README.md`](docs/ml/README.md)** ·  
+Grok Bot equipo: **[`docs/EMPRESA_BOTS_TRABAJADORES.md`](docs/EMPRESA_BOTS_TRABAJADORES.md)**
+
+### Portal / sala de mando (legacy eng, no primary)
 
 ```powershell
 python scripts\show_all.py
-# o solo commander:
 python scripts\build_commander_app.py
-start docs\commander\index.html
 ```
 
-Venta: **[`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md)**  
-Comandos largos: **[`docs/GUIA_COMANDOS_RECREAR_TODO.md`](docs/GUIA_COMANDOS_RECREAR_TODO.md)**  
-Sueños máximos: **[`docs/SUENOS_MAXIMOS.md`](docs/SUENOS_MAXIMOS.md)**
+Venta: **[`docs/ONEPAGER_COMERCIAL_ES.md`](docs/ONEPAGER_COMERCIAL_ES.md)** · H1: **[`docs/H1_GO_Q_RUNBOOK.md`](docs/H1_GO_Q_RUNBOOK.md)**
 
 ---
 
@@ -65,7 +68,8 @@ Sueños máximos: **[`docs/SUENOS_MAXIMOS.md`](docs/SUENOS_MAXIMOS.md)**
 | Tobarra LOFO fresh (2026-08-05) | IoU **0.478** · **KILL** vs Head A 0.489 (K1) · lab only |
 | Packs open CEMS (emsr*) | **11** (inventario local `outputs/open_if/`; + AND/EXT/open packs aparte) |
 | Decision Card | GO / HOLD / **ABSTAIN** según fuentes |
-| Gates | GO_MES **true** · GO_Q **partial** · `ml_product_go` **true** · fusion **OFF** · ML closeout **FREEZE+DATA** |
+| Gates | GO_MES **true** · GO_Q **partial** · `ml_product_go` **true** · fusion **OFF** · ML **FREEZE+DATA** |
+| SPA / Live Ops | eng **OK** · `app --demo-day` · residual = **H1 human** |
 | Sealed LOFO (lab) | mean IoU **0.788** · min **0.707** (`exact_force_ema_long`) |
 | Weather spatial (lab) | ERA5 long mean **0.576** · ΔW0 **+0.019** |
 | “99.9999%” | Solo: no emitir GO silencioso bajo tests — **no** acierto del fuego |

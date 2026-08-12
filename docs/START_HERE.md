@@ -72,32 +72,31 @@ python scripts\show_all.py
 
 | Doc | Para qué |
 |------|----------|
-| `docs/CURRENT_STATE.md` | **Snapshot canónico** (gates + ML freeze) |
+| `docs/CURRENT_STATE.md` | **Snapshot canónico** (gates + Live Ops + freeze) |
 | `docs/REPO_MAP.md` | **Mapa profesional** de carpetas |
-| `docs/ml/README.md` | **ML probado**: champions, cómo se midió, kill list |
-| `docs/GOAL_ML_CLOSEOUT.md` | Cierre ML: freeze / más datos / techo |
-| `outputs/ml_eval/canonical/` | Stamps locales de champions (gitignored) |
+| `docs/APP.md` | **SPA + Live Ops** (flags, API `/live/v1/*`) |
+| `docs/design/LIVE_OPS_DEMO_KERNEL.md` | Diseño Live Ops Kernel |
+| `docs/EMPRESA_BOTS_TRABAJADORES.md` | **Grok Bot** teammates (empresa de bots) |
+| `docs/PLAN_PR_POST_LIVE_OPS.md` | Plan PRs post–Live Ops |
+| `docs/ml/README.md` | **ML probado**: champions, kill list |
+| `docs/GOAL_ML_CLOSEOUT.md` | Cierre ML: freeze / más datos |
+| `docs/CHEATSHEET_DEMO_12MIN.md` | Demo 12 min (SPA primary) |
+| `docs/H1_GO_Q_RUNBOOK.md` · `docs/H1_DEMO_SESSION_READY.json` | Cierre GO_Q (humano) |
 | `docs/MEGA_AUDIT_SELL_20260805.md` | Qué falta para vender (H1 + pitch) |
-| `docs/goals/README.md` | Mega goals cerrados + closeout |
-| `docs/OPERATOR_UX_LOOP_LOG.md` | Loop UX operario |
-| `docs/APP.md` | **SPA ops** (Leaflet + dashboard) |
-| `docs/CHEATSHEET_DEMO_12MIN.md` | Demo 12 min |
 | `docs/ML_PRODUCT_START_HERE.md` | ML lab CLI |
-| `docs/PORTAL.html` | Ver todo (generado) |
-| `docs/ONEPAGER_COMERCIAL_ES.md` | Venta |
-| `docs/H1_GO_Q_RUNBOOK.md` | Cierre GO_Q (humano) |
-| `docs/GUIA_COMANDOS_RECREAR_TODO.md` | Comandos lab |
-| `docs/PLAN_3_MESES.md` | Roadmap |
+| `docs/ONEPAGER_COMERCIAL_ES.md` | Venta (claims honestos) |
+| `docs/goals/README.md` | Mega goals cerrados |
+| `docs/PORTAL.html` | Hub eng (legacy vs SPA) |
 
 ## Qué está hecho vs bloqueado
 
-| Hecho | Bloqueado (externo / humano) |
-|-------|------------------------------|
-| Operator UX + 4 actos + Decision Card | **H1** demo tercero → GO_Q |
-| ML sealed LOFO **0.788** + weather ERA5 long **+0.019** · thrash **FREEZE** | **Más IF chain_honest** (siguiente cola ML) |
-| Tobarra KEEP **KILL** · fusion OFF | 3ª ancla / perímetro nacional / O5 grade A |
-| Pack third-party + replay | Piloto cliente real |
-| API mínima POST /v1/decide | Auth / 99.9% uptime (sueño) |
+| Hecho (eng) | Bloqueado (externo / humano) |
+|-------------|------------------------------|
+| SPA C2 + **Live Ops** + `app --demo-day` | **H1** demo tercero + acta → GO_Q |
+| Operator UX + Decision Card + pack/replay | Piloto cliente real firmado |
+| ML sealed LOFO **0.788** · thrash **FREEZE** | **Más IF chain_honest** (cola ML) |
+| Tobarra KEEP **KILL** · fusion **OFF** | O2 nacional / O5 2º grade A (B4/B5) |
+| Release flags + `make test-spa` | Auth cloud / 99.9% uptime (sueño) |
 
 ## Comando mínimo de decisión
 
