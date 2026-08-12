@@ -133,10 +133,11 @@ def _sanitize_under(
             raise PathNotAllowedError(f"path outside allowlist: {user_path}")
     except ValueError as exc:
         raise PathNotAllowedError(f"path outside allowlist: {user_path}") from exc
-    if candidate_real != root_real and not candidate_real.startswith(root_real + os.sep):
-        # Windows may normalize to different sep; also accept '/'
-        if not candidate_real.startswith(root_real + "/"):
-            raise PathNotAllowedError(f"path outside allowlist: {user_path}")
+    under_sep = candidate_real.startswith(root_real + os.sep) or candidate_real.startswith(
+        root_real + "/"
+    )
+    if candidate_real != root_real and not under_sep:
+        raise PathNotAllowedError(f"path outside allowlist: {user_path}")
     # Existence checks on the verified realpath string only
     if must_exist and not os.path.exists(candidate_real):  # noqa: PTH110 — intentional realpath sink
         raise PathNotAllowedError(f"path not found: {user_path}")
