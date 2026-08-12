@@ -11,14 +11,6 @@ import math
 from pathlib import Path
 from typing import Any
 
-# Optional B sidecar names (read-only; absent → stub)
-_DECISION_LOG_CANDIDATES = (
-    "outbox/decision_log.json",
-    "outbox/wfd_decision_log_v1.json",
-    "decision_log.json",
-    "outbox/decision_log/latest.json",
-)
-
 _H1_SESSION_REL = Path("docs") / "H1_DEMO_SESSION_READY.json"
 
 # Mes2 PR1-A fixed honesty strings (tests pin exact phrases)
@@ -232,86 +224,136 @@ def build_h1_eng_rehearsal(
     }
 
 
+def _empty_decision_log_surface(
+    *,
+    decision_card: dict[str, Any] | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    """Honest empty / sin-sidecar surface — never invent decision_id or fake ACK."""
+    card = decision_card if isinstance(decision_card, dict) else {}
+    # Card decision may be shown as context only; id stays None (no invent).
+    return {
+        "schema": "wfd_decision_log_ui_v1",
+        "marker": "decision-log",
+        "mode": "stub",
+        "source": "sin_sidecar",
+        "path_rel": None,
+        "id": None,
+        "decision_id": None,
+        "decision": card.get("decision"),
+        "event_id": card.get("event_id"),
+        "confidence_pred": None,
+        "confidence_pred_label": None,
+        "ack": None,
+        "ack_backend": None,
+        "acked": False,
+        "ack_ui_only": True,
+        "ack_requires_live_ops": True,
+        "go_q_met": False,
+        "n_entries": 0,
+        "note": note
+        or (
+            "Sin sidecar decision_log.jsonl · no inventa decision_id · "
+            "ACK backend requiere app --serve · no inventa GO_Q · fusion OFF"
+        ),
+        "field_ops_ml_live_fusion": "OFF",
+    }
+
+
 def load_decision_log_surface(
     *,
     work_dir: Path | None,
     decision_card: dict[str, Any] | None = None,
     repo_root: Path | None = None,
+    base: Path | None = None,
+    include_repo_root: bool = True,
 ) -> dict[str, Any]:
-    """A8: read-only decision-log if B sidecar exists; else honest stub.
+    """Mes2 PR2-A: map #31 ``decision_log.jsonl`` → SPA decision-log surface.
 
-    Never mutates disk, never invents backend ACK, never sets GO_Q.
+    Uses shipped ``load_decision_log`` (allowlisted). Latest entry wins.
+    Empty / path fail → honest stub (no invented decision_id, no fake ACK).
+    Never mutates disk, never sets GO_Q, fusion stays OFF.
     """
+    from wildfire_front.product.decide_service import PathNotAllowedError
+    from wildfire_front.product.decision_log import (
+        DECISION_LOG_FILENAME,
+        DecisionLogError,
+        load_decision_log,
+    )
+
     card = decision_card if isinstance(decision_card, dict) else {}
-    event_id = card.get("event_id")
-    decision = card.get("decision")
-    found: dict[str, Any] | None = None
-    source = "stub_ui"
-    rel_path: str | None = None
 
-    if work_dir is not None:
-        wd = Path(work_dir)
-        for rel in _DECISION_LOG_CANDIDATES:
-            p = wd / rel
-            if not p.is_file():
-                continue
-            try:
-                data = json.loads(p.read_text(encoding="utf-8"))
-            except (OSError, UnicodeError, json.JSONDecodeError):
-                continue
-            if isinstance(data, dict):
-                found = data
-                source = "sidecar_file"
-                rel_path = rel.replace("\\", "/")
-                break
-            if isinstance(data, list) and data and isinstance(data[0], dict):
-                found = data[0]
-                source = "sidecar_file_list_head"
-                rel_path = rel.replace("\\", "/")
-                break
+    if work_dir is None:
+        return _empty_decision_log_surface(decision_card=card)
 
-    if found is not None:
-        log_id = (
-            found.get("id")
-            or found.get("decision_id")
-            or found.get("event_id")
-            or event_id
-            or "sidecar"
+    allow_base = Path(base) if base is not None else (
+        Path(repo_root) if repo_root is not None else None
+    )
+
+    try:
+        entries = load_decision_log(
+            work_dir,
+            base=allow_base,
+            include_repo_root=include_repo_root,
         )
-        ack_backend = found.get("ack") or found.get("ack_state") or "unknown"
-        return {
-            "schema": "wfd_decision_log_ui_v1",
-            "marker": "decision-log",
-            "mode": "sidecar_read",
-            "source": source,
-            "path_rel": rel_path,
-            "id": str(log_id),
-            "decision": found.get("decision") or decision,
-            "ack_backend": ack_backend,
-            "ack_ui_only": True,
-            "go_q_met": False,
-            "note": (
-                "Sidecar B leído en solo lectura · ACK UI local ≠ ACK backend · "
-                "no inventa GO_Q · fusion OFF"
+    except PathNotAllowedError:
+        return _empty_decision_log_surface(
+            decision_card=card,
+            note=(
+                "work_dir fuera de allowlist · sin sidecar legible · "
+                "no inventa decision_id · fusion OFF · no GO_Q invent"
             ),
-            "field_ops_ml_live_fusion": "OFF",
-        }
+        )
+    except (OSError, UnicodeError, DecisionLogError, ValueError, TypeError):
+        return _empty_decision_log_surface(
+            decision_card=card,
+            note=(
+                "Error leyendo decision_log.jsonl · sin inventar entradas · "
+                "fusion OFF · no GO_Q invent"
+            ),
+        )
 
-    stub_id = event_id or (f"stub-{str(decision).lower()}" if decision else None)
+    if not entries:
+        return _empty_decision_log_surface(decision_card=card)
+
+    # Latest append is product "current" entry
+    found = entries[-1]
+    did = found.get("decision_id")
+    if not did:
+        return _empty_decision_log_surface(
+            decision_card=card,
+            note=(
+                "Sidecar sin decision_id válido · fail closed · "
+                "no inventa id · fusion OFF"
+            ),
+        )
+
+    ack_obj = found.get("ack") if isinstance(found.get("ack"), dict) else None
+    acked = bool(ack_obj and ack_obj.get("acked") is True)
+
     return {
         "schema": "wfd_decision_log_ui_v1",
         "marker": "decision-log",
-        "mode": "stub",
-        "source": "stub_ui",
-        "path_rel": None,
-        "id": str(stub_id) if stub_id else None,
-        "decision": decision,
-        "ack_backend": None,
-        "ack_ui_only": True,
+        "mode": "sidecar_read",
+        "source": "decision_log_jsonl",
+        "path_rel": DECISION_LOG_FILENAME,
+        "id": str(did),
+        "decision_id": str(did),
+        "decision": found.get("decision") or card.get("decision"),
+        "event_id": found.get("event_id") or card.get("event_id"),
+        "confidence_pred": found.get("confidence_pred"),
+        "confidence_pred_label": found.get("confidence_pred_label"),
+        "ack": ack_obj,
+        "ack_backend": ack_obj if ack_obj is not None else None,
+        "acked": acked,
+        "ack_ui_only": False,
+        "ack_requires_live_ops": True,
         "go_q_met": False,
+        "n_entries": len(entries),
         "note": (
-            "Stub UI · backend B opcional ausente · ACK local only · "
-            "no inventa GO_Q · fusion OFF · no es acta H1"
+            "Sidecar #31 decision_log.jsonl (última entrada) · "
+            "ACK backend solo con app --serve loopback · "
+            "no inventa GO_Q · fusion OFF · conf ML ≠ ROS"
         ),
         "field_ops_ml_live_fusion": "OFF",
     }

@@ -14,12 +14,14 @@ import pytest
 from wildfire_front.cli_app import _SafeSPARequestHandler, run_app
 from wildfire_front.product.app_spa import build_product_app_payload, write_product_app
 from wildfire_front.product.live_ops import (
+    LIVE_PATH_ACK_DECISION,
     LIVE_PATH_DECIDE,
     LIVE_PATH_EXPORT_ACTA,
     LIVE_PATH_HEALTH,
     LIVE_PATH_STATUS,
     check_demo_day_artifacts,
     dispatch_live,
+    handle_ack_decision,
     handle_decide,
     honesty_rails,
     resolve_work_dir,
@@ -120,11 +122,14 @@ def test_payload_live_ops_flag():
     assert on["live_ops"]["enabled"] is True
     assert on["live_ops"]["endpoints"]["decide"] == LIVE_PATH_DECIDE
     assert "export-acta" in on["live_ops"]["endpoints"]["export_acta"]
+    assert on["live_ops"]["endpoints"]["ack_decision"] == LIVE_PATH_ACK_DECISION
     # HTML must reference live endpoints when enabled
     paths = write_product_app(on, Path("outputs") / "_test_live_ops_spa")
     html = paths["html"].read_text(encoding="utf-8")
     assert "live_ops" in html or "liveOps" in html
     assert "/live/v1/decide" in html or "liveOps" in html
+    assert "/live/v1/ack-decision" in html or "ack_decision" in html
+    assert "runDlogAck" in html
 
 
 def test_dispatch_health_and_disabled_path():
@@ -324,3 +329,124 @@ def test_replay_third_party_default_pack():
     assert payload.get("ok") is True
     assert "replay_ok" in (payload.get("summary") or {})
     assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+
+
+def test_handle_ack_decision_round_trip_and_unknown(tmp_path: Path):
+    """Shipped Live Ops ACK path: append → handle_ack_decision → acked true."""
+    from wildfire_front.product.decision_log import (
+        append_decision,
+        get_decision,
+    )
+    from wildfire_front.product.decide_service import decide_from_request
+
+    work = tmp_path / "ack_live"
+    work.mkdir()
+    card = decide_from_request(
+        {
+            "event_id": "IF_ACK_LIVE",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 5.0,
+                "n_frames_staged": 10,
+                "speed_vs_ref_ratio": 0.9,
+            },
+            "ml_metrics": {"test_iou": 0.89, "improvement_vs_copy_iou": 0.25},
+            "channel": "pytest",
+            "trust_client_reliability": True,
+        }
+    )
+    entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
+    did = entry["decision_id"]
+
+    out = handle_ack_decision(
+        {
+            "work_dir": str(work),
+            "decision_id": did,
+            "operator": "spa_test",
+            "note": "PR2-A ack",
+        },
+        base=tmp_path,
+    )
+    assert out["ok"] is True
+    assert out["acked"] is True
+    assert out["decision_id"] == did
+    assert out["go_q_met"] is False
+    assert out["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert out["ack"]["acked"] is True
+
+    reloaded = get_decision(work, did, base=tmp_path, include_repo_root=False)
+    assert reloaded is not None
+    assert reloaded["ack"]["acked"] is True
+
+    bad = handle_ack_decision(
+        {"work_dir": str(work), "decision_id": "00000000-0000-0000-0000-000000000000"},
+        base=tmp_path,
+    )
+    assert bad["ok"] is False
+    assert bad["error"] == "unknown_decision_id"
+
+    st, payload = dispatch_live(
+        LIVE_PATH_ACK_DECISION,
+        {"work_dir": str(work), "decision_id": "deadbeef-dead-beef-dead-beefdeadbeef"},
+        base=tmp_path,
+        method="POST",
+    )
+    assert st == 400
+    assert payload.get("ok") is False
+    assert payload.get("error") == "unknown_decision_id"
+
+
+def test_live_http_ack_decision(tmp_path: Path):
+    """HTTP POST /live/v1/ack-decision on loopback server rewrites sidecar."""
+    from wildfire_front.product.decision_log import append_decision, get_decision
+    from wildfire_front.product.decide_service import decide_from_request
+
+    # Nested under tmp base so resolve_work_dir allowlist passes
+    base = tmp_path / "repo_like"
+    work = base / "outputs" / "incidents" / "ack_http"
+    work.mkdir(parents=True)
+    card = decide_from_request(
+        {
+            "event_id": "IF_ACK_HTTP",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 5.0,
+                "n_frames_staged": 10,
+                "speed_vs_ref_ratio": 0.9,
+            },
+            "ml_metrics": {"test_iou": 0.89, "improvement_vs_copy_iou": 0.25},
+            "channel": "pytest",
+            "trust_client_reliability": True,
+        }
+    )
+    entry = append_decision(work, card, base=base, include_repo_root=False)
+    did = entry["decision_id"]
+    rel = "outputs/incidents/ack_http"
+
+    httpd, port, _ = _start_live_server(tmp_path, live=True, base=base)
+    try:
+        st, payload = _post_json(
+            port,
+            LIVE_PATH_ACK_DECISION,
+            {"work_dir": rel, "decision_id": did, "operator": "http_test"},
+        )
+        assert st == 200, payload
+        assert payload["ok"] is True
+        assert payload["acked"] is True
+        assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+        assert payload.get("go_q_met") is False
+
+        reloaded = get_decision(work, did, base=base, include_repo_root=False)
+        assert reloaded is not None
+        assert reloaded["ack"]["acked"] is True
+
+        st2, bad = _post_json(
+            port,
+            LIVE_PATH_ACK_DECISION,
+            {"work_dir": rel, "decision_id": "11111111-1111-1111-1111-111111111111"},
+        )
+        assert st2 == 400
+        assert bad.get("error") == "unknown_decision_id"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
