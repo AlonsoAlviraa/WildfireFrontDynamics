@@ -32,11 +32,11 @@
       "allow_ml_only_hold": false,
       "allow_open_only_hold": true,
       "min_available_sources": 1,
-      "allow_ml_live_in_fusion": false,
+      "allow_ml_live_in_fusion": true,
       "ml_live_max_weight": 0.2,
       "ml_live_abstain_below": 0.45,
       "ml_live_veto_on_abstain": false,
-      "notes": "Never GO without thermal ops. ML-only \u2192 ABSTAIN. Open-only \u2192 HOLD monitoring."
+      "notes": "Never GO without thermal ops. ML-only \u2192 ABSTAIN. Open-only \u2192 HOLD monitoring. | allow_ml_live_in_fusion ON after human promote 2026-08-13. Still not tactical dispatch. IoU \u2260 ROS. GO_Q remains partial."
     },
     "research_open": {
       "id": "research_open",

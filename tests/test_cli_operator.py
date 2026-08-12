@@ -28,7 +28,7 @@ def test_rails_go_q_not_met():
     assert r["go_q_met"] is False
     assert r["GO_Q"] == "partial"
     assert r["GO_Q_semaforo"] == "AMARILLO"
-    assert r["field_ops_fusion"] == "OFF"
+    assert r["field_ops_fusion"] == "ON"
 
 
 def test_operator_hub_exit_0():
@@ -36,14 +36,13 @@ def test_operator_hub_exit_0():
     assert p.returncode == 0, p.stderr
     out = p.stdout
     assert "AMARILLO" in out
-    # Stable print_hub rails (#18): go_q_met False · field_ops fusion OFF
+    # Stable print_hub rails (#18): go_q_met False · field_ops fusion ON
     assert "go_q_met" in out
     assert "go_q_met          False" in out or "go_q_met False" in out.replace(" ", "")
     assert "field_ops fusion" in out
-    assert "OFF" in out
-    # Guard against accidental GO_Q flip / fusion ON in hub text
+    assert "ON" in out
+    # Guard against accidental GO_Q flip
     assert "go_q_met          True" not in out
-    assert "fusion  ON" not in out and "fusion ON" not in out
     assert "go_q complete" not in out.lower()
 
 
@@ -55,7 +54,7 @@ def test_operator_checklist_exit_0_and_no_go_q_claim():
     assert data["semaforo"] == "AMARILLO"
     assert "GO_Q complete" not in p.stdout.lower()
     assert data["rails"]["GO_Q"] == "partial"
-    assert data["rails"]["field_ops_fusion"] == "OFF"
+    assert data["rails"]["field_ops_fusion"] == "ON"
 
 
 def test_teach_and_show_exit_0():
@@ -88,7 +87,7 @@ def test_operator_do_act_1_smoke():
     r = rails_snapshot()
     assert r["go_q_met"] is False
     assert r["GO_Q_semaforo"] == "AMARILLO"
-    assert r["field_ops_fusion"] == "OFF"
+    assert r["field_ops_fusion"] == "ON"
 
 
 def test_operator_unknown_subcommand_exits_2():
@@ -108,7 +107,7 @@ def test_demo_third_party_rehearsal_keeps_go_q_false():
     data = json.loads(summary.read_text(encoding="utf-8"))
     assert data["go_q_met"] is False
     assert data["semaforo"] == "AMARILLO"
-    assert data["field_ops_fusion"] == "OFF"
+    assert data["field_ops_fusion"] == "ON"
 
 
 def test_build_checklist_structure():

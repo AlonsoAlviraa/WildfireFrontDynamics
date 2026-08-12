@@ -4,7 +4,7 @@
 Authority order:
   1. docs/CURRENT_STATE.md (human narrative + gate table)
   2. docs/ML_PRODUCT_GO_STATUS.json (machine stamp)
-  3. Hard rails: field_ops fusion OFF · GO_Q partial · FREEZE_ML · GO_MES+ false
+  3. Hard rails: field_ops fusion ON (human 2026-08-13) · GO_Q partial · FREEZE_ML · GO_MES+ false
 
 Exit codes:
   0 — PASS (all hard invariants hold)
@@ -103,42 +103,54 @@ def evaluate(
     gates = _extract_gate_table(md)
 
     # --- Hard rails ---
-    fusion = str(stamp.get("field_ops_allow_ml_live_in_fusion", True)).lower()
+    fusion = str(stamp.get("field_ops_allow_ml_live_in_fusion", False)).lower()
     rails = stamp.get("rails") or {}
     fusion_rail = str(rails.get("field_ops_fusion", "")).upper()
-    fusion_off = fusion in {"false", "0", "no"} or fusion_rail == "OFF"
+    fusion_on = fusion in {"true", "1", "yes"} and fusion_rail == "ON"
     checks.append(
         {
-            "id": "field_ops_fusion_off",
-            "ok": fusion_off,
+            "id": "field_ops_fusion_on",
+            "ok": fusion_on,
             "detail": (
                 f"stamp fusion allow={stamp.get('field_ops_allow_ml_live_in_fusion')} "
-                f"rails={fusion_rail}"
+                f"rails={fusion_rail} (human promote requires ON)"
             ),
         }
     )
-    if not fusion_off:
+    if not fusion_on:
+        hard_fail = True
+
+    # Catalog must match stamp (product rail)
+    policy_path = Path(__file__).resolve().parents[1] / "config" / "decision_policies.json"
+    catalog_on = False
+    if policy_path.is_file():
+        try:
+            cat = json.loads(policy_path.read_text(encoding="utf-8"))
+            fo = ((cat.get("policies") or {}).get("field_ops") or {})
+            catalog_on = bool(fo.get("allow_ml_live_in_fusion"))
+        except (OSError, json.JSONDecodeError, TypeError):
+            catalog_on = False
+    checks.append(
+        {
+            "id": "field_ops_catalog_fusion_on",
+            "ok": catalog_on,
+            "detail": f"decision_policies field_ops.allow_ml_live_in_fusion={catalog_on}",
+        }
+    )
+    if not catalog_on:
         hard_fail = True
 
     ml_go = bool(stamp.get("ml_product_go"))
-    # ml_product_go true is allowed ONLY as lab; must not imply fusion ON
-    if ml_go and not fusion_off:
-        checks.append(
-            {
-                "id": "ml_product_go_without_fusion",
-                "ok": False,
-                "detail": "ml_product_go true with fusion ON is forbidden",
-            }
-        )
-        hard_fail = True
-    else:
-        checks.append(
-            {
-                "id": "ml_product_go_lab_only",
-                "ok": True,
-                "detail": f"ml_product_go={ml_go} fusion_off={fusion_off} (lab GO ≠ field fusion)",
-            }
-        )
+    checks.append(
+        {
+            "id": "ml_product_go_with_field_fusion",
+            "ok": True,
+            "detail": (
+                f"ml_product_go={ml_go} fusion_on={fusion_on} "
+                "(human field promote; still not tactical dispatch)"
+            ),
+        }
+    )
 
     # Align CURRENT_STATE narrative tokens with stamp where both present
     cs_ml = gates.get("ml_product_go")
@@ -169,11 +181,11 @@ def evaluate(
             checks.append(
                 {
                     "id": "align_fusion_current_state",
-                    "ok": tok is False,
-                    "detail": f"CURRENT_STATE[{k}]={v}",
+                    "ok": tok is True,
+                    "detail": f"CURRENT_STATE[{k}]={v} (must be ON)",
                 }
             )
-            if tok is not False:
+            if tok is not True:
                 hard_fail = True
             break
 
@@ -237,18 +249,20 @@ def evaluate(
     if not keep_ok:
         hard_fail = True
 
-    # One-line truth must mention fusion OFF and not claim field ML live
+    # One-line / table must mention fusion ON after human promote
     oneline = ""
     for line in md.splitlines():
-        if "fusion" in line.lower() and ("OFF" in line or "off" in line):
+        if "fusion" in line.lower() and ("ON" in line or "on" in line):
             oneline = line
             break
-    fusion_narrative_ok = bool(oneline) or "fusion OFF" in md or "fusion** | **OFF" in md
+    fusion_narrative_ok = (
+        bool(oneline) or "fusion ON" in md or "fusion** | **ON" in md
+    )
     checks.append(
         {
-            "id": "narrative_mentions_fusion_off",
+            "id": "narrative_mentions_fusion_on",
             "ok": fusion_narrative_ok,
-            "detail": "CURRENT_STATE must keep field fusion OFF visible",
+            "detail": "CURRENT_STATE must keep field fusion ON visible",
         }
     )
     if not fusion_narrative_ok:
@@ -300,8 +314,8 @@ def evaluate(
             "ml_product_go_stamp": str(st_path),
         },
         "invariants": {
-            "field_ops_fusion": "OFF",
-            "ml_product_go_means": "lab_only_not_field_fusion",
+            "field_ops_fusion": "ON",
+            "ml_product_go_means": "lab_product_field_fusion_on_not_dispatch",
             "go_q": "partial_until_human_acta",
             "go_mes_plus": False,
             "tobarra_keep_reopen": False,

@@ -72,7 +72,7 @@ def test_payload_simple_mode_and_html(tmp_path: Path):
     wd = SLA if SLA.is_dir() else None
     payload = build_product_app_payload(work_dir=wd, live=False, ui_mode="simple", scan=True)
     assert payload["ui_mode"] == "simple"
-    assert payload["rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["rails"]["field_ops_ml_live_fusion"] == "ON"
     assert payload.get("plain_language", {}).get("schema") == "wfd_plain_language_v1"
     assert len(payload.get("glossary") or []) >= 10
     actions = payload.get("product_actions") or []

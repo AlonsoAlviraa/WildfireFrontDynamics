@@ -39,7 +39,7 @@ def test_write_read_stub_round_trip(tmp_path: Path):
     assert card["eng_stub"] is True
     assert card["event_id"] == "IF_VV_1"
     assert card["rails"]["GO_Q"] == "partial"
-    assert card["rails"]["field_ops_fusion"] == "OFF"
+    assert card["rails"]["field_ops_fusion"] == "ON"
 
     path = scorecard_path(work)
     assert path.is_file()
@@ -66,11 +66,11 @@ def test_non_claims_and_no_field_metrics(tmp_path: Path):
     assert metrics.get("field_grade") is None
     raw = (work / VV_SCORECARD_FILENAME).read_text(encoding="utf-8").lower()
     assert "go_q complete" not in raw
-    assert '"field_ops_fusion": "on"' not in raw
+    assert '"go_q": "true"' not in raw
     assert "tactical dispatch" not in raw or "not" in raw
     # Must not claim field-validated true
     assert "field-validated" not in raw or "not" in raw
-    assert card["rails"]["field_ops_fusion"] == "OFF"
+    assert card["rails"]["field_ops_fusion"] == "ON"
     assert card["rails"]["GO_Q"] != "true"
 
 
@@ -120,7 +120,7 @@ def test_script_entry_writes_scorecard(tmp_path: Path):
     assert data["eng_stub"] is True
     assert data["event_id"] == "script_path"
     assert data["rails"]["GO_Q"] == "partial"
-    assert data["rails"]["field_ops_fusion"] == "OFF"
+    assert data["rails"]["field_ops_fusion"] == "ON"
 
 
 def test_script_rejects_outside_path(tmp_path: Path):
@@ -160,7 +160,7 @@ def test_custom_scorecard_nulls_field_metrics(tmp_path: Path):
     }
     card = write_vv_scorecard(work, bad, base=tmp_path, include_repo_root=False)
     assert card["rails"]["GO_Q"] == "partial"
-    assert card["rails"]["field_ops_fusion"] == "OFF"
+    assert card["rails"]["field_ops_fusion"] == "ON"
     assert card["metrics"]["field_iou"] is None
     assert card["metrics"]["field_ros"] is None
     assert card["metrics"]["field_grade"] is None
@@ -185,7 +185,7 @@ def test_decide_writes_vv_scorecard_under_work_dir(tmp_path: Path):
     assert vv["status"] == VV_STATUS_ENG_STUB
     assert vv["eng_stub"] is True
     assert vv["rails"]["GO_Q"] == "partial"
-    assert vv["rails"]["field_ops_fusion"] == "OFF"
+    assert vv["rails"]["field_ops_fusion"] == "ON"
     assert vv["metrics_field_null"] is True
     assert (work / VV_SCORECARD_FILENAME).is_file()
     disk = json.loads((work / VV_SCORECARD_FILENAME).read_text(encoding="utf-8"))

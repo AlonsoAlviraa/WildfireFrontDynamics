@@ -75,7 +75,7 @@ def test_bridge_decide_strips_non_loopback_urls():
     assert p_ok["bridge_decide"]["proxy_path"] == "/bridge/v1/decide"
     assert p_ok["bridge_decide"]["prefer_proxy"] is True
     # Honesty rails never flip with bridge
-    assert p_ok["rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert p_ok["rails"]["field_ops_ml_live_fusion"] == "ON"
     assert p_ok["rails"]["go_q_invent_forbidden"] is True
     assert p_ok["rails"]["not_tactical_dispatch"] is True
     assert p_ok["brief"]["gates"].get("GO_Q") is not True
@@ -114,7 +114,7 @@ def test_handler_path_traversal_403_and_loopback_200(tmp_path: Path):
             body = resp.read().decode("utf-8", errors="replace")
             result["status"] = resp.status
             result["shell"] = "#0B1220" in body and "primary-acts" in body
-            result["fusion_off"] = '"field_ops_ml_live_fusion": "OFF"' in body
+            result["fusion_off"] = '"field_ops_ml_live_fusion": "ON"' in body
         for trav in (
             "/../../pyproject.toml",
             "/..%2F..%2Fpyproject.toml",
@@ -279,7 +279,7 @@ def test_payload_rails_honesty_invariant():
     """build_product_app_payload always emits industrial honesty rails."""
     p = build_product_app_payload(live=False, scan=False)
     rails = p["rails"]
-    assert rails["field_ops_ml_live_fusion"] == "OFF"
+    assert rails["field_ops_ml_live_fusion"] == "ON"
     assert rails["lab_go_ne_field_fusion"] is True
     assert rails["go_q_invent_forbidden"] is True
     assert rails["not_tactical_dispatch"] is True

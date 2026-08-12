@@ -109,13 +109,12 @@ def test_policy_catalog_ml_live_fields():
     assert default.ml_live_abstain_below == pytest.approx(0.35)
     assert default.ml_live_veto_on_abstain is False
 
-    assert field.allow_ml_live_in_fusion is False
+    assert field.allow_ml_live_in_fusion is True
     assert field.ml_live_max_weight == pytest.approx(0.20)
     assert field.ml_live_abstain_below == pytest.approx(0.45)
     assert field.ml_live_veto_on_abstain is False
 
-    # research_open may enable experimental live fusion after U1 TEST honest promote;
-    # field_ops stays hard-off (asserted above).
+    # research_open experimental + field_ops human promote 2026-08-13
     assert research.allow_ml_live_in_fusion is True
     assert research.ml_live_max_weight == pytest.approx(0.35)
     assert research.ml_live_abstain_below == pytest.approx(0.25)

@@ -34,7 +34,7 @@ pytest tests/test_check_release_flags.py -q
 
 | Flag | Valor |
 |------|--------|
-| field_ops ML fusion | **OFF** |
+| field_ops ML fusion | **ON** |
 | ml_product_go | **true (lab only)** |
 | GO_MES | **true** (mínimo) |
 | GO_MES+ | **false** |

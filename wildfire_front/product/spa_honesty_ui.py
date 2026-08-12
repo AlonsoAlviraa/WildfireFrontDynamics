@@ -13,6 +13,12 @@ from typing import Any
 
 _H1_SESSION_REL = Path("docs") / "H1_DEMO_SESSION_READY.json"
 
+
+def _fusion_rail() -> str:
+    from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+    return field_ops_ml_live_fusion_rail()
+
 # Mes2 PR1-A fixed honesty strings (tests pin exact phrases)
 UNCERTAINTY_BAR_NOTE = (
     "no es ROS · IoU ≠ ROS · banda de calidad existente, sin inventar scores"
@@ -99,7 +105,7 @@ def build_uncertainty_bar_view(
         "is_ros": False,
         "iou_is_not_ros": True,
         "empty": conf is None,
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
         "go_q_invent_forbidden": True,
     }
 
@@ -174,10 +180,10 @@ def build_split_conf_view(
         "ml_neq_ros": True,
         "iou_is_not_ros": True,
         "invents_scores": False,
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
         "go_q_invent_forbidden": True,
         "go_q_met": False,
-        "note": "Conf. ML ≠ Conf. ROS · IoU ≠ ROS · no es despacho táctico · fusion OFF",
+        "note": "Conf. ML ≠ Conf. ROS · IoU ≠ ROS · no es despacho táctico · fusion ON",
     }
 
 
@@ -187,7 +193,7 @@ def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:
     if dec == "GO":
         # Lab/eng GO on card ≠ field GO sell — clamp ladder highlight to S2
         active = "S2"
-        note = "Card GO (lab/eng) ≠ field GO · fusion OFF · no vender despacho"
+        note = "Card GO (lab/eng) ≠ field GO · fusion ON · no vender despacho"
     elif dec == "HOLD":
         active = "S1"
         note = "HOLD: soporte limitado · no inventar certeza"
@@ -210,7 +216,7 @@ def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:
             "no GO_Q complete · no IoU=ROS · marketing embargado hasta clear humano"
         ),
         "note": note,
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
         "go_q_invent_forbidden": True,
     }
 
@@ -239,7 +245,7 @@ def build_h1_eng_rehearsal(
         {
             "n": 1,
             "title": "Rails en voz alta",
-            "detail": "GO_MES true · GO_Q partial · fusion OFF · ABSTAIN = feature",
+            "detail": "GO_MES true · GO_Q partial · fusion ON · ABSTAIN = feature",
         },
         {
             "n": 2,
@@ -300,7 +306,7 @@ def build_h1_eng_rehearsal(
         "eng_only": True,
         "not_third_party_acta": True,
         "go_q_invent_forbidden": True,
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
     }
 
 
@@ -334,9 +340,9 @@ def _empty_decision_log_surface(
         "note": note
         or (
             "Sin sidecar decision_log.jsonl · no inventa decision_id · "
-            "ACK backend requiere app --serve · no inventa GO_Q · fusion OFF"
+            "ACK backend requiere app --serve · no inventa GO_Q · fusion ON"
         ),
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
     }
 
 
@@ -381,7 +387,7 @@ def load_decision_log_surface(
             decision_card=card,
             note=(
                 "work_dir fuera de allowlist · sin sidecar legible · "
-                "no inventa decision_id · fusion OFF · no GO_Q invent"
+                "no inventa decision_id · fusion ON · no GO_Q invent"
             ),
         )
     except (OSError, UnicodeError, DecisionLogError, ValueError, TypeError):
@@ -389,7 +395,7 @@ def load_decision_log_surface(
             decision_card=card,
             note=(
                 "Error leyendo decision_log.jsonl · sin inventar entradas · "
-                "fusion OFF · no GO_Q invent"
+                "fusion ON · no GO_Q invent"
             ),
         )
 
@@ -404,7 +410,7 @@ def load_decision_log_surface(
             decision_card=card,
             note=(
                 "Sidecar sin decision_id válido · fail closed · "
-                "no inventa id · fusion OFF"
+                "no inventa id · fusion ON"
             ),
         )
 
@@ -433,9 +439,9 @@ def load_decision_log_surface(
         "note": (
             "Sidecar #31 decision_log.jsonl (última entrada) · "
             "ACK backend solo con app --serve loopback · "
-            "no inventa GO_Q · fusion OFF · conf ML ≠ ROS"
+            "no inventa GO_Q · fusion ON · conf ML ≠ ROS"
         ),
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
     }
 
 
@@ -461,9 +467,9 @@ def _empty_vv_scorecard_surface(*, note: str | None = None) -> dict[str, Any]:
         "note": note
         or (
             "Sin sidecar vv_scorecard.json · no inventa field IoU/ROS/grade · "
-            "eng_stub only · fusion OFF · GO_Q partial · no es despacho"
+            "eng_stub only · fusion ON · GO_Q partial · no es despacho"
         ),
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
     }
 
 
@@ -506,14 +512,14 @@ def load_vv_scorecard_surface(
         return _empty_vv_scorecard_surface(
             note=(
                 "work_dir fuera de allowlist · sin sidecar V&V legible · "
-                "no inventa field scores · fusion OFF · GO_Q partial"
+                "no inventa field scores · fusion ON · GO_Q partial"
             ),
         )
     except (OSError, UnicodeError, VvSidecarError, ValueError, TypeError, json.JSONDecodeError):
         return _empty_vv_scorecard_surface(
             note=(
                 "Error leyendo vv_scorecard.json · sin inventar métricas de campo · "
-                "fusion OFF · GO_Q partial"
+                "fusion ON · GO_Q partial"
             ),
         )
 
@@ -540,7 +546,7 @@ def load_vv_scorecard_surface(
         "invents_field_scores": False,
         "note": (
             "Sidecar #34 vv_scorecard.json (lectura) · eng_stub · "
-            "no field IoU/ROS/grade · no inventa GO_Q · fusion OFF · no es despacho"
+            "no field IoU/ROS/grade · no inventa GO_Q · fusion ON · no es despacho"
         ),
-        "field_ops_ml_live_fusion": "OFF",
+        "field_ops_ml_live_fusion": _fusion_rail(),
     }

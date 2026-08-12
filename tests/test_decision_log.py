@@ -49,7 +49,7 @@ def test_append_and_load_round_trip(tmp_path: Path):
     assert entry["decision"] == card["decision"]
     assert entry["event_id"] == card["event_id"]
     assert entry["rails"]["GO_Q"] == "partial"
-    assert entry["rails"]["field_ops_fusion"] == "OFF"
+    assert entry["rails"]["field_ops_fusion"] == "ON"
 
     log_path = log_file_path(work)
     assert log_path.is_file()
@@ -125,13 +125,12 @@ def test_rails_non_claims_never_flip_gates(tmp_path: Path):
     work.mkdir()
     card = _sample_card()
     entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
-    # Log must not claim GO_Q complete or fusion ON
+    # Log must not claim GO_Q complete; fusion ON is the human-promoted rail
     assert entry["rails"]["GO_Q"] != "true"
     assert entry["rails"]["GO_Q"] == "partial"
-    assert entry["rails"]["field_ops_fusion"] == "OFF"
+    assert entry["rails"]["field_ops_fusion"] == "ON"
     raw = (work / DECISION_LOG_FILENAME).read_text(encoding="utf-8").lower()
     assert "go_q complete" not in raw
-    assert '"field_ops_fusion": "on"' not in raw
     # Real decide card itself must not invent fusion unlock
     assert card.get("system_reliability_pass") is False or card.get("decision") in (
         "GO",

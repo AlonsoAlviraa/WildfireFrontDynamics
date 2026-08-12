@@ -42,7 +42,7 @@ def rails_snapshot() -> dict[str, Any]:
         "GO_Q_semaforo": "AMARILLO",
         "go_q_met": False,
         "go_q_note": "Needs human third-party demo + signed acta (eng cannot close GO_Q)",
-        "field_ops_fusion": "OFF",
+        "field_ops_fusion": "ON",
         "ml_product_go": "lab_only",
         "disclaimers": [
             "not_validated_tactical_dispatch",
@@ -166,7 +166,7 @@ def print_checklist(*, as_json: bool = False) -> int:
         mark = "OK" if c["ok"] else "MISS"
         print(f"  [{mark:<4}] {c['id']:<24} {c['path']}")
     print()
-    print("  Rails: GO_Q=partial · field_ops fusion OFF · no claim GO_Q complete")
+    print("  Rails: GO_Q=partial · field_ops fusion ON · no claim GO_Q complete")
     print("  Next:  wildfire-front operator do --act 1")
     print()
     return 0
@@ -302,7 +302,7 @@ def run_demo_third_party(
         "decision": card.get("decision"),
         "go_q_met": False,
         "semaforo": "AMARILLO",
-        "field_ops_fusion": "OFF",
+        "field_ops_fusion": "ON",
         "paths": paths,
         "replay_ok": None if replay_result is None else bool(replay_result.get("replay_ok")),
         "limits": [

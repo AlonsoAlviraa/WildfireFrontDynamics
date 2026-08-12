@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from wildfire_front.geo_crs import geojson_to_wgs84, looks_projected_meters
+from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
 
 from .firms_client import fetch_firms_hotspots
 
@@ -286,7 +287,7 @@ def build_fire_status_map_payload(
             "external_hotspots": int(firms.get("n_hotspots") or 0),
         },
         "rails": {
-            "field_ops_ml_live_fusion": "OFF",
+            "field_ops_ml_live_fusion": field_ops_ml_live_fusion_rail(),
             "not_tactical_dispatch": True,
             "nrt_not_official_perimeter": True,
             "hotspots_not_burned_area": True,
@@ -297,7 +298,7 @@ def build_fire_status_map_payload(
             "Mapa de estado / NRT. NO despacho táctico. "
             "Hotspots FIRMS ≠ área quemada oficial ni perímetro de extinción. "
             "Capas locales = productos WFD (frente/envelope) con sus limitaciones. "
-            "field_ops ML fusion = OFF."
+            "field_ops ML fusion = ON (≠ despacho)."
         ),
         "work_dir": str(work_dir) if work_dir else None,
     }

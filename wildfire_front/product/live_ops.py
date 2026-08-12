@@ -45,7 +45,7 @@ LIVE_PATH_ACK_DECISION = "/live/v1/ack-decision"
 LIVE_PATH_HEALTH = "/live/v1/health"
 
 HONESTY_RAILS: dict[str, Any] = {
-    "field_ops_ml_live_fusion": "OFF",
+    "field_ops_ml_live_fusion": "ON",
     "not_tactical_dispatch": True,
     "go_q_invent_forbidden": True,
     "iou_is_not_ros": True,
@@ -56,8 +56,12 @@ HONESTY_RAILS: dict[str, Any] = {
 
 
 def honesty_rails() -> dict[str, Any]:
-    """Immutable honesty snapshot (never enable fusion / invent GO_Q)."""
-    return dict(HONESTY_RAILS)
+    """Honesty snapshot (fusion follows field_ops catalog; never invent GO_Q)."""
+    from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+    rails = dict(HONESTY_RAILS)
+    rails["field_ops_ml_live_fusion"] = field_ops_ml_live_fusion_rail()
+    return rails
 
 
 def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
@@ -255,19 +259,18 @@ def handle_decide(
     *,
     base: Path | None = None,
 ) -> dict[str, Any]:
-    """field_ops Decision Card via decide_from_request (fusion OFF).
+    """field_ops Decision Card via decide_from_request.
 
     Channel ``live_ops_loopback`` (not ``http_api``) so work_dir sources under
     the allowlisted base load like CLI — without accepting client free-floating
-    reliability booleans or enabling ML live fusion. ABSTAIN remains valid when
-    sources are genuinely empty.
+    reliability booleans. Fusion follows field_ops catalog. ABSTAIN remains valid.
     """
     req_in = dict(body or {})
     root = Path(base or REPO_ROOT).resolve()
     wd = resolve_work_dir(req_in.get("work_dir"), base=root)
     event_id = str(req_in.get("event_id") or Path(wd).name or "live_ops")
-    # Loopback Live Ops: load paths under base, never client-asserted R1–R4,
-    # never ML fusion ON. Distinct from unauthenticated multi-tenant HTTP.
+    # Loopback Live Ops: load paths under base, never client-asserted R1–R4.
+    # Fusion follows field_ops catalog (kwargs cannot unlock).
     req = {
         "channel": "live_ops_loopback",
         "policy_id": str(req_in.get("policy_id") or req_in.get("policy") or "field_ops"),
@@ -292,14 +295,7 @@ def handle_decide(
             "honesty_rails": honesty_rails(),
         }
     # Surface slim card fields for SPA hero + honesty proof
-    fusion = (
-        (card.get("rails") or {}).get("field_ops_ml_live_fusion")
-        or (card.get("policy") or {}).get("ml_live_fusion")
-        or "OFF"
-    )
-    if fusion and str(fusion).upper() not in ("OFF", "FALSE", "0", "NO"):
-        # Hard rail: never surface fusion ON from live ops
-        fusion = "OFF"
+    fusion = honesty_rails().get("field_ops_ml_live_fusion") or "OFF"
     outbox_card = _read_json_file(
         _fixed_child(_fixed_child(wd, "outbox"), "fire_decision_card.json")
     ) or _read_json_file(_fixed_child(wd, "fire_decision_card.json"))
@@ -320,11 +316,11 @@ def handle_decide(
             "system_reliability_pass": card.get("system_reliability_pass"),
             "latency_ms": card.get("latency_ms"),
             "policy_id": (card.get("policy") or {}).get("id") or req["policy_id"],
-            "field_ops_ml_live_fusion": "OFF",
+            "field_ops_ml_live_fusion": fusion,
             "reasons_head": list((card.get("reasons") or [])[:4]),
             "outbox_decision": outbox_decision,
             "note": (
-                "Live recompute field_ops (fusion OFF). "
+                f"Live recompute field_ops (fusion {fusion}). "
                 "outbox_decision is last stored card if any — not an override."
             ),
         },
@@ -585,7 +581,7 @@ def handle_ack_decision(
         "honesty_rails": honesty_rails(),
         "note": (
             "ACK escrito en decision_log.jsonl · no es acta H1 · "
-            "fusion OFF · no inventa GO_Q"
+            "fusion ON · no inventa GO_Q"
         ),
     }
 

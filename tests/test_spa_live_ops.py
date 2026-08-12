@@ -94,9 +94,9 @@ def sla_work_dir() -> Path:
     return wd
 
 
-def test_honesty_rails_fusion_off():
+def test_honesty_rails_fusion_on():
     r = honesty_rails()
-    assert r["field_ops_ml_live_fusion"] == "OFF"
+    assert r["field_ops_ml_live_fusion"] == "ON"
     assert r["go_q_invent_forbidden"] is True
     assert r["not_tactical_dispatch"] is True
 
@@ -117,7 +117,7 @@ def test_resolve_work_dir_rejects_traversal(tmp_path: Path):
 def test_payload_live_ops_flag():
     off = build_product_app_payload(live=False, scan=False, live_ops_enabled=False)
     assert off["live_ops"]["enabled"] is False
-    assert off["rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert off["rails"]["field_ops_ml_live_fusion"] == "ON"
     on = build_product_app_payload(live=False, scan=False, live_ops_enabled=True)
     assert on["live_ops"]["enabled"] is True
     assert on["live_ops"]["endpoints"]["decide"] == LIVE_PATH_DECIDE
@@ -136,7 +136,7 @@ def test_dispatch_health_and_disabled_path():
     st, payload = dispatch_live(LIVE_PATH_HEALTH, method="GET")
     assert st == 200
     assert payload["ok"] is True
-    assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
 
 
 def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
@@ -153,7 +153,7 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         assert st_s == 200, status
         assert status["ok"] is True
         assert status["act"] == "status"
-        assert status["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+        assert status["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
 
         st_d, decided = _post_json(
             port,
@@ -163,7 +163,7 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         assert st_d == 200, decided
         assert decided["ok"] is True
         assert decided["act"] == "decide"
-        assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+        assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
         summary = decided.get("summary") or {}
         assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get(
             "decision"
@@ -282,7 +282,7 @@ def test_demo_day_json_rails(tmp_path: Path, monkeypatch):
     assert code == 0
     payload = json.loads(buf.getvalue())
     assert payload["live_ops"]["enabled"] is True
-    assert payload["rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["rails"]["field_ops_ml_live_fusion"] == "ON"
     dd = payload.get("demo_day") or {}
     assert dd.get("go_q_met") is False
     assert dd.get("go_q_invent_forbidden") is True
@@ -295,7 +295,7 @@ def test_check_demo_day_artifacts_rails():
     art = check_demo_day_artifacts(repo=REPO_ROOT)
     assert art["go_q_met"] is False
     assert art["go_q_invent_forbidden"] is True
-    assert art["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert art["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
     # Prefer present, but don't fail the whole suite if pack missing in bare clones
     assert "artifacts" in art
 
@@ -307,13 +307,13 @@ def test_handle_decide_direct(sla_work_dir: Path):
         base=REPO_ROOT,
     )
     assert out["ok"] is True
-    assert out["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert out["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
     assert out.get("channel") == "live_ops_loopback"
     dec = (out.get("summary") or {}).get("decision")
     assert dec is not None
     assert str(dec).upper() in ("GO", "HOLD", "ABSTAIN")
     # Loopback channel should load work_dir sources (not force empty-source only)
-    assert (out.get("summary") or {}).get("field_ops_ml_live_fusion") == "OFF"
+    assert (out.get("summary") or {}).get("field_ops_ml_live_fusion") == "ON"
 
 
 def test_replay_third_party_default_pack():
@@ -328,7 +328,7 @@ def test_replay_third_party_default_pack():
     assert st == 200
     assert payload.get("ok") is True
     assert "replay_ok" in (payload.get("summary") or {})
-    assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
 
 
 def test_handle_ack_decision_round_trip_and_unknown(tmp_path: Path):
@@ -371,7 +371,7 @@ def test_handle_ack_decision_round_trip_and_unknown(tmp_path: Path):
     assert out["acked"] is True
     assert out["decision_id"] == did
     assert out["go_q_met"] is False
-    assert out["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert out["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
     assert out["ack"]["acked"] is True
 
     reloaded = get_decision(work, did, base=tmp_path, include_repo_root=False)
@@ -433,7 +433,7 @@ def test_live_http_ack_decision(tmp_path: Path):
         assert st == 200, payload
         assert payload["ok"] is True
         assert payload["acked"] is True
-        assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "OFF"
+        assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
         assert payload.get("go_q_met") is False
 
         reloaded = get_decision(work, did, base=base, include_repo_root=False)

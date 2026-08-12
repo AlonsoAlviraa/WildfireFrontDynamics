@@ -9,7 +9,7 @@ UI (Stitch «WFD Industrial C2»): dark EOC/map-first shell, dense KPIs, short l
 Modo fácil by default. HTML renderer: ``app_spa_html.render_product_app_html``.
 
 Schema: ``wfd_product_app_v1``
-Honesty: not tactical dispatch · field_ops fusion OFF · no GO_Q invent.
+Honesty: not tactical dispatch · field_ops fusion ON · no GO_Q invent.
 """
 
 from __future__ import annotations

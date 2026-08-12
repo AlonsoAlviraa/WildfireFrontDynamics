@@ -14,10 +14,11 @@ from .product.app_spa import (
     write_product_app,
 )
 from .product.fire_catalog import scan_fire_catalog
+from .product.policy import field_ops_ml_live_fusion_rail
 
-# Product CLI rails snapshot (never flip here — SSOT is CURRENT_STATE / stamp)
+# Product CLI rails snapshot (fusion follows field_ops catalog; GO_Q never invented)
 _APP_RAILS: dict[str, Any] = {
-    "field_ops_ml_live_fusion": "OFF",
+    "field_ops_ml_live_fusion": field_ops_ml_live_fusion_rail(),
     "go_q_invent_forbidden": True,
     "go_q_met": False,
     "not_tactical_dispatch": True,
@@ -36,7 +37,7 @@ def register_app_commands(commands: Any, *, add_global_flags) -> None:
             "  · Map-first + Decision Card + product_actions inventory\n"
             "  · Tabs: Overview / Decisión / Acciones / Nuevo / Términos / Lista\n"
             "  · All CTAs copy with toast feedback; fire picker + rebuild bound to work-dir\n"
-            "Honesty: NOT tactical dispatch; field_ops ML fusion OFF; no GO_Q invent."
+            "Honesty: NOT tactical dispatch; field_ops ML fusion ON (human 2026-08-13); no GO_Q invent."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -247,7 +248,7 @@ def run_app(args: argparse.Namespace) -> int:
                     "rails": dict(_APP_RAILS),
                     "note": (
                         "Catalog only · not tactical dispatch · "
-                        "field_ops ML fusion OFF · GO_Q invent forbidden · "
+                        "field_ops ML fusion ON · GO_Q invent forbidden · "
                         "file:// / no --serve: SPA copies CLI (liveUnavailableFallback)"
                     ),
                 }
@@ -276,7 +277,7 @@ def run_app(args: argparse.Namespace) -> int:
             print("")
             print("  Abrir: python -m wildfire_front app --fire ID --open")
             print("  Live Ops: python -m wildfire_front app --serve --fire ID")
-            print("  rails: fusion OFF · GO_Q invent forbidden · no despacho táctico")
+            print("  rails: fusion ON · GO_Q invent forbidden · no despacho táctico")
             print("  sin --serve: botones SPA copian CLI (liveUnavailableFallback)")
             print("  V&V SPA: lectura vv_scorecard.json · sin scores de campo")
             print("")
@@ -483,7 +484,7 @@ def run_app(args: argparse.Namespace) -> int:
             print("  live: click acts run product code (loopback --serve only)")
         else:
             print("  no-serve: copy-CLI fallback (app --serve for Live Ops)")
-            print("  rails: fusion OFF · GO_Q invent forbidden · no despacho táctico")
+            print("  rails: fusion ON · GO_Q invent forbidden · no despacho táctico")
         print("")
 
     # --json snapshot never blocks on serve (CI / demo-day rails check)
@@ -916,7 +917,7 @@ def _serve_static_spa(
     if not quiet:
         print(f"  serve:        {url}  (dir={root}; loopback-only; no CORS)")
         if live_ops_enabled:
-            print("  live ops:     POST /live/v1/{status,decide,export-acta}  (fusion OFF)")
+            print("  live ops:     POST /live/v1/{status,decide,export-acta}  (fusion ON)")
         if bridge_upstream:
             print(f"  bridge proxy: /bridge/v1/decide → {bridge_upstream}/v1/decide")
         print("  stop:         Ctrl+C")

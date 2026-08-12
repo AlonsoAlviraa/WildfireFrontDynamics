@@ -2,7 +2,7 @@
 
 ## Rails (decir en voz alta)
 
-GO_MES **true** (mínimo) · GO_Q **partial** (H1 demo) · field_ops ML fusion **OFF** · ml_product_go **true** (lab only) · Tobarra LOFO **KILL** (lab) · **ABSTAIN = feature**
+GO_MES **true** (mínimo) · GO_Q **partial** (H1 demo) · field_ops ML fusion **ON** · ml_product_go **true** (lab) · Tobarra LOFO **KILL** (lab) · **ABSTAIN = feature** · fusion ON ≠ despacho
 
 ## Setup
 
@@ -34,7 +34,7 @@ python -m wildfire_front app --fire _sla_measure --open   # sin --serve
 # En UI: Estado / Decidir / Acta → toast «CLI copiado · sin serve»
 ```
 
-Rails SPA: field_ops ML fusion **OFF** · conf. predicción **no es ROS** · IoU ≠ ROS · GO_Q partial.
+Rails SPA: field_ops ML fusion **ON** · conf. predicción **no es ROS** · IoU ≠ ROS · GO_Q partial.
 
 ### Ensayo eng en SPA (A6) — no es H1 tercero
 
