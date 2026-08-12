@@ -477,13 +477,13 @@ def _shell() -> str:
 
       <div class="decision-log" id="decision-log" data-marker="decision-log" aria-label="Decision log">
         <b>Decision log</b>
-        <div class="dlog-id" id="dlog-id">id: — (stub UI · backend B opcional)</div>
-        <div class="dlog-meta" id="dlog-meta">Última decisión mostrada aquí. ACK es superficie UI; no inventa backend si B no shippea.</div>
+        <div class="dlog-id" id="dlog-id">id: — (sin sidecar decision_log.jsonl)</div>
+        <div class="dlog-meta" id="dlog-meta">Última entrada #31. ACK backend solo con app --serve; sin inventar decision_id.</div>
         <div class="dlog-ack">
-          <button type="button" class="btn sm" id="btn-dlog-ack" title="ACK local (UI only)">ACK UI</button>
-          <span class="dlog-meta" id="dlog-ack-state">ack: pending</span>
+          <button type="button" class="btn sm" id="btn-dlog-ack" title="ACK sidecar (loopback --serve)">ACK</button>
+          <span class="dlog-meta" id="dlog-ack-state">ack: —</span>
         </div>
-        <div class="dlog-note">fusion OFF · no GO_Q invent · ACK local ≠ acta H1</div>
+        <div class="dlog-note" id="dlog-note">fusion OFF · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS</div>
       </div>
 
       <div class="split-conf" id="split-conf" data-marker="split-conf" aria-label="Confianza ML vs ROS">
@@ -600,7 +600,7 @@ let hero = P.hero || {};
 const rails = P.rails || {};
 const h1Eng = P.h1_eng_rehearsal || {};
 const srLadder = P.sr_ladder || {};
-const decisionLog = P.decision_log || {};
+let decisionLog = P.decision_log || {};
 let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
@@ -900,16 +900,97 @@ if (btnReplay) {
   };
   btnReplay.style.display = liveOps.enabled ? '' : 'none';
 }
-// A4: ACK is UI-only until Agent B decision-log backend ships
+// Mes2 PR2-A: ACK → Live Ops /live/v1/ack-decision (shipped ack_decision) when --serve
+function paintDecisionLog() {
+  const dlog = decisionLog || {};
+  const dlogId = document.getElementById('dlog-id');
+  const dlogMeta = document.getElementById('dlog-meta');
+  const st = document.getElementById('dlog-ack-state');
+  const noteEl = document.getElementById('dlog-note');
+  const did = dlog.decision_id || dlog.id || null;
+  const mode = dlog.mode === 'sidecar_read' ? 'sidecar #31' : 'sin sidecar';
+  if (dlogId) {
+    dlogId.textContent = did
+      ? ('id: ' + did + ' · ' + mode)
+      : ('id: — (' + mode + ' · no inventa decision_id)');
+  }
+  if (dlogMeta) {
+    const dec = dlog.decision || (card && card.decision) || '—';
+    const conf = dlog.confidence_pred != null
+      ? (' · conf ' + dlog.confidence_pred + ' (no es ROS)')
+      : '';
+    const gq = 'go_q_met=' + String(dlog.go_q_met === true);
+    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + conf
+      + ' · fusion OFF · ' + gq + ' · ' + (dlog.note || '');
+  }
+  if (st) {
+    if (dlog.acked || (dlog.ack && dlog.ack.acked)) {
+      st.textContent = 'ack: acked (sidecar)';
+    } else if (dlog.mode === 'sidecar_read' && did) {
+      st.textContent = liveOpsOn()
+        ? 'ack: pending (pulse ACK · loopback)'
+        : 'ack: pending (ACK backend requiere --serve)';
+    } else {
+      st.textContent = 'ack: — (sin decision_id)';
+    }
+  }
+  if (noteEl) {
+    noteEl.textContent = 'fusion OFF · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS';
+  }
+}
+async function runDlogAck() {
+  const dlog = decisionLog || {};
+  const did = dlog.decision_id || dlog.id || null;
+  const st = document.getElementById('dlog-ack-state');
+  if (!liveOpsOn()) {
+    if (st) st.textContent = 'ack: no backend (sin serve · no invent success)';
+    recordAct('ACK', 'decision-log', 'ACK backend requiere app --serve · no false success', 'ack_offline');
+    toast('ACK backend requiere app --serve');
+    return;
+  }
+  if (!did || dlog.mode !== 'sidecar_read') {
+    if (st) st.textContent = 'ack: fail closed (sin decision_id sidecar)';
+    toast('Sin decision_id de sidecar');
+    return;
+  }
+  const url = liveUrl('ack_decision');
+  if (!url) {
+    toast('Endpoint ACK no configurado');
+    return;
+  }
+  const wd = currentWorkDirRel();
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ work_dir: wd, decision_id: did }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.ok) {
+      const err = (data && data.error) || ('http_' + resp.status);
+      if (st) st.textContent = 'ack: fail · ' + err;
+      recordAct('ACK fail', did, err, 'ack_fail');
+      toast('ACK fail · ' + err);
+      return;
+    }
+    decisionLog = Object.assign({}, dlog, {
+      acked: true,
+      ack: data.ack || { acked: true },
+      ack_backend: data.ack || { acked: true },
+      decision: data.decision || dlog.decision,
+      confidence_pred: data.confidence_pred != null ? data.confidence_pred : dlog.confidence_pred,
+    });
+    paintDecisionLog();
+    recordAct('ACK sidecar', did, data.note || 'acked', 'ack_ok');
+    toast('ACK sidecar · decision_log.jsonl');
+  } catch (e) {
+    if (st) st.textContent = 'ack: error red (no invent success)';
+    toast('ACK error · sin false success');
+  }
+}
 const btnDlogAck = document.getElementById('btn-dlog-ack');
 if (btnDlogAck) {
-  btnDlogAck.onclick = () => {
-    const st = document.getElementById('dlog-ack-state');
-    const ts = new Date().toISOString().slice(0, 19) + 'Z';
-    if (st) st.textContent = 'ack: UI ' + ts + ' (local · no backend)';
-    recordAct('ACK UI', 'decision-log', 'ACK local only — not H1 acta', 'ack_ui');
-    toast('ACK UI · no backend');
-  };
+  btnDlogAck.onclick = () => { runDlogAck(); };
 }
 function actStatus() {
   if (liveOpsOn()) { runLiveAct('status'); return; }
@@ -1095,23 +1176,8 @@ function applyHero(h) {
       scRos.textContent = '— (sin conf ROS)';
     }
   }
-  // A4/A8 decision-log surface (sidecar read or stub; never invent GO_Q)
-  const dlogId = document.getElementById('dlog-id');
-  const dlogMeta = document.getElementById('dlog-meta');
-  const dlog = decisionLog || {};
-  if (dlogId) {
-    const eid = dlog.id || (card && card.event_id) || hero.event_id
-      || (hero.decision ? ('stub-' + String(hero.decision).toLowerCase()) : null);
-    const mode = dlog.mode === 'sidecar_read' ? 'sidecar B' : 'stub UI';
-    dlogId.textContent = eid ? ('id: ' + eid + ' · ' + mode) : ('id: — (' + mode + ' · backend B opcional)');
-  }
-  if (dlogMeta) {
-    const dec = dlog.decision || (card && card.decision) || hero.decision || '—';
-    const fus = 'fusion OFF';
-    const gq = 'go_q_met=' + String(dlog.go_q_met === true ? true : false);
-    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + ' · ' + fus + ' · ' + gq
-      + ' · conf ML ≠ conf ROS · ' + (dlog.note || 'ACK UI only');
-  }
+  // A4/A8/PR2-A decision-log surface (real #31 sidecar or honest empty)
+  paintDecisionLog();
   renderH1Eng();
   renderSrLadder();
 }

@@ -88,7 +88,8 @@ def test_h1_eng_rehearsal_never_sets_go_q_met():
     )
 
 
-def test_decision_log_stub_and_sidecar(tmp_path: Path):
+def test_decision_log_empty_no_invented_id():
+    """Without work_dir / without jsonl: honest stub — no invented decision_id."""
     stub = load_decision_log_surface(
         work_dir=None, decision_card={"decision": "HOLD", "event_id": "E1"}
     )
@@ -96,23 +97,77 @@ def test_decision_log_stub_and_sidecar(tmp_path: Path):
     assert stub["go_q_met"] is False
     assert stub["ack_ui_only"] is True
     assert stub["field_ops_ml_live_fusion"] == "OFF"
-    assert stub["id"] == "E1"
+    assert stub["id"] is None
+    assert stub["decision_id"] is None
+    assert stub["acked"] is False
+    assert stub["ack"] is None
+    assert "sin sidecar" in stub["note"].lower() or "Sin sidecar" in stub["note"]
+    # Card decision may appear as context only
+    assert stub["decision"] == "HOLD"
 
-    wd = tmp_path / "inc"
-    out = wd / "outbox"
-    out.mkdir(parents=True)
-    (out / "decision_log.json").write_text(
-        json.dumps({"id": "log-99", "decision": "ABSTAIN", "ack": "pending"}),
-        encoding="utf-8",
+    empty = load_decision_log_surface(
+        work_dir=None,
+        decision_card=None,
     )
+    assert empty["mode"] == "stub"
+    assert empty["decision_id"] is None
+
+
+def test_decision_log_real_sidecar_via_append(tmp_path: Path):
+    """Drive real #31 append_decision → SPA surface reads decision_log.jsonl."""
+    from wildfire_front.product.decision_log import append_decision
+    from wildfire_front.product.decide_service import decide_from_request
+
+    work = tmp_path / "inc_real"
+    work.mkdir()
+    card = decide_from_request(
+        {
+            "event_id": "IF_SPA_LOG",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 5.0,
+                "n_frames_staged": 10,
+                "speed_vs_ref_ratio": 0.9,
+            },
+            "ml_metrics": {"test_iou": 0.89, "improvement_vs_copy_iou": 0.25},
+            "channel": "pytest",
+            "trust_client_reliability": True,
+        }
+    )
+    entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
     side = load_decision_log_surface(
-        work_dir=wd,
+        work_dir=work,
         decision_card={"decision": "HOLD", "event_id": "E1"},
+        base=tmp_path,
+        include_repo_root=False,
     )
     assert side["mode"] == "sidecar_read"
-    assert side["id"] == "log-99"
+    assert side["decision_id"] == entry["decision_id"]
+    assert side["id"] == entry["decision_id"]
+    assert side["decision"] == entry["decision"]
+    assert side["confidence_pred"] == entry["confidence_pred"]
+    assert side["path_rel"] == "decision_log.jsonl"
     assert side["go_q_met"] is False
-    assert side["path_rel"] == "outbox/decision_log.json"
+    assert side["field_ops_ml_live_fusion"] == "OFF"
+    assert side["acked"] is False
+    assert side["ack_ui_only"] is False
+    assert side["n_entries"] == 1
+
+    # Wrong-path outbox JSON alone must not invent a sidecar read
+    empty_wd = tmp_path / "inc_outbox_only"
+    out = empty_wd / "outbox"
+    out.mkdir(parents=True)
+    (out / "decision_log.json").write_text(
+        json.dumps({"id": "fake-99", "decision": "ABSTAIN"}),
+        encoding="utf-8",
+    )
+    not_side = load_decision_log_surface(
+        work_dir=empty_wd,
+        base=tmp_path,
+        include_repo_root=False,
+    )
+    assert not_side["mode"] == "stub"
+    assert not_side["decision_id"] is None
 
 
 def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
@@ -131,6 +186,7 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert payload["sr_ladder"]["marker"] == "sr-ladder"
     assert payload["sr_ladder"]["field_ops_ml_live_fusion"] == "OFF"
     assert payload["decision_log"]["go_q_met"] is False
+    assert payload["decision_log"]["marker"] == "decision-log"
     assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "OFF"
     assert payload["rails"]["go_q_invent_forbidden"] is True
 
@@ -142,9 +198,49 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert "uncertainty_bar" in html or "uncertaintyBar" in html
     assert 'data-marker="h1-rehearsal"' in html
     assert 'data-marker="sr-ladder"' in html
+    assert 'data-marker="decision-log"' in html
+    assert "runDlogAck" in html or "ack_decision" in html
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
     assert "fusion OFF" in html
     assert '"field_ops_ml_live_fusion": "OFF"' in html
     assert "go_q_invent_forbidden" in html
     assert "liveUnavailableFallback" in html
+
+
+def test_payload_reads_real_sidecar_and_html_marker(tmp_path: Path):
+    """Product payload path: real append → build_product_app_payload decision_log."""
+    from wildfire_front.product.decision_log import append_decision
+    from wildfire_front.product.decide_service import decide_from_request
+
+    # Place work_dir under repo so default allowlist works without custom base
+    # Use tmp under REPO outputs-style via base=tmp and build surface helper assert;
+    # full payload uses repo cwd — here we pin via load + render of custom surface.
+    work = tmp_path / "wd_payload"
+    work.mkdir()
+    card = decide_from_request(
+        {
+            "event_id": "IF_PAYLOAD",
+            "ops_metrics": {
+                "quality_grade": "A",
+                "primary_ros_m_min": 4.0,
+                "n_frames_staged": 8,
+                "speed_vs_ref_ratio": 0.85,
+            },
+            "ml_metrics": {"test_iou": 0.8, "improvement_vs_copy_iou": 0.2},
+            "channel": "pytest",
+            "trust_client_reliability": True,
+        }
+    )
+    entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
+    surface = load_decision_log_surface(
+        work_dir=work, base=tmp_path, include_repo_root=False
+    )
+    payload = build_product_app_payload(live=False, scan=False)
+    payload = {**payload, "decision_log": surface}
+    html = render_product_app_html(payload)
+    assert surface["mode"] == "sidecar_read"
+    assert surface["decision_id"] == entry["decision_id"]
+    assert entry["decision_id"] in html or surface["decision_id"] in html
+    assert 'data-marker="decision-log"' in html
+    assert payload["decision_log"]["go_q_met"] is False

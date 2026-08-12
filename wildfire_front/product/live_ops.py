@@ -41,6 +41,7 @@ LIVE_PATH_STATUS = "/live/v1/status"
 LIVE_PATH_DECIDE = "/live/v1/decide"
 LIVE_PATH_EXPORT_ACTA = "/live/v1/export-acta"
 LIVE_PATH_REPLAY = "/live/v1/replay-third-party"
+LIVE_PATH_ACK_DECISION = "/live/v1/ack-decision"
 LIVE_PATH_HEALTH = "/live/v1/health"
 
 HONESTY_RAILS: dict[str, Any] = {
@@ -70,6 +71,7 @@ def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
             "decide": LIVE_PATH_DECIDE,
             "export_acta": LIVE_PATH_EXPORT_ACTA,
             "replay_third_party": LIVE_PATH_REPLAY,
+            "ack_decision": LIVE_PATH_ACK_DECISION,
         },
         "policy_default": "field_ops",
         "channel": "live_ops_loopback",
@@ -505,6 +507,89 @@ def handle_replay_third_party(
     }
 
 
+def handle_ack_decision(
+    req: dict[str, Any] | None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    """ACK a decision_id via shipped #31 ``ack_decision`` (loopback Live Ops only).
+
+    Fail closed on unknown id / missing work_dir. Never invents GO_Q or fusion ON.
+    """
+    from wildfire_front.product.decision_log import (
+        DecisionLogError,
+        UnknownDecisionIdError,
+        ack_decision,
+        get_decision,
+    )
+
+    body = req if isinstance(req, dict) else {}
+    decision_id = str(body.get("decision_id") or "").strip()
+    if not decision_id:
+        return {
+            "ok": False,
+            "act": "ack_decision",
+            "error": "decision_id_required",
+            "detail": "decision_id required for ACK",
+            "go_q_met": False,
+            "honesty_rails": honesty_rails(),
+        }
+
+    work = resolve_work_dir(body.get("work_dir"), base=base)
+    root = Path(base or REPO_ROOT)
+    try:
+        entry = ack_decision(
+            work,
+            decision_id,
+            operator=body.get("operator"),
+            note=body.get("note"),
+            base=root,
+            include_repo_root=True,
+        )
+    except UnknownDecisionIdError as exc:
+        return {
+            "ok": False,
+            "act": "ack_decision",
+            "error": "unknown_decision_id",
+            "detail": str(exc),
+            "decision_id": decision_id,
+            "go_q_met": False,
+            "honesty_rails": honesty_rails(),
+        }
+    except DecisionLogError as exc:
+        return {
+            "ok": False,
+            "act": "ack_decision",
+            "error": "decision_log_error",
+            "detail": str(exc),
+            "go_q_met": False,
+            "honesty_rails": honesty_rails(),
+        }
+
+    # Reload to prove sidecar rewrite (shipped get_decision path)
+    reloaded = get_decision(
+        work, decision_id, base=root, include_repo_root=True
+    )
+    ack_obj = (reloaded or entry).get("ack") if (reloaded or entry) else None
+    return {
+        "ok": True,
+        "act": "ack_decision",
+        "schema": LIVE_OPS_SCHEMA,
+        "decision_id": str(entry.get("decision_id") or decision_id),
+        "decision": entry.get("decision"),
+        "confidence_pred": entry.get("confidence_pred"),
+        "ack": ack_obj if isinstance(ack_obj, dict) else entry.get("ack"),
+        "acked": bool(isinstance(ack_obj, dict) and ack_obj.get("acked") is True),
+        "work_dir": str(work),
+        "go_q_met": False,
+        "honesty_rails": honesty_rails(),
+        "note": (
+            "ACK escrito en decision_log.jsonl · no es acta H1 · "
+            "fusion OFF · no inventa GO_Q"
+        ),
+    }
+
+
 def handle_health(*, live_ops_enabled: bool = True) -> dict[str, Any]:
     return {
         "ok": True,
@@ -517,6 +602,7 @@ def handle_health(*, live_ops_enabled: bool = True) -> dict[str, Any]:
             LIVE_PATH_DECIDE,
             LIVE_PATH_EXPORT_ACTA,
             LIVE_PATH_REPLAY,
+            LIVE_PATH_ACK_DECISION,
         ],
         "honesty_rails": honesty_rails(),
         "disclaimer": "Not tactical dispatch. Loopback demo only.",
@@ -542,6 +628,8 @@ def dispatch_live(
         "/live/v1/export_acta": "export_acta",
         LIVE_PATH_REPLAY.rstrip("/"): "replay_third_party",
         "/live/v1/replay": "replay_third_party",
+        LIVE_PATH_ACK_DECISION.rstrip("/"): "ack_decision",
+        "/live/v1/ack_decision": "ack_decision",
     }
     kind = aliases.get(p)
     if kind is None:
@@ -574,6 +662,19 @@ def dispatch_live(
             return 200, handle_export_acta(body, base=base)
         if kind == "replay_third_party":
             return 200, handle_replay_third_party(body, base=base)
+        if kind == "ack_decision":
+            payload = handle_ack_decision(body, base=base)
+            # unknown id / missing decision_id → 400 fail closed (not 200 ok:false only)
+            if not payload.get("ok"):
+                err = str(payload.get("error") or "")
+                code = 400 if err in (
+                    "decision_id_required",
+                    "unknown_decision_id",
+                    "decision_log_error",
+                    "path_not_allowed",
+                ) else 400
+                return code, payload
+            return 200, payload
     except PathNotAllowedError as exc:
         return 400, {
             "ok": False,

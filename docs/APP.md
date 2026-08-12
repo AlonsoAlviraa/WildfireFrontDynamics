@@ -54,6 +54,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 - field_ops ML fusion **OFF**
 - Confidence band = **prediction quality**, **no es ROS** · IoU ≠ ROS
 - SPA marker `uncertainty-bar` / payload `uncertainty_bar`: fill from existing `confidence_pred` only (no invented scores, never ROS)
+- Decision log: reads real `#31` `decision_log.jsonl` (latest entry); empty = sin sidecar (no invented `decision_id`); ACK backend only via `app --serve` → `POST /live/v1/ack-decision`
 - Never invent GO_Q / scores / tactical dispatch claims
 - Decision may **ABSTAIN** / **HOLD** (feature)
 
