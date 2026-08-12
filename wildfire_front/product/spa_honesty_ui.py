@@ -518,7 +518,8 @@ def load_vv_scorecard_surface(
         )
 
     summary = scorecard_summary(card)
-    rails = summary.get("rails") if isinstance(summary.get("rails"), dict) else {}
+    raw_rails = summary.get("rails")
+    rails: dict[str, Any] = raw_rails if isinstance(raw_rails, dict) else {}
     return {
         "schema": "wfd_vv_scorecard_ui_v1",
         "marker": "vv-scorecard",

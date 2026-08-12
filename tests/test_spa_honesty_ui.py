@@ -160,8 +160,8 @@ def test_decision_log_empty_no_invented_id():
 
 def test_decision_log_real_sidecar_via_append(tmp_path: Path):
     """Drive real #31 append_decision → SPA surface reads decision_log.jsonl."""
-    from wildfire_front.product.decision_log import append_decision
     from wildfire_front.product.decide_service import decide_from_request
+    from wildfire_front.product.decision_log import append_decision
 
     work = tmp_path / "inc_real"
     work.mkdir()
@@ -324,8 +324,8 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
 
 def test_payload_reads_real_sidecar_and_html_marker(tmp_path: Path):
     """Product payload path: real append → build_product_app_payload decision_log."""
-    from wildfire_front.product.decision_log import append_decision
     from wildfire_front.product.decide_service import decide_from_request
+    from wildfire_front.product.decision_log import append_decision
 
     # Place work_dir under repo so default allowlist works without custom base
     # Use tmp under REPO outputs-style via base=tmp and build surface helper assert;
