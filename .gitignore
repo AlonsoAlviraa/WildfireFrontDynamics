@@ -171,3 +171,19 @@ htmlcov/
 .cdsapirc
 **/.cdsapirc
 
+# ─── Outreach / mailbox PII (never re-add to tree) ───────────
+docs/CONTACTOS_OUTREACH.csv
+docs/CONTACTOS_EMERGENCIAS_DATOS.md
+docs/PLAN_PROGRAMACION_EMAILS_*
+docs/GMAIL_REPLIES*
+docs/GMAIL_AUDIT_*
+docs/OUTREACH_SEND_REPORT*
+docs/OUTREACH_DRAFTS*
+docs/OUTREACH_PT_FR_*
+docs/OUTREACH_AND_GAL_*
+docs/correo_pablo_cma_avances.md
+docs/entrega_cma/correo_solicitud_datos.md
+docs/open_if_intake/OUTREACH_AND_GAL_EXT_*.md
+docs/_gmail_*.json
+docs/_outreach_send_log_*.json
+**/*RELLENADA*
