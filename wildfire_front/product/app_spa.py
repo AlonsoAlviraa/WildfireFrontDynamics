@@ -37,6 +37,7 @@ from wildfire_front.product.plain_language import build_plain_language_payload
 from wildfire_front.product.spa_honesty_ui import (
     build_h1_eng_rehearsal,
     build_sr_ladder,
+    build_uncertainty_bar_view,
     load_decision_log_surface,
 )
 
@@ -612,7 +613,18 @@ def build_product_app_payload(
         "layer_summary": layers_summary,
         "connectivity": connectivity,
         "rails": rails,
-        # Agent A honesty UI (A6 H1 eng · A7 SR ladder · A8 decision-log read)
+        # Agent A honesty UI (Mes2 PR1-A uncertainty bar · A6 H1 · A7 SR · A8 decision-log)
+        "uncertainty_bar": build_uncertainty_bar_view(
+            confidence_pred=(
+                (hero or {}).get("confidence_pred")
+                if (hero or {}).get("confidence_pred") is not None
+                else (decision or {}).get("confidence_pred")
+            ),
+            confidence_label=(
+                (hero or {}).get("confidence_label")
+                or (decision or {}).get("confidence_pred_label")
+            ),
+        ),
         "h1_eng_rehearsal": build_h1_eng_rehearsal(
             repo_root=repo_root,
             live_ops_enabled=bool(live_ops_enabled),

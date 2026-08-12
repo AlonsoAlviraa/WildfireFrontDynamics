@@ -455,7 +455,7 @@ def _shell() -> str:
             <span id="unc-label">Conf. predicción</span>
             <span id="unc-band">—</span>
           </div>
-          <div class="unc-note" id="unc-note"><b>no es ROS</b> · IoU ≠ ROS · banda de calidad existente, sin inventar scores</div>
+          <div class="unc-note" id="unc-note" data-marker="uncertainty-no-ros"><b>no es ROS</b> · IoU ≠ ROS · banda de calidad existente, sin inventar scores</div>
         </div>
       </div>
 
@@ -601,6 +601,7 @@ const rails = P.rails || {};
 const h1Eng = P.h1_eng_rehearsal || {};
 const srLadder = P.sr_ladder || {};
 const decisionLog = P.decision_log || {};
+let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
 const intake = P.new_fire_intake || [];
@@ -1054,9 +1055,23 @@ function applyHero(h) {
     else band = 'alta';
   }
   if (!band) band = 'sin conf';
-  if (fill) fill.style.width = (conf != null ? Math.round(conf * 100) : 0) + '%';
+  // Conf fill only from existing hero.confidence_pred — never invent ROS/scores.
+  // Prefer server uncertainty_bar.fill_pct when present and conf matches.
+  const ub = uncertaintyBar || {};
+  let fillPct = (conf != null ? Math.round(conf * 100) : 0);
+  if (ub && ub.confidence_pred != null && conf != null
+      && Math.abs(+ub.confidence_pred - conf) < 1e-9
+      && typeof ub.fill_pct === 'number') {
+    fillPct = Math.max(0, Math.min(100, +ub.fill_pct));
+  }
+  if (fill) fill.style.width = fillPct + '%';
   if (bandEl) bandEl.textContent = 'banda ' + band;
-  if (labelEl) labelEl.textContent = 'Conf. predicción (no es ROS)';
+  if (labelEl) labelEl.textContent = (ub && ub.label) || 'Conf. predicción (no es ROS)';
+  const noteEl = document.getElementById('unc-note');
+  if (noteEl) {
+    // Keep bold **no es ROS** emphasis for honesty pin (Mes2 PR1-A)
+    noteEl.innerHTML = '<b>no es ROS</b> · IoU ≠ ROS · banda de calidad existente, sin inventar scores';
+  }
   // A5 split conf UI: ML conf ≠ ROS conf labels
   const scMl = document.getElementById('sc-ml');
   const scRos = document.getElementById('sc-ros');

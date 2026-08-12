@@ -49,10 +49,15 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert "role-seg" in html
     assert "last-act" in html
     assert "Último acto" in html
-    # A3 uncertainty bar (UI only; no invent scores; IoU ≠ ROS)
+    # A3 / Mes2 PR1-A uncertainty bar (UI only; no invent scores; IoU ≠ ROS)
     assert 'id="uncertainty-bar"' in html or 'data-marker="uncertainty-bar"' in html
     assert "no es ROS" in html
     assert "IoU" in html and "ROS" in html
+    assert 'data-marker="uncertainty-no-ros"' in html
+    assert payload["uncertainty_bar"]["marker"] == "uncertainty-bar"
+    assert payload["uncertainty_bar"]["is_ros"] is False
+    assert payload["uncertainty_bar"]["field_ops_ml_live_fusion"] == "OFF"
+    assert payload["rails"]["go_q_invent_forbidden"] is True
     # A4 decision-log UI + A5 split conf (ML ≠ ROS)
     assert 'data-marker="decision-log"' in html or 'id="decision-log"' in html
     assert 'data-marker="split-conf"' in html or 'id="split-conf"' in html
@@ -102,12 +107,15 @@ def test_html_helpers_split_markers():
     assert "Último acto" in shell
     assert "uncertainty-bar" in shell
     assert "no es ROS" in shell
+    assert "uncertainty-no-ros" in shell
     assert "decision-log" in shell
     assert "split-conf" in shell
     assert "h1-rehearsal" in shell
     assert "sr-ladder" in shell
     assert "function toast" in js or "toast(" in js
     assert "unc-fill" in js or "uncertainty" in js
+    assert "uncertaintyBar" in js or "uncertainty_bar" in js
+    assert "Conf. predicción (no es ROS)" in js
     assert "btn-dlog-ack" in js or "dlog-ack" in js
     assert "renderH1Eng" in js and "renderSrLadder" in js
     assert "sc-ml" in js and "sc-ros" in js
