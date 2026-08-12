@@ -12,7 +12,7 @@
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 PR1–PR2 eng shipped (#31/#32/#34/#35).**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab only) · field_ops ML fusion OFF · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · Mes3 plan filed.**
 
 ## Gates
 

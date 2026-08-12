@@ -9,6 +9,19 @@
 
 El plan 30d (13 ago–11 sep) y los slices “Mes2 PR1–PR3” se **adelantaron** en eng (ago). Mes 3 **no** relanza SPA/decision-log/V&V stub: asume tip `main` post-#38 (PR3-A) y post-**#39** (PR3-B sector ROS) cuando mergee.
 
+## Baseline en main (no rehacer)
+
+| Item | PR |
+|------|-----|
+| SPA Live Ops + 501 CLI fallback | **#19 shipped** |
+| Decision-log + ACK library | **#31 shipped** |
+| Uncertainty bar + no-ROS | **#32 shipped** |
+| V&V eng scorecard sidecar | **#34 shipped** |
+| SPA decision-log UI + loopback ACK | **#35 shipped** |
+| H1 eng polish + split-conf ML≠ROS | **#38 shipped** |
+| Mes2 PR3 docs + CURRENT_STATE refresh | **#37 shipped** |
+| Sector ROS eng default + tests | **#39 in flight** (B cierra antes de W1-B si sigue abierto) |
+
 **Objetivo del mes:** stack **demo-tercero listo** + camino honest hacia GO_MES+ **sin inventar gates**.  
 GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta Claims clear.
 
