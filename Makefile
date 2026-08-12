@@ -33,8 +33,8 @@ test-cov:  ## Run pytest with coverage report
 	$(PYTHON) -m pytest $(TESTS) --cov=$(PKG) --cov-report=term-missing
 
 
-test-spa:  ## SPA industrial C2 pack (product_app + layout + plain_language + release flags + live ops)
-	set PYTHONPATH=. && $(PYTHON) -m pytest tests/test_product_app.py tests/test_spa_layout.py tests/test_plain_language_app.py tests/test_check_release_flags.py tests/test_app_spa_security.py tests/test_spa_live_ops.py -q --tb=short
+test-spa:  ## SPA industrial C2 pack (product_app + layout + plain_language + release flags + live ops + honesty UI)
+	set PYTHONPATH=. && $(PYTHON) -m pytest tests/test_product_app.py tests/test_spa_layout.py tests/test_plain_language_app.py tests/test_check_release_flags.py tests/test_app_spa_security.py tests/test_spa_live_ops.py tests/test_spa_honesty_ui.py -q --tb=short
 
 verify: lint typecheck test  ## Run all quality gates (lint + typecheck + test)
 

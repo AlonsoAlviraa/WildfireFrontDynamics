@@ -34,6 +34,11 @@ from wildfire_front.product.operator_ux import (
     build_operator_brief,
 )
 from wildfire_front.product.plain_language import build_plain_language_payload
+from wildfire_front.product.spa_honesty_ui import (
+    build_h1_eng_rehearsal,
+    build_sr_ladder,
+    load_decision_log_surface,
+)
 
 SCHEMA = "wfd_product_app_v1"
 DEFAULT_OUTPUT = Path("outputs") / "app"
@@ -64,6 +69,7 @@ def is_loopback_http_url(url: str | None) -> bool:
         return False
     host = (parsed.hostname or "").lower()
     return host in _LOOPBACK_HOSTS
+
 
 _DECISION_CARD_CANDIDATES = (
     "outbox/fire_decision_card.json",
@@ -576,8 +582,7 @@ def build_product_app_payload(
         "pack": pack_block,
         "incident_summary": (
             {
-                "event_id": (summary or {}).get("event_id")
-                or (decision or {}).get("event_id"),
+                "event_id": (summary or {}).get("event_id") or (decision or {}).get("event_id"),
                 "keys": sorted((summary or {}).keys())[:24] if summary else [],
                 "present": summary is not None,
             }
@@ -607,6 +612,19 @@ def build_product_app_payload(
         "layer_summary": layers_summary,
         "connectivity": connectivity,
         "rails": rails,
+        # Agent A honesty UI (A6 H1 eng · A7 SR ladder · A8 decision-log read)
+        "h1_eng_rehearsal": build_h1_eng_rehearsal(
+            repo_root=repo_root,
+            live_ops_enabled=bool(live_ops_enabled),
+        ),
+        "sr_ladder": build_sr_ladder(
+            decision=str((decision or {}).get("decision") or (hero or {}).get("decision") or "")
+        ),
+        "decision_log": load_decision_log_surface(
+            work_dir=wd,
+            decision_card=decision if isinstance(decision, dict) else None,
+            repo_root=repo_root,
+        ),
         "disclaimer": (
             "Not validated tactical dispatch. Thermal mask ≠ official perimeter. "
             "15/30/60 envelopes are extrapolated guidance only. "
@@ -620,6 +638,8 @@ def build_product_app_payload(
             "operator_cli": "docs/OPERATOR_CLI_CHANGES.md",
             "start_here": "docs/START_HERE.md",
             "audit_spa": "docs/AUDIT_AND_PR_PLAN_SPA_C2_20260811.md",
+            "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
+            "h1_runbook": "docs/H1_GO_Q_RUNBOOK.md",
         },
     }
 

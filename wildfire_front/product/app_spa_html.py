@@ -240,6 +240,33 @@ body.mode-advanced .simp{display:none!important}
 .split-conf .sc-box .sc-h{font-size:9px;color:var(--faint);margin-top:2px;line-height:1.25}
 .split-conf .sc-box.ros .sc-v{color:var(--hold)}
 .split-conf .sc-box.ml .sc-v{color:var(--cyan)}
+/* A6 H1 eng rehearsal · A7 SR ladder */
+.h1-rehearsal,.sr-ladder{
+  margin:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel2);font-size:11px;
+}
+.h1-rehearsal b,.sr-ladder b{
+  display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;
+}
+.h1-rehearsal .h1-flag{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r);
+  border:1px solid var(--hold);color:var(--hold);font:10px/1 var(--mono);margin-bottom:6px;
+}
+.h1-rehearsal ol{margin:4px 0 0;padding-left:1.15rem;color:var(--muted);font-size:10px}
+.h1-rehearsal li{margin:3px 0}
+.h1-rehearsal .h1-cmd{font-family:var(--mono);font-size:9px;color:var(--local);word-break:break-all}
+.h1-rehearsal .h1-note{font-size:9px;color:var(--faint);margin-top:6px;line-height:1.3}
+.sr-ladder .sr-levels{display:grid;gap:4px;margin-top:4px}
+.sr-ladder .sr-lv{
+  display:grid;grid-template-columns:36px 1fr;gap:6px;padding:5px 6px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--panel);
+}
+.sr-ladder .sr-lv.on{border-color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan)}
+.sr-ladder .sr-id{font:10px/1.2 var(--mono);color:var(--cyan);font-weight:700}
+.sr-ladder .sr-lab{font-size:11px;font-weight:600;color:var(--text)}
+.sr-ladder .sr-why{font-size:9px;color:var(--faint);margin-top:2px;line-height:1.25}
+.sr-ladder .sr-claims{font-size:9px;color:var(--hold);margin-top:6px;line-height:1.3}
 
 /* Primary 3 acts — industry stress pattern: priority first, full power later */
 .primary-acts{
@@ -472,6 +499,20 @@ def _shell() -> str:
         </div>
       </div>
 
+      <div class="h1-rehearsal" id="h1-rehearsal" data-marker="h1-rehearsal" aria-label="Ensayo H1 eng">
+        <b>Ensayo H1 eng (12 min)</b>
+        <div class="h1-flag" id="h1-goq-flag">go_q_met=false · no es demo tercero</div>
+        <ol id="h1-steps"></ol>
+        <div class="h1-cmd" id="h1-serve-cmd">—</div>
+        <div class="h1-note" id="h1-note">fusion OFF · eng dry-run · acta H1 es humana</div>
+      </div>
+
+      <div class="sr-ladder" id="sr-ladder" data-marker="sr-ladder" aria-label="Escala SR">
+        <b>Escala SR (soporte / recomendación)</b>
+        <div class="sr-levels" id="sr-levels"></div>
+        <div class="sr-claims" id="sr-claims">Claims Guardian: no field GO · no fusion ON · no GO_Q invent</div>
+      </div>
+
       <!-- 3 actos prioritarios (Everbridge/InformaCast pattern: critical path first) -->
       <div class="primary-acts" role="group" aria-label="Actos prioritarios">
         <button type="button" class="pact" id="btn-act-status" title="Estado del outbox">
@@ -557,6 +598,9 @@ let card = P.decision_card || null;
 let ops = P.ops_metrics || null;
 let hero = P.hero || {};
 const rails = P.rails || {};
+const h1Eng = P.h1_eng_rehearsal || {};
+const srLadder = P.sr_ladder || {};
+const decisionLog = P.decision_log || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
 const intake = P.new_fire_intake || [];
@@ -1036,17 +1080,81 @@ function applyHero(h) {
       scRos.textContent = '— (sin conf ROS)';
     }
   }
-  // A4 decision-log surface (id stub or real event_id)
+  // A4/A8 decision-log surface (sidecar read or stub; never invent GO_Q)
   const dlogId = document.getElementById('dlog-id');
   const dlogMeta = document.getElementById('dlog-meta');
+  const dlog = decisionLog || {};
   if (dlogId) {
-    const eid = (card && card.event_id) || hero.event_id || (hero.decision ? ('stub-' + String(hero.decision).toLowerCase()) : null);
-    dlogId.textContent = eid ? ('id: ' + eid) : 'id: — (stub UI · backend B opcional)';
+    const eid = dlog.id || (card && card.event_id) || hero.event_id
+      || (hero.decision ? ('stub-' + String(hero.decision).toLowerCase()) : null);
+    const mode = dlog.mode === 'sidecar_read' ? 'sidecar B' : 'stub UI';
+    dlogId.textContent = eid ? ('id: ' + eid + ' · ' + mode) : ('id: — (' + mode + ' · backend B opcional)');
   }
   if (dlogMeta) {
-    const dec = (card && card.decision) || hero.decision || '—';
+    const dec = dlog.decision || (card && card.decision) || hero.decision || '—';
     const fus = 'fusion OFF';
-    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + ' · ' + fus + ' · conf ML ≠ conf ROS';
+    const gq = 'go_q_met=' + String(dlog.go_q_met === true ? true : false);
+    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + ' · ' + fus + ' · ' + gq
+      + ' · conf ML ≠ conf ROS · ' + (dlog.note || 'ACK UI only');
+  }
+  renderH1Eng();
+  renderSrLadder();
+}
+
+function renderH1Eng() {
+  const flag = document.getElementById('h1-goq-flag');
+  const stepsEl = document.getElementById('h1-steps');
+  const cmdEl = document.getElementById('h1-serve-cmd');
+  const noteEl = document.getElementById('h1-note');
+  const h1 = h1Eng || {};
+  if (flag) {
+    flag.textContent = 'go_q_met=' + String(h1.go_q_met === true ? true : false)
+      + ' · eng dry-run · no es demo tercero';
+  }
+  if (stepsEl) {
+    stepsEl.innerHTML = '';
+    (h1.steps || []).slice(0, 6).forEach(s => {
+      const li = document.createElement('li');
+      const title = s.title || ('Paso ' + (s.n || ''));
+      const detail = s.detail || '';
+      li.textContent = title + (detail ? ' — ' + detail : '');
+      stepsEl.appendChild(li);
+    });
+  }
+  if (cmdEl) {
+    const live = !!(liveOps && liveOps.enabled);
+    cmdEl.textContent = live
+      ? (h1.serve_cmd || 'python -m wildfire_front app --serve')
+      : ((h1.offline_cmd || 'python -m wildfire_front app --open') + ' · sin serve → copy-CLI');
+  }
+  if (noteEl) {
+    noteEl.textContent = (h1.non_claims || []).slice(0, 3).join(' · ')
+      || 'fusion OFF · go_q_met=false · acta H1 es humana';
+  }
+}
+
+function renderSrLadder() {
+  const host = document.getElementById('sr-levels');
+  const claims = document.getElementById('sr-claims');
+  const sr = srLadder || {};
+  if (host) {
+    host.innerHTML = '';
+    const active = String(sr.active_id || 'S0');
+    (sr.levels || []).forEach(lv => {
+      const row = document.createElement('div');
+      row.className = 'sr-lv' + (lv.id === active ? ' on' : '');
+      row.setAttribute('data-sr-id', lv.id || '');
+      row.innerHTML = '<div class="sr-id">' + (lv.id || '?') + '</div>'
+        + '<div><div class="sr-lab">' + (lv.label || '') + '</div>'
+        + '<div class="sr-why">' + (lv.why || '') + '</div></div>';
+      host.appendChild(row);
+    });
+  }
+  if (claims) {
+    const nc = (sr.non_claims || []).slice(0, 4).join(' · ');
+    claims.textContent = (sr.claims_guardian || 'Claims Guardian')
+      + (nc ? ' · ' + nc : '')
+      + ' · fusion ' + (sr.field_ops_ml_live_fusion || 'OFF');
   }
 }
 
