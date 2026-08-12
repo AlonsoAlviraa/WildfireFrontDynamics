@@ -44,9 +44,29 @@ def test_replay_decide_missing_args_exits_2_with_hint():
 
 
 def test_no_accepted_observations_message_includes_manifest_path(tmp_path: Path):
+    import numpy as np
+    import rasterio
+    from rasterio.transform import from_origin
+
     images = tmp_path / "images"
     images.mkdir()
     output = tmp_path / "out"
+    # Zero band + high threshold → rejected mask → empty observations (not the
+    # early "threshold required" / "no GeoTIFF" validators).
+    arr = np.zeros((1, 8, 8), dtype=np.uint16)
+    transform = from_origin(500000.0, 4100000.0, 10.0, 10.0)
+    with rasterio.open(
+        images / "burn_20260610_120000.tif",
+        "w",
+        driver="GTiff",
+        width=8,
+        height=8,
+        count=1,
+        dtype="uint16",
+        crs="EPSG:32630",
+        transform=transform,
+    ) as dataset:
+        dataset.write(arr)
     with pytest.raises(ValueError, match="ingest_manifest.csv") as ei:
         run_geotiff_ingest(
             images,
@@ -56,7 +76,7 @@ def test_no_accepted_observations_message_includes_manifest_path(tmp_path: Path)
             sensor_id="lwir_drone",
             estimated_error_m=2.0,
             band=1,
-            threshold=None,
+            threshold=10.0,
         )
     msg = str(ei.value)
     assert str(output / "ingest_manifest.csv") in msg
