@@ -1,1 +1,1 @@
-LOAD_FROM_/workspace/wfd-cli-fix/cli.py
+@/workspace/wfd-cli-fix/cli.py
