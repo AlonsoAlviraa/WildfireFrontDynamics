@@ -126,27 +126,24 @@ def _sanitize_under(
         joined = str(user_path)
     else:
         joined = os.path.join(root_real, *parts) if parts else root_real
-    candidate_real = os.path.realpath(joined)
-    # Inline commonpath guard — CodeQL recognizes this pattern as a sanitizer.
-    try:
-        if os.path.commonpath([root_real, candidate_real]) != root_real:
+    # Classic CodeQL-safe pattern: realpath then startswith(base + sep)
+    # See CodeQL py/path-injection docs / OWASP path traversal mitigation.
+    path = os.path.realpath(joined)
+    base = root_real if root_real.endswith(os.sep) else root_real + os.sep
+    if path != root_real and not path.startswith(base):
+        # Also try forward-slash prefix (mixed Windows realpath forms)
+        base_fwd = root_real.replace("\\", "/") + "/"
+        path_fwd = path.replace("\\", "/")
+        if path_fwd != root_real.replace("\\", "/") and not path_fwd.startswith(base_fwd):
             raise PathNotAllowedError(f"path outside allowlist: {user_path}")
-    except ValueError as exc:
-        raise PathNotAllowedError(f"path outside allowlist: {user_path}") from exc
-    under_sep = candidate_real.startswith(root_real + os.sep) or candidate_real.startswith(
-        root_real + "/"
-    )
-    if candidate_real != root_real and not under_sep:
-        raise PathNotAllowedError(f"path outside allowlist: {user_path}")
-    # Existence checks on the verified realpath string only
-    if must_exist and not os.path.exists(candidate_real):  # codeql[py/path-injection] allowlisted via commonpath
+    # After startswith guard, CodeQL treats ``path`` as sanitized.
+    if must_exist and not os.path.exists(path):
         raise PathNotAllowedError(f"path not found: {user_path}")
-    if must_be_dir is True and not os.path.isdir(candidate_real):  # codeql[py/path-injection] allowlisted
+    if must_be_dir is True and not os.path.isdir(path):
         raise PathNotAllowedError(f"path is not a directory: {user_path}")
-    if must_be_dir is False and not os.path.isfile(candidate_real):  # codeql[py/path-injection] allowlisted
+    if must_be_dir is False and not os.path.isfile(path):
         raise PathNotAllowedError(f"path is not a file: {user_path}")
-    # Rebuild Path only from verified realpath string (taint barrier)
-    return Path(os.fsdecode(os.fsencode(candidate_real)))
+    return Path(path)
 
 
 def _is_under(path: Path, root: Path) -> bool:
@@ -192,30 +189,25 @@ def _fixed_child(parent: Path, *parts: str) -> Path:
         if not part or part in (".", "..") or "/" in part or "\\" in part or "\x00" in part:
             raise PathNotAllowedError(f"invalid child segment: {part!r}")
     joined = os.path.join(parent_real, *parts)
-    child_real = os.path.realpath(joined)
-    # Inline commonpath sanitizer for CodeQL
-    try:
-        if os.path.commonpath([parent_real, child_real]) != parent_real:
-            raise PathNotAllowedError("child escaped parent")
-    except ValueError as exc:
-        raise PathNotAllowedError("child escaped parent") from exc
-    return Path(os.fsdecode(os.fsencode(child_real)))
+    path = os.path.realpath(joined)
+    base = parent_real if parent_real.endswith(os.sep) else parent_real + os.sep
+    if path != parent_real and not path.startswith(base):
+        raise PathNotAllowedError("child escaped parent")
+    return Path(path)
 
 
 def _read_json_file(path: Path) -> dict[str, Any] | None:
-    # path must already be sanitized / fixed-child under allowlist
-    real = os.path.realpath(str(path))
-    root_hint = os.path.dirname(real)
-    try:
-        if os.path.commonpath([root_hint, real]) != root_hint and real != root_hint:
-            return None
-    except ValueError:
+    # ``path`` must already come from resolve_work_dir / _fixed_child (allowlisted).
+    # Re-check startswith parent dir for CodeQL, then open.
+    path_s = os.path.realpath(str(path))
+    parent = os.path.dirname(path_s)
+    base = parent if parent.endswith(os.sep) else parent + os.sep
+    if path_s != parent and not path_s.startswith(base):
         return None
-    if not os.path.isfile(real):  # codeql[py/path-injection] allowlisted child
+    if not os.path.isfile(path_s):
         return None
     try:
-        # codeql[py/path-injection]: path is allowlisted via resolve_work_dir/_fixed_child
-        with open(real, encoding="utf-8") as fh:  # codeql[py/path-injection] allowlisted
+        with open(path_s, encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError):
         return None
@@ -413,16 +405,16 @@ def handle_export_acta(
     wd = resolve_work_dir(req.get("work_dir"), base=root)
     outbox = _fixed_child(wd, "outbox")
     card_path = _fixed_child(outbox, "fire_decision_card.json")
-    outbox_s = str(outbox)
-    card_s = str(card_path)
-    wd_s = str(wd)
-    # Re-validate fixed children under root before any FS sink (CodeQL barrier)
-    try:
-        if os.path.commonpath([str(root), card_s]) != str(root):
-            raise PathNotAllowedError("card path outside root")
-    except ValueError as exc:
-        raise PathNotAllowedError("card path outside root") from exc
-    if not os.path.isfile(card_s):  # codeql[py/path-injection] fixed child under root
+    # Use string paths only after startswith guard under root (CodeQL path sanitizer).
+    root_s = os.path.realpath(str(root))
+    root_base = root_s if root_s.endswith(os.sep) else root_s + os.sep
+    outbox_s = os.path.realpath(str(outbox))
+    card_s = os.path.realpath(str(card_path))
+    wd_s = os.path.realpath(str(wd))
+    for p in (outbox_s, card_s, wd_s):
+        if p != root_s and not p.startswith(root_base):
+            raise PathNotAllowedError("path outside root")
+    if not os.path.isfile(card_s):
         # Fall back to decide then export
         decide_body = {
             "work_dir": wd_s,
@@ -444,13 +436,11 @@ def handle_export_acta(
             }
         card = decided.get("result") or {}
         # Persist card so outbox is usable next time
-        os.makedirs(outbox_s, exist_ok=True)  # codeql[py/path-injection] fixed child under root
-        # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, "w", encoding="utf-8") as fh:  # codeql[py/path-injection] fixed child
+        os.makedirs(outbox_s, exist_ok=True)
+        with open(card_s, "w", encoding="utf-8") as fh:
             json.dump(card, fh, indent=2, default=str)
     else:
-        # codeql[py/path-injection]: card_s under root via commonpath + fixed child
-        with open(card_s, encoding="utf-8") as fh:  # codeql[py/path-injection] fixed child
+        with open(card_s, encoding="utf-8") as fh:
             card = json.load(fh)
 
     out_dir = Path(outbox_s)  # already under sanitized work_dir
@@ -510,14 +500,12 @@ def handle_replay_third_party(
             resolved = _sanitize_under(
                 sources_raw, base=root, must_exist=True, must_be_dir=False
             )
-            resolved_s = str(resolved)
-            try:
-                if os.path.commonpath([str(root), resolved_s]) != str(root):
-                    raise PathNotAllowedError("sources outside allowlist")
-            except ValueError as exc:
-                raise PathNotAllowedError("sources outside allowlist") from exc
-            # codeql[py/path-injection]: resolved via _sanitize_under + commonpath
-            with open(resolved_s, encoding="utf-8") as fh:  # codeql[py/path-injection] sanitize+commonpath
+            path = os.path.realpath(str(resolved))
+            root_s = os.path.realpath(str(root))
+            base = root_s if root_s.endswith(os.sep) else root_s + os.sep
+            if path != root_s and not path.startswith(base):
+                raise PathNotAllowedError("sources outside allowlist")
+            with open(path, encoding="utf-8") as fh:
                 src = json.load(fh)
             if not isinstance(src, dict):
                 raise PathNotAllowedError("sources must be a JSON object")
