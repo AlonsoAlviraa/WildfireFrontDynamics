@@ -41,6 +41,16 @@ Rails SPA: field_ops ML fusion **OFF** · conf. predicción **no es ROS** · IoU
 En la consola (rail derecho) el bloque **Ensayo H1 eng** marca siempre `go_q_met=false`.
 Escala **SR** = soporte/recomendación (S0–S3) — **no** vender field GO / fusion ON.
 
+### E2E eng (W1-A) — V&V sidecar lectura
+
+Panel **V&V eng** (`data-marker="vv-scorecard"`): si `work_dir` tiene `vv_scorecard.json` (#34, lo escribe `decide` / `run_vv_sidecar`), la SPA **solo lee**. Sin archivo → «sin sidecar». Field IoU/ROS/grade siempre **—**. No es score de campo ni GO_Q.
+
+```powershell
+python scripts/run_vv_sidecar.py --work-dir outputs/incidents/_sla_measure
+python -m wildfire_front app --fire _sla_measure --open
+# UI: panel V&V eng · eng_stub · fusion OFF · go_q_met=false
+```
+
 ```powershell
 # Preferido loopback:
 python -m wildfire_front app --fire _sla_measure --serve

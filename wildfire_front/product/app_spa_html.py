@@ -230,6 +230,14 @@ body.mode-advanced .simp{display:none!important}
 }
 .decision-log .dlog-ack .btn{min-height:28px;font-size:10px;padding:0 8px}
 .decision-log .dlog-note{font-size:9px;color:var(--faint);margin-top:4px}
+.vv-scorecard{
+  margin:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel2);font-size:11px;
+}
+.vv-scorecard b{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.vv-scorecard .vv-status{font-family:var(--mono);font-size:10px;color:var(--local);word-break:break-all}
+.vv-scorecard .vv-meta{font-size:10px;color:var(--faint);margin-top:4px;line-height:1.35}
+.vv-scorecard .vv-note{font-size:9px;color:var(--faint);margin-top:4px}
 /* A5 split conf: ML conf ≠ ROS conf */
 .split-conf{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 .split-conf .sc-banner{
@@ -491,6 +499,14 @@ def _shell() -> str:
         <div class="dlog-note" id="dlog-note">fusion OFF · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS</div>
       </div>
 
+      <div class="vv-scorecard" id="vv-scorecard" data-marker="vv-scorecard" aria-label="V&amp;V eng sidecar">
+        <b>V&amp;V eng (lectura)</b>
+        <div class="vv-status" id="vv-status">sin sidecar vv_scorecard.json</div>
+        <div class="vv-meta" id="vv-rails">GO_Q partial · fusion OFF · go_q_met=false</div>
+        <div class="vv-meta" id="vv-metrics">field IoU/ROS/grade: — (eng_stub · no inventar)</div>
+        <div class="vv-note" id="vv-note">lectura #34 · no scores de campo · no es despacho táctico</div>
+      </div>
+
       <div class="split-conf" id="split-conf" data-marker="split-conf" aria-label="Confianza ML vs ROS">
         <div class="sc-banner" id="sc-banner" data-marker="split-conf-banner">Conf. ML ≠ Conf. ROS · no es despacho táctico</div>
         <div class="sc-box ml" data-marker="split-conf-ml">
@@ -611,6 +627,7 @@ const h1Eng = P.h1_eng_rehearsal || {};
 const srLadder = P.sr_ladder || {};
 const splitConf = P.split_conf || {};
 let decisionLog = P.decision_log || {};
+const vvScorecard = P.vv_scorecard || {};
 let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
@@ -1194,8 +1211,35 @@ function applyHero(h) {
   }
   // A4/A8/PR2-A decision-log surface (real #31 sidecar or honest empty)
   paintDecisionLog();
+  paintVvScorecard();
   renderH1Eng();
   renderSrLadder();
+}
+
+function paintVvScorecard() {
+  const vv = vvScorecard || {};
+  const st = document.getElementById('vv-status');
+  const railsEl = document.getElementById('vv-rails');
+  const metEl = document.getElementById('vv-metrics');
+  const noteEl = document.getElementById('vv-note');
+  const mode = vv.mode === 'sidecar_read' ? 'sidecar #34' : 'sin sidecar';
+  const status = vv.status || '—';
+  if (st) {
+    st.textContent = vv.mode === 'sidecar_read'
+      ? (mode + ' · ' + status + ' · eng_stub')
+      : (mode + ' · vv_scorecard.json');
+  }
+  if (railsEl) {
+    railsEl.textContent = 'GO_Q ' + String(vv.go_q || 'partial')
+      + ' · fusion ' + String(vv.field_ops_fusion || 'OFF')
+      + ' · go_q_met=' + String(vv.go_q_met === true);
+  }
+  if (metEl) {
+    metEl.textContent = 'field IoU/ROS/grade: — (eng_stub · no inventar)';
+  }
+  if (noteEl) {
+    noteEl.textContent = vv.note || 'lectura · no scores de campo · no es despacho';
+  }
 }
 
 function renderH1Eng() {

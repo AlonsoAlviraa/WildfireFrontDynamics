@@ -61,6 +61,7 @@
 | Mes2 PR3-A H1 / split-conf polish | **Shipped** (#38) |
 | Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
+| Mes3 W1-A V&V UI read | **Shipped** — SPA `vv-scorecard` read-only #34; empty honest; no field scores |
 | ML leap program | **Filed** — `PLAN_ML_LEAP_2026-08-12.md` (FREEZE intact; no v35) |
 | ML leap D0 REQUEST_DATA | **Shipped** docs (#42) — P0/P1/P2 + Hellín H1–H7; no promote |
 | ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |

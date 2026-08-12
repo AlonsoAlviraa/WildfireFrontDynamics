@@ -1,4 +1,4 @@
-"""SPA honesty UI helpers (Agent A): uncertainty bar, H1 eng, SR ladder, decision-log.
+"""SPA honesty UI helpers (Agent A): uncertainty bar, H1, SR, decision-log, V&V read.
 
 Pure payload builders — no fusion ON, never invent GO_Q=true, never invent backend ACK.
 Uncertainty bar is conf-only (existing confidence_pred) — never ROS / never invented scores.
@@ -434,6 +434,112 @@ def load_decision_log_surface(
             "Sidecar #31 decision_log.jsonl (última entrada) · "
             "ACK backend solo con app --serve loopback · "
             "no inventa GO_Q · fusion OFF · conf ML ≠ ROS"
+        ),
+        "field_ops_ml_live_fusion": "OFF",
+    }
+
+
+def _empty_vv_scorecard_surface(*, note: str | None = None) -> dict[str, Any]:
+    """Honest empty / sin-sidecar V&V surface — never invent field scores."""
+    return {
+        "schema": "wfd_vv_scorecard_ui_v1",
+        "marker": "vv-scorecard",
+        "mode": "sin_sidecar",
+        "source": "sin_sidecar",
+        "path_rel": None,
+        "status": None,
+        "eng_stub": True,
+        "event_id": None,
+        "go_q_met": False,
+        "go_q": "partial",
+        "field_ops_fusion": "OFF",
+        "field_iou": None,
+        "field_ros": None,
+        "field_grade": None,
+        "metrics_field_null": True,
+        "invents_field_scores": False,
+        "note": note
+        or (
+            "Sin sidecar vv_scorecard.json · no inventa field IoU/ROS/grade · "
+            "eng_stub only · fusion OFF · GO_Q partial · no es despacho"
+        ),
+        "field_ops_ml_live_fusion": "OFF",
+    }
+
+
+def load_vv_scorecard_surface(
+    *,
+    work_dir: Path | None,
+    repo_root: Path | None = None,
+    base: Path | None = None,
+    include_repo_root: bool = True,
+) -> dict[str, Any]:
+    """Mes3 W1-A: read-only map of #34 ``vv_scorecard.json`` → SPA surface.
+
+    Uses shipped ``load_vv_scorecard`` (allowlisted). Missing file → honest empty.
+    Never mutates disk, never surfaces field IoU/ROS/grade numbers, never GO_Q.
+    """
+    from wildfire_front.product.decide_service import PathNotAllowedError
+    from wildfire_front.product.vv_sidecar import (
+        VV_SCORECARD_FILENAME,
+        VvSidecarError,
+        load_vv_scorecard,
+        scorecard_summary,
+    )
+
+    if work_dir is None:
+        return _empty_vv_scorecard_surface()
+
+    allow_base = Path(base) if base is not None else (
+        Path(repo_root) if repo_root is not None else None
+    )
+
+    try:
+        card = load_vv_scorecard(
+            work_dir,
+            base=allow_base,
+            include_repo_root=include_repo_root,
+        )
+    except FileNotFoundError:
+        return _empty_vv_scorecard_surface()
+    except PathNotAllowedError:
+        return _empty_vv_scorecard_surface(
+            note=(
+                "work_dir fuera de allowlist · sin sidecar V&V legible · "
+                "no inventa field scores · fusion OFF · GO_Q partial"
+            ),
+        )
+    except (OSError, UnicodeError, VvSidecarError, ValueError, TypeError, json.JSONDecodeError):
+        return _empty_vv_scorecard_surface(
+            note=(
+                "Error leyendo vv_scorecard.json · sin inventar métricas de campo · "
+                "fusion OFF · GO_Q partial"
+            ),
+        )
+
+    summary = scorecard_summary(card)
+    rails = summary.get("rails") if isinstance(summary.get("rails"), dict) else {}
+    return {
+        "schema": "wfd_vv_scorecard_ui_v1",
+        "marker": "vv-scorecard",
+        "mode": "sidecar_read",
+        "source": "vv_scorecard_json",
+        "path_rel": VV_SCORECARD_FILENAME,
+        "status": summary.get("status") or "eng_stub",
+        "eng_stub": True,
+        "event_id": summary.get("event_id"),
+        "go_q_met": False,
+        "go_q": rails.get("GO_Q") or "partial",
+        "field_ops_fusion": rails.get("field_ops_fusion") or "OFF",
+        # Always null on the product surface — do not echo sidecar field_* if present.
+        "field_iou": None,
+        "field_ros": None,
+        "field_grade": None,
+        "metrics_field_null": True,
+        "invents_field_scores": False,
+        "note": (
+            "Sidecar #34 vv_scorecard.json (lectura) · eng_stub · "
+            "no field IoU/ROS/grade · no inventa GO_Q · fusion OFF · no es despacho"
         ),
         "field_ops_ml_live_fusion": "OFF",
     }
