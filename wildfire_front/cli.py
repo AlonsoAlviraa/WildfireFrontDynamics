@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 
 from . import __version__
+from .cli_app import register_app_commands, run_app
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
 from .cli_operator import dispatch_operator_command, register_operator_commands
@@ -382,6 +383,29 @@ def build_parser() -> argparse.ArgumentParser:
     # ─ incident ───────────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
 
+    # ── product SPA (Leaflet + dashboard; brief + map_status) ────────────
+    register_app_commands(commands, add_global_flags=_add_global_flags)
+
+    # Discoverability map (SPA aliases land via _rewrite_argv)
+    cmds = commands.add_parser(
+        "commands",
+        help="Command map by role (operator / field / lab / decision / eng)",
+        description=(
+            "Print a role-grouped map of CLI entry points. "
+            "Use when you know the product exists but not which COMMAND. "
+            "Aliases: spa / console → app."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  wildfire-front commands\n"
+            "  wildfire-front commands --json\n"
+            "  wildfire-front spa --open\n"
+            "  wildfire-front console --fire _sla_measure --open\n"
+        ),
+    )
+    _add_global_flags(cmds)
+
     # ─ decide (Fire Decision Card) ────────────────────────────────────────────
     decide = commands.add_parser(
         "decide",
@@ -582,14 +606,93 @@ def _emit(payload: dict[str, Any] | None, *, as_json: bool, human_fn, **human_kw
     human_fn(**human_kw)
 
 
+# Spanish / short aliases → canonical commands (SPA UX; keep main operator hub)
+_COMMAND_ALIASES: dict[str, str] = {
+    "spa": "app",
+    "console": "app",
+    "ayuda": "commands",
+    "help": "commands",
+    "cmds": "commands",
+}
+
+
+def _rewrite_argv(raw: list[str]) -> list[str]:
+    """Map spa/console/help aliases without changing tip-only cold-start defaults."""
+    if not raw:
+        return raw
+    head = str(raw[0])
+    rest = list(raw[1:])
+    if head in _COMMAND_ALIASES:
+        return [_COMMAND_ALIASES[head], *rest]
+    return raw
+
+
+def build_commands_map() -> dict[str, Any]:
+    """Role-grouped CLI map for ``commands`` (discoverability)."""
+    return {
+        "schema": "wfd_cli_commands_v1",
+        "entry": "python -m wildfire_front",
+        "groups": [
+            {
+                "id": "operator",
+                "title": "Operario",
+                "commands": [
+                    {
+                        "cmd": "app / spa / console [--work-dir] [--open] [--serve] [--ui-mode simple|advanced]",
+                        "why": "SPA industrial C2: dual-mode · Estado/Decidir/Acta",
+                    },
+                    {"cmd": "operator / teach / show / demo-third-party", "why": "H1 operator hub"},
+                ],
+            },
+            {
+                "id": "decision",
+                "title": "Decision Card",
+                "commands": [
+                    {"cmd": "decide --policy field_ops", "why": "GO/HOLD/ABSTAIN"},
+                    {"cmd": "serve-decide --port 8765", "why": "HTTP local POST /v1/decide"},
+                    {"cmd": "export-acta --work-dir …", "why": "acta + radio + replay sources"},
+                    {"cmd": "replay-decide --work-dir …", "why": "forensic replay"},
+                ],
+            },
+        ],
+    }
+
+
+def format_commands_map_human(payload: dict[str, Any] | None = None) -> str:
+    data = payload or build_commands_map()
+    lines = ["WFD · mapa de comandos", ""]
+    for g in data.get("groups") or []:
+        lines.append(f"-- {g.get('title')} --")
+        for row in g.get("commands") or []:
+            lines.append(f"  {row.get('cmd')}")
+            if row.get("why"):
+                lines.append(f"      -> {row.get('why')}")
+        lines.append("")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: Sequence[str] | None = None) -> None:
+    raw_in = list(argv) if argv is not None else None
+    if raw_in is None:
+        import sys as _sys
+
+        raw_in = list(_sys.argv[1:])
+    raw = _rewrite_argv(raw_in)
     parser = build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
+    args = parser.parse_args(raw)
     as_json = bool(getattr(args, "json", False))
     verbose = bool(getattr(args, "verbose", False))
     quiet = bool(getattr(args, "quiet", False))
 
     try:
+        if args.command == "commands":
+            payload = build_commands_map()
+            if as_json:
+                print_json(payload)
+            else:
+                print(format_commands_map_human(payload), end="")
+            return
+
         if args.command in {"operator", "teach", "show", "demo-third-party"}:
             dispatch_operator_command(args)
             return
@@ -711,6 +814,9 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if out:
                     print(f"wrote: {out}")
             return
+
+        if args.command == "app":
+            raise SystemExit(run_app(args))
 
         if args.command == "serve-decide":
             from .product.api_server import serve as serve_decide_api

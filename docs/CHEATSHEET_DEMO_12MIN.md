@@ -13,7 +13,28 @@ $env:PYTHONPATH = "."
 
 **Modo operario (preferido):** `python -m wildfire_front operator`  
 **Ensayo 4 actos:** `python -m wildfire_front operator do --all` · `make operator-path`  
-CLI teach path: `python -m wildfire_front teach` · gates: `python -m wildfire_front show`
+CLI teach path: `python -m wildfire_front teach` · gates: `python -m wildfire_front show`  
+**Mapa de comandos:** `python -m wildfire_front commands` (aliases `spa` / `console` → `app`)
+
+### SPA Live Ops (Estado → Decidir → Acta)
+
+Con **serve** (loopback; Live Ops POST `/live/v1/*`):
+
+```powershell
+python -m wildfire_front app --fire _sla_measure --serve
+# aliases: spa · console ·  --demo-day  (H1 presentador, no inventa GO_Q)
+# abre http://127.0.0.1:8766/  →  pulse Estado · Decidir · Acta en la SPA
+```
+
+Sin serve (estático / file://): **no** HTTP 501 desnudo — la UI usa `liveUnavailableFallback`:
+copia el CLI al portapapeles y deja el comando en **Último acto** (copy-CLI).
+
+```powershell
+python -m wildfire_front app --fire _sla_measure --open   # sin --serve
+# En UI: Estado / Decidir / Acta → toast «CLI copiado · sin serve»
+```
+
+Rails SPA: field_ops ML fusion **OFF** · conf. predicción **no es ROS** · IoU ≠ ROS · GO_Q partial.
 
 ## Timeline 12 min
 

@@ -5,7 +5,7 @@ PYTHON := python
 PKG    := wildfire_front
 TESTS  := tests
 
-.PHONY: help install dev-install lint typecheck test test-cov verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa pilot-honesty
+.PHONY: help install dev-install lint typecheck test test-cov test-spa verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa pilot-honesty
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -31,6 +31,10 @@ test:  ## Run pytest suite
 
 test-cov:  ## Run pytest with coverage report
 	$(PYTHON) -m pytest $(TESTS) --cov=$(PKG) --cov-report=term-missing
+
+
+test-spa:  ## SPA industrial C2 pack (product_app + layout + plain_language + release flags + live ops)
+	set PYTHONPATH=. && $(PYTHON) -m pytest tests/test_product_app.py tests/test_spa_layout.py tests/test_plain_language_app.py tests/test_check_release_flags.py tests/test_app_spa_security.py tests/test_spa_live_ops.py -q --tb=short
 
 verify: lint typecheck test  ## Run all quality gates (lint + typecheck + test)
 
