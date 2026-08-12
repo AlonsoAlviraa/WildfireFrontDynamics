@@ -72,6 +72,10 @@ examples:
   wildfire-front operator checklist
   wildfire-front operator do --act 1
   wildfire-front demo-third-party
+  # Decision Card → forensic acta
+  wildfire-front decide --work-dir outputs/incidents/IF1 \
+    --output outputs/incidents/IF1/outbox/fire_decision_card.json
+  wildfire-front export-acta --work-dir outputs/incidents/IF1
 
 notes:
   · Thermal mask ≠ official fire perimeter
@@ -141,13 +145,26 @@ def run_geotiff_ingest(
     output.mkdir(parents=True, exist_ok=True)
     write_ingest_manifest(result.records, output / "ingest_manifest.csv")
     if not result.observations:
-        raise ValueError("no accepted observations; inspect ingest_manifest.csv")
+        manifest = output / "ingest_manifest.csv"
+        raise ValueError(
+            f"no accepted observations; inspect {manifest} for reject reasons. "
+            "Example: wildfire-front ingest-geotiff "
+            "--images artifacts/tobarra_reprojected_lwir "
+            "--masks artifacts/tobarra_lwir_masks "
+            "--sensor-id lwir_drone --estimated-error-m 2 "
+            "--event-id tobarra_20240802 --output outputs/tobarra"
+        )
     resolution = next(
         (item.resolution_m for item in result.observations if item.resolution_m is not None),
         None,
     )
     if resolution is None:
-        raise ValueError("accepted observations do not have metric resolution")
+        raise ValueError(
+            "accepted observations do not have metric resolution; "
+            "GeoTIFFs must use a projected CRS in metres "
+            "(see docs/GEOTIFF_INPUT_CONTRACT.md). "
+            "Example: gdalwarp -t_srs EPSG:25830 in.tif out_projected.tif"
+        )
 
     arrival_resolution = float(resolution)
     try:
@@ -485,6 +502,13 @@ def build_parser() -> argparse.ArgumentParser:
             "Paid-value audit package: fire_decision_acta.md, fire_decision_radio.txt, "
             "replay_sources.json, forensic_manifest.json. Not a court PDF."
         ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "example:\n"
+            "  wildfire-front decide --work-dir outputs/incidents/IF1 \\\n"
+            "    --output outputs/incidents/IF1/outbox/fire_decision_card.json\n"
+            "  wildfire-front export-acta --work-dir outputs/incidents/IF1\n"
+        ),
     )
     acta.add_argument(
         "--card",
@@ -520,6 +544,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Forensic replay: load replay_sources.json (or card) and verify "
             "output_hash + decision match. Empty mismatch → replay_ok=false."
         ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=("example:\n  wildfire-front replay-decide --work-dir outputs/incidents/IF1\n"),
     )
     replay.add_argument(
         "--bundle",
@@ -706,7 +732,15 @@ def main(argv: Sequence[str] | None = None) -> None:
             if card_path is None and work is not None:
                 card_path = Path(work) / "outbox" / "fire_decision_card.json"
             if card_path is None or not Path(card_path).is_file():
-                raise SystemExit("export-acta requires --card path or --work-dir with outbox card")
+                print_error(
+                    "export-acta requires --card PATH or --work-dir with "
+                    "outbox/fire_decision_card.json",
+                    hint=(
+                        "run decide first, then: "
+                        "wildfire-front export-acta --work-dir outputs/incidents/IF1"
+                    ),
+                )
+                raise SystemExit(2)
             card = _json.loads(Path(card_path).read_text(encoding="utf-8"))
             out_dir = getattr(args, "output", None)
             if out_dir is None:
@@ -740,7 +774,13 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if bundle is None and work is not None:
                     bundle = Path(work) / "outbox"
                 if bundle is None:
-                    raise SystemExit("replay-decide requires --bundle, --sources, or --work-dir")
+                    print_error(
+                        "replay-decide requires --bundle, --sources, or --work-dir",
+                        hint=(
+                            "example: wildfire-front replay-decide --work-dir outputs/incidents/IF1"
+                        ),
+                    )
+                    raise SystemExit(2)
                 result = load_and_replay_bundle(bundle, base=Path.cwd())
             if as_json:
                 # omit full nested card if quiet? keep full for audit
