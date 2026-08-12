@@ -59,7 +59,7 @@
 | Mes2 PR2-A decision-log UI + ACK | **Shipped** (#35) — SPA wire to real sidecar |
 | Mes2 PR2-B V&V scorecard stub | **Shipped** (#34) — `vv_sidecar` eng_stub, no field claims |
 | Mes2 PR3-A H1 / split-conf polish | **Shipped** (#38) |
-| Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — merge before Mes3 W1-B if still open |
+| Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — `sector_ros_eng_default` (physics/quartile; not tactical / not field ROS) |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
 | Mes3 W1-A V&V UI read | **Shipped** — SPA `vv-scorecard` read-only #34; empty honest; no field scores |
 | field_ops ML live fusion | **ON** — human promote 2026-08-13 (catalog + stamp; ≠ despacho; GO_Q partial) |
@@ -89,7 +89,8 @@
 - Not ROS / Vp from catalog IoU
 - Not Hellín confirmed Vp/ha without cite + Alonso promote
 - Not merge of `fix/b2-b3-flags-noise*` / PR #10 secret-bearing base
-- Not PR3-A/B code shipped until those PRs merge (docs plan only)
+- Not PR3-B field-validated ROS / GO_Q (sector ROS is **default eng** only)
+- Not PR3-A/B remaining items as complete beyond what this table lists
 
 ## Verify (B)
 

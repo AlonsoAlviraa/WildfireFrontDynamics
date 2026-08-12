@@ -17,6 +17,18 @@ import numpy as np
 _ENVELOPE_MAX_ROS_M_MIN = 40.0
 _HORIZONS_MIN = (15, 30, 60)
 
+# Eng default snapshot — not a GO_Q / field-ROS claim. Fusion SSOT is ON
+# (human promote 2026-08-13); that does not make sector ROS field-validated.
+SECTOR_ROS_ENG_SCHEMA = "wfd_sector_ros_eng_v1"
+SECTOR_ROS_ENG_RAILS: dict[str, Any] = {
+    "GO_Q": "partial",
+    "field_ops_fusion": "ON",
+    "FREEZE_ML_AND_REQUEST_DATA": True,
+    "not_tactical_dispatch": True,
+    "not_field_validated_ros": True,
+    "default": "eng_physics_quartile_split",
+}
+
 
 def expansion_bearing_deg_from_centroids(
     centroids: list[tuple[float, float]],
@@ -76,11 +88,18 @@ def compute_sector_ros(
     """
     if primary_ros_m_min is None or not math.isfinite(primary_ros_m_min) or primary_ros_m_min < 0:
         return {
+            "schema": SECTOR_ROS_ENG_SCHEMA,
             "status": "abstained",
             "reason": "no_primary_ros",
             "sectors": None,
             "uncertainty_m_min": None,
             "expansion_bearing_deg": expansion_bearing_deg,
+            "method": "bulk_ros_quartile_split",
+            "rails": dict(SECTOR_ROS_ENG_RAILS),
+            "label_es": (
+                "Sin ROS primaria finita: sector ROS abstained (fail-closed). "
+                "No inventar Vp/ha. No es despacho táctico."
+            ),
         }
 
     p = float(primary_ros_m_min)
@@ -107,6 +126,7 @@ def compute_sector_ros(
         sectors["rear_bearing_deg"] = round((b + 180) % 360, 2)
 
     return {
+        "schema": SECTOR_ROS_ENG_SCHEMA,
         "status": "estimated" if n_estimates >= 1 else "estimated_low_n",
         "sectors": sectors,
         "uncertainty_m_min": {
@@ -117,11 +137,44 @@ def compute_sector_ros(
         },
         "expansion_bearing_deg": expansion_bearing_deg,
         "method": "bulk_ros_quartile_split",
+        "rails": dict(SECTOR_ROS_ENG_RAILS),
         "label_es": (
-            "ROS por sector (orientativo): cabeza≈P75, flanco≈primaria, cola≈P25. "
-            "No es despacho táctico validado."
+            "ROS por sector (orientativo, default eng): cabeza≈P75, flanco≈primaria, cola≈P25. "
+            "No es despacho táctico validado ni ROS de campo."
         ),
     }
+
+
+def sector_ros_eng_default(
+    primary_ros_m_min: float | None,
+    p25_m_min: float | None = None,
+    p75_m_min: float | None = None,
+    *,
+    expansion_bearing_deg: float | None = None,
+    n_estimates: int = 0,
+) -> dict[str, Any]:
+    """Documented eng default for sector ROS (physics/quartile path; no ML).
+
+    Same numbers as ``compute_sector_ros`` plus explicit rails: GO_Q partial,
+    field_ops fusion ON (SSOT), not field-validated ROS. Fail-closed when
+    primary ROS is missing or non-finite / negative.
+    """
+    out = compute_sector_ros(
+        primary_ros_m_min,
+        p25_m_min,
+        p75_m_min,
+        expansion_bearing_deg=expansion_bearing_deg,
+        n_estimates=n_estimates,
+    )
+    out["schema"] = SECTOR_ROS_ENG_SCHEMA
+    out["eng_default"] = True
+    out["rails"] = dict(SECTOR_ROS_ENG_RAILS)
+    if out.get("status") == "abstained":
+        out["label_es"] = (
+            "Sin ROS primaria finita: sector ROS abstained (fail-closed). "
+            "No inventar Vp/ha. No es despacho táctico."
+        )
+    return out
 
 
 def compute_short_horizon_envelope(

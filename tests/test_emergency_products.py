@@ -8,12 +8,15 @@ import sys
 from pathlib import Path
 
 from wildfire_front.emergency_products import (
+    SECTOR_ROS_ENG_RAILS,
+    SECTOR_ROS_ENG_SCHEMA,
     compute_sector_ros,
     compute_short_horizon_envelope,
     enrich_ops_dict,
     envelope_to_geojson,
     expansion_bearing_deg_from_centroids,
     ring_centroid,
+    sector_ros_eng_default,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +36,41 @@ def test_sector_ros_abstained():
     s = compute_sector_ros(None)
     assert s["status"] == "abstained"
     assert s["sectors"] is None
+    assert s["schema"] == SECTOR_ROS_ENG_SCHEMA
+    assert s["rails"]["GO_Q"] == "partial"
+    assert s["rails"]["field_ops_fusion"] == "ON"
+
+
+def test_sector_ros_eng_default_head_flank_rear_and_rails():
+    """Drive shipped eng default: quartile split + honesty rails."""
+    s = sector_ros_eng_default(10.0, 5.0, 12.0, expansion_bearing_deg=90.0, n_estimates=4)
+    assert s["eng_default"] is True
+    assert s["schema"] == SECTOR_ROS_ENG_SCHEMA
+    secs = s["sectors"]
+    assert secs["head_m_min"] >= secs["flank_m_min"] >= secs["rear_m_min"]
+    assert secs["flank_m_min"] == 10.0
+    assert secs["head_m_min"] == 12.0
+    assert secs["rear_m_min"] == 5.0
+    assert s["rails"] == SECTOR_ROS_ENG_RAILS
+    assert s["rails"]["GO_Q"] == "partial"
+    assert s["rails"]["field_ops_fusion"] == "ON"
+    assert s["rails"]["not_tactical_dispatch"] is True
+    raw = json.dumps(s).lower()
+    assert "go_q" in raw and "partial" in raw
+    assert s["rails"]["field_ops_fusion"] == "ON"
+    assert s["rails"]["not_field_validated_ros"] is True
+    assert "despacho" in s["label_es"].lower() or "táctico" in s["label_es"].lower()
+    assert "campo" in s["label_es"].lower() or "field" in raw
+
+
+def test_sector_ros_eng_default_fail_closed_no_primary():
+    for bad in (None, float("nan"), float("-inf"), -1.0):
+        s = sector_ros_eng_default(bad)
+        assert s["status"] == "abstained", bad
+        assert s["sectors"] is None
+        assert s["reason"] == "no_primary_ros"
+        assert s["rails"]["GO_Q"] == "partial"
+        assert s["eng_default"] is True
 
 
 def test_envelope_labels_not_dispatch():
