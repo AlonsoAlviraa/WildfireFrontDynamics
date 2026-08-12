@@ -127,8 +127,8 @@ def _sanitize_under(
     # Classic CodeQL-safe pattern: realpath then startswith(base + sep)
     # See CodeQL py/path-injection docs / OWASP path traversal mitigation.
     path = os.path.realpath(joined)
-    base = root_real if root_real.endswith(os.sep) else root_real + os.sep
-    if path != root_real and not path.startswith(base):
+    base_prefix = root_real if root_real.endswith(os.sep) else root_real + os.sep
+    if path != root_real and not path.startswith(base_prefix):
         # Also try forward-slash prefix (mixed Windows realpath forms)
         base_fwd = root_real.replace("\\", "/") + "/"
         path_fwd = path.replace("\\", "/")
@@ -497,8 +497,8 @@ def handle_replay_third_party(
             resolved = _sanitize_under(sources_raw, base=root, must_exist=True, must_be_dir=False)
             path = os.path.realpath(str(resolved))
             root_s = os.path.realpath(str(root))
-            base = root_s if root_s.endswith(os.sep) else root_s + os.sep
-            if path != root_s and not path.startswith(base):
+            base_prefix = root_s if root_s.endswith(os.sep) else root_s + os.sep
+            if path != root_s and not path.startswith(base_prefix):
                 raise PathNotAllowedError("sources outside allowlist")
             with open(path, encoding="utf-8") as fh:
                 src = json.load(fh)
