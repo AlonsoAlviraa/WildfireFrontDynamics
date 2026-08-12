@@ -231,7 +231,7 @@ def run_geotiff_ingest(
     return summary
 
 
-# ── argparse builders ────────────────────────────────────────────────────────
+# ─ argparse builders ──────────────────────────────────────────────────────────
 
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
@@ -274,7 +274,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
-    # ── demo ──────────────────────────────────────────────────────────────
+    # ─ demo ───────────────────────────────────────────────────────────────────
     demo = commands.add_parser(
         "demo",
         help="Synthetic end-to-end demo with ground truth",
@@ -293,7 +293,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(demo)
 
-    # ── ingest-geotiff ────────────────────────────────────────────────────
+    # ─ ingest-geotiff ─────────────────────────────────────────────────────────
     ingest = commands.add_parser(
         "ingest-geotiff",
         help="Batch-ingest a folder of georeferenced thermal GeoTIFFs",
@@ -361,10 +361,10 @@ def build_parser() -> argparse.ArgumentParser:
     isp.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
     _add_global_flags(ingest)
 
-    # ── incident ──────────────────────────────────────────────────────────
+    # ─ incident ───────────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
 
-    # ── decide (Fire Decision Card) ─────────────────────────────────────
+    # ─ decide (Fire Decision Card) ────────────────────────────────────────────
     decide = commands.add_parser(
         "decide",
         help="Build Fire Decision Card (GO/HOLD/ABSTAIN + metrics fusion)",
@@ -448,7 +448,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(decide)
 
-    # ── serve-decide (minimal HTTP API) ────────────────────────────────
+    # ─ serve-decide (minimal HTTP API) ────────────────────────────────────────
     serve = commands.add_parser(
         "serve-decide",
         help="Minimal HTTP API for Fire Decision Card (POST /v1/decide)",
@@ -477,7 +477,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(serve)
 
-    # ── export-acta (forensic bundle) ──────────────────────────────────
+    # ─ export-acta (forensic bundle) ──────────────────────────────────────────
     acta = commands.add_parser(
         "export-acta",
         help="Write forensic acta + radio-bridge + replay sources from a Decision Card",
@@ -512,7 +512,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(acta)
 
-    # ── replay-decide (forensic verify) ────────────────────────────────
+    # ─ replay-decide (forensic verify) ────────────────────────────────────────
     replay = commands.add_parser(
         "replay-decide",
         help="Rebuild Decision Card from forensic sources and verify hashes",
@@ -541,7 +541,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(replay)
 
-    # ── operator / teach / show / demo-third-party (H1 cheatsheet) ──
+    # ─ operator / teach / show / demo-third-party (H1 cheatsheet) ──
     register_operator_commands(commands, add_global_flags=_add_global_flags)
 
     return parser
@@ -669,7 +669,9 @@ def main(argv: Sequence[str] | None = None) -> None:
                 print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
                 if getattr(args, "explain", False):
                     print("explain:")
-                    print("  rails: field_ops fusion OFF · ABSTAIN is a feature · not tactical dispatch")
+                    print(
+                        "  rails: field_ops fusion OFF · ABSTAIN is a feature · not tactical dispatch"
+                    )
                     for s in payload.get("sources") or []:
                         if not isinstance(s, dict):
                             continue
