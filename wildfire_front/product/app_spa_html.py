@@ -576,7 +576,7 @@ function renderLastAct() {
         prevEl.textContent = '';
       }
     }
-    if (btnsEl) btnsEl.hidden = !(liveOpsOn() || lastAct.path);
+    if (btnsEl) btnsEl.hidden = !(liveOpsOn() || lastAct.path || lastAct.cmd);
   } else if (outboxSnap) {
     cmdEl.textContent = 'Outbox: ' + (outboxSnap.decision || '—') +
       (outboxSnap.quality_grade ? ' · grade ' + outboxSnap.quality_grade : '');
@@ -606,6 +606,55 @@ function currentWorkDirRel() {
   const f = fireById(fireSel.value);
   return (f && f.work_dir_rel) || P.work_dir_rel || null;
 }
+function cliCmdFor(kind) {
+  if (kind === 'status') {
+    return fireCmd('status_cmd', 'python -m wildfire_front incident status --work-dir "DIR"');
+  }
+  if (kind === 'decide') {
+    return fireCmd('decide_cmd', 'python -m wildfire_front decide --policy field_ops --work-dir "DIR" --explain');
+  }
+  if (kind === 'export_acta') {
+    return fireCmd('acta_cmd', 'python -m wildfire_front export-acta --work-dir "DIR"');
+  }
+  if (kind === 'replay_third_party') {
+    return 'python scripts/run_third_party_replay.py';
+  }
+  return '';
+}
+function copyCliQuiet(cmd) {
+  const t = (cmd || '').trim();
+  if (!t) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).catch(() => {});
+  } else {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = t; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    } catch (e) {}
+  }
+}
+function liveUnavailableFallback(kind, label, why) {
+  const cmd = cliCmdFor(kind);
+  const reason = String(why || 'Sin Live Ops').slice(0, 160);
+  recordAct(
+    label,
+    cmd || '—',
+    'Live Ops no activo (hace falta app --serve en loopback). CLI abajo — péguelo en terminal.',
+    reason
+  );
+  const btnsEl = document.getElementById('last-act-btns');
+  if (btnsEl) btnsEl.hidden = false;
+  const btn = document.getElementById('btn-copy-act-path');
+  if (btn) btn.textContent = 'Copiar CLI';
+  if (cmd) {
+    copyCliQuiet(cmd);
+    toast('CLI copiado · sin serve');
+  } else {
+    toast(reason);
+  }
+  return true;
+}
 async function runLiveAct(kind) {
   if (!liveOpsOn()) return false;
   const urlKey = kind === 'export_acta' ? 'export_acta'
@@ -613,8 +662,7 @@ async function runLiveAct(kind) {
   const url = liveUrl(urlKey);
   const wd = currentWorkDirRel();
   if (!url) {
-    toast('Live offline');
-    return true;
+    return liveUnavailableFallback(kind, 'Live', 'Live offline');
   }
   if (kind !== 'replay_third_party' && !wd) {
     toast('Sin work-dir');
@@ -642,6 +690,17 @@ async function runLiveAct(kind) {
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok || data.ok === false) {
       const err = (data && (data.detail || data.error)) || ('HTTP ' + resp.status);
+      const code = resp.status;
+      const absent = code === 501 || code === 503 || code === 404
+        || err === 'live_ops_disabled'
+        || /not implemented/i.test(String(err));
+      if (absent) {
+        return liveUnavailableFallback(
+          kind,
+          label,
+          'Sin Live Ops (HTTP ' + code + ')'
+        );
+      }
       recordAct(label, url, 'Live error · fusion OFF', String(err).slice(0, 200));
       toast(label + ' error');
       return true;
@@ -701,16 +760,17 @@ async function runLiveAct(kind) {
     );
     toast(label + ' OK');
   } catch (e) {
-    recordAct(label, url, 'Live unreachable — use Pro copy', String(e).slice(0, 120));
-    toast(label + ' offline');
+    return liveUnavailableFallback(kind, label, 'Live Ops no alcanzable');
   }
   return true;
 }
 const btnCopyPath = document.getElementById('btn-copy-act-path');
 if (btnCopyPath) {
   btnCopyPath.onclick = () => {
-    const p = lastAct.path || lastAct.result || lastAct.cmd;
-    copyText(String(p || ''), 'Path', { act: 'Path', hint: 'artifact path' });
+    const cli = (lastAct.cmd && String(lastAct.cmd).indexOf('python') === 0) ? lastAct.cmd : null;
+    const p = cli || lastAct.path || lastAct.cmd || lastAct.result;
+    const ok = cli ? 'CLI copiado' : 'Path';
+    copyText(String(p || ''), ok, { act: ok, hint: cli ? 'comando CLI (terminal)' : 'artifact path' });
   };
 }
 const btnReplay = document.getElementById('btn-live-replay');
@@ -726,15 +786,15 @@ if (btnReplay) {
 }
 function actStatus() {
   if (liveOpsOn()) { runLiveAct('status'); return; }
-  copyText(fireCmd('status_cmd', 'python -m wildfire_front incident status --work-dir "DIR"'), 'Estado', { act: 'Estado', hint: 'incident status (estático)' });
+  copyText(cliCmdFor('status'), 'CLI copiado', { act: 'Estado', hint: 'sin serve — péguelo en terminal' });
 }
 function actDecide() {
   if (liveOpsOn()) { runLiveAct('decide'); return; }
-  copyText(fireCmd('decide_cmd', 'python -m wildfire_front decide --policy field_ops --work-dir "DIR" --explain'), 'Decidir', { act: 'Decidir', hint: 'Decision Card field_ops (estático)' });
+  copyText(cliCmdFor('decide'), 'CLI copiado', { act: 'Decidir', hint: 'sin serve — péguelo en terminal' });
 }
 function actActa() {
   if (liveOpsOn()) { runLiveAct('export_acta'); return; }
-  copyText(fireCmd('acta_cmd', 'python -m wildfire_front export-acta --work-dir "DIR"'), 'Acta', { act: 'Acta', hint: 'export-acta forense (estático)' });
+  copyText(cliCmdFor('export_acta'), 'CLI copiado', { act: 'Acta', hint: 'sin serve — péguelo en terminal' });
 }
 
 function setMode(mode, quiet) {

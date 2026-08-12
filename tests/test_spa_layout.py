@@ -126,3 +126,18 @@ def test_render_product_app_html_dual_mode_and_bridge_markers():
     assert '"field_ops_ml_live_fusion": "OFF"' in html
     assert '"go_q_invent_forbidden": true' in html
     assert '"not_tactical_dispatch": true' in html
+
+
+def test_js_live_unavailable_surfaces_cli_fallback():
+    """Offline/501 Live Ops path must show serve hint + CLI copy (not bare HTTP 501)."""
+    from wildfire_front.product import app_spa_html as mod
+
+    js = mod._js()
+    assert "liveUnavailableFallback" in js
+    assert "cliCmdFor" in js
+    assert "app --serve" in js
+    assert "CLI copiado" in js
+    assert "Sin Live Ops (HTTP" in js
+    # still no fusion ON control / shell injection helpers
+    assert "fusion ON" not in js.lower() or "fusion off" in js.lower()
+
