@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 from wildfire_front.cli import build_parser, main
@@ -38,6 +41,45 @@ def _run_main(argv: list[str], capsys) -> tuple[int, str, str]:
             code = 1
     captured = capsys.readouterr()
     return code, captured.out, captured.err
+
+
+def _run_app_module(argv: list[str]) -> tuple[int, str, str]:
+    """Drive the shipped ``python -m wildfire_front app`` entry (not a stub)."""
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(ROOT)
+    proc = subprocess.run(
+        [sys.executable, "-m", "wildfire_front", *argv],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    return int(proc.returncode), proc.stdout or "", proc.stderr or ""
+
+
+def test_shipped_app_help_mentions_serve():
+    """Verification: real module help exits 0 and mentions app / --serve."""
+    c1, o1, e1 = _run_app_module(["app", "--help"])
+    assert c1 == 0, e1
+    assert o1.strip()
+    assert "app" in o1.lower() or "--serve" in o1
+    assert "--serve" in o1
+    assert "--list-fires" in o1
+    c2, o2, e2 = _run_app_module(["app", "--help"])
+    assert c2 == 0, e2
+    assert "--serve" in o2
+
+
+def test_shipped_app_list_fires_json_rails():
+    """Verification: real ``app --list-fires --json`` keeps fusion OFF / no GO_Q."""
+    code, out, err = _run_app_module(["app", "--list-fires", "--json"])
+    assert code == 0, err
+    data = json.loads(out)
+    rails = data.get("rails") or {}
+    assert rails.get("field_ops_ml_live_fusion") == "OFF"
+    assert rails.get("go_q_invent_forbidden") is True
+    assert rails.get("go_q_met") is not True
 
 
 def test_parser_registers_app():
@@ -201,6 +243,12 @@ def test_cli_list_fires(capsys):
     data = json.loads(out)
     assert data["schema"] == "wfd_fire_catalog_v1"
     assert "fires" in data
+    rails = data.get("rails") or {}
+    assert rails.get("field_ops_ml_live_fusion") == "OFF"
+    assert rails.get("go_q_invent_forbidden") is True
+    assert rails.get("go_q_met") is False
+    assert rails.get("not_tactical_dispatch") is True
+    assert "fusion OFF" in (data.get("note") or "") or "fusion" in (data.get("note") or "")
 
 
 def test_cli_app_json_and_html(tmp_path: Path, capsys):
@@ -228,6 +276,31 @@ def test_cli_app_json_and_html(tmp_path: Path, capsys):
     assert '"field_ops_ml_live_fusion": "OFF"' in html
     reloaded = json.loads((out / "app_payload.json").read_text(encoding="utf-8"))
     assert reloaded["rails"]["field_ops_ml_live_fusion"] == "OFF"
+    assert reloaded["rails"]["go_q_invent_forbidden"] is True
+    assert "liveUnavailableFallback" in html
+    assert 'id="btn-act-status"' in html and 'id="btn-act-decide"' in html
+    assert 'id="btn-act-acta"' in html or "btn-act-acta" in html
+
+
+def test_render_operator_front_markers():
+    """Shipped payload→HTML: Live Ops acts + honesty + copy-CLI fallback."""
+    payload = build_product_app_payload(live=False, scan=False)
+    html = render_product_app_html(payload)
+    assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "OFF"
+    assert payload["rails"]["go_q_invent_forbidden"] is True
+    assert payload["h1_eng_rehearsal"]["go_q_met"] is False
+    for marker in (
+        "btn-act-status",
+        "btn-act-decide",
+        "btn-act-acta",
+        "liveUnavailableFallback",
+        "no es ROS",
+        "split-conf",
+        "h1-rehearsal",
+        "go_q_met",
+        "decision-log",
+    ):
+        assert marker in html, f"missing front marker {marker}"
 
 
 def test_cli_app_human_and_missing_work_dir(tmp_path: Path, capsys):
@@ -240,6 +313,8 @@ def test_cli_app_human_and_missing_work_dir(tmp_path: Path, capsys):
     assert "PRODUCT SPA" in stdout or "SPA" in stdout
     assert "index.html" in stdout or str(out) in stdout
     assert "despacho" in stdout.lower() or "táctico" in stdout.lower() or "tactical" in stdout.lower()
+    assert "fusion OFF" in stdout or "no-serve" in stdout
+    assert "copy-CLI" in stdout or "GO_Q" in stdout
 
     missing = tmp_path / "no_such_incident"
     code2, _out2, err2 = _run_main(

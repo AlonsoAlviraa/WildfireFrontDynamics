@@ -15,6 +15,14 @@ from .product.app_spa import (
 )
 from .product.fire_catalog import scan_fire_catalog
 
+# Product CLI rails snapshot (never flip here — SSOT is CURRENT_STATE / stamp)
+_APP_RAILS: dict[str, Any] = {
+    "field_ops_ml_live_fusion": "OFF",
+    "go_q_invent_forbidden": True,
+    "go_q_met": False,
+    "not_tactical_dispatch": True,
+}
+
 
 def register_app_commands(commands: Any, *, add_global_flags) -> None:
     """Register ``app`` top-level command on the root parser."""
@@ -231,7 +239,19 @@ def run_app(args: argparse.Namespace) -> int:
     if bool(getattr(args, "list_fires", False)):
         fires = scan_fire_catalog()
         if bool(getattr(args, "json", False)):
-            print_json({"schema": "wfd_fire_catalog_v1", "n": len(fires), "fires": fires})
+            print_json(
+                {
+                    "schema": "wfd_fire_catalog_v1",
+                    "n": len(fires),
+                    "fires": fires,
+                    "rails": dict(_APP_RAILS),
+                    "note": (
+                        "Catalog only · not tactical dispatch · "
+                        "field_ops ML fusion OFF · GO_Q invent forbidden · "
+                        "file:// / no --serve: SPA copies CLI (liveUnavailableFallback)"
+                    ),
+                }
+            )
         else:
             print("╔══════════════════════════════════════════════════════════╗")
             print("║  WFD · incendios descubiertos                            ║")
@@ -255,6 +275,9 @@ def run_app(args: argparse.Namespace) -> int:
                 print(f"      {f.get('rebuild_cmd')}")
             print("")
             print("  Abrir: python -m wildfire_front app --fire ID --open")
+            print("  Live Ops: python -m wildfire_front app --serve --fire ID")
+            print("  rails: fusion OFF · GO_Q invent forbidden · no despacho táctico")
+            print("  sin --serve: botones SPA copian CLI (liveUnavailableFallback)")
             print("")
         return 0
 
@@ -457,6 +480,9 @@ def run_app(args: argparse.Namespace) -> int:
         print("  dual-mode: Fácil (default) | Pro · primary acts: Estado · Decidir · Acta")
         if live_ops_enabled:
             print("  live: click acts run product code (loopback --serve only)")
+        else:
+            print("  no-serve: copy-CLI fallback (app --serve for Live Ops)")
+            print("  rails: fusion OFF · GO_Q invent forbidden · no despacho táctico")
         print("")
 
     # --json snapshot never blocks on serve (CI / demo-day rails check)
