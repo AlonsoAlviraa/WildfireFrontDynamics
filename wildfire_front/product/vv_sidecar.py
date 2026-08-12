@@ -68,6 +68,37 @@ def _now_utc() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def _harden_eng_stub_metrics(metrics: Any) -> dict[str, Any]:
+    """Force field_* null on every eng_stub write (no field claims via custom cards)."""
+    out: dict[str, Any] = dict(metrics) if isinstance(metrics, Mapping) else {}
+    out["field_iou"] = None
+    out["field_ros"] = None
+    out["field_grade"] = None
+    out.setdefault("note", "metrics intentionally null in eng_stub")
+    return out
+
+
+def scorecard_summary(card: Mapping[str, Any], *, path: Path | None = None) -> dict[str, Any]:
+    """Compact decide/API surface: rails + eng_stub only (no field metrics)."""
+    rails = card.get("rails") if isinstance(card.get("rails"), Mapping) else {}
+    summary: dict[str, Any] = {
+        "schema": card.get("schema") or VV_SCORECARD_SCHEMA,
+        "status": card.get("status") or VV_STATUS_ENG_STUB,
+        "eng_stub": True,
+        "event_id": card.get("event_id"),
+        "file": VV_SCORECARD_FILENAME,
+        "rails": {
+            "GO_Q": rails.get("GO_Q", DEFAULT_RAILS["GO_Q"]),
+            "field_ops_fusion": rails.get("field_ops_fusion", DEFAULT_RAILS["field_ops_fusion"]),
+        },
+        "metrics_field_null": True,
+        "note": "eng_stub only · not field-validated · not GO_Q complete · fusion OFF",
+    }
+    if path is not None:
+        summary["path"] = str(path)
+    return summary
+
+
 def build_vv_scorecard_stub(
     *,
     event_id: str | None = None,
@@ -162,7 +193,7 @@ def write_vv_scorecard(
             )
         if not card.get("eng_stub"):
             raise VvSidecarError("scorecard must set eng_stub=true (no field claims)")
-    # Harden rails/non-claims on every write
+    # Harden rails/non-claims/metrics on every write
     card["rails"] = {
         **DEFAULT_RAILS,
         **(card.get("rails") if isinstance(card.get("rails"), dict) else {}),
@@ -177,6 +208,7 @@ def write_vv_scorecard(
     card["status"] = card.get("status") or VV_STATUS_ENG_STUB
     card["eng_stub"] = True
     card["schema"] = VV_SCORECARD_SCHEMA
+    card["metrics"] = _harden_eng_stub_metrics(card.get("metrics"))
     card["work_dir"] = str(work)
     text = json.dumps(card, indent=2, ensure_ascii=False, default=str) + "\n"
     out.write_text(text, encoding="utf-8")

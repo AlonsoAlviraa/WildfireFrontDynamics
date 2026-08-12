@@ -144,3 +144,68 @@ def test_script_rejects_outside_path(tmp_path: Path):
     )
     assert proc.returncode == 2
     assert "path_not_allowed" in proc.stderr.lower() or "error" in proc.stderr.lower()
+
+
+def test_custom_scorecard_nulls_field_metrics(tmp_path: Path):
+    """Custom write path must not preserve field claims under eng_stub."""
+    work = tmp_path / "custom"
+    work.mkdir()
+    bad = {
+        "schema": VV_SCORECARD_SCHEMA,
+        "eng_stub": True,
+        "status": VV_STATUS_ENG_STUB,
+        "metrics": {"field_iou": 0.91, "field_ros": 1.2, "field_grade": "A"},
+        "rails": {"GO_Q": "true", "field_ops_fusion": "ON"},
+        "non_claims": [],
+    }
+    card = write_vv_scorecard(work, bad, base=tmp_path, include_repo_root=False)
+    assert card["rails"]["GO_Q"] == "partial"
+    assert card["rails"]["field_ops_fusion"] == "OFF"
+    assert card["metrics"]["field_iou"] is None
+    assert card["metrics"]["field_ros"] is None
+    assert card["metrics"]["field_grade"] is None
+    assert "eng_only_stub" in card["non_claims"]
+
+
+def test_decide_writes_vv_scorecard_under_work_dir(tmp_path: Path):
+    """Integration: decide_from_request emits eng stub when work_dir is set."""
+    from wildfire_front.product.decide_service import decide_from_request
+
+    work = tmp_path / "incident_decide"
+    work.mkdir()
+    payload = decide_from_request(
+        {"event_id": "IF_DECIDE_VV", "work_dir": str(work)},
+        base=tmp_path,
+        trust_client_reliability=False,
+    )
+    assert payload["decision"] == "ABSTAIN"
+    vv = payload.get("vv_scorecard")
+    assert isinstance(vv, dict)
+    assert vv["schema"] == VV_SCORECARD_SCHEMA
+    assert vv["status"] == VV_STATUS_ENG_STUB
+    assert vv["eng_stub"] is True
+    assert vv["rails"]["GO_Q"] == "partial"
+    assert vv["rails"]["field_ops_fusion"] == "OFF"
+    assert vv["metrics_field_null"] is True
+    assert (work / VV_SCORECARD_FILENAME).is_file()
+    disk = json.loads((work / VV_SCORECARD_FILENAME).read_text(encoding="utf-8"))
+    assert disk["event_id"] == "IF_DECIDE_VV"
+    assert disk["metrics"]["field_iou"] is None
+
+
+def test_decide_opt_out_write_vv_scorecard(tmp_path: Path):
+    from wildfire_front.product.decide_service import decide_from_request
+
+    work = tmp_path / "no_vv"
+    work.mkdir()
+    payload = decide_from_request(
+        {
+            "event_id": "no_write",
+            "work_dir": str(work),
+            "write_vv_scorecard": False,
+        },
+        base=tmp_path,
+        trust_client_reliability=False,
+    )
+    assert "vv_scorecard" not in payload
+    assert not (work / VV_SCORECARD_FILENAME).exists()
