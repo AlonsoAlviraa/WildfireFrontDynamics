@@ -36,6 +36,18 @@ python -m wildfire_front app --fire _sla_measure --open   # sin --serve
 
 Rails SPA: field_ops ML fusion **OFF** · conf. predicción **no es ROS** · IoU ≠ ROS · GO_Q partial.
 
+### Ensayo eng en SPA (A6) — no es H1 tercero
+
+En la consola (rail derecho) el bloque **Ensayo H1 eng** marca siempre `go_q_met=false`.
+Escala **SR** = soporte/recomendación (S0–S3) — **no** vender field GO / fusion ON.
+
+```powershell
+# Preferido loopback:
+python -m wildfire_front app --fire _sla_measure --serve
+# o demo-day (sigue sin inventar GO_Q):
+python -m wildfire_front app --demo-day
+```
+
 ## Timeline 12 min
 
 | Min | Acto | Qué haces | Comando / path |
