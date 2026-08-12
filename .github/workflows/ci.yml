@@ -44,8 +44,8 @@ jobs:
       - name: Ruff format check
         run: >
           ruff format --check
-          wildfire_front/cli.py
-          wildfire_front/cli_*.py
+          wildfire_front/cli_incident.py
+          wildfire_front/cli_report.py
           tests/test_cli*.py
 
       - name: Mypy type-check (core, no heavy deps)
