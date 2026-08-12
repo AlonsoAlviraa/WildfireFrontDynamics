@@ -1091,4 +1091,20 @@ def decide_from_request(
     payload["api_version"] = API_VERSION
     payload["product"] = PRODUCT_ID
     payload["policy_id"] = (payload.get("audit") or {}).get("policy_id") or policy_id or "default"
+
+    # Eng-only V&V scorecard sidecar when work_dir is present (opt-out: write_vv_scorecard=false).
+    # Lazy import avoids circular import (vv_sidecar → decide_service path helpers).
+    write_vv = req.get("write_vv_scorecard", True)
+    if req.get("work_dir") and write_vv is not False:
+        from .vv_sidecar import run_vv_sidecar, scorecard_path, scorecard_summary
+
+        vv_card = run_vv_sidecar(
+            req["work_dir"],
+            base=base,
+            include_repo_root=include_repo_root,
+            event_id=event_id,
+        )
+        out_path = scorecard_path(Path(vv_card["work_dir"]))
+        payload["vv_scorecard"] = scorecard_summary(vv_card, path=out_path)
+
     return payload
