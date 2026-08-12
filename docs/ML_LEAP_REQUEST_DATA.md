@@ -90,5 +90,5 @@ pytest tests/test_data_anchor_honesty.py tests/test_ml_leap_request_data.py -q
 ## Siguiente bucle (tras D0)
 
 1. **E1** — `docs/ML_LEAP_EVAL_ONESHOT.md` (eval TEST + cal frozen)  
-2. **E1b** — selective/FNR method note  
+2. **E1b** — `docs/ML_LEAP_SELECTIVE_FNR.md` (method note; @50/@90 not run)  
 3. **M1** — bloqueado hasta IF nuevo + lift FREEZE (Alonso)
