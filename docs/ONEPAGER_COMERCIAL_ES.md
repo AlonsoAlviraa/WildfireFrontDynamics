@@ -1,5 +1,9 @@
 # One-pager — qué se vende (rediseño)
 
+> **EMBARGO OUTBOUND 2026-08-12:** no publicar ni enviar este one-pager en campañas  
+> hasta **Claims clear** (humano + Claims Guardian). Ver `docs/FOCUS_P0_BOARD_20260812.md` §5.  
+> Redacción local / review OK · send/publish **NO**.
+
 ## No vendemos
 
 - Mapitas CEMS (ya son gratis en Copernicus)

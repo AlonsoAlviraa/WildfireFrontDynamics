@@ -55,7 +55,9 @@
       "status": "confirmed",
       "detection": "2024-07-19",
       "fs_m": 280,
-      "notes": "Cabeza fuera de capacidad de extincion, con fuego de copas (boletin). area_ha is estimated non-official per boletin footnote. KMZ 20:45 sup_ha attr ~93.66 ha (ops perimeter, not EGIF).",
+      "notes": "Cabeza fuera de capacidad de extincion, con fuego de copas (boletin). area_ha is estimated non-official per boletin footnote. KMZ 20:45 sup_ha attr ~93.66 ha (ops perimeter, not EGIF). PROMOTE SSOT: pending — do NOT promote to structural grade A / O5 / commercial pitch without re-verified cite + human OK. Ops scorecard remains grade B path (see docs/P1_HELLIN_ENG_STATUS.md).",
+      "promote_ssot": "pending",
+      "promote_forbidden_until": "verified_cite_plus_grade_a_scorecard_plus_human",
       "perimeter_drop_pablo_20260803": {
         "path": "data/real_if/pablo_geacam_20260803_drop/hellin",
         "kmz": "20240719_Hellin_2045_20240719_2045.kmz",

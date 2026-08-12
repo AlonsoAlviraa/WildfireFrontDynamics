@@ -1,7 +1,9 @@
 # P1 Hellín — Engineering status (Track A + GO_MES clarify)
 
-**Date:** 2026-08-04 (updated after GO_MES close)  
-**Anchor:** confirmed INFOCAM UNAP boletín 2024-07-20 — **Vp = 50 m/min**, area 100 ha* (estimated)
+**Date:** 2026-08-12 (promote SSOT clarified)  
+**Anchor O1:** cite UNAP boletín 2024-07-20 — **Vp = 50 m/min**, area 100 ha* (estimated, non-official)  
+**Promote SSOT:** **`pending`** — do **not** promote grade A / O5 / commercial pitch without re-verified cite + human OK  
+**Focus board:** `docs/FOCUS_P0_BOARD_20260812.md` §6
 
 ## Two different “P1” meanings
 
@@ -14,17 +16,18 @@
 
 ## Verdict (ops pack Hellín)
 
-Hellín remains a **confirmed ANCHOR** (Vp 50). Ops pack is **grade B, ratio in band** at best.
+Hellín can sit as **O1 second anchor with cite** (Vp 50). Ops pack is **grade B, ratio in band** at best. **Product/O5 promote remains pending.**
 
 | Gate | Result |
 |------|--------|
-| O1 multi-anchor + ratios in band | **PASS** |
+| O1 multi-anchor + ratios in band | **PASS** (with documented cite) |
 | P1 smoke 2 real IFs | **PASS** |
 | O5 second grade A | **NO** — only Tobarra is A |
 | GO_MES (plan mínimo) | **GO_MES** — `docs/GO_MES_VERDICT.md` |
 | Structural grade A + in-band Hellín | **ENG BLOCKED** (rules vs Vp=50) |
+| **Promote SSOT** | **pending** — no pitch as grade A / official ha |
 
-**Do not invent Vp/ha. Do not joint-k Tobarra(7)+Hellín(50). Do not silent-rescale ROS to Vp.**
+**Do not invent Vp/ha. Do not joint-k Tobarra(7)+Hellín(50). Do not silent-rescale ROS to Vp. Do not promote without cite re-verify.**
 
 ## Best retained pack (canonical)
 

@@ -8,17 +8,21 @@
   "eng_session_ready": true,
   "suggested_slot_utc": "2026-08-14T10:00:00+00:00",
   "demo_entry": {
-    "primary": "python -m wildfire_front app --fire _sla_measure --open",
+    "primary": "python -m wildfire_front app --demo-day",
     "serve": "python -m wildfire_front app --fire _sla_measure --serve",
+    "static_open": "python -m wildfire_front app --fire _sla_measure --open",
+    "demo_day_cmd": "python -m wildfire_front app --demo-day",
+    "live_ops": true,
     "artifact": "outputs/app/index.html",
-    "surface": "industrial_spa_c2",
+    "surface": "industrial_spa_c2_live_ops",
     "primary_acts": [
       "Estado",
       "Decidir",
       "Acta"
     ],
     "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
-    "runbook": "docs/H1_GO_Q_RUNBOOK.md"
+    "runbook": "docs/H1_GO_Q_RUNBOOK.md",
+    "focus_board": "docs/FOCUS_P0_BOARD_20260812.md"
   },
   "artifacts": {
     "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
@@ -30,10 +34,11 @@
   },
   "human_next": [
     "Agendar tercero externo (copiar docs/H1_CALENDAR_INVITE.md)",
-    "Correr SPA industrial: python -m wildfire_front app --fire _sla_measure --open",
+    "Correr SPA Live Ops: python -m wildfire_front app --demo-day",
     "Correr demo 12 min con cheatsheet (docs/CHEATSHEET_DEMO_12MIN.md)",
     "Rellenar acta real (no PENDING)",
-    "python scripts/record_h1_demo_complete.py --acta <acta_firmada>"
+    "python scripts/record_h1_demo_complete.py --acta <acta_firmada>",
+    "Ver focus board: docs/FOCUS_P0_BOARD_20260812.md (marketing embargo, PR#10 hold, tokens)"
   ],
   "steps": [
     {

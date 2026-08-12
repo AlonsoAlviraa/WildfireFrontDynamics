@@ -27,7 +27,8 @@
 | **ML closeout** | **FREEZE_ML_AND_REQUEST_DATA** | `docs/GOAL_ML_CLOSEOUT.md` · canonical stamp |
 | **SPA industrial C2** | **eng OK** | dual-mode · primary acts · `#0B1220` · Live Ops on `--serve` |
 | **Live Ops / demo-day** | **eng OK** | `POST /live/v1/{status,decide,export-acta,replay-third-party}` · `go_q_met=false` always from eng |
-| **Confirmed anchors** | **2** | Tobarra + Hellín 2024-07-19 |
+| **Confirmed anchors** | **2** | Tobarra + Hellín 2024-07-19 (Hellín cite UNAP; **promote grade A / O5 = pending**) |
+| **P0 focus board** | active | `docs/FOCUS_P0_BOARD_20260812.md` — PR#10 hold · tokens · H1 · New Bot · marketing embargo · Hellín no-promote |
 
 ---
 
@@ -116,8 +117,12 @@ Boards:
 
 | Priority | Item | Owner |
 |----------|------|--------|
-| **P0 product** | **H1** demo tercero + acta firmada → GO_Q (**not eng-closable**) | human calendar |
+| **P0 product** | **H1** demo tercero + acta firmada → GO_Q (**not eng-closable**) | human calendar · `FOCUS_P0_BOARD` §3 |
+| **P0 SPA merge** | PR **#10 HOLD** until clean history path (secrets once in branch history) | eng · board §1 |
+| **P0 security** | Rotate OAuth/tokens that lived in historical Gmail/outreach dumps | human · board §2 |
 | **P0 evidence show** | Run `app --demo-day` + pack + reliability in front of third party | human + eng prep done |
+| **P0 marketing** | **EMBARGO** outbound until Claims clear | Claims + human · board §5 |
+| **P0 Hellín** | No promote grade A / O5 / pitch without verified cite; promote SSOT **pending** | eng + human · board §6 |
 | **P0 lab (done)** | S1 SDC KILL promote · S3 open H-lite · S4 multipass Tobarra OK | lab closed |
 | **P1 data** | O2 perímetro nacional / O5 2º grade A (B4/B5) | external |
 | **P1 ML data** | **Chain_honest multi-day IF** (FOV + timestamps ERA5) | data + lab |
@@ -163,6 +168,7 @@ python scripts/prepare_h1_demo_session.py
 | Doc | Role |
 |------|------|
 | **`docs/CURRENT_STATE.md`** | **This file — gates + freeze** |
+| **`docs/FOCUS_P0_BOARD_20260812.md`** | **Active focus: #10 hold · tokens · H1 · New Bot · marketing · Hellín** |
 | `docs/START_HERE.md` | Onboarding 2 min |
 | `docs/APP.md` | SPA + Live Ops flags/API |
 | `docs/design/LIVE_OPS_DEMO_KERNEL.md` | Live Ops design |
