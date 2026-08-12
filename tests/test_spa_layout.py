@@ -58,6 +58,11 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert 'data-marker="split-conf"' in html or 'id="split-conf"' in html
     assert "Conf. ML" in html or "sc-ml" in html
     assert "fusion OFF" in html
+    # A6 H1 eng + A7 SR ladder
+    assert 'data-marker="h1-rehearsal"' in html or 'id="h1-rehearsal"' in html
+    assert 'data-marker="sr-ladder"' in html or 'id="sr-ladder"' in html
+    assert "go_q_met" in html
+    assert "Claims Guardian" in html or "sr-claims" in html
 
 
 def test_write_and_reopen_html_intact(tmp_path: Path):
@@ -99,9 +104,12 @@ def test_html_helpers_split_markers():
     assert "no es ROS" in shell
     assert "decision-log" in shell
     assert "split-conf" in shell
+    assert "h1-rehearsal" in shell
+    assert "sr-ladder" in shell
     assert "function toast" in js or "toast(" in js
     assert "unc-fill" in js or "uncertainty" in js
     assert "btn-dlog-ack" in js or "dlog-ack" in js
+    assert "renderH1Eng" in js and "renderSrLadder" in js
     assert "sc-ml" in js and "sc-ros" in js
     assert "selectFire" in js
     # Bridge same-origin proxy path handling (when --serve + bridge)

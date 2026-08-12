@@ -39,13 +39,15 @@ Without serve: UI **copy-CLI fallback** (`liveUnavailableFallback`) — no bare 
 
 Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 
-## Demo dry-run eng (A2)
+## Demo dry-run eng (A2 / A6)
 
 1. Rails aloud: GO_MES true · GO_Q partial · fusion OFF · ABSTAIN = feature.
 2. `app --serve --fire _sla_measure` (or `--demo-day`).
 3. In browser: **Estado → Decidir → Acta** (Último acto shows result / path).
 4. Offline path: open static SPA, same buttons → CLI copied, not invented GO_Q.
-5. Cheatsheet: `docs/CHEATSHEET_DEMO_12MIN.md`.
+5. SPA panel **Ensayo H1 eng** (`data-marker="h1-rehearsal"`) shows `go_q_met=false` always on this product surface — eng dry-run ≠ third-party acta.
+6. SPA **Escala SR** (`data-marker="sr-ladder"`) is support/recommendation only — Claims Guardian non-claims (no field GO sell).
+7. Cheatsheet: `docs/CHEATSHEET_DEMO_12MIN.md`.
 
 ## Honesty rails (UI)
 
@@ -60,6 +62,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 |------|------|
 | `wildfire_front/product/app_spa.py` | payload builder |
 | `wildfire_front/product/app_spa_html.py` | CSS / shell / JS |
+| `wildfire_front/product/spa_honesty_ui.py` | H1 eng / SR ladder / decision-log UI helpers |
 | `wildfire_front/product/live_ops.py` | Live Ops handlers |
 | `wildfire_front/cli_app.py` | `app` CLI + loopback server |
 | `wildfire_front/map_status/**` | map payload / FIRMS / html map |
