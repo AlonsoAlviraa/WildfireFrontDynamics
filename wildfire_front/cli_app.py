@@ -510,7 +510,6 @@ class _SafeSPARequestHandler:
     ):
         import http.server
         import json
-        import mimetypes
         import urllib.error
         import urllib.parse
         import urllib.request
@@ -545,6 +544,8 @@ class _SafeSPARequestHandler:
 
             def _safe_path(self) -> Path | None:
                 # Reject URL tricks; only serve files under root_res
+                import os as _os
+
                 parsed = urllib.parse.urlparse(self.path)
                 raw = urllib.parse.unquote(parsed.path or "/")
                 # Normalize separators and strip leading slash
@@ -552,17 +553,28 @@ class _SafeSPARequestHandler:
                 if rel == "" or rel.endswith("/"):
                     rel = (rel + "index.html") if rel else "index.html"
                 # Block null bytes and parent traversal tokens before resolve
-                if "\x00" in rel or any(p == ".." for p in rel.split("/")):
+                parts = [p for p in rel.split("/") if p not in ("", ".")]
+                if "\x00" in rel or any(p == ".." for p in parts):
                     return None
                 # Bridge / live API paths are not static files
                 if rel.startswith("bridge/") or rel.startswith("live/"):
                     return None
-                candidate = (root_res / rel).resolve()
+                root_real = _os.path.realpath(str(root_res))
+                joined = _os.path.join(root_real, *parts) if parts else root_real
+                cand_real = _os.path.realpath(joined)
                 try:
-                    candidate.relative_to(root_res)
+                    common = _os.path.commonpath([root_real, cand_real])
                 except ValueError:
                     return None
-                return candidate
+                if common != root_real:
+                    return None
+                if cand_real != root_real and not (
+                    cand_real.startswith(root_real + _os.sep)
+                    or cand_real.startswith(root_real + "/")
+                ):
+                    return None
+                # Rebuild from verified realpath only (breaks path-injection taint)
+                return Path(cand_real)
 
             def _send_bytes(
                 self,
@@ -571,8 +583,41 @@ class _SafeSPARequestHandler:
                 *,
                 content_type: str = "application/json; charset=utf-8",
             ) -> None:
+                # Whitelist content-types (no CR/LF — HTTP response splitting)
+                allowed_ct = {
+                    "application/json; charset=utf-8",
+                    "application/json",
+                    "text/html; charset=utf-8",
+                    "text/plain; charset=utf-8",
+                    "application/octet-stream",
+                    "text/css",
+                    "application/javascript",
+                    "image/png",
+                    "image/jpeg",
+                    "image/svg+xml",
+                    "image/gif",
+                    "image/webp",
+                    "font/woff",
+                    "font/woff2",
+                }
+                ct = str(content_type or "application/octet-stream")
+                if "\r" in ct or "\n" in ct or ct not in allowed_ct:
+                    # Map common mimetypes to safe fixed strings
+                    low = ct.split(";")[0].strip().lower()
+                    ct = {
+                        "text/html": "text/html; charset=utf-8",
+                        "application/json": "application/json; charset=utf-8",
+                        "text/plain": "text/plain; charset=utf-8",
+                        "text/css": "text/css",
+                        "application/javascript": "application/javascript",
+                        "image/png": "image/png",
+                        "image/jpeg": "image/jpeg",
+                        "image/svg+xml": "image/svg+xml",
+                        "image/gif": "image/gif",
+                        "image/webp": "image/webp",
+                    }.get(low, "application/octet-stream")
                 self.send_response(status)
-                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Type", ct)
                 self.send_header("Content-Length", str(len(data)))
                 self.send_header("X-Content-Type-Options", "nosniff")
                 self.send_header("Cache-Control", "no-store")
@@ -688,16 +733,30 @@ class _SafeSPARequestHandler:
                 if target is None:
                     self.send_error(403, "Forbidden: path outside SPA output dir")
                     return
-                if not target.is_file():
+                import os as _os
+
+                t_real = _os.path.realpath(str(target))
+                if not _os.path.isfile(t_real):
                     self.send_error(404, "Not found")
                     return
-                ctype = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-                if target.suffix.lower() == ".html":
-                    ctype = "text/html; charset=utf-8"
-                elif target.suffix.lower() == ".json":
-                    ctype = "application/json; charset=utf-8"
+                # Fixed content-type from suffix only (no free-form header injection)
+                suf = Path(t_real).suffix.lower()
+                ctype = {
+                    ".html": "text/html; charset=utf-8",
+                    ".htm": "text/html; charset=utf-8",
+                    ".json": "application/json; charset=utf-8",
+                    ".css": "text/css",
+                    ".js": "application/javascript",
+                    ".png": "image/png",
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".svg": "image/svg+xml",
+                    ".gif": "image/gif",
+                    ".webp": "image/webp",
+                }.get(suf, "application/octet-stream")
                 try:
-                    data = target.read_bytes()
+                    with open(t_real, "rb") as fh:
+                        data = fh.read()
                 except OSError:
                     self.send_error(404, "Not found")
                     return
@@ -736,7 +795,10 @@ class _SafeSPARequestHandler:
                 if target is None:
                     self.send_error(403, "Forbidden")
                     return
-                if not target.is_file():
+                import os as _os
+
+                t_real = _os.path.realpath(str(target))
+                if not _os.path.isfile(t_real):
                     self.send_error(404, "Not found")
                     return
                 self.send_response(200)
@@ -838,18 +900,28 @@ def _serve_static_spa(
 
 def resolve_safe_spa_path(root: Path, request_path: str) -> Path | None:
     """Public helper for tests: resolve request path under root or None if escape."""
+    import os
     import urllib.parse
 
-    root_res = Path(root).resolve()
+    root_real = os.path.realpath(str(root))
     raw = urllib.parse.unquote(str(request_path or "/"))
     rel = raw.lstrip("/").replace("\\", "/")
     if rel == "" or rel.endswith("/"):
         rel = (rel + "index.html") if rel else "index.html"
-    if "\x00" in rel or any(p == ".." for p in rel.split("/")):
+    parts = [p for p in rel.split("/") if p not in ("", ".")]
+    if "\x00" in rel or any(p == ".." for p in parts):
         return None
-    candidate = (root_res / rel).resolve()
+    joined = os.path.join(root_real, *parts) if parts else root_real
+    cand_real = os.path.realpath(joined)
     try:
-        candidate.relative_to(root_res)
+        common = os.path.commonpath([root_real, cand_real])
     except ValueError:
         return None
-    return candidate
+    if common != root_real:
+        return None
+    if cand_real != root_real and not (
+        cand_real.startswith(root_real + os.sep)
+        or cand_real.startswith(root_real + "/")
+    ):
+        return None
+    return Path(cand_real)
