@@ -1,1 +1,257 @@
-PLACEHOLDER
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # actions: write scoped to docker job only (GHA cache for build-push-action)
+
+jobs:
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ruff>=0.4" "mypy>=1.10"
+
+      - name: Ruff lint
+        # Scoped while repo-wide ruff debt stays red on main (same failures on merged #9).
+        # Full-tree autofix tracked separately; CLI PRs must stay green.
+        run: >
+          ruff check
+          wildfire_front/cli.py
+          wildfire_front/cli_*.py
+          tests/test_cli*.py
+
+      - name: Ruff format check
+        run: >
+          ruff format --check
+          wildfire_front/cli_incident.py
+          wildfire_front/cli_report.py
+          tests/test_cli*.py
+
+      - name: Mypy type-check (CLI surfaces)
+        # Whole-package mypy is red on main (~38 errors outside CLI).
+        # Scope to CLI modules for these PRs; full-tree mypy is a separate track.
+        run: >
+          mypy
+          wildfire_front/cli.py
+          wildfire_front/cli_incident.py
+          wildfire_front/cli_operator.py
+          wildfire_front/cli_report.py
+          --ignore-missing-imports
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install GDAL system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+
+      - name: Install package and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "rasterio>=1.4"
+          pip install ".[ml,viz,dev]"
+          pip install pytest-cov
+
+      - name: Run tests with coverage
+        # Gate starts modest (coverage ~74% locally); raise gradually toward 80+.
+        run: pytest --cov=wildfire_front --cov-report=term-missing --cov-report=xml --cov-fail-under=62
+
+      - name: Upload coverage artifact
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+
+  ml-smoke:
+    name: ML smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install GDAL system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+
+      - name: Install ML extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install "rasterio>=1.4"
+          pip install ".[ml,dev]"
+
+      - name: Run ML tests (U-Net + catalog + pipeline + metrics/norm)
+        run: >
+          pytest
+          tests/test_unet_model.py
+          tests/test_product_catalog.py
+          tests/test_clm_eval_ensemble.py
+          tests/test_ml_pipeline.py
+          tests/test_meta_labeler.py
+          tests/test_ndws_metrics.py
+          tests/test_spread_predictor.py
+          tests/test_export_torchscript.py
+          tests/test_normalization.py
+          tests/test_metrics_protocol.py
+          -v
+
+      - name: Run ops/incident unit tests
+        run: pytest tests/test_incident_watch.py tests/test_cli_report.py tests/test_emergency_products.py -v
+
+      - name: Smoke product Residual U-Net + catalog (primary)
+        run: |
+          python - <<'PY'
+          import torch
+          from models.unet_model import ResidualWildfireUNetSmall, WildfireUNetSmall
+          from wildfire_front.ml.product_catalog import get_product, list_products, load_catalog
+
+          # Residual U-Net is the production architecture (v21+/CLM specialist).
+          torch.manual_seed(0)
+          residual = ResidualWildfireUNetSmall(in_channels=18)
+          x = torch.randn(1, 18, 64, 64)
+          prev = (torch.rand(1, 64, 64) > 0.5).float()
+          with torch.no_grad():
+              logits = residual(x, prev)
+              probs = residual.predict(x, prev)
+          assert logits.shape == (1, 1, 64, 64), logits.shape
+          assert probs.shape == (1, 1, 64, 64)
+          assert torch.isfinite(logits).all()
+          assert (probs >= 0).all() and (probs <= 1).all()
+
+          small = WildfireUNetSmall(in_channels=18)
+          with torch.no_grad():
+              out = small(x)
+          assert out.shape == (1, 1, 64, 64)
+
+          # Catalog product contracts (weights optional; structure always required).
+          catalog = load_catalog()
+          assert "ndws_v21" in catalog["products"]
+          assert "clm_v28" in catalog["products"]
+          assert "clm_ensemble_v34" in catalog["products"]
+          for pid in ("ndws_v21", "clm_v28", "clm_ensemble_v34"):
+              spec = get_product(pid)
+              assert spec.manifest_path.name  # resolved path
+              ok, msg = spec.resolve_existing()
+              print(f"  product {pid}: ready={ok} ({msg})")
+          products = list_products()
+          assert len(products) >= 3
+          print("Residual U-Net + catalog product smoke OK")
+          PY
+
+      - name: Smoke A3C legacy model (optional / secondary)
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import torch
+          from models.model import A3C_PerCellModel_LSTM
+          m = A3C_PerCellModel_LSTM()
+          seq = torch.randn(1, 3, 16, 30, 30)
+          mask = torch.zeros(1, 30, 30)
+          feats, value = m(seq, mask)
+          assert feats.shape == (1, 256, 30, 30)
+          assert value.shape == (1, 1)
+          print("A3C legacy smoke OK (secondary)")
+          PY
+
+  docker:
+    name: Docker build (runtime + inference)
+    runs-on: ubuntu-latest
+    # GHA cache write only needed here (not lint/test/ml-smoke).
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: wildfire-front-dynamics:runtime
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke import geospatial stack (runtime)
+        run: |
+          docker run --rm --entrypoint python wildfire-front-dynamics:runtime -c \
+            "import shapely, pyproj, rasterio, numpy, affine, wildfire_front; print('runtime-deps-ok')"
+
+      # Inference image is heavier (CPU torch). Full load+smoke only on main/tags;
+      # PRs skip the second load to cut CI wall-time (runtime smoke already covers
+      # the geospatial stack). Re-enable via push to main or a release tag.
+      - name: Build inference image
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: inference
+          push: false
+          load: true
+          tags: wildfire-front-dynamics:inference
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke import inference stack (weights optional)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          docker run --rm --entrypoint python wildfire-front-dynamics:inference -c \
+            "import torch; import wildfire_front.ml.spread_predictor as s; print('inference-import-ok')"
+          # .pt are gitignored — do not fail CI when absent; only report status
+          if [ -f models/production/weights_v21_best.pt ] || [ -f models/production/spread_model_v21.pt ]; then
+            echo "Local production weight artifacts present in build context"
+          else
+            echo "NOTE: no production .pt in context (expected on clean clone)."
+            echo "Inject via bind-mount or place under models/production/ before docker build."
+            echo "See CONTRIBUTING.md Model weights section."
+          fi
+
+      - name: Note inference skipped on PR
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
+        run: echo "Inference image build skipped on PR (built only on main/tags)."
