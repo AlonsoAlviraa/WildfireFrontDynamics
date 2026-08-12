@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""B2 — Release flags SSOT checker (docs/flags alignment).
+"""Release flags SSOT checker (docs/flags alignment) — Agent B ownership.
 
 Authority order:
   1. docs/CURRENT_STATE.md (human narrative + gate table)
   2. docs/ML_PRODUCT_GO_STATUS.json (machine stamp)
-  3. Hard rails: field_ops fusion OFF unless human promote
+  3. Hard rails: field_ops fusion OFF · GO_Q partial · FREEZE_ML · GO_MES+ false
 
 Exit codes:
   0 — PASS (all hard invariants hold)
@@ -13,6 +13,7 @@ Exit codes:
 
 Does not flip any product flags. Read-only.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,6 +26,9 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT_STATE = ROOT / "docs" / "CURRENT_STATE.md"
 ML_GO_STAMP = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+
+_GOQ_FORBIDDEN = frozenset({"true", "complete", "full", "yes", "1"})
+_GOQ_ALLOWED = frozenset({"partial", "false", "0", "no"})
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -58,25 +62,44 @@ def _truthy_token(s: str) -> bool | None:
     return None
 
 
-def evaluate() -> dict[str, Any]:
+def _go_q_stamp_ok(stamp_goq: Any) -> bool:
+    """GO_Q may be partial/false only; never invent true/complete."""
+    if stamp_goq is True:
+        return False
+    if stamp_goq is False:
+        return True
+    s = str(stamp_goq).strip().lower() if stamp_goq is not None else ""
+    if s in _GOQ_FORBIDDEN:
+        return False
+    return s in _GOQ_ALLOWED
+
+
+def evaluate(
+    *,
+    current_state_path: Path | None = None,
+    stamp_path: Path | None = None,
+) -> dict[str, Any]:
+    """Evaluate release-flag rails. Paths injectable for unit tests."""
+    cs_path = current_state_path or CURRENT_STATE
+    st_path = stamp_path or ML_GO_STAMP
     checks: list[dict[str, Any]] = []
     hard_fail = False
 
-    if not CURRENT_STATE.is_file():
+    if not cs_path.is_file():
         return {
             "status": "ERROR",
             "exit_code": 2,
-            "error": f"missing {CURRENT_STATE.relative_to(ROOT)}",
+            "error": f"missing {cs_path}",
         }
-    if not ML_GO_STAMP.is_file():
+    if not st_path.is_file():
         return {
             "status": "ERROR",
             "exit_code": 2,
-            "error": f"missing {ML_GO_STAMP.relative_to(ROOT)}",
+            "error": f"missing {st_path}",
         }
 
-    md = CURRENT_STATE.read_text(encoding="utf-8")
-    stamp = _load_json(ML_GO_STAMP)
+    md = cs_path.read_text(encoding="utf-8")
+    stamp = _load_json(st_path)
     gates = _extract_gate_table(md)
 
     # --- Hard rails ---
@@ -88,7 +111,10 @@ def evaluate() -> dict[str, Any]:
         {
             "id": "field_ops_fusion_off",
             "ok": fusion_off,
-            "detail": f"stamp fusion allow={stamp.get('field_ops_allow_ml_live_in_fusion')} rails={fusion_rail}",
+            "detail": (
+                f"stamp fusion allow={stamp.get('field_ops_allow_ml_live_in_fusion')} "
+                f"rails={fusion_rail}"
+            ),
         }
     )
     if not fusion_off:
@@ -118,7 +144,7 @@ def evaluate() -> dict[str, Any]:
     cs_ml = gates.get("ml_product_go")
     if cs_ml is not None:
         cs_bool = _truthy_token(cs_ml)
-        ok = cs_bool is True and ml_go is True or cs_bool is False and ml_go is False
+        ok = (cs_bool is True and ml_go is True) or (cs_bool is False and ml_go is False)
         checks.append(
             {
                 "id": "align_ml_product_go_current_state",
@@ -129,15 +155,17 @@ def evaluate() -> dict[str, Any]:
         if not ok:
             hard_fail = True
 
-    cs_fusion = gates.get("field_ops ML fusion") or gates.get("field_ops ML fusion")
     # table key in CURRENT_STATE is "field_ops ML fusion"
     for k, v in gates.items():
         if "fusion" in k.lower():
-            tok = _truthy_token(v) if v not in {"off", "on"} else (v == "on")
-            if v.strip().lower() == "off":
+            tok: bool | None
+            vl = v.strip().lower()
+            if vl == "off":
                 tok = False
-            if v.strip().lower() == "on":
+            elif vl == "on":
                 tok = True
+            else:
+                tok = _truthy_token(v)
             checks.append(
                 {
                     "id": "align_fusion_current_state",
@@ -149,14 +177,12 @@ def evaluate() -> dict[str, Any]:
                 hard_fail = True
             break
 
-    # GO_MES stamp vs CURRENT_STATE (stamp may lag; warn-as-fail for B2)
+    # GO_MES stamp vs CURRENT_STATE
     stamp_gomes = stamp.get("GO_MES")
     cs_gomes = gates.get("GO_MES")
     if cs_gomes is not None and stamp_gomes is not None:
         cs_b = _truthy_token(cs_gomes)
-        ok = (cs_b is True and stamp_gomes is True) or (
-            cs_b is False and stamp_gomes is False
-        )
+        ok = (cs_b is True and stamp_gomes is True) or (cs_b is False and stamp_gomes is False)
         checks.append(
             {
                 "id": "align_go_mes",
@@ -167,20 +193,102 @@ def evaluate() -> dict[str, Any]:
         if not ok:
             hard_fail = True
 
+    # GO_MES+ must stay false until 2nd grade A + O2 path + H1 honesty
+    stamp_gomes_plus = stamp.get("GO_MES_plus")
+    if stamp_gomes_plus is not None:
+        gomes_plus_ok = stamp_gomes_plus is False or str(stamp_gomes_plus).lower() in {
+            "false",
+            "0",
+            "no",
+        }
+        checks.append(
+            {
+                "id": "go_mes_plus_false",
+                "ok": gomes_plus_ok,
+                "detail": f"stamp GO_MES_plus={stamp_gomes_plus!r} (must stay false until criteria)",
+            }
+        )
+        if not gomes_plus_ok:
+            hard_fail = True
+    cs_gomes_plus = gates.get("GO_MES+")
+    if cs_gomes_plus is not None:
+        tok = _truthy_token(cs_gomes_plus)
+        ok = tok is False
+        checks.append(
+            {
+                "id": "go_mes_plus_current_state_false",
+                "ok": ok,
+                "detail": f"CURRENT_STATE GO_MES+={cs_gomes_plus!r}",
+            }
+        )
+        if not ok:
+            hard_fail = True
+
+    # FREEZE_ML: Tobarra KEEP reopen must remain false
+    keep_reopen = rails.get("tobarra_keep_reopen", True)
+    keep_ok = keep_reopen is False or str(keep_reopen).lower() in {"false", "0", "no"}
+    checks.append(
+        {
+            "id": "tobarra_keep_reopen_false",
+            "ok": keep_ok,
+            "detail": f"stamp rails.tobarra_keep_reopen={keep_reopen!r}",
+        }
+    )
+    if not keep_ok:
+        hard_fail = True
+
     # One-line truth must mention fusion OFF and not claim field ML live
     oneline = ""
     for line in md.splitlines():
         if "fusion" in line.lower() and ("OFF" in line or "off" in line):
             oneline = line
             break
+    fusion_narrative_ok = bool(oneline) or "fusion OFF" in md or "fusion** | **OFF" in md
     checks.append(
         {
             "id": "narrative_mentions_fusion_off",
-            "ok": bool(oneline) or "fusion OFF" in md or "fusion** | **OFF" in md,
+            "ok": fusion_narrative_ok,
             "detail": "CURRENT_STATE must keep field fusion OFF visible",
         }
     )
-    if not checks[-1]["ok"]:
+    if not fusion_narrative_ok:
+        hard_fail = True
+
+    # GO_Q hard rail: eng must never invent complete/true
+    stamp_goq = stamp.get("GO_Q")
+    goq_stamp_ok = _go_q_stamp_ok(stamp_goq)
+    checks.append(
+        {
+            "id": "go_q_stamp_not_complete",
+            "ok": goq_stamp_ok,
+            "detail": f"stamp GO_Q={stamp_goq!r} (must stay partial until human acta)",
+        }
+    )
+    if not goq_stamp_ok:
+        hard_fail = True
+
+    cs_goq = gates.get("GO_Q")
+    if cs_goq is not None:
+        goq_cs_ok = cs_goq.strip().lower() == "partial"
+        checks.append(
+            {
+                "id": "go_q_current_state_partial",
+                "ok": goq_cs_ok,
+                "detail": f"CURRENT_STATE GO_Q={cs_goq!r} (must be partial; never invent true)",
+            }
+        )
+        if not goq_cs_ok:
+            hard_fail = True
+
+    narrative_goq = ("GO_Q partial" in md) or ("partial" in md.lower() and "go_q" in md.lower())
+    checks.append(
+        {
+            "id": "narrative_go_q_partial",
+            "ok": narrative_goq,
+            "detail": "CURRENT_STATE narrative must keep GO_Q partial visible",
+        }
+    )
+    if not narrative_goq:
         hard_fail = True
 
     status = "FAIL" if hard_fail else "PASS"
@@ -188,12 +296,14 @@ def evaluate() -> dict[str, Any]:
         "status": status,
         "exit_code": 1 if hard_fail else 0,
         "authority": {
-            "current_state": str(CURRENT_STATE.relative_to(ROOT)),
-            "ml_product_go_stamp": str(ML_GO_STAMP.relative_to(ROOT)),
+            "current_state": str(cs_path),
+            "ml_product_go_stamp": str(st_path),
         },
         "invariants": {
             "field_ops_fusion": "OFF",
             "ml_product_go_means": "lab_only_not_field_fusion",
+            "go_q": "partial_until_human_acta",
+            "go_mes_plus": False,
             "tobarra_keep_reopen": False,
         },
         "checks": checks,
@@ -203,7 +313,7 @@ def evaluate() -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="WFD B2 release flags SSOT check")
+    ap = argparse.ArgumentParser(description="WFD release flags SSOT check (Agent B)")
     ap.add_argument(
         "--json",
         action="store_true",

@@ -10,10 +10,11 @@
 
 1. **Anclas SSOT** = solo `data/infocam_anchors.json` → ver `docs/DATA_ANCHOR_SSOT.md`.  
    Hoy: **1 confirmed (Tobarra)**. Hellín / Cardoso / … = `pending_external`.
-2. La tabla “✅ Completos” de abajo es un **inventario histórico** (2026-07-17).  
+2. **Cite → promote** (Hellín u otra ancla): checklist en `docs/DATA_ANCHOR_SSOT.md` — **humano Alonso**; agentes no promueven sin cite literal. Tests: `tests/test_data_anchor_honesty.py`.
+3. La tabla “✅ Completos” de abajo es un **inventario histórico** (2026-07-17).  
    **No** garantiza que este clone tenga stacks LWIR bajo `artifacts/`. Verificar on-disk (`build_if_inventory` / listar `.tif`) antes de vender “6 IF completos”.
-3. **O2 nacional** sigue BLOCKED_EXTERNAL; CEMS/REDIAM/RAI = **proxy ≠ cadastro**.
-4. No inventar Vp/ha. FREEZE_ML → pedir datos, no reentrenar.
+4. **O2 nacional** sigue BLOCKED_EXTERNAL; CEMS/REDIAM/RAI = **proxy ≠ cadastro**.
+5. No inventar Vp/ha. FREEZE_ML → pedir datos, no reentrenar.
 
 ---
 
