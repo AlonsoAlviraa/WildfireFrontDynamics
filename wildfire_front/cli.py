@@ -16,6 +16,7 @@ import numpy as np
 from . import __version__
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
+from .cli_operator import dispatch_operator_command, register_operator_commands
 from .cli_report import (
     enrich_incident_summary,
     print_demo_report,
@@ -66,8 +67,14 @@ examples:
   # Machine-readable
   wildfire-front incident status --work-dir outputs/incidents/IF1 --json
 
+  # H1 / 12-min demo (operator hub)
+  wildfire-front operator
+  wildfire-front operator checklist
+  wildfire-front operator do --act 1
+  wildfire-front demo-third-party
+
   # Decision Card → forensic acta
-  wildfire-front decide --work-dir outputs/incidents/IF1 \
+  wildfire-front decide --work-dir outputs/incidents/IF1 \\
     --output outputs/incidents/IF1/outbox/fire_decision_card.json
   wildfire-front export-acta --work-dir outputs/incidents/IF1
 
@@ -452,6 +459,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Write card JSON to this path",
     )
+    decide.add_argument(
+        "--explain",
+        action="store_true",
+        help="Print sources, policy rails, and reasons (human mode)",
+    )
     _add_global_flags(decide)
 
     # ─ serve-decide (minimal HTTP API) ────────────────────────────────────────
@@ -556,6 +568,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(replay)
 
+    # ─ operator / teach / show / demo-third-party (H1 cheatsheet) ──
+    register_operator_commands(commands, add_global_flags=_add_global_flags)
+
     return parser
 
 
@@ -575,6 +590,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     quiet = bool(getattr(args, "quiet", False))
 
     try:
+        if args.command in {"operator", "teach", "show", "demo-third-party"}:
+            dispatch_operator_command(args)
+            return
+
         if args.command == "demo":
             metrics = run_demo(args.output, args.seed, args.position_error_m)
             print_demo_report(args.output, metrics, as_json=as_json)
@@ -675,6 +694,20 @@ def main(argv: Sequence[str] | None = None) -> None:
                 print(f"system_reliability_pass: {payload.get('system_reliability_pass')}")
                 print(f"latency_ms: {payload.get('latency_ms')}")
                 print("reasons:", "; ".join((payload.get("reasons") or [])[:12]))
+                if getattr(args, "explain", False):
+                    print("explain:")
+                    print(
+                        "  rails: field_ops fusion OFF · ABSTAIN is a feature · not tactical dispatch"
+                    )
+                    for s in payload.get("sources") or []:
+                        if not isinstance(s, dict):
+                            continue
+                        print(
+                            f"  source {s.get('id')}: available={s.get('available')} "
+                            f"weight={s.get('weight')} conf={s.get('confidence')}"
+                        )
+                    for d in (payload.get("disclaimers") or [])[:8]:
+                        print(f"  disclaimer: {d}")
                 if out:
                     print(f"wrote: {out}")
             return
