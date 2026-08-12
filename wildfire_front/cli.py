@@ -16,6 +16,7 @@ import numpy as np
 from . import __version__
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
+from .cli_app import register_app_commands, run_app
 from .cli_operator import dispatch_operator_command, register_operator_commands
 from .cli_report import (
     enrich_incident_summary,
@@ -382,6 +383,9 @@ def build_parser() -> argparse.ArgumentParser:
     # ─ incident ───────────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
 
+    # ── product SPA (Leaflet + dashboard; brief + map_status) ────────────
+    register_app_commands(commands, add_global_flags=_add_global_flags)
+
     # ─ decide (Fire Decision Card) ────────────────────────────────────────────
     decide = commands.add_parser(
         "decide",
@@ -711,6 +715,9 @@ def main(argv: Sequence[str] | None = None) -> None:
                 if out:
                     print(f"wrote: {out}")
             return
+
+        if args.command == "app":
+            raise SystemExit(run_app(args))
 
         if args.command == "serve-decide":
             from .product.api_server import serve as serve_decide_api
