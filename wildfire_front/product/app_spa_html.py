@@ -217,6 +217,29 @@ body.mode-advanced .simp{display:none!important}
 .last-act .preview{font-size:10px;color:var(--muted);margin-top:4px;max-height:4.5em;overflow:hidden;white-space:pre-wrap}
 .last-act .row-btns{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
 .last-act .row-btns .btn{min-height:28px;font-size:10px;padding:0 8px}
+/* A4 decision-log UI (display only; ACK backend is Agent B) */
+.decision-log{
+  margin:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel2);font-size:11px;
+}
+.decision-log b{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.decision-log .dlog-id{font-family:var(--mono);font-size:10px;color:var(--local);word-break:break-all}
+.decision-log .dlog-meta{font-size:10px;color:var(--faint);margin-top:4px;line-height:1.35}
+.decision-log .dlog-ack{
+  margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+}
+.decision-log .dlog-ack .btn{min-height:28px;font-size:10px;padding:0 8px}
+.decision-log .dlog-note{font-size:9px;color:var(--faint);margin-top:4px}
+/* A5 split conf: ML conf ≠ ROS conf */
+.split-conf{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.split-conf .sc-box{
+  border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;background:var(--panel);
+}
+.split-conf .sc-box .sc-k{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.split-conf .sc-box .sc-v{font-size:12px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.split-conf .sc-box .sc-h{font-size:9px;color:var(--faint);margin-top:2px;line-height:1.25}
+.split-conf .sc-box.ros .sc-v{color:var(--hold)}
+.split-conf .sc-box.ml .sc-v{color:var(--cyan)}
 
 /* Primary 3 acts — industry stress pattern: priority first, full power later */
 .primary-acts{
@@ -422,6 +445,30 @@ def _shell() -> str:
         <div class="row-btns" id="last-act-btns" hidden>
           <button type="button" class="btn sm" id="btn-copy-act-path">Copiar path</button>
           <button type="button" class="btn sm adv" id="btn-live-replay" title="Replay pack third-party (consistencia forense)">Replay pack</button>
+        </div>
+      </div>
+
+      <div class="decision-log" id="decision-log" data-marker="decision-log" aria-label="Decision log">
+        <b>Decision log</b>
+        <div class="dlog-id" id="dlog-id">id: — (stub UI · backend B opcional)</div>
+        <div class="dlog-meta" id="dlog-meta">Última decisión mostrada aquí. ACK es superficie UI; no inventa backend si B no shippea.</div>
+        <div class="dlog-ack">
+          <button type="button" class="btn sm" id="btn-dlog-ack" title="ACK local (UI only)">ACK UI</button>
+          <span class="dlog-meta" id="dlog-ack-state">ack: pending</span>
+        </div>
+        <div class="dlog-note">fusion OFF · no GO_Q invent · ACK local ≠ acta H1</div>
+      </div>
+
+      <div class="split-conf" id="split-conf" data-marker="split-conf" aria-label="Confianza ML vs ROS">
+        <div class="sc-box ml">
+          <div class="sc-k">Conf. ML / predicción</div>
+          <div class="sc-v" id="sc-ml">—</div>
+          <div class="sc-h">calidad de card · <b>no es ROS</b></div>
+        </div>
+        <div class="sc-box ros">
+          <div class="sc-k">Conf. ROS / ops</div>
+          <div class="sc-v" id="sc-ros">—</div>
+          <div class="sc-h">métrica ops si existe · IoU ≠ ROS</div>
         </div>
       </div>
 
@@ -808,6 +855,17 @@ if (btnReplay) {
   };
   btnReplay.style.display = liveOps.enabled ? '' : 'none';
 }
+// A4: ACK is UI-only until Agent B decision-log backend ships
+const btnDlogAck = document.getElementById('btn-dlog-ack');
+if (btnDlogAck) {
+  btnDlogAck.onclick = () => {
+    const st = document.getElementById('dlog-ack-state');
+    const ts = new Date().toISOString().slice(0, 19) + 'Z';
+    if (st) st.textContent = 'ack: UI ' + ts + ' (local · no backend)';
+    recordAct('ACK UI', 'decision-log', 'ACK local only — not H1 acta', 'ack_ui');
+    toast('ACK UI · no backend');
+  };
+}
 function actStatus() {
   if (liveOpsOn()) { runLiveAct('status'); return; }
   copyText(cliCmdFor('status'), 'CLI copiado', { act: 'Estado', hint: 'sin serve — péguelo en terminal' });
@@ -955,6 +1013,41 @@ function applyHero(h) {
   if (fill) fill.style.width = (conf != null ? Math.round(conf * 100) : 0) + '%';
   if (bandEl) bandEl.textContent = 'banda ' + band;
   if (labelEl) labelEl.textContent = 'Conf. predicción (no es ROS)';
+  // A5 split conf UI: ML conf ≠ ROS conf labels
+  const scMl = document.getElementById('sc-ml');
+  const scRos = document.getElementById('sc-ros');
+  if (scMl) {
+    scMl.textContent = conf != null
+      ? (Math.round(conf * 100) + '% · ' + band)
+      : '—';
+  }
+  if (scRos) {
+    let rosConf = null;
+    if (ops && ops.ros_confidence != null && !Number.isNaN(+ops.ros_confidence)) {
+      rosConf = +ops.ros_confidence;
+    } else if (ops && ops.quality_grade) {
+      rosConf = String(ops.quality_grade);
+    }
+    if (typeof rosConf === 'number') {
+      scRos.textContent = Math.round(rosConf * 100) + '% (ops)';
+    } else if (rosConf) {
+      scRos.textContent = 'grade ' + rosConf + ' (ops · no ML)';
+    } else {
+      scRos.textContent = '— (sin conf ROS)';
+    }
+  }
+  // A4 decision-log surface (id stub or real event_id)
+  const dlogId = document.getElementById('dlog-id');
+  const dlogMeta = document.getElementById('dlog-meta');
+  if (dlogId) {
+    const eid = (card && card.event_id) || hero.event_id || (hero.decision ? ('stub-' + String(hero.decision).toLowerCase()) : null);
+    dlogId.textContent = eid ? ('id: ' + eid) : 'id: — (stub UI · backend B opcional)';
+  }
+  if (dlogMeta) {
+    const dec = (card && card.decision) || hero.decision || '—';
+    const fus = 'fusion OFF';
+    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + ' · ' + fus + ' · conf ML ≠ conf ROS';
+  }
 }
 
 function renderOpsKv() {
