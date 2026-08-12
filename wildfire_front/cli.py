@@ -14,9 +14,9 @@ from typing import Any
 import numpy as np
 
 from . import __version__
+from .cli_app import register_app_commands, run_app
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
-from .cli_app import register_app_commands, run_app
 from .cli_operator import dispatch_operator_command, register_operator_commands
 from .cli_report import (
     enrich_incident_summary,
