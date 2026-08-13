@@ -20,6 +20,7 @@ from .teach_path import (
     load_gate_snapshot,
     rails_one_liner,
     resolve_repo_root,
+    ssot_field_ops_fusion,
 )
 
 # Written by ``operator do`` so checklist can distinguish presence vs ensayo.
@@ -218,7 +219,7 @@ def build_operator_brief(
     status = build_operator_status(repo)
     gates = dict(status.get("gates") or {})
     go_q = dict(status.get("go_q") or {})
-    fusion = str(gates.get("field_ops_ml_live_fusion", "OFF")).upper()
+    fusion = ssot_field_ops_fusion()
     if fusion in ("FALSE", "0", "NO"):
         fusion = "OFF"
 
@@ -692,7 +693,7 @@ def format_abstain_plain(card: dict[str, Any] | None = None) -> str:
             "    3. En demo: operator do --act 2  (pilot honesty) y acto 4 (pack).",
             "    4. Nunca forzar un GO sin fuentes — viola la política field_ops.",
             "",
-            "  Rails: field_ops ML live fusion = OFF · ml_product_go = true",
+            f"  Rails: field_ops ML live fusion = {ssot_field_ops_fusion()} · ml_product_go = true",
             "  Doc: docs/PILOT_HONESTY_CARD.md · docs/PRODUCTO_DUAL.md",
             "",
         ]

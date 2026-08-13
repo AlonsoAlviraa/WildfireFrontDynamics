@@ -8,7 +8,7 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 ```
 
 ## Título
-WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
+WildfireFrontDynamics — demo decisión 12 min (HITL, fusion ON)
 
 ## Cuándo (propuesta)
 **Propuesta eng:** 2026-08-13 10:00–10:15 (UTC) — reprogramar con el tercero. Prepared UTC: 2026-08-10T13:42:31.496441+00:00
@@ -24,7 +24,7 @@ WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
 
 | Min | Bloque |
 |----:|--------|
-| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **OFF** · ml_product_go **lab only** · ABSTAIN = feature |
+| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **ON** · ml_product_go **lab only** · ABSTAIN = feature · fusion ON ≠ despacho |
 | 1–4 | Ver multi-CCAA (3 contratos) |
 | 4–6 | Callarse (pilot honesty / field_ops se calla) |
 | 6–9 | Decision Card + explain |
@@ -44,7 +44,7 @@ python -m wildfire_front operator checklist
 
 ## Kill list verbal (obligatorio)
 - No ROS inventado  
-- No field_ops ML live fusion ON  
+- fusion ON ≠ GO_Q complete ≠ despacho táctico  
 - No vender Tobarra LOFO ~0.48 como producto de campo  
 - No “apagamos incendios con IA”
 
