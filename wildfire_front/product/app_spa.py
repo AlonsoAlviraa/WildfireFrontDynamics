@@ -34,6 +34,7 @@ from wildfire_front.product.operator_ux import (
     build_operator_brief,
 )
 from wildfire_front.product.plain_language import build_plain_language_payload
+from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
 from wildfire_front.product.spa_honesty_ui import (
     build_h1_eng_rehearsal,
     build_split_conf_view,
@@ -196,7 +197,7 @@ def _hero_from_decision(
         hero_conf = None
         hero_label = str(brief.get("overall_light") or "AMARILLO")
     hero_plain = {
-        "GO": "El sistema se atreve a proponer una orientación con las fuentes actuales.",
+        "GO": "El sistema propone una orientación de card (no es GO_Q; no es despacho).",
         "HOLD": "Hay datos, pero no bastan o chocan: espera / revisa antes de actuar.",
         "ABSTAIN": "El sistema se calla a propósito — callarse es correcto si faltan fuentes.",
         "BRIEF": "Vista de producto (semáforo / brief) sin Decision Card local del incendio.",
@@ -411,14 +412,13 @@ def build_product_app_payload(
     hero = _hero_from_decision(decision, brief)
 
     rails = {
-        "field_ops_ml_live_fusion": (brief.get("rails") or {}).get(
-            "field_ops_ml_live_fusion", "OFF"
-        ),
+        "field_ops_ml_live_fusion": field_ops_ml_live_fusion_rail(),
         "ml_product_go": bool((brief.get("rails") or {}).get("ml_product_go", True)),
         "iou_is_not_ros": True,
         "lab_go_ne_field_fusion": True,
         "not_tactical_dispatch": True,
         "go_q_invent_forbidden": True,
+        "go_q_met": False,
         "nrt_not_official_perimeter": True,
         "hotspots_not_burned_area": True,
     }
@@ -580,7 +580,7 @@ def build_product_app_payload(
                 "Con --serve, la SPA usa proxy same-origin /bridge/v1/decide → upstream. "
                 "file:// o upstream caído: fallback silencioso a card embebida. "
                 "serve-decide necesita --base-dir del repo para work_dir relativo. "
-                "No fusion; no despacho táctico."
+                "Fusion sigue catálogo field_ops; no inventa GO_Q; no despacho táctico."
             ),
         },
         "pack": pack_block,
@@ -662,7 +662,9 @@ def build_product_app_payload(
         "disclaimer": (
             "Not validated tactical dispatch. Thermal mask ≠ official perimeter. "
             "15/30/60 envelopes are extrapolated guidance only. "
-            "FIRMS NRT hotspots ≠ burned area. field_ops ML fusion = OFF. "
+            f"FIRMS NRT hotspots ≠ burned area. field_ops ML fusion = "
+            f"{rails.get('field_ops_ml_live_fusion') or 'OFF'} "
+            "(≠ GO_Q complete ≠ despacho). "
             "ABSTAIN is a product feature, not a crash."
         ),
         "disclaimer_simple": plain_block.get("disclaimer_simple"),

@@ -96,9 +96,20 @@ def sla_work_dir() -> Path:
 
 def test_honesty_rails_fusion_on():
     r = honesty_rails()
+    from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+    stamp_path = REPO_ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+    assert stamp.get("field_ops_allow_ml_live_in_fusion") is True
+    assert (stamp.get("rails") or {}).get("field_ops_fusion") == "ON"
+    assert stamp.get("GO_Q") == "partial"
+    # Same catalog source as ``app --list-fires``
+    assert r["field_ops_ml_live_fusion"] == field_ops_ml_live_fusion_rail()
     assert r["field_ops_ml_live_fusion"] == "ON"
     assert r["go_q_invent_forbidden"] is True
     assert r["not_tactical_dispatch"] is True
+    assert r["go_q_met"] is False
+    assert r["iou_is_not_ros"] is True
 
 
 def test_resolve_work_dir_rejects_traversal(tmp_path: Path):
@@ -118,6 +129,9 @@ def test_payload_live_ops_flag():
     off = build_product_app_payload(live=False, scan=False, live_ops_enabled=False)
     assert off["live_ops"]["enabled"] is False
     assert off["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert off["live_ops"]["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert off["live_ops"]["honesty_rails"]["go_q_met"] is False
+    assert "Fusion OFF" not in (off["live_ops"].get("note") or "")
     on = build_product_app_payload(live=False, scan=False, live_ops_enabled=True)
     assert on["live_ops"]["enabled"] is True
     assert on["live_ops"]["endpoints"]["decide"] == LIVE_PATH_DECIDE
@@ -137,6 +151,7 @@ def test_dispatch_health_and_disabled_path():
     assert st == 200
     assert payload["ok"] is True
     assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert payload["honesty_rails"].get("go_q_met") is False
 
 
 def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
@@ -145,6 +160,8 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         st_h, health = _get_json(port, LIVE_PATH_HEALTH)
         assert st_h == 200
         assert health["ok"] is True
+        assert health["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+        assert health["honesty_rails"]["go_q_met"] is False
 
         rel = str(sla_work_dir.resolve().relative_to(REPO_ROOT.resolve())).replace(
             "\\", "/"
@@ -164,12 +181,12 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         assert decided["ok"] is True
         assert decided["act"] == "decide"
         assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+        assert decided["honesty_rails"]["go_q_met"] is False
         summary = decided.get("summary") or {}
         assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get(
             "decision"
         )
-        # fusion never ON in summary/rails
-        assert decided["honesty_rails"]["field_ops_ml_live_fusion"] != "ON"
+        assert decided["honesty_rails"]["go_q_invent_forbidden"] is True
     finally:
         httpd.shutdown()
         httpd.server_close()
