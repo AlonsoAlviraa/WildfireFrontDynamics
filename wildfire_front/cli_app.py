@@ -16,6 +16,7 @@ from .product.app_spa import (
 from .product.fire_catalog import scan_fire_catalog
 from .product.policy import field_ops_ml_live_fusion_rail
 
+
 def app_rails() -> dict[str, Any]:
     """Catalog rails — same fusion source as Live Ops ``honesty_rails`` / ``--list-fires``."""
     return {

@@ -201,4 +201,3 @@ def test_js_live_unavailable_surfaces_cli_fallback():
     assert "fusionRailLabel" in js
     assert "hero-kind" in mod._shell() or "hero-orientation" in mod._shell()
     assert "decision-honest" in js
-

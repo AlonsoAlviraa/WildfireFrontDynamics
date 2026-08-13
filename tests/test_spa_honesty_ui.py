@@ -247,9 +247,7 @@ def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
     work = tmp_path / "inc_vv"
     work.mkdir()
     write_vv_scorecard(work, base=tmp_path, include_repo_root=False, event_id="IF_VV")
-    side = load_vv_scorecard_surface(
-        work_dir=work, base=tmp_path, include_repo_root=False
-    )
+    side = load_vv_scorecard_surface(work_dir=work, base=tmp_path, include_repo_root=False)
     assert side["mode"] == "sidecar_read"
     assert side["path_rel"] == "vv_scorecard.json"
     assert side["eng_stub"] is True
@@ -264,9 +262,7 @@ def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
 
     empty_wd = tmp_path / "inc_no_vv"
     empty_wd.mkdir()
-    missing = load_vv_scorecard_surface(
-        work_dir=empty_wd, base=tmp_path, include_repo_root=False
-    )
+    missing = load_vv_scorecard_surface(work_dir=empty_wd, base=tmp_path, include_repo_root=False)
     assert missing["mode"] == "sin_sidecar"
     assert missing["field_iou"] is None
 
@@ -371,9 +367,7 @@ def test_payload_reads_real_sidecar_and_html_marker(tmp_path: Path):
         }
     )
     entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
-    surface = load_decision_log_surface(
-        work_dir=work, base=tmp_path, include_repo_root=False
-    )
+    surface = load_decision_log_surface(work_dir=work, base=tmp_path, include_repo_root=False)
     payload = build_product_app_payload(live=False, scan=False)
     payload = {**payload, "decision_log": surface}
     html = render_product_app_html(payload)

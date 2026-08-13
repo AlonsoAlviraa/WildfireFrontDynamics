@@ -571,9 +571,7 @@ def handle_ack_decision(
         }
 
     # Reload to prove sidecar rewrite (shipped get_decision path)
-    reloaded = get_decision(
-        work, decision_id, base=root, include_repo_root=True
-    )
+    reloaded = get_decision(work, decision_id, base=root, include_repo_root=True)
     ack_obj = (reloaded or entry).get("ack") if (reloaded or entry) else None
     return {
         "ok": True,
@@ -587,10 +585,7 @@ def handle_ack_decision(
         "work_dir": str(work),
         "go_q_met": False,
         "honesty_rails": honesty_rails(),
-        "note": (
-            "ACK escrito en decision_log.jsonl · no es acta H1 · "
-            "fusion ON · no inventa GO_Q"
-        ),
+        "note": ("ACK escrito en decision_log.jsonl · no es acta H1 · fusion ON · no inventa GO_Q"),
     }
 
 
@@ -671,12 +666,17 @@ def dispatch_live(
             # unknown id / missing decision_id → 400 fail closed (not 200 ok:false only)
             if not payload.get("ok"):
                 err = str(payload.get("error") or "")
-                code = 400 if err in (
-                    "decision_id_required",
-                    "unknown_decision_id",
-                    "decision_log_error",
-                    "path_not_allowed",
-                ) else 400
+                code = (
+                    400
+                    if err
+                    in (
+                        "decision_id_required",
+                        "unknown_decision_id",
+                        "decision_log_error",
+                        "path_not_allowed",
+                    )
+                    else 400
+                )
                 return code, payload
             return 200, payload
     except PathNotAllowedError as exc:
