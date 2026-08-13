@@ -592,7 +592,7 @@ def second_anchor_surface(board_json: dict[str, Any] | None) -> dict[str, Any]:
     Fail-closed: a lying ``grade_a_ops_anchors >= 2`` with only one confirmed
     cited fire stays hidden. Never invent a 2nd grade-A.
     """
-    hidden = {
+    hidden: dict[str, Any] = {
         "visible": False,
         "n_confirmed_cited": 0,
         "grade_a_ops_anchors": None,
@@ -741,9 +741,12 @@ def load_weakness_board_surface(
             note="schema inválido · no inventa conteos · fusion ON · GO_Q partial"
         )
 
-    summary = raw.get("summary") if isinstance(raw.get("summary"), dict) else {}
-    rails = raw.get("rails") if isinstance(raw.get("rails"), dict) else {}
-    fires_in = raw.get("fires") if isinstance(raw.get("fires"), list) else []
+    summary_raw = raw.get("summary")
+    rails_raw = raw.get("rails")
+    fires_raw = raw.get("fires")
+    summary: dict[str, Any] = summary_raw if isinstance(summary_raw, dict) else {}
+    rails: dict[str, Any] = rails_raw if isinstance(rails_raw, dict) else {}
+    fires_in: list[Any] = fires_raw if isinstance(fires_raw, list) else []
     fires: list[dict[str, Any]] = []
     for row in fires_in:
         if not isinstance(row, dict):

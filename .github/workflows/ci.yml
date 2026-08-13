@@ -271,7 +271,7 @@ jobs:
       - name: Install pytest (unit smoke; no GDAL walk)
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install pytest numpy
 
       - name: Board CLI --help and missing/unknown fire-id
         env:
