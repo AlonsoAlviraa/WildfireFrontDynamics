@@ -32,6 +32,8 @@ python scripts\show_all.py
 
 Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces.
 
+**Probar CLI + web (inventario completo):** `docs/CHECKLIST_CLI_SPA_QA.md`
+
 ## Tres números para enseñar
 
 | Qué | Valor |
