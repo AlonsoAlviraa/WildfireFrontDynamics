@@ -169,6 +169,13 @@ def test_build_payload_brief_only(tmp_path: Path):
     assert payload["rails"]["not_tactical_dispatch"] is True
     assert payload["rails"]["go_q_invent_forbidden"] is True
     assert payload["brief"]["gates"]["GO_Q"] is not True
+    # SPA KPI Producto/Demo reads brief.gates — stamp fallback, not "unknown"
+    assert payload["brief"]["gates"]["GO_MES"] is True or str(
+        payload["brief"]["gates"]["GO_MES"]
+    ).lower() == "true"
+    assert payload["brief"]["gates"]["GO_MES"] != "unknown"
+    assert payload["brief"]["gates"]["GO_Q"] == "partial"
+    assert payload["brief"]["gates"]["GO_Q"] != "unknown"
     assert "Not validated tactical dispatch" in payload["disclaimer"]
     assert isinstance(payload.get("fires"), list)
     assert isinstance(payload.get("product_actions"), list)

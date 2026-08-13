@@ -57,6 +57,16 @@ def test_current_state_go_q_partial_token():
     assert "| **GO_MES+** | **false** |" in md
 
 
+def test_current_state_no_stale_open_pr_48():
+    """Weakness-board SPA is Shipped on main; no open PR #48 leftover."""
+    md = (ROOT / "docs" / "CURRENT_STATE.md").read_text(encoding="utf-8")
+    assert "feat/agent-b-weakness-board" not in md
+    assert "until Tests CI green" not in md
+    assert "Weakness-board SPA" in md
+    assert "**Shipped**" in md
+    assert "| **GO_Q** | **partial** |" in md
+
+
 def test_go_q_stamp_helper_rejects_complete():
     assert _go_q_stamp_ok("partial") is True
     assert _go_q_stamp_ok(False) is True

@@ -410,6 +410,20 @@ def _normalize_go_q(value: Any) -> Any:
     return value
 
 
+def _go_q_from_stamp(value: Any) -> Any:
+    """Stamp is never authority for GO_Q complete.
+
+    Same clamp as ``prepare_h1_demo_session.load_stamp_rails``: true / complete /
+    full stay ``partial``. Do not invent GO_Q true from the living stamp.
+    """
+    if value is True or str(value).lower() in {"true", "complete", "full"}:
+        return "partial"
+    normalized = _normalize_go_q(value)
+    if normalized is True or str(normalized).lower() in {"true", "complete", "full"}:
+        return "partial"
+    return normalized
+
+
 def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
     """Load gates from repo JSON + decision_policies; fail soft, never invent GO_Q=true."""
     root = resolve_repo_root(repo)
@@ -474,6 +488,21 @@ def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
         # Preferred repo may be cwd without catalog. Package stamp/catalog is SSOT.
         gates["field_ops_ml_live_fusion"] = ssot_field_ops_fusion()
 
+    # Living stamp fallback when verdict / plan JSON leave GO_MES / GO_Q unset.
+    # Stamp is never authority for GO_Q complete (clamp true/complete/full).
+    if gates["GO_MES"] is None or gates["GO_Q"] is None:
+        stamp = load_ml_go_stamp(root)
+        if stamp:
+            sources_status["ml_product_stamp"] = "ok"
+            if gates["GO_MES"] is None and "GO_MES" in stamp:
+                gates["GO_MES"] = bool(stamp["GO_MES"])
+            if "GO_MES_plus" in stamp:
+                gates["GO_MES_plus"] = bool(stamp["GO_MES_plus"])
+            if gates["GO_Q"] is None and "GO_Q" in stamp:
+                gates["GO_Q"] = _go_q_from_stamp(stamp["GO_Q"])
+        else:
+            sources_status["ml_product_stamp"] = "missing"
+
     # If GO_MES / GO_Q still None after all sources → unknown (do NOT invent true)
     if gates["GO_MES"] is None:
         gates["GO_MES"] = "unknown"
@@ -495,6 +524,7 @@ def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
             "go_mes_verdict": "docs/GO_MES_VERDICT.json",
             "plan_status": "docs/PLAN_1_MES_GRAPH_V6_STATUS.json",
             "policies": "config/decision_policies.json",
+            "ml_product_stamp": "docs/ML_PRODUCT_GO_STATUS.json",
         },
         "sources_status": sources_status,
         "gates": gates,
@@ -612,24 +642,13 @@ def format_show_human(
 
 
 def load_field_ops_ml_fusion_rail(repo: Path | None = None) -> str:
-    """Return ON/OFF for ``field_ops.allow_ml_live_in_fusion``; fail-closed OFF.
+    """Return ON/OFF for the field_ops product rail; fail-closed OFF.
 
-    This is the **product rail** for field_ops, independent of the selected
-    policy's effective fusion flag (e.g. research_open may allow ML live).
+    Stamp first (``ssot_field_ops_fusion`` / ``stamp_field_ops_fusion``), then
+    catalog. Independent of the selected policy's effective fusion flag
+    (e.g. research_open may allow ML live). Never copies this_run fusion.
     """
-    root = resolve_repo_root(repo)
-    policies_doc = _read_json(root / "config" / "decision_policies.json")
-    if policies_doc is None:
-        return "OFF"
-    policies = policies_doc.get("policies")
-    if not isinstance(policies, dict):
-        return "OFF"
-    field_ops = policies.get("field_ops")
-    if not isinstance(field_ops, dict):
-        return "OFF"
-    if "allow_ml_live_in_fusion" not in field_ops:
-        return "OFF"
-    return "ON" if bool(field_ops["allow_ml_live_in_fusion"]) else "OFF"
+    return ssot_field_ops_fusion(repo)
 
 
 def format_decide_explain(
@@ -733,6 +752,11 @@ def format_decide_explain(
     for d in disclaimers:
         lines.append(f"  · {d}")
 
+    rail_u = str(field_ops_rail or "OFF").upper()
+    if rail_u == "ON":
+        fusion_note = "  · field_ops ML live fusion ON ≠ GO_Q complete ≠ despacho"
+    else:
+        fusion_note = "  · field_ops ML live fusion remains OFF until explicit policy change"
     lines.extend(
         [
             "",
@@ -740,7 +764,7 @@ def format_decide_explain(
             "  · ml_clm_ensemble weight 0 = holdout provenance, not live certainty",
             "  · IoU ≠ ROS — docs/METRICS_HONESTY_IOU_NE_ROS.md",
             "  · ABSTAIN is a feature (product refuses when sources insufficient)",
-            "  · field_ops ML live fusion remains OFF until explicit policy change",
+            fusion_note,
             "",
         ]
     )
