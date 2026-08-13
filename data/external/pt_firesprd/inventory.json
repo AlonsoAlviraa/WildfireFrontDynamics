@@ -1,0 +1,4712 @@
+{
+  "schema": "wfd_external_ros_inventory_v1",
+  "pack_id": "pt_firesprd",
+  "as_of_utc": "2026-08-13T09:46:12.553571Z",
+  "title": "Portuguese Large Wildfire Spread Database (PT-FireSprd)",
+  "license_id": "cc-by-4.0",
+  "requested_doi": "10.5281/zenodo.7495506",
+  "resolved_doi": "10.5281/zenodo.7495506",
+  "url": "https://zenodo.org/records/7495506",
+  "download_url": "https://zenodo.org/api/records/7495506/files/PT-FireSprd_v0.08.zip/content",
+  "version": "0.08",
+  "class": "ml_weak",
+  "role": "open_progression_ros_vectors",
+  "not_official_es_cadastre": true,
+  "not_tactical_ros": true,
+  "not_product_ros": true,
+  "zip": {
+    "rel": "PT-FireSprd_v0.08.zip",
+    "bytes": 32981758,
+    "suffix": ".zip",
+    "sha256": "8599c824181e1e7f8e13bce850402a2c3cf0e3b1ae7cf38c579c353b8da8e60b",
+    "role": "zenodo_zip",
+    "md5": "4d248b3f5c006c41dbaeae9e512493f6",
+    "md5_matches_zenodo": true
+  },
+  "zip_md5_ok": true,
+  "extracted_root": "data/external/pt_firesprd/extracted",
+  "n_extracted_files": 397,
+  "extracted_files": [
+    {
+      "rel": ".extracted_ok",
+      "bytes": 27,
+      "suffix": ""
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Gouveia_10082015/progression_Gouveia_100815.dbf",
+      "bytes": 588,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Gouveia_10082015/progression_Gouveia_100815.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Gouveia_10082015/progression_Gouveia_100815.shp",
+      "bytes": 41304,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Gouveia_10082015/progression_Gouveia_100815.shx",
+      "bytes": 188,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Oleiros_03082015/progression_Oleiros_030815.dbf",
+      "bytes": 318,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Oleiros_03082015/progression_Oleiros_030815.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Oleiros_03082015/progression_Oleiros_030815.shp",
+      "bytes": 13912,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/Oleiros_03082015/progression_Oleiros_030815.shx",
+      "bytes": 124,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/VilaNovadeCerveira_08082015/progression_VilaNovadeCerveira_080815.dbf",
+      "bytes": 566,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/VilaNovadeCerveira_08082015/progression_VilaNovadeCerveira_080815.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/VilaNovadeCerveira_08082015/progression_VilaNovadeCerveira_080815.shp",
+      "bytes": 38408,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2015/VilaNovadeCerveira_08082015/progression_VilaNovadeCerveira_080815.shx",
+      "bytes": 188,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Agueda_08082016/progression_Agueda_080816.dbf",
+      "bytes": 1093,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Agueda_08082016/progression_Agueda_080816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Agueda_08082016/progression_Agueda_080816.shp",
+      "bytes": 131276,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Agueda_08082016/progression_Agueda_080816.shx",
+      "bytes": 324,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.dbf",
+      "bytes": 797,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.shp",
+      "bytes": 42012,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ArcosdeValdevez_08082016/progression_ArcosValdevez_080816.dbf",
+      "bytes": 2241,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ArcosdeValdevez_08082016/progression_ArcosValdevez_080816.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ArcosdeValdevez_08082016/progression_ArcosValdevez_080816.shp",
+      "bytes": 54404,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ArcosdeValdevez_08082016/progression_ArcosValdevez_080816.shx",
+      "bytes": 436,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.dbf",
+      "bytes": 2205,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.shp",
+      "bytes": 71740,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.shx",
+      "bytes": 540,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.dbf",
+      "bytes": 657,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.shp",
+      "bytes": 39852,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/CabeceirasdeBasto_06092016/progression_CabeceiraBasto_060916.dbf",
+      "bytes": 566,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/CabeceirasdeBasto_06092016/progression_CabeceiraBasto_060916.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/CabeceirasdeBasto_06092016/progression_CabeceiraBasto_060916.shp",
+      "bytes": 47404,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/CabeceirasdeBasto_06092016/progression_CabeceiraBasto_060916.shx",
+      "bytes": 188,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Caminha_09082016/progression_Caminha_090816.dbf",
+      "bytes": 621,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Caminha_09082016/progression_Caminha_090816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Caminha_09082016/progression_Caminha_090816.shp",
+      "bytes": 16820,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Caminha_09082016/progression_Caminha_090816.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.dbf",
+      "bytes": 522,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.shp",
+      "bytes": 17676,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.dbf",
+      "bytes": 423,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.shp",
+      "bytes": 10132,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.shx",
+      "bytes": 148,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/FreixodeEspadaaCinta_06092016/progression_Mogadouro_060916.dbf",
+      "bytes": 605,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/FreixodeEspadaaCinta_06092016/progression_Mogadouro_060916.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/FreixodeEspadaaCinta_06092016/progression_Mogadouro_060916.shp",
+      "bytes": 34228,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/FreixodeEspadaaCinta_06092016/progression_Mogadouro_060916.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.dbf",
+      "bytes": 535,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.shp",
+      "bytes": 14372,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_09082016/progression_Moncao_090816.dbf",
+      "bytes": 819,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_09082016/progression_Moncao_090816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_09082016/progression_Moncao_090816.shp",
+      "bytes": 19936,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_09082016/progression_Moncao_090816.shx",
+      "bytes": 244,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ParedesdeCoura_07082016/progression_ParedesdeCoura_070816.dbf",
+      "bytes": 1660,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ParedesdeCoura_07082016/progression_ParedesdeCoura_070816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ParedesdeCoura_07082016/progression_ParedesdeCoura_070816.shp",
+      "bytes": 34040,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/ParedesdeCoura_07082016/progression_ParedesdeCoura_070816.shx",
+      "bytes": 380,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/PontedeLima_08082016/progression_PontedeLima_080816.dbf",
+      "bytes": 489,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/PontedeLima_08082016/progression_PontedeLima_080816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/PontedeLima_08082016/progression_PontedeLima_080816.shp",
+      "bytes": 9100,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/PontedeLima_08082016/progression_PontedeLima_080816.shx",
+      "bytes": 164,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/SeverdoVouga_09082016/SeverVouga_090816_v3.dbf",
+      "bytes": 897,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/SeverdoVouga_09082016/SeverVouga_090816_v3.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/SeverdoVouga_09082016/SeverVouga_090816_v3.shp",
+      "bytes": 31656,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/SeverdoVouga_09082016/SeverVouga_090816_v3.shx",
+      "bytes": 212,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/VieiradoMinho_10082016/progression_VieiraMinho_100816.dbf",
+      "bytes": 456,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/VieiradoMinho_10082016/progression_VieiraMinho_100816.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/VieiradoMinho_10082016/progression_VieiraMinho_100816.shp",
+      "bytes": 19592,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2016/VieiradoMinho_10082016/progression_VieiraMinho_100816.shx",
+      "bytes": 156,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Abrantes_09082017/progression_Abrantes_090817.dbf",
+      "bytes": 1281,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Abrantes_09082017/progression_Abrantes_090817.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Abrantes_09082017/progression_Abrantes_090817.shp",
+      "bytes": 27908,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Abrantes_09082017/progression_Abrantes_090817.shx",
+      "bytes": 276,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Agueda_15102017/Progression_Agueda151017_v2.dbf",
+      "bytes": 9827,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Agueda_15102017/Progression_Agueda151017_v2.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Agueda_15102017/Progression_Agueda151017_v2.shp",
+      "bytes": 559272,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Agueda_15102017/Progression_Agueda151017_v2.shx",
+      "bytes": 1260,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.dbf",
+      "bytes": 1137,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.shp",
+      "bytes": 581004,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.shx",
+      "bytes": 252,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alvaiazere_11082017/progression_Alvaiazere_110817.dbf",
+      "bytes": 1248,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alvaiazere_11082017/progression_Alvaiazere_110817.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alvaiazere_11082017/progression_Alvaiazere_110817.shp",
+      "bytes": 1115884,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Alvaiazere_11082017/progression_Alvaiazere_110817.shx",
+      "bytes": 348,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.dbf",
+      "bytes": 1653,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.shp",
+      "bytes": 1635116,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.shx",
+      "bytes": 436,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_13082017/progression_castelobranco_130817.dbf",
+      "bytes": 1425,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_13082017/progression_castelobranco_130817.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_13082017/progression_castelobranco_130817.shp",
+      "bytes": 299648,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_13082017/progression_castelobranco_130817.shx",
+      "bytes": 300,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_23072017/progression_CasteloBranco_230717.dbf",
+      "bytes": 909,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_23072017/progression_CasteloBranco_230717.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_23072017/progression_CasteloBranco_230717.shp",
+      "bytes": 28072,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_23072017/progression_CasteloBranco_230717.shx",
+      "bytes": 244,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CastroDaire_05102017/progression_CastroDaire_051017.dbf",
+      "bytes": 513,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CastroDaire_05102017/progression_CastroDaire_051017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CastroDaire_05102017/progression_CastroDaire_051017.shp",
+      "bytes": 14436,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/CastroDaire_05102017/progression_CastroDaire_051017.shx",
+      "bytes": 148,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.dbf",
+      "bytes": 2865,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.shp",
+      "bytes": 875648,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.shx",
+      "bytes": 740,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.dbf",
+      "bytes": 28636,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.shp",
+      "bytes": 2258988,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.shx",
+      "bytes": 3948,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_17072017/progression_Guarda_170717.dbf",
+      "bytes": 801,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_17072017/progression_Guarda_170717.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_17072017/progression_Guarda_170717.shp",
+      "bytes": 27752,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_17072017/progression_Guarda_170717.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.dbf",
+      "bytes": 669,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.shp",
+      "bytes": 26216,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.dbf",
+      "bytes": 13273,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.shp",
+      "bytes": 3463996,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.shx",
+      "bytes": 1964,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mirandela_16072017/progression_Mirandela_160717.dbf",
+      "bytes": 513,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mirandela_16072017/progression_Mirandela_160717.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mirandela_16072017/progression_Mirandela_160717.shp",
+      "bytes": 142036,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mirandela_16072017/progression_Mirandela_160717.shx",
+      "bytes": 148,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mortagua_07102017/progression_Mortagua_071017.dbf",
+      "bytes": 369,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mortagua_07102017/progression_Mortagua_071017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mortagua_07102017/progression_Mortagua_071017.shp",
+      "bytes": 33328,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Mortagua_07102017/progression_Mortagua_071017.shx",
+      "bytes": 124,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Oleiros_23082017/progression_Oleiros_230817.dbf",
+      "bytes": 837,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Oleiros_23082017/progression_Oleiros_230817.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Oleiros_23082017/progression_Oleiros_230817.shp",
+      "bytes": 91184,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Oleiros_23082017/progression_Oleiros_230817.shx",
+      "bytes": 236,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.dbf",
+      "bytes": 5537,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.shp",
+      "bytes": 469392,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.shx",
+      "bytes": 580,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PampilhosadaSerra_06102017/Progression_PampilhosadaSerra_061017.dbf",
+      "bytes": 1841,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PampilhosadaSerra_06102017/Progression_PampilhosadaSerra_061017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PampilhosadaSerra_06102017/Progression_PampilhosadaSerra_061017.shp",
+      "bytes": 55432,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PampilhosadaSerra_06102017/Progression_PampilhosadaSerra_061017.shx",
+      "bytes": 364,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.dbf",
+      "bytes": 4924,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.shp",
+      "bytes": 860296,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.shx",
+      "bytes": 924,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Pombal_06102017/progression_pombal_061017.dbf",
+      "bytes": 321,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Pombal_06102017/progression_pombal_061017.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Pombal_06102017/progression_pombal_061017.shp",
+      "bytes": 40460,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Pombal_06102017/progression_pombal_061017.shx",
+      "bytes": 116,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Resende_17082017/progression_Resende_170817.dbf",
+      "bytes": 605,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Resende_17082017/progression_Resende_170817.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Resende_17082017/progression_Resende_170817.shp",
+      "bytes": 20616,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Resende_17082017/progression_Resende_170817.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/RibeiradePena_15082017/progression_RibeiradePena_150817.dbf",
+      "bytes": 311,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/RibeiradePena_15082017/progression_RibeiradePena_150817.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/RibeiradePena_15082017/progression_RibeiradePena_150817.shp",
+      "bytes": 49488,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/RibeiradePena_15082017/progression_RibeiradePena_150817.shx",
+      "bytes": 116,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_08092017/progression_Serta_080917.dbf",
+      "bytes": 657,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_08092017/progression_Serta_080917.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_08092017/progression_Serta_080917.shp",
+      "bytes": 1248884,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_08092017/progression_Serta_080917.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.dbf",
+      "bytes": 1719,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.shp",
+      "bytes": 1197008,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.shx",
+      "bytes": 444,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.dbf",
+      "bytes": 993,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.shp",
+      "bytes": 342272,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.shx",
+      "bytes": 228,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_23072017/progression_Serta_230717.dbf",
+      "bytes": 2201,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_23072017/progression_Serta_230717.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_23072017/progression_Serta_230717.shp",
+      "bytes": 73344,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_23072017/progression_Serta_230717.shx",
+      "bytes": 516,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/TorredeMoncorvo_18072017/progression_TorredeMoncorvo_180717.dbf",
+      "bytes": 369,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/TorredeMoncorvo_18072017/progression_TorredeMoncorvo_180717.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/TorredeMoncorvo_18072017/progression_TorredeMoncorvo_180717.shp",
+      "bytes": 75836,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2017/TorredeMoncorvo_18072017/progression_TorredeMoncorvo_180717.shx",
+      "bytes": 124,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.dbf",
+      "bytes": 3833,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.shp",
+      "bytes": 639972,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.shx",
+      "bytes": 804,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.dbf",
+      "bytes": 1150,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.shp",
+      "bytes": 37428,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.shx",
+      "bytes": 300,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Alijo_24072019/progression_Alijo_240719.dbf",
+      "bytes": 558,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Alijo_24072019/progression_Alijo_240719.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Alijo_24072019/progression_Alijo_240719.shp",
+      "bytes": 13044,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Alijo_24072019/progression_Alijo_240719.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Baiao_04092019/progression_Baiao_040919.dbf",
+      "bytes": 719,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Baiao_04092019/progression_Baiao_040919.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Baiao_04092019/progression_Baiao_040919.shp",
+      "bytes": 14300,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Baiao_04092019/progression_Baiao_040919.shx",
+      "bytes": 204,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/MirandadoCorvo_13092019/progression_MirandaCorvo_130919.dbf",
+      "bytes": 561,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/MirandadoCorvo_13092019/progression_MirandaCorvo_130919.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/MirandadoCorvo_13092019/progression_MirandaCorvo_130919.shp",
+      "bytes": 19596,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/MirandadoCorvo_13092019/progression_MirandaCorvo_130919.shx",
+      "bytes": 156,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.dbf",
+      "bytes": 632,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.shp",
+      "bytes": 31072,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.shx",
+      "bytes": 188,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.dbf",
+      "bytes": 621,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.shp",
+      "bytes": 9036,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Penedono_21072019/progression_Penedono_220719.dbf",
+      "bytes": 716,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Penedono_21072019/progression_Penedono_220719.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Penedono_21072019/progression_Penedono_220719.shp",
+      "bytes": 18480,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Penedono_21072019/progression_Penedono_220719.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Sabugal_29082019/progression_Sabugal_290819.dbf",
+      "bytes": 491,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Sabugal_29082019/progression_Sabugal_290819.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Sabugal_29082019/progression_Sabugal_290819.shp",
+      "bytes": 11180,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Sabugal_29082019/progression_Sabugal_290819.shx",
+      "bytes": 156,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Serta_13092019/progression_Serta_130919.dbf",
+      "bytes": 897,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Serta_13092019/progression_Serta_130919.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Serta_13092019/progression_Serta_130919.shp",
+      "bytes": 35188,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Serta_13092019/progression_Serta_130919.shx",
+      "bytes": 268,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Tomar_03082019/progression_Tomar_030819.dbf",
+      "bytes": 854,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Tomar_03082019/progression_Tomar_030819.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Tomar_03082019/progression_Tomar_030819.shp",
+      "bytes": 26732,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Tomar_03082019/progression_Tomar_030819.shx",
+      "bytes": 236,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valenca_04092019/progression_Valenca_040919.dbf",
+      "bytes": 693,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valenca_04092019/progression_Valenca_040919.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valenca_04092019/progression_Valenca_040919.shp",
+      "bytes": 25388,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valenca_04092019/progression_Valenca_040919.shx",
+      "bytes": 204,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valpacos_13092019/progression_Valpacos_130919.dbf",
+      "bytes": 947,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valpacos_13092019/progression_Valpacos_130919.prj",
+      "bytes": 401,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valpacos_13092019/progression_Valpacos_130919.shp",
+      "bytes": 43724,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/Valpacos_13092019/progression_Valpacos_130919.shx",
+      "bytes": 252,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/ViladeRei_20072019/progression_ViladeRei_200719.dbf",
+      "bytes": 2909,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/ViladeRei_20072019/progression_ViladeRei_200719.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/ViladeRei_20072019/progression_ViladeRei_200719.shp",
+      "bytes": 149040,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2019/ViladeRei_20072019/progression_ViladeRei_200719.shx",
+      "bytes": 516,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.dbf",
+      "bytes": 1141,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.shp",
+      "bytes": 26188,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.shx",
+      "bytes": 236,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.dbf",
+      "bytes": 689,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.shp",
+      "bytes": 13640,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.dbf",
+      "bytes": 779,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.shp",
+      "bytes": 20988,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.dbf",
+      "bytes": 737,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.shp",
+      "bytes": 11564,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.shx",
+      "bytes": 140,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.dbf",
+      "bytes": 1261,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.shp",
+      "bytes": 156504,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.shx",
+      "bytes": 324,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.dbf",
+      "bytes": 707,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.shp",
+      "bytes": 12848,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.shx",
+      "bytes": 172,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.dbf",
+      "bytes": 958,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.shp",
+      "bytes": 19120,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.shx",
+      "bytes": 212,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.dbf",
+      "bytes": 993,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.shp",
+      "bytes": 20748,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.shx",
+      "bytes": 156,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.dbf",
+      "bytes": 1889,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.shp",
+      "bytes": 65752,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.shx",
+      "bytes": 356,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.dbf",
+      "bytes": 2577,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.shp",
+      "bytes": 36208,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.shx",
+      "bytes": 420,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.dbf",
+      "bytes": 891,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.shp",
+      "bytes": 36712,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.shx",
+      "bytes": 244,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/ProencaaNova_13092020/Progression_ProencaaNova_130920.dbf",
+      "bytes": 1433,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/ProencaaNova_13092020/Progression_ProencaaNova_130920.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/ProencaaNova_13092020/Progression_ProencaaNova_130920.shp",
+      "bytes": 65516,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/ProencaaNova_13092020/Progression_ProencaaNova_130920.shx",
+      "bytes": 268,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.dbf",
+      "bytes": 837,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.shp",
+      "bytes": 12140,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.dbf",
+      "bytes": 807,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.shp",
+      "bytes": 27568,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.shx",
+      "bytes": 180,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.dbf",
+      "bytes": 625,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.prj",
+      "bytes": 597,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.qpj",
+      "bytes": 597,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.shp",
+      "bytes": 17616,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.shx",
+      "bytes": 164,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.dbf",
+      "bytes": 1678,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.shp",
+      "bytes": 606616,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.shx",
+      "bytes": 332,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/FRE.txt",
+      "bytes": 714,
+      "suffix": ".txt"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.dbf",
+      "bytes": 357,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.shp",
+      "bytes": 13560,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.shx",
+      "bytes": 124,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.dbf",
+      "bytes": 577,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.shp",
+      "bytes": 5188,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.shx",
+      "bytes": 164,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Monchique_17072021/Progressao_Monchique_UTM29n.dbf",
+      "bytes": 953,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Monchique_17072021/Progressao_Monchique_UTM29n.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Monchique_17072021/Progressao_Monchique_UTM29n.shp",
+      "bytes": 51064,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Monchique_17072021/Progressao_Monchique_UTM29n.shx",
+      "bytes": 196,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.dbf",
+      "bytes": 985,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.shp",
+      "bytes": 83404,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.shx",
+      "bytes": 260,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.dbf",
+      "bytes": 571767,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.shp",
+      "bytes": 16775940,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L2_FireBehavior/PT-FireSprd_L2_FireBehavior.shx",
+      "bytes": 18668,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.cpg",
+      "bytes": 5,
+      "suffix": ".cpg"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.dbf",
+      "bytes": 54609,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.prj",
+      "bytes": 389,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.qpj",
+      "bytes": 598,
+      "suffix": ".qpj"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.shp",
+      "bytes": 15495948,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/L3_Simplied_FireBehavior/PT-FireSprd_L3_FireBehavior.shx",
+      "bytes": 2260,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "PT-FireSprd_v0.08/PT-FireSprd_Metadata.xls",
+      "bytes": 25088,
+      "suffix": ".xls"
+    }
+  ],
+  "l1": {
+    "n_shapefiles": 78,
+    "n_fires_ok": 78,
+    "n_fires_r1": 73,
+    "not_product_ros": true,
+    "fires": [
+      {
+        "fire_id": "Gouveia_10082015",
+        "year": "2015",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2015/Gouveia_10082015/progression_Gouveia_100815.shp",
+        "ok": true,
+        "n_records": 11,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "z": 3,
+          "a": 1,
+          "p": 7
+        },
+        "epsg": 32629,
+        "bbox": [
+          618094.5409348988,
+          4474542.71496616,
+          625788.0819064203,
+          4481245.224418617
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20150810_143000",
+          "20150811_030000",
+          "20150811_123000",
+          "20150812_023000",
+          "20150812_120000"
+        ]
+      },
+      {
+        "fire_id": "Oleiros_03082015",
+        "year": "2015",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2015/Oleiros_03082015/progression_Oleiros_030815.shp",
+        "ok": true,
+        "n_records": 3,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          587752.0486376992,
+          4419994.938159775,
+          591812.1541128205,
+          4424739.207763073
+        ],
+        "n_dated_scenes": 3,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20150803_143000",
+          "20150804_030000",
+          "20150804_123000"
+        ]
+      },
+      {
+        "fire_id": "VilaNovadeCerveira_08082015",
+        "year": "2015",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2015/VilaNovadeCerveira_08082015/progression_VilaNovadeCerveira_080815.shp",
+        "ok": true,
+        "n_records": 11,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 2,
+          "a": 4,
+          "p": 5
+        },
+        "epsg": 32629,
+        "bbox": [
+          516321.9725921637,
+          4627835.216877973,
+          524966.3829448528,
+          4643746.756204513
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20150808_120000",
+          "20150808_150000",
+          "20150809_000000",
+          "20150809_133000",
+          "20150809_150000",
+          "20150809_190000"
+        ]
+      },
+      {
+        "fire_id": "Agueda_08082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Agueda_08082016/progression_Agueda_080816.shp",
+        "ok": true,
+        "n_records": 28,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 4,
+          "p": 24
+        },
+        "epsg": 32629,
+        "bbox": [
+          548424.4687312786,
+          4486916.203077724,
+          559643.3810210226,
+          4500444.526267087
+        ],
+        "n_dated_scenes": 9,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160808_040000",
+          "20160808_123000",
+          "20160809_023000",
+          "20160810_040000",
+          "20160810_133000",
+          "20160811_033000",
+          "20160811_123000",
+          "20160811_150000",
+          "20160812_030000"
+        ]
+      },
+      {
+        "fire_id": "Anadia_10082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Anadia_10082016/progression_Anadia_100816.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 1,
+          "p": 11
+        },
+        "epsg": 32629,
+        "bbox": [
+          547306.5383764582,
+          4469633.37037869,
+          556308.3848814565,
+          4477441.583672173
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160810_023000",
+          "20160810_130000",
+          "20160811_033000",
+          "20160811_130000",
+          "20160812_010000"
+        ]
+      },
+      {
+        "fire_id": "ArcosdeValdevez_08082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/ArcosdeValdevez_08082016/progression_ArcosValdevez_080816.shp",
+        "ok": true,
+        "n_records": 42,
+        "n_unparsed_date_hour": 12,
+        "type_counts": {
+          "z": 9,
+          "p": 28,
+          "a": 5
+        },
+        "epsg": 32629,
+        "bbox": [
+          552114.3932788916,
+          4630894.987227656,
+          565339.461634283,
+          4646613.199312689
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160808_020000",
+          "20160808_123000",
+          "20160809_023000",
+          "20160809_140000",
+          "20160809_153000",
+          "20160810_000000",
+          "20160810_130000",
+          "20160810_210000",
+          "20160811_123000",
+          "20160811_173000"
+        ]
+      },
+      {
+        "fire_id": "Arouca_08082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Arouca_08082016/progression_Arouca_090816.shp",
+        "ok": true,
+        "n_records": 55,
+        "n_unparsed_date_hour": 11,
+        "type_counts": {
+          "z": 18,
+          "p": 36,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          554719.6675883607,
+          4515020.591720826,
+          582478.2003840433,
+          4537862.58720797
+        ],
+        "n_dated_scenes": 15,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160808_143000",
+          "20160809_013000",
+          "20160809_140000",
+          "20160810_040000",
+          "20160810_133000",
+          "20160810_150000",
+          "20160811_030000",
+          "20160811_130000",
+          "20160812_030000",
+          "20160812_150000",
+          "20160813_040000",
+          "20160813_140000",
+          "20160814_030000",
+          "20160814_120000",
+          "20160814_200000"
+        ]
+      },
+      {
+        "fire_id": "Boticas_05092016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Boticas_05092016/progression_Boticas_050916.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 3,
+          "p": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          606800.8546230675,
+          4610734.454059732,
+          613993.0093524995,
+          4615635.691155991
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160905_160000",
+          "20160905_183000",
+          "20160906_133000",
+          "20160907_003000"
+        ]
+      },
+      {
+        "fire_id": "CabeceirasdeBasto_06092016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/CabeceirasdeBasto_06092016/progression_CabeceiraBasto_060916.shp",
+        "ok": true,
+        "n_records": 11,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 3,
+          "a": 5,
+          "p": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          583888.397803289,
+          4599626.7876738785,
+          591399.1722055621,
+          4606551.564873839
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160906_040000",
+          "20160906_133000",
+          "20160907_003000",
+          "20160907_123000"
+        ]
+      },
+      {
+        "fire_id": "Caminha_09082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Caminha_09082016/progression_Caminha_090816.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "z": 2,
+          "p": 10
+        },
+        "epsg": 32629,
+        "bbox": [
+          512588.90456775884,
+          4627694.594557553,
+          518376.9949413269,
+          4634648.511809435
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160809_170000",
+          "20160809_230000",
+          "20160811_000000",
+          "20160811_033000",
+          "20160811_123000",
+          "20160811_230000"
+        ]
+      },
+      {
+        "fire_id": "Cinfaes_07082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_07082016/progression_cinfaes_070816_1_new.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 3,
+          "p": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          575435.6191430518,
+          4540814.856449199,
+          577942.2727500433,
+          4545888.739612679
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160807_213000",
+          "20160808_030000",
+          "20160808_110000",
+          "20160808_130000",
+          "20160808_223000"
+        ]
+      },
+      {
+        "fire_id": "Cinfaes_08082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Cinfaes_08082016/progression_Cinfaes_080816_2_new.shp",
+        "ok": true,
+        "n_records": 6,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "z": 2,
+          "p": 2,
+          "a": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          579449.2730141006,
+          4543259.949314011,
+          583166.6327586167,
+          4547802.234541582
+        ],
+        "n_dated_scenes": 3,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160808_023000",
+          "20160808_123000",
+          "20160809_023000"
+        ]
+      },
+      {
+        "fire_id": "FreixodeEspadaaCinta_06092016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/FreixodeEspadaaCinta_06092016/progression_Mogadouro_060916.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "a": 2,
+          "z": 2,
+          "p": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          683408.7061770373,
+          4557314.531774233,
+          697135.7394718081,
+          4571431.145212234
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160906_123000",
+          "20160906_150000",
+          "20160906_203000",
+          "20160907_123000",
+          "20160907_140000",
+          "20160907_150000",
+          "20160907_233000"
+        ]
+      },
+      {
+        "fire_id": "Moncao_06092016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_06092016/progression_Moncao_060916_new.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 1,
+          "p": 9
+        },
+        "epsg": 32629,
+        "bbox": [
+          557073.2174875898,
+          4649648.532663085,
+          561488.6341197613,
+          4653872.08637525
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160906_133000",
+          "20160907_033000",
+          "20160907_120000",
+          "20160907_150000"
+        ]
+      },
+      {
+        "fire_id": "Moncao_09082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/Moncao_09082016/progression_Moncao_090816.shp",
+        "ok": true,
+        "n_records": 18,
+        "n_unparsed_date_hour": 12,
+        "type_counts": {
+          "p": 13,
+          "a": 3,
+          "z": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          533756.086997723,
+          4643197.864365187,
+          541174.9652954664,
+          4649849.691114667
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160809_013000",
+          "20160809_120000",
+          "20160809_140000",
+          "20160809_180000",
+          "20160810_133000",
+          "20160811_033000"
+        ]
+      },
+      {
+        "fire_id": "ParedesdeCoura_07082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/ParedesdeCoura_07082016/progression_ParedesdeCoura_070816.shp",
+        "ok": true,
+        "n_records": 35,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 9,
+          "p": 25,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          517949.242420764,
+          4618184.829824641,
+          533186.3920661934,
+          4639450.692804258
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160807_170000",
+          "20160808_023000",
+          "20160808_140000",
+          "20160809_023000",
+          "20160809_140000",
+          "20160809_220000",
+          "20160810_133000",
+          "20160811_033000",
+          "20160811_130000",
+          "20160812_130000"
+        ]
+      },
+      {
+        "fire_id": "PontedeLima_08082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/PontedeLima_08082016/progression_PontedeLima_080816.shp",
+        "ok": true,
+        "n_records": 8,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "p": 5,
+          "a": 2,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          535236.5920837745,
+          4626785.924679406,
+          540476.2856836402,
+          4632115.023719325
+        ],
+        "n_dated_scenes": 3,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160808_170000",
+          "20160809_013000",
+          "20160809_153000"
+        ]
+      },
+      {
+        "fire_id": "VieiradoMinho_10082016",
+        "year": "2016",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2016/VieiradoMinho_10082016/progression_VieiraMinho_100816.shp",
+        "ok": true,
+        "n_records": 7,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 1,
+          "a": 2,
+          "p": 4
+        },
+        "epsg": 32629,
+        "bbox": [
+          566190.6693998724,
+          4597968.175662149,
+          575114.5290599326,
+          4602026.522133977
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20160810_100000",
+          "20160810_150000",
+          "20160811_033000",
+          "20160811_083000"
+        ]
+      },
+      {
+        "fire_id": "Abrantes_09082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Abrantes_09082017/progression_Abrantes_090817.shp",
+        "ok": true,
+        "n_records": 22,
+        "n_unparsed_date_hour": 9,
+        "type_counts": {
+          "p": 19,
+          "z": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          561238.2855165416,
+          4368807.767144272,
+          568649.1558389802,
+          4380291.4178785775
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170809_180000",
+          "20170809_230000",
+          "20170810_030000",
+          "20170810_120000",
+          "20170810_143000",
+          "20170810_220000"
+        ]
+      },
+      {
+        "fire_id": "Agueda_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Agueda_15102017/Progression_Agueda151017_v2.shp",
+        "ok": true,
+        "n_records": 145,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 137,
+          "z": 7,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          560744.345165158,
+          4496333.6423794925,
+          577853.0197092858,
+          4516063.738269373
+        ],
+        "n_dated_scenes": 12,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_040000"
+        ]
+      },
+      {
+        "fire_id": "Alcobaca_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Alcobaca_15102017/progression_Alcobaca_151017.shp",
+        "ok": true,
+        "n_records": 19,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 17,
+          "z": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          494023.5589597467,
+          4388501.095379128,
+          514627.17157358583,
+          4430661.252582434
+        ],
+        "n_dated_scenes": 14,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_140000",
+          "20171015_143000",
+          "20171015_153000",
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_100000",
+          "20171016_180000"
+        ]
+      },
+      {
+        "fire_id": "Alvaiazere_11082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Alvaiazere_11082017/progression_Alvaiazere_110817.shp",
+        "ok": true,
+        "n_records": 31,
+        "n_unparsed_date_hour": 8,
+        "type_counts": {
+          "p": 17,
+          "z": 8,
+          "a": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          556371.2851142759,
+          4368084.966617215,
+          613269.3545294977,
+          4409582.132671825
+        ],
+        "n_dated_scenes": 14,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170811_193000",
+          "20170812_000000",
+          "20170813_013000",
+          "20170813_143000",
+          "20170814_000000",
+          "20170814_130000",
+          "20170814_150000",
+          "20170815_003000",
+          "20170816_030000",
+          "20170816_140000",
+          "20170817_023000",
+          "20170818_120000",
+          "20170818_150000",
+          "20170819_010000"
+        ]
+      },
+      {
+        "fire_id": "Arganil_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Arganil_15102017/progression_Arganil_151017.shp",
+        "ok": true,
+        "n_records": 42,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 7,
+          "p": 33,
+          "a": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          584404.481969852,
+          4444196.351761698,
+          608578.4607413644,
+          4493153.651905386
+        ],
+        "n_dated_scenes": 12,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_123000",
+          "20171015_140000",
+          "20171015_160000",
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000"
+        ]
+      },
+      {
+        "fire_id": "CasteloBranco_13082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_13082017/progression_castelobranco_130817.shp",
+        "ok": true,
+        "n_records": 25,
+        "n_unparsed_date_hour": 9,
+        "type_counts": {
+          "z": 4,
+          "p": 18,
+          "a": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          621957.5086070818,
+          4432009.405324297,
+          634388.8572546324,
+          4441948.124295141
+        ],
+        "n_dated_scenes": 9,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170813_013000",
+          "20170813_123000",
+          "20170813_150000",
+          "20170814_000000",
+          "20170814_130000",
+          "20170814_150000",
+          "20170815_030000",
+          "20170815_143000",
+          "20170815_230000"
+        ]
+      },
+      {
+        "fire_id": "CasteloBranco_23072017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/CasteloBranco_23072017/progression_CasteloBranco_230717.shp",
+        "ok": true,
+        "n_records": 18,
+        "n_unparsed_date_hour": 7,
+        "type_counts": {
+          "z": 5,
+          "p": 12,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          607842.8649583881,
+          4384605.978762908,
+          620933.1361142297,
+          4404101.262891944
+        ],
+        "n_dated_scenes": 9,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170723_180000",
+          "20170724_010000",
+          "20170724_150000",
+          "20170724_233000",
+          "20170725_143000",
+          "20170726_010000",
+          "20170726_213000",
+          "20170727_140000",
+          "20170728_020000"
+        ]
+      },
+      {
+        "fire_id": "CastroDaire_05102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/CastroDaire_05102017/progression_CastroDaire_051017.shp",
+        "ok": true,
+        "n_records": 6,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 4,
+          "a": 1,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          601956.4568628569,
+          4532273.947222495,
+          606476.8087233142,
+          4536656.8965809755
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171005_093000",
+          "20171005_130000",
+          "20171005_153000",
+          "20171005_173000"
+        ]
+      },
+      {
+        "fire_id": "FigueiradaFoz_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/FigueiradaFoz_15102017/progression_FigueiradaFoz_151017.shp",
+        "ok": true,
+        "n_records": 80,
+        "n_unparsed_date_hour": 6,
+        "type_counts": {
+          "p": 75,
+          "a": 4,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          512563.3687904123,
+          4451298.490405827,
+          532505.8325685356,
+          4487976.270416692
+        ],
+        "n_dated_scenes": 24,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_143000",
+          "20171015_160000",
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_130000",
+          "20171016_140000",
+          "20171016_150000",
+          "20171016_160000",
+          "20171016_170000",
+          "20171016_180000",
+          "20171016_200000",
+          "20171016_210000",
+          "20171016_220000",
+          "20171016_230000",
+          "20171017_000000",
+          "20171017_040000"
+        ]
+      },
+      {
+        "fire_id": "Gois_17062017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Gois_17062017/Progression_Gois170617.shp",
+        "ok": true,
+        "n_records": 481,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "p": 458,
+          "z": 23
+        },
+        "epsg": 32629,
+        "bbox": [
+          572340.0009810397,
+          4422989.998383087,
+          587360.0009809487,
+          4447219.998364525
+        ],
+        "n_dated_scenes": 106,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170617_150000",
+          "20170617_160000",
+          "20170617_170000",
+          "20170617_180000",
+          "20170617_190000",
+          "20170617_200000",
+          "20170617_210000",
+          "20170617_220000",
+          "20170617_230000",
+          "20170618_000000",
+          "20170618_010000",
+          "20170618_020000",
+          "20170618_030000",
+          "20170618_040000",
+          "20170618_050000",
+          "20170618_060000",
+          "20170618_070000",
+          "20170618_080000",
+          "20170618_090000",
+          "20170618_100000",
+          "20170618_110000",
+          "20170618_120000",
+          "20170618_130000",
+          "20170618_140000",
+          "20170618_150000",
+          "20170618_160000",
+          "20170618_170000",
+          "20170618_180000",
+          "20170618_190000",
+          "20170618_200000",
+          "20170618_210000",
+          "20170618_220000",
+          "20170618_230000",
+          "20170619_000000",
+          "20170619_010000",
+          "20170619_020000",
+          "20170619_030000",
+          "20170619_040000",
+          "20170619_050000",
+          "20170619_060000",
+          "20170619_070000",
+          "20170619_080000",
+          "20170619_090000",
+          "20170619_100000",
+          "20170619_110000",
+          "20170619_120000",
+          "20170619_130000",
+          "20170619_140000",
+          "20170619_150000",
+          "20170619_160000",
+          "20170619_170000",
+          "20170619_180000",
+          "20170619_190000",
+          "20170619_200000",
+          "20170619_210000",
+          "20170619_220000",
+          "20170619_230000",
+          "20170620_000000",
+          "20170620_010000",
+          "20170620_020000",
+          "20170620_030000",
+          "20170620_040000",
+          "20170620_050000",
+          "20170620_060000",
+          "20170620_070000",
+          "20170620_080000",
+          "20170620_090000",
+          "20170620_100000",
+          "20170620_110000",
+          "20170620_120000",
+          "20170620_130000",
+          "20170620_140000",
+          "20170620_150000",
+          "20170620_160000",
+          "20170620_170000",
+          "20170620_180000",
+          "20170620_190000",
+          "20170620_200000",
+          "20170620_210000",
+          "20170620_220000",
+          "20170620_230000",
+          "20170621_000000",
+          "20170621_010000",
+          "20170621_020000",
+          "20170621_030000",
+          "20170621_040000",
+          "20170621_050000",
+          "20170621_060000",
+          "20170621_070000",
+          "20170621_080000",
+          "20170621_090000",
+          "20170621_100000",
+          "20170621_110000",
+          "20170621_120000",
+          "20170621_130000",
+          "20170621_140000",
+          "20170621_150000",
+          "20170621_160000",
+          "20170621_170000",
+          "20170621_180000",
+          "20170621_190000",
+          "20170621_200000",
+          "20170621_210000",
+          "20170621_220000",
+          "20170621_230000",
+          "20170622_020000"
+        ]
+      },
+      {
+        "fire_id": "Guarda_17072017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_17072017/progression_Guarda_170717.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "z": 3,
+          "p": 9
+        },
+        "epsg": 32629,
+        "bbox": [
+          660434.6926074411,
+          4483839.66788626,
+          669877.7543855306,
+          4501495.402998514
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170717_130000",
+          "20170717_153000",
+          "20170717_230000",
+          "20170718_033000",
+          "20170718_133000",
+          "20170718_150000",
+          "20170718_170000"
+        ]
+      },
+      {
+        "fire_id": "Guarda_23082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Guarda_23082017/progression_Guarda_230817.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "z": 2,
+          "p": 8,
+          "a": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          638818.5448506011,
+          4476635.502413921,
+          647849.5266806304,
+          4484769.143837747
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170823_140000",
+          "20170824_033000",
+          "20170824_113000",
+          "20170824_150000",
+          "20170824_233000",
+          "20170825_020000"
+        ]
+      },
+      {
+        "fire_id": "Lousa_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Lousa_15102017/progression_Lousa_151017_NEW_V2.shp",
+        "ok": true,
+        "n_records": 233,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "p": 227,
+          "z": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          562274.970511388,
+          4442190.218243165,
+          593572.7916189918,
+          4492951.514443518
+        ],
+        "n_dated_scenes": 37,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_083000",
+          "20171015_100000",
+          "20171015_110000",
+          "20171015_120000",
+          "20171015_130000",
+          "20171015_140000",
+          "20171015_160000",
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_040000",
+          "20171016_050000",
+          "20171016_060000",
+          "20171016_070000",
+          "20171016_080000",
+          "20171016_090000",
+          "20171016_100000",
+          "20171016_110000",
+          "20171016_120000",
+          "20171016_130000",
+          "20171016_140000",
+          "20171016_150000",
+          "20171016_160000",
+          "20171016_170000",
+          "20171016_180000",
+          "20171016_190000",
+          "20171016_210000",
+          "20171016_230000",
+          "20171017_030000",
+          "20171017_040000"
+        ]
+      },
+      {
+        "fire_id": "Mirandela_16072017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Mirandela_16072017/progression_Mirandela_160717.shp",
+        "ok": true,
+        "n_records": 6,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 5
+        },
+        "epsg": 32629,
+        "bbox": [
+          657504.5306872413,
+          4603777.998677989,
+          661781.4019022014,
+          4608753.586331405
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170716_123000",
+          "20170716_140000",
+          "20170716_200000",
+          "20170717_153000"
+        ]
+      },
+      {
+        "fire_id": "Mortagua_07102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Mortagua_07102017/progression_Mortagua_071017.shp",
+        "ok": true,
+        "n_records": 3,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "z": 1,
+          "p": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          554132.6346588775,
+          4474117.054410233,
+          560556.3791536447,
+          4478232.309585152
+        ],
+        "n_dated_scenes": 2,
+        "meets_geotiff_r1": false,
+        "skip_reason": "r1_lt_3_dated",
+        "stamps": [
+          "20171007_143000",
+          "20171008_003000"
+        ]
+      },
+      {
+        "fire_id": "Oleiros_23082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Oleiros_23082017/progression_Oleiros_230817.shp",
+        "ok": true,
+        "n_records": 17,
+        "n_unparsed_date_hour": 6,
+        "type_counts": {
+          "z": 3,
+          "a": 2,
+          "p": 12
+        },
+        "epsg": 32629,
+        "bbox": [
+          596566.5426408519,
+          4417412.787227127,
+          613622.3684297149,
+          4432464.893040521
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170823_133000",
+          "20170823_153000",
+          "20170823_210000",
+          "20170824_033000",
+          "20170824_113000",
+          "20170824_160000",
+          "20170825_033000"
+        ]
+      },
+      {
+        "fire_id": "OliveiraFrades_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/OliveiraFrades_15102017/Progression_OliveiraFrades_151017.shp",
+        "ok": true,
+        "n_records": 60,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "p": 57,
+          "z": 2,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          565387.4757646044,
+          4493942.788476502,
+          581439.0797337247,
+          4509084.116008665
+        ],
+        "n_dated_scenes": 17,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_040000",
+          "20171016_060000",
+          "20171016_090000",
+          "20171016_120000",
+          "20171016_130000",
+          "20171016_140000",
+          "20171016_170000",
+          "20171017_020000"
+        ]
+      },
+      {
+        "fire_id": "PampilhosadaSerra_06102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/PampilhosadaSerra_06102017/Progression_PampilhosadaSerra_061017.shp",
+        "ok": true,
+        "n_records": 33,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "p": 22,
+          "z": 11
+        },
+        "epsg": 32629,
+        "bbox": [
+          586618.9855279177,
+          4440368.937943594,
+          597767.3731777805,
+          4452493.002095876
+        ],
+        "n_dated_scenes": 11,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171006_233000",
+          "20171007_023000",
+          "20171007_123000",
+          "20171008_030000",
+          "20171008_113000",
+          "20171008_143000",
+          "20171009_023000",
+          "20171009_043000",
+          "20171009_130000",
+          "20171009_140000",
+          "20171009_193000"
+        ]
+      },
+      {
+        "fire_id": "PedrogaoGrande_17062017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/PedrogaoGrande_17062017/progression_PedrogaoGrande_170617_NEW.shp",
+        "ok": true,
+        "n_records": 103,
+        "n_unparsed_date_hour": 45,
+        "type_counts": {
+          "p": 97,
+          "z": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          555371.5527446208,
+          4404062.187721906,
+          573729.0733114331,
+          4433376.251080212
+        ],
+        "n_dated_scenes": 32,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170617_143000",
+          "20170617_160000",
+          "20170617_170000",
+          "20170617_180000",
+          "20170617_190000",
+          "20170617_200000",
+          "20170617_210000",
+          "20170617_220000",
+          "20170617_230000",
+          "20170618_000000",
+          "20170618_010000",
+          "20170618_020000",
+          "20170618_030000",
+          "20170618_040000",
+          "20170618_050000",
+          "20170618_060000",
+          "20170618_070000",
+          "20170618_080000",
+          "20170618_090000",
+          "20170618_100000",
+          "20170618_110000",
+          "20170618_120000",
+          "20170618_130000",
+          "20170618_140000",
+          "20170618_150000",
+          "20170618_160000",
+          "20170618_170000",
+          "20170618_180000",
+          "20170618_190000",
+          "20170618_200000",
+          "20170618_210000",
+          "20170619_050000"
+        ]
+      },
+      {
+        "fire_id": "Pombal_06102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Pombal_06102017/progression_pombal_061017.shp",
+        "ok": true,
+        "n_records": 2,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "p": 1,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          540379.3777383053,
+          4402731.870615828,
+          544532.9914041401,
+          4410447.025791397
+        ],
+        "n_dated_scenes": 2,
+        "meets_geotiff_r1": false,
+        "skip_reason": "r1_lt_3_dated",
+        "stamps": [
+          "20171006_143000",
+          "20171007_000000"
+        ]
+      },
+      {
+        "fire_id": "Resende_17082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Resende_17082017/progression_Resende_170817.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "z": 1,
+          "p": 9
+        },
+        "epsg": 32629,
+        "bbox": [
+          592954.2011230267,
+          4547969.393448649,
+          596302.7383345662,
+          4551966.205457221
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170817_023000",
+          "20170817_123000",
+          "20170817_140000",
+          "20170817_210000",
+          "20170821_040000"
+        ]
+      },
+      {
+        "fire_id": "RibeiradePena_15082017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/RibeiradePena_15082017/progression_RibeiradePena_150817.shp",
+        "ok": true,
+        "n_records": 2,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          592397.3279819669,
+          4594248.755526874,
+          597080.2048206959,
+          4596982.231194817
+        ],
+        "n_dated_scenes": 2,
+        "meets_geotiff_r1": false,
+        "skip_reason": "r1_lt_3_dated",
+        "stamps": [
+          "20170815_150000",
+          "20170816_030000"
+        ]
+      },
+      {
+        "fire_id": "Serta_08092017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_08092017/progression_Serta_080917.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "z": 4,
+          "p": 3,
+          "a": 5
+        },
+        "epsg": 32629,
+        "bbox": [
+          574582.7655781063,
+          4370243.8987153135,
+          613269.3545294977,
+          4415152.421129087
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170908_173000",
+          "20170909_020000",
+          "20170909_133000",
+          "20170909_150000",
+          "20170909_210000"
+        ]
+      },
+      {
+        "fire_id": "Serta_15102017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017/progression_Serta_151017_v2.shp",
+        "ok": true,
+        "n_records": 43,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 40,
+          "z": 2,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          572318.317837513,
+          4399716.754485102,
+          613622.4976708372,
+          4452493.002095876
+        ],
+        "n_dated_scenes": 27,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_120000",
+          "20171015_123000",
+          "20171015_130000",
+          "20171015_140000",
+          "20171015_150000",
+          "20171015_160000",
+          "20171015_170000",
+          "20171015_180000",
+          "20171015_190000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_040000",
+          "20171016_050000",
+          "20171016_060000",
+          "20171016_070000",
+          "20171016_080000",
+          "20171016_090000",
+          "20171016_130000",
+          "20171016_180000",
+          "20171016_210000",
+          "20171017_000000"
+        ]
+      },
+      {
+        "fire_id": "Serta_15102017_2",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_15102017_2/progression_Serta_151017_PedrogaoPequeno.shp",
+        "ok": true,
+        "n_records": 16,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 2,
+          "p": 13,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          572318.317837513,
+          4399716.754485102,
+          587379.9897311385,
+          4447231.36814203
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20171015_183000",
+          "20171015_200000",
+          "20171015_210000",
+          "20171015_220000",
+          "20171015_230000",
+          "20171016_000000",
+          "20171016_010000",
+          "20171016_020000",
+          "20171016_030000",
+          "20171016_060000"
+        ]
+      },
+      {
+        "fire_id": "Serta_23072017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/Serta_23072017/progression_Serta_230717.shp",
+        "ok": true,
+        "n_records": 52,
+        "n_unparsed_date_hour": 13,
+        "type_counts": {
+          "z": 28,
+          "p": 21,
+          "a": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          582929.6427892179,
+          4370481.835973165,
+          613206.9080549658,
+          4408073.89557687
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170723_140000",
+          "20170724_010000",
+          "20170724_123000",
+          "20170725_013000",
+          "20170725_143000",
+          "20170726_000000",
+          "20170726_140000",
+          "20170727_010000",
+          "20170727_140000",
+          "20170727_220000"
+        ]
+      },
+      {
+        "fire_id": "TorredeMoncorvo_18072017",
+        "year": "2017",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2017/TorredeMoncorvo_18072017/progression_TorredeMoncorvo_180717.shp",
+        "ok": true,
+        "n_records": 3,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          662849.3885613142,
+          4556702.14492803,
+          673052.2153495416,
+          4561136.07410474
+        ],
+        "n_dated_scenes": 3,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20170718_140000",
+          "20170718_150000",
+          "20170718_230000"
+        ]
+      },
+      {
+        "fire_id": "Monchique_03082018",
+        "year": "2018",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2018/Monchique_03082018/progression_Monchique_030818_NEW.shp",
+        "ok": true,
+        "n_records": 88,
+        "n_unparsed_date_hour": 42,
+        "type_counts": {
+          "z": 19,
+          "p": 69
+        },
+        "epsg": 32629,
+        "bbox": [
+          533679.850455154,
+          4115664.3726899335,
+          557676.6671178517,
+          4140750.109398025
+        ],
+        "n_dated_scenes": 14,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20180803_133000",
+          "20180803_170000",
+          "20180804_013000",
+          "20180805_020000",
+          "20180805_133000",
+          "20180806_003000",
+          "20180806_150000",
+          "20180807_030000",
+          "20180807_120000",
+          "20180807_143000",
+          "20180808_030000",
+          "20180808_143000",
+          "20180808_180000",
+          "20180808_220000"
+        ]
+      },
+      {
+        "fire_id": "Agueda_05092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Agueda_05092019/Progression_Agueda050919.shp",
+        "ok": true,
+        "n_records": 25,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "p": 21,
+          "z": 3,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          537497.3533499489,
+          4499296.3160487795,
+          546788.7912547363,
+          4503534.661248521
+        ],
+        "n_dated_scenes": 16,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190905_093000",
+          "20190905_123000",
+          "20190905_170000",
+          "20190905_180000",
+          "20190906_013000",
+          "20190906_033000",
+          "20190906_040000",
+          "20190906_043000",
+          "20190906_050000",
+          "20190906_053000",
+          "20190906_063000",
+          "20190906_070000",
+          "20190906_093000",
+          "20190906_103000",
+          "20190906_150000",
+          "20190906_160000"
+        ]
+      },
+      {
+        "fire_id": "Alijo_24072019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Alijo_24072019/progression_Alijo_240719.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "z": 1,
+          "p": 7,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          623526.3056061416,
+          4579763.979044518,
+          629802.0133758781,
+          4584355.0725875
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190724_150000",
+          "20190724_170000",
+          "20190724_180000",
+          "20190724_190000",
+          "20190724_200000",
+          "20190724_213000"
+        ]
+      },
+      {
+        "fire_id": "Baiao_04092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Baiao_04092019/progression_Baiao_040919.shp",
+        "ok": true,
+        "n_records": 13,
+        "n_unparsed_date_hour": 7,
+        "type_counts": {
+          "a": 1,
+          "z": 1,
+          "p": 11
+        },
+        "epsg": 32629,
+        "bbox": [
+          585436.2447210057,
+          4558527.826734673,
+          591748.8266010587,
+          4561719.201793436
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190905_233000",
+          "20190906_030000",
+          "20190906_090000",
+          "20190906_140000",
+          "20190906_150000",
+          "20190906_170000"
+        ]
+      },
+      {
+        "fire_id": "MirandadoCorvo_13092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/MirandadoCorvo_13092019/progression_MirandaCorvo_130919.shp",
+        "ok": true,
+        "n_records": 7,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "p": 5,
+          "z": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          551648.4673377757,
+          4440804.478410278,
+          556841.1338467968,
+          4442877.930157687
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190913_183000",
+          "20190913_200000",
+          "20190913_230000",
+          "20190914_023000"
+        ]
+      },
+      {
+        "fire_id": "Nisa_01082019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Nisa_01082019/progression_Nisa_010819.shp",
+        "ok": true,
+        "n_records": 11,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "z": 1,
+          "p": 10
+        },
+        "epsg": 32629,
+        "bbox": [
+          612895.9942359044,
+          4367414.274702513,
+          618797.1294787325,
+          4369716.098009336
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190801_143000",
+          "20190801_163000",
+          "20190801_170000",
+          "20190801_173000",
+          "20190801_180000",
+          "20190801_190000",
+          "20190801_193000"
+        ]
+      },
+      {
+        "fire_id": "Ourique_10062019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Ourique_10062019/progression_Ourique_100619.shp",
+        "ok": true,
+        "n_records": 12,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "p": 9,
+          "z": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          560185.8835595022,
+          4158666.3324676943,
+          563245.7025916295,
+          4162307.353966307
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190610_133000",
+          "20190610_153000",
+          "20190610_160000",
+          "20190610_170000",
+          "20190610_173000",
+          "20190610_183000"
+        ]
+      },
+      {
+        "fire_id": "Penedono_21072019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Penedono_21072019/progression_Penedono_220719.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 2,
+          "p": 8
+        },
+        "epsg": 32629,
+        "bbox": [
+          632689.954049396,
+          4530228.34607399,
+          639186.823575186,
+          4532846.350649301
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190721_173000",
+          "20190721_203000",
+          "20190722_140000",
+          "20190722_150000",
+          "20190722_170000",
+          "20190722_193000",
+          "20190723_010000"
+        ]
+      },
+      {
+        "fire_id": "Sabugal_29082019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Sabugal_29082019/progression_Sabugal_290819.shp",
+        "ok": true,
+        "n_records": 7,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          658322.292088277,
+          4471917.659068598,
+          660881.9034386928,
+          4475759.614886077
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190829_120000",
+          "20190829_140000",
+          "20190829_150000",
+          "20190829_160000",
+          "20190829_170000",
+          "20190829_190000"
+        ]
+      },
+      {
+        "fire_id": "Serta_13092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Serta_13092019/progression_Serta_130919.shp",
+        "ok": true,
+        "n_records": 21,
+        "n_unparsed_date_hour": 6,
+        "type_counts": {
+          "a": 5,
+          "p": 15,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          570443.5984643206,
+          4388093.695662736,
+          588958.1504862963,
+          4404392.218661062
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190913_160000",
+          "20190913_170000",
+          "20190913_190000",
+          "20190913_193000",
+          "20190913_203000",
+          "20190913_220000",
+          "20190913_233000",
+          "20190914_020000",
+          "20190914_040000",
+          "20190914_060000"
+        ]
+      },
+      {
+        "fire_id": "Tomar_03082019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Tomar_03082019/progression_Tomar_030819.shp",
+        "ok": true,
+        "n_records": 17,
+        "n_unparsed_date_hour": 8,
+        "type_counts": {
+          "p": 15,
+          "z": 1,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          556891.2435337652,
+          4371935.9510506485,
+          561087.064581473,
+          4377740.159743319
+        ],
+        "n_dated_scenes": 7,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190803_160000",
+          "20190803_170000",
+          "20190803_180000",
+          "20190803_190000",
+          "20190803_193000",
+          "20190803_200000",
+          "20190803_203000"
+        ]
+      },
+      {
+        "fire_id": "Valenca_04092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Valenca_04092019/progression_Valenca_040919.shp",
+        "ok": true,
+        "n_records": 13,
+        "n_unparsed_date_hour": 8,
+        "type_counts": {
+          "a": 2,
+          "z": 1,
+          "p": 10
+        },
+        "epsg": 32629,
+        "bbox": [
+          529598.9763790822,
+          4641390.415103449,
+          534359.6239000049,
+          4647172.549976595
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190904_213000",
+          "20190905_033000",
+          "20190905_110000",
+          "20190905_123000"
+        ]
+      },
+      {
+        "fire_id": "Valpacos_13092019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/Valpacos_13092019/progression_Valpacos_130919.shp",
+        "ok": true,
+        "n_records": 19,
+        "n_unparsed_date_hour": 13,
+        "type_counts": {
+          "z": 1,
+          "p": 12,
+          "a": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          630809.869525396,
+          4612520.953489178,
+          637060.1370345748,
+          4615220.430143699
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190913_133000",
+          "20190913_170000",
+          "20190913_180000",
+          "20190913_183000",
+          "20190913_213000"
+        ]
+      },
+      {
+        "fire_id": "ViladeRei_20072019",
+        "year": "2019",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2019/ViladeRei_20072019/progression_ViladeRei_200719.shp",
+        "ok": true,
+        "n_records": 52,
+        "n_unparsed_date_hour": 9,
+        "type_counts": {
+          "p": 46,
+          "z": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          570399.029778185,
+          4388086.567950633,
+          588882.197271393,
+          4401674.028734722
+        ],
+        "n_dated_scenes": 24,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20190720_143000",
+          "20190720_170000",
+          "20190720_180000",
+          "20190720_190000",
+          "20190720_200000",
+          "20190720_210000",
+          "20190720_230000",
+          "20190721_000000",
+          "20190721_010000",
+          "20190721_020000",
+          "20190721_030000",
+          "20190721_143000",
+          "20190721_150000",
+          "20190721_160000",
+          "20190721_170000",
+          "20190721_180000",
+          "20190721_190000",
+          "20190721_200000",
+          "20190721_233000",
+          "20190722_140000",
+          "20190722_160000",
+          "20190722_170000",
+          "20190722_180000",
+          "20190722_203000"
+        ]
+      },
+      {
+        "fire_id": "Aljezur_19062020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Aljezur_19062020/Progression_Aljezur_190620.shp",
+        "ok": true,
+        "n_records": 17,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "p": 16,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          512407.5767459515,
+          4105058.4145808322,
+          517614.20524931623,
+          4113269.8147882125
+        ],
+        "n_dated_scenes": 10,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200619_130000",
+          "20200619_150000",
+          "20200619_163000",
+          "20200619_170000",
+          "20200619_183000",
+          "20200619_190000",
+          "20200619_193000",
+          "20200619_233000",
+          "20200620_023000",
+          "20200620_233000"
+        ]
+      },
+      {
+        "fire_id": "Avis_21072020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Avis_21072020/Progression_Avis_210720.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 4,
+        "type_counts": {
+          "p": 8,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          583129.7338552099,
+          4329489.605495582,
+          589298.6579286074,
+          4331402.464150949
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200721_143000",
+          "20200721_153000",
+          "20200721_163000",
+          "20200721_170000",
+          "20200721_183000"
+        ]
+      },
+      {
+        "fire_id": "CasteloBranco_29082020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/CasteloBranco_29082020/Progression_CasteloBranco_290820.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 8
+        },
+        "epsg": 32629,
+        "bbox": [
+          640176.1279151782,
+          4409581.373055644,
+          641844.8093999997,
+          4413674.718699999
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200829_173000",
+          "20200829_190000",
+          "20200829_193000",
+          "20200829_213000"
+        ]
+      },
+      {
+        "fire_id": "CastroDaire_07092020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/CastroDaire_07092020/Progression_CastroDaire_070920.shp",
+        "ok": true,
+        "n_records": 5,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "z": 1,
+          "p": 4
+        },
+        "epsg": 32629,
+        "bbox": [
+          596486.82550264,
+          4529973.570161518,
+          599545.2747774927,
+          4533320.159043697
+        ],
+        "n_dated_scenes": 2,
+        "meets_geotiff_r1": false,
+        "skip_reason": "r1_lt_3_dated",
+        "stamps": [
+          "20200907_053000",
+          "20200907_090000"
+        ]
+      },
+      {
+        "fire_id": "Chaves_30072020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Chaves_30072020/Progression_Chaves_30072020.shp",
+        "ok": true,
+        "n_records": 28,
+        "n_unparsed_date_hour": 14,
+        "type_counts": {
+          "p": 25,
+          "z": 2,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          631691.8298991646,
+          4626053.607766688,
+          642039.6525437067,
+          4633801.650363623
+        ],
+        "n_dated_scenes": 9,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200730_140000",
+          "20200730_160000",
+          "20200730_173000",
+          "20200730_190000",
+          "20200730_200000",
+          "20200730_210000",
+          "20200730_233000",
+          "20200731_133000",
+          "20200731_160000"
+        ]
+      },
+      {
+        "fire_id": "Fundao_06082020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_06082020/Progression_Fundao_060820.shp",
+        "ok": true,
+        "n_records": 9,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "p": 6,
+          "z": 2,
+          "a": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          600007.5736315767,
+          4432952.0765132215,
+          606056.7269794848,
+          4436476.651836751
+        ],
+        "n_dated_scenes": 5,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200806_140000",
+          "20200806_170000",
+          "20200806_180000",
+          "20200806_213000",
+          "20200806_230000"
+        ]
+      },
+      {
+        "fire_id": "Fundao_07082020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Fundao_07082020/Progression_Fundao_070820.shp",
+        "ok": true,
+        "n_records": 14,
+        "n_unparsed_date_hour": 5,
+        "type_counts": {
+          "a": 1,
+          "p": 12,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          638186.5879341653,
+          4452003.705647556,
+          641018.9021413752,
+          4455713.452231682
+        ],
+        "n_dated_scenes": 8,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200807_123000",
+          "20200807_140000",
+          "20200807_150000",
+          "20200807_160000",
+          "20200807_190000",
+          "20200807_210000",
+          "20200807_220000",
+          "20200808_020000"
+        ]
+      },
+      {
+        "fire_id": "IdanhaaNova_30062020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/IdanhaaNova_30062020/Progression_IdanhaaNova_300620.shp",
+        "ok": true,
+        "n_records": 7,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 6
+        },
+        "epsg": 32629,
+        "bbox": [
+          675352.9240853674,
+          4422397.7905,
+          682528.9435761465,
+          4425574.9
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200630_173000",
+          "20200630_193000",
+          "20200630_200000",
+          "20200630_203000",
+          "20200630_213000",
+          "20200630_233000"
+        ]
+      },
+      {
+        "fire_id": "Oleiros_25072020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Oleiros_25072020/Progression_Oleiros_250720.shp",
+        "ok": true,
+        "n_records": 32,
+        "n_unparsed_date_hour": 8,
+        "type_counts": {
+          "p": 29,
+          "z": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          584734.0434275925,
+          4404135.987755295,
+          596168.0068014838,
+          4414973.799015049
+        ],
+        "n_dated_scenes": 12,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200725_153000",
+          "20200725_180000",
+          "20200725_190000",
+          "20200725_223000",
+          "20200726_013000",
+          "20200726_030000",
+          "20200726_110000",
+          "20200726_130000",
+          "20200726_150000",
+          "20200726_183000",
+          "20200726_200000",
+          "20200727_010000"
+        ]
+      },
+      {
+        "fire_id": "OliveiraFrades_07092020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/OliveiraFrades_07092020/Progression_OliveiraFrades_070920.shp",
+        "ok": true,
+        "n_records": 40,
+        "n_unparsed_date_hour": 13,
+        "type_counts": {
+          "p": 35,
+          "z": 5
+        },
+        "epsg": 32629,
+        "bbox": [
+          550871.9653598482,
+          4503142.096972309,
+          562638.7342233955,
+          4508447.262429042
+        ],
+        "n_dated_scenes": 14,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200907_113000",
+          "20200907_140000",
+          "20200907_143000",
+          "20200907_160000",
+          "20200907_170000",
+          "20200907_180000",
+          "20200907_220000",
+          "20200907_230000",
+          "20200908_030000",
+          "20200908_040000",
+          "20200908_060000",
+          "20200908_063000",
+          "20200908_083000",
+          "20200908_113000"
+        ]
+      },
+      {
+        "fire_id": "PortoMos_06092020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/PortoMos_06092020/Progression_PortoMos_060920.shp",
+        "ok": true,
+        "n_records": 18,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 15,
+          "z": 3
+        },
+        "epsg": 32629,
+        "bbox": [
+          514234.044274131,
+          4371113.6521478025,
+          517762.8720471707,
+          4376888.104777034
+        ],
+        "n_dated_scenes": 9,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200906_020000",
+          "20200906_043000",
+          "20200906_123000",
+          "20200906_140000",
+          "20200906_153000",
+          "20200906_173000",
+          "20200907_000000",
+          "20200907_033000",
+          "20200907_133000"
+        ]
+      },
+      {
+        "fire_id": "ProencaaNova_13092020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/ProencaaNova_13092020/Progression_ProencaaNova_130920.shp",
+        "ok": true,
+        "n_records": 21,
+        "n_unparsed_date_hour": 8,
+        "type_counts": {
+          "p": 20,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          595236.6067326397,
+          4406528.575711148,
+          607623.7419849528,
+          4428584.133298432
+        ],
+        "n_dated_scenes": 8,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200913_133000",
+          "20200913_153000",
+          "20200913_173000",
+          "20200913_190000",
+          "20200914_020000",
+          "20200914_113000",
+          "20200914_163000",
+          "20200914_190000"
+        ]
+      },
+      {
+        "fire_id": "SaoJoaoPesqueira_10072020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/SaoJoaoPesqueira_10072020/Progression_SaoJoaoPesqueira_100720.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 9,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          624268.3104880648,
+          4536264.917042682,
+          626982.9222381375,
+          4541900.1386338165
+        ],
+        "n_dated_scenes": 8,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200710_140000",
+          "20200710_160000",
+          "20200710_173000",
+          "20200710_190000",
+          "20200710_223000",
+          "20200711_023000",
+          "20200711_080000",
+          "20200711_143000"
+        ]
+      },
+      {
+        "fire_id": "Sernancelhe_06082020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Sernancelhe_06082020/Progression_Sernancelhe_060820.shp",
+        "ok": true,
+        "n_records": 10,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "p": 9,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          617969.4727435093,
+          4525441.114569639,
+          625189.7989475947,
+          4531152.514497003
+        ],
+        "n_dated_scenes": 8,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200806_120000",
+          "20200806_140000",
+          "20200806_143000",
+          "20200806_153000",
+          "20200806_170000",
+          "20200806_200000",
+          "20200806_220000",
+          "20200806_230000"
+        ]
+      },
+      {
+        "fire_id": "Silves_06072020",
+        "year": "2020",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2020/Silves_06072020/Progression_Silves_060720.shp",
+        "ok": true,
+        "n_records": 8,
+        "n_unparsed_date_hour": 3,
+        "type_counts": {
+          "p": 7,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          557453.8847023849,
+          4133969.669230172,
+          560379.2093549976,
+          4137103.4804770374
+        ],
+        "n_dated_scenes": 4,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20200706_150000",
+          "20200706_163000",
+          "20200706_173000",
+          "20200706_193000"
+        ]
+      },
+      {
+        "fire_id": "CastroMarim_16082021",
+        "year": "2021",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2021/CastroMarim_16082021/Progression_CastroMarim_160821.shp",
+        "ok": true,
+        "n_records": 29,
+        "n_unparsed_date_hour": 2,
+        "type_counts": {
+          "p": 22,
+          "z": 5,
+          "a": 2
+        },
+        "epsg": 32629,
+        "bbox": [
+          622785.0471999999,
+          4115071.0241,
+          630935.1218999997,
+          4129886.4779000003
+        ],
+        "n_dated_scenes": 20,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20210816_010000",
+          "20210816_030000",
+          "20210816_040000",
+          "20210816_050000",
+          "20210816_073000",
+          "20210816_083000",
+          "20210816_113000",
+          "20210816_143000",
+          "20210816_160000",
+          "20210816_163000",
+          "20210816_173000",
+          "20210816_183000",
+          "20210816_193000",
+          "20210816_230000",
+          "20210817_000000",
+          "20210817_010000",
+          "20210817_023000",
+          "20210817_033000",
+          "20210817_060000",
+          "20210817_120000"
+        ]
+      },
+      {
+        "fire_id": "FreixoEspadaaCinta_20082021",
+        "year": "2021",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2021/FreixoEspadaaCinta_20082021/Progression_FreixoEspadaaCinta_200821.shp",
+        "ok": true,
+        "n_records": 3,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "p": 2,
+          "z": 1
+        },
+        "epsg": 32629,
+        "bbox": [
+          689283.6886,
+          4563430.612400001,
+          693650.2810000004,
+          4565394.1873
+        ],
+        "n_dated_scenes": 2,
+        "meets_geotiff_r1": false,
+        "skip_reason": "r1_lt_3_dated",
+        "stamps": [
+          "20210820_180000",
+          "20210820_193000"
+        ]
+      },
+      {
+        "fire_id": "Mogadouro_20072021",
+        "year": "2021",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2021/Mogadouro_20072021/Progression_Mogadouro_200721.shp",
+        "ok": true,
+        "n_records": 8,
+        "n_unparsed_date_hour": 1,
+        "type_counts": {
+          "z": 1,
+          "p": 7
+        },
+        "epsg": 32629,
+        "bbox": [
+          703408.0503000002,
+          4580091.8671,
+          706679.4148000004,
+          4581587.082
+        ],
+        "n_dated_scenes": 6,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20210720_140000",
+          "20210720_163000",
+          "20210720_170000",
+          "20210720_173000",
+          "20210720_180000",
+          "20210720_190000"
+        ]
+      },
+      {
+        "fire_id": "Odemira_18082021",
+        "year": "2021",
+        "shp": "data/external/pt_firesprd/extracted/PT-FireSprd_v0.08/L1_FireProgressions/2021/Odemira_18082021/Progression_Odemira_08182021.shp",
+        "ok": true,
+        "n_records": 20,
+        "n_unparsed_date_hour": 0,
+        "type_counts": {
+          "z": 1,
+          "p": 19
+        },
+        "epsg": 32629,
+        "bbox": [
+          537575.6437999997,
+          4137314.1766999997,
+          544601.2560999999,
+          4143692.2203
+        ],
+        "n_dated_scenes": 12,
+        "meets_geotiff_r1": true,
+        "skip_reason": null,
+        "stamps": [
+          "20210818_130000",
+          "20210818_143000",
+          "20210818_153000",
+          "20210818_163000",
+          "20210818_173000",
+          "20210818_183000",
+          "20210818_193000",
+          "20210818_203000",
+          "20210818_213000",
+          "20210819_003000",
+          "20210819_033000",
+          "20210819_120000"
+        ]
+      }
+    ]
+  }
+}
