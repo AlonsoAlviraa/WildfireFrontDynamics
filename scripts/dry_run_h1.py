@@ -20,9 +20,34 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "docs" / "H1_DRY_RUN.json"
 
 
+def _snapshot_field_ops_fusion() -> str:
+    """Catalog rail first (same as check_release_flags); fail-closed OFF."""
+    try:
+        from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+        rail = str(field_ops_ml_live_fusion_rail()).upper()
+        if rail in {"ON", "OFF"}:
+            return rail
+    except Exception:
+        pass
+    stamp_path = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    try:
+        stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+        rails = stamp.get("rails") or {}
+        fusion = str(rails.get("field_ops_fusion") or "").upper()
+        if fusion in {"ON", "OFF"}:
+            return fusion
+        if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+            return "ON"
+    except (OSError, json.JSONDecodeError, TypeError, AttributeError):
+        pass
+    return "OFF"
+
+
 def build_dry_run_stamp(*, now: datetime | None = None) -> dict[str, Any]:
     ts = now or datetime.now(UTC)
     as_of = ts.strftime("%Y-%m-%dT%H:%M:%SZ") if ts.tzinfo else ts.isoformat() + "Z"
+    fusion = _snapshot_field_ops_fusion()
     return {
         "schema": "wfd_h1_dry_run_v1",
         "as_of_utc": as_of,
@@ -32,8 +57,8 @@ def build_dry_run_stamp(*, now: datetime | None = None) -> dict[str, Any]:
         "not_signed_acta": True,
         "product_unlock": False,
         "calls_record_h1_demo_complete": False,
-        "field_ops_fusion": "ON",
-        "note": "dry-run ≠ acta · no inventa GO_Q · fusion ON ≠ despacho",
+        "field_ops_fusion": fusion,
+        "note": f"dry-run ≠ acta · no inventa GO_Q · fusion {fusion} ≠ despacho",
     }
 
 
