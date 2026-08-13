@@ -124,8 +124,8 @@ Mensaje: `replay_ok` = consistencia forense offline, **no** autenticidad criptog
 
 ## Kill list (5+)
 
-1. No field_ops ML live fusion ON  
-2. No vender `ml_product_go` lab como field GO / fusion ON  
+1. fusion ON ≠ GO_Q complete ≠ despacho táctico  
+2. No vender `ml_product_go` lab como field GO / despacho  
 3. No inventar Vp/ha  
 4. No IoU = ROS  
 5. No GO_Q sin M3.2 / acta humana H1  

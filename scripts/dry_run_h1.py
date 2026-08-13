@@ -20,9 +20,31 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "docs" / "H1_DRY_RUN.json"
 
 
+def _stamp_fusion() -> str:
+    path = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    try:
+        stamp = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return "OFF"
+    if not isinstance(stamp, dict):
+        return "OFF"
+    if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+        return "ON"
+    rails = stamp.get("rails") if isinstance(stamp.get("rails"), dict) else {}
+    if rails.get("field_ops_fusion") is not None:
+        return str(rails["field_ops_fusion"]).upper()
+    return "OFF"
+
+
 def build_dry_run_stamp(*, now: datetime | None = None) -> dict[str, Any]:
     ts = now or datetime.now(UTC)
     as_of = ts.strftime("%Y-%m-%dT%H:%M:%SZ") if ts.tzinfo else ts.isoformat() + "Z"
+    fusion = _stamp_fusion()
+    note = (
+        "dry-run ≠ acta · no inventa GO_Q · fusion ON ≠ despacho"
+        if fusion == "ON"
+        else "dry-run ≠ acta · no inventa GO_Q · not third-party acta"
+    )
     return {
         "schema": "wfd_h1_dry_run_v1",
         "as_of_utc": as_of,
@@ -32,8 +54,8 @@ def build_dry_run_stamp(*, now: datetime | None = None) -> dict[str, Any]:
         "not_signed_acta": True,
         "product_unlock": False,
         "calls_record_h1_demo_complete": False,
-        "field_ops_fusion": "ON",
-        "note": "dry-run ≠ acta · no inventa GO_Q · fusion ON ≠ despacho",
+        "field_ops_fusion": fusion,
+        "note": note,
     }
 
 

@@ -1,7 +1,8 @@
 """Operator / teach / show / demo-third-party CLI for H1 12-min rehearsal.
 
 Rails: decision-support only. GO_Q stays partial (AMARILLO) until a human
-third-party acta is recorded. field_ops ML live fusion stays OFF.
+third-party acta is recorded. field_ops ML live fusion follows the stamp
+(ON after human 2026-08-13). Fusion ON ≠ GO_Q complete ≠ despacho.
 """
 
 from __future__ import annotations
@@ -15,6 +16,8 @@ import webbrowser
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
+
+from .product.teach_path import honesty_kill_list, ssot_field_ops_fusion
 
 AddGlobalFlags = Callable[[argparse.ArgumentParser], None]
 
@@ -35,14 +38,14 @@ def _rel(path: Path, root: Path | None = None) -> str:
 
 
 def rails_snapshot() -> dict[str, Any]:
-    """Hard-coded honest product rails for the operator board (not a GO_Q flip)."""
+    """Honest product rails for the operator board (not a GO_Q flip)."""
     return {
         "GO_MES": True,
         "GO_Q": "partial",
         "GO_Q_semaforo": "AMARILLO",
         "go_q_met": False,
         "go_q_note": "Needs human third-party demo + signed acta (eng cannot close GO_Q)",
-        "field_ops_fusion": "ON",
+        "field_ops_fusion": ssot_field_ops_fusion(),
         "ml_product_go": "lab_only",
         "disclaimers": [
             "not_validated_tactical_dispatch",
@@ -111,7 +114,7 @@ def build_checklist(*, root: Path | None = None) -> dict[str, Any]:
             "After real third-party demo: python scripts/record_h1_demo_complete.py --acta <signed>",
         ],
         "kill_list": [
-            "No field_ops ML live fusion ON",
+            honesty_kill_list()[0],
             "No inventar tercero / no firmar acta vacía",
             "No marcar GO_Q complete desde eng",
             "No IoU = ROS",
@@ -166,7 +169,10 @@ def print_checklist(*, as_json: bool = False) -> int:
         mark = "OK" if c["ok"] else "MISS"
         print(f"  [{mark:<4}] {c['id']:<24} {c['path']}")
     print()
-    print("  Rails: GO_Q=partial · field_ops fusion ON · no claim GO_Q complete")
+    print(
+        f"  Rails: GO_Q=partial · field_ops fusion {ssot_field_ops_fusion()} · "
+        "no claim GO_Q complete"
+    )
     print("  Next:  wildfire-front operator do --act 1")
     print()
     return 0
@@ -302,7 +308,7 @@ def run_demo_third_party(
         "decision": card.get("decision"),
         "go_q_met": False,
         "semaforo": "AMARILLO",
-        "field_ops_fusion": "ON",
+        "field_ops_fusion": ssot_field_ops_fusion(),
         "paths": paths,
         "replay_ok": None if replay_result is None else bool(replay_result.get("replay_ok")),
         "limits": [
@@ -322,7 +328,7 @@ def run_demo_third_party(
                 "",
                 f"- decision: **{card.get('decision')}**",
                 "- GO_Q: **partial (AMARILLO)** · `go_q_met=false`",
-                "- field_ops fusion: **OFF**",
+                f"- field_ops fusion: **{ssot_field_ops_fusion()}**",
                 "- `replay_ok` = offline forensic consistency, **not** third-party authenticity",
                 "",
                 "Close GO_Q only after a real external demo + signed acta:",

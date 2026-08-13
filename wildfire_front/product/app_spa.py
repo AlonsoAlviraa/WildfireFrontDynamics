@@ -33,6 +33,7 @@ from wildfire_front.product.operator_ux import (
     ROLE_PLAYBOOKS,
     build_operator_brief,
 )
+from wildfire_front.product.teach_path import ssot_field_ops_fusion
 from wildfire_front.product.plain_language import build_plain_language_payload
 from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
 from wildfire_front.product.spa_honesty_ui import (
@@ -412,7 +413,7 @@ def build_product_app_payload(
     hero = _hero_from_decision(decision, brief)
 
     rails = {
-        "field_ops_ml_live_fusion": field_ops_ml_live_fusion_rail(),
+        "field_ops_ml_live_fusion": ssot_field_ops_fusion() or field_ops_ml_live_fusion_rail(),
         "ml_product_go": bool((brief.get("rails") or {}).get("ml_product_go", True)),
         "iou_is_not_ros": True,
         "lab_go_ne_field_fusion": True,
