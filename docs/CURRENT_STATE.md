@@ -67,6 +67,7 @@
 | ML leap D0 REQUEST_DATA | **Shipped** docs (#42) — P0/P1/P2 + Hellín H1–H7; no promote |
 | ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |
 | ML leap E1b selective/FNR | **Filed** — `ML_LEAP_SELECTIVE_FNR.md` (method; @50/@90 not run; no L6) |
+| IF weakness / candidate board | **Shipped** — `docs/WEAKNESS_BOARD.md` (R1–R6 / H1–H7 fail-closed; measured on-disk counts; no Vp/ha invention; no FREEZE lift / no KEEP reopen) |
 
 ## Bottlenecks snapshot (B1–B6)
 

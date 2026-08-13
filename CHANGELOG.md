@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — IF weakness / candidate board (2026-08-13)
+- `scripts/score_if_weakness_board.py` scores on-disk CLM + open-IF trees with fail-closed R1–R6 / H1–H7.
+- Writes `docs/WEAKNESS_BOARD.json` + `.md` and `docs/IF_ONDISK_INVENTORY.json` (counts + tree fingerprints; no raw GeoTIFF hashes).
+- Missing anchors / unknown `--fire-id` exit 1. Never writes `data/infocam_anchors.json`. No v34 retrain / KEEP reopen.
+
 ### Fixed — ML-Sprint 2: Pre-trained weights transfer integrity (2026-07-09)
 - **Root cause**: When loading v1 checkpoints into the v2 model,
   `load_pretrained_weights` emitted spurious `missing keys` / `shape mismatch`
