@@ -28,7 +28,8 @@ $env:PYTHONPATH = "."
 **Modo operario (preferido):** `python -m wildfire_front operator`  
 **Ensayo 4 actos:** `python -m wildfire_front operator do --all` · `make operator-path`  
 CLI teach path: `python -m wildfire_front teach` · gates: `python -m wildfire_front show`  
-**Mapa de comandos:** `python -m wildfire_front commands` (aliases `spa` / `console` → `app`)
+**Mapa de comandos:** `python -m wildfire_front commands` (aliases `spa` / `console` → `app`)  
+**Checklist QA (CLI + SPA, todo lo clicable):** `docs/CHECKLIST_CLI_SPA_QA.md`
 
 ### SPA Live Ops (Estado → Decidir → Acta)
 
@@ -146,6 +147,7 @@ python -m wildfire_front demo-third-party
 | Reliability report | `docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md` |
 | Curso completo | `docs/CURSO_WFD_PARA_DESCONOCIDOS.md` |
 | START_HERE | `docs/START_HERE.md` |
+| Checklist QA CLI + SPA | `docs/CHECKLIST_CLI_SPA_QA.md` |
 
 **No marcar GO_Q sin H1 firmada.** Eng (teach-cli / pack / replay) no cierra GO_Q.
 
