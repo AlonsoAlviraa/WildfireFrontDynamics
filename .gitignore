@@ -88,7 +88,9 @@ _scratch*/
 
 # ─── Large external data caches (keep tree, ignore blobs) ────
 data/external/**
+!data/external/**/
 !data/external/**/README.md
+!data/external/**/inventory.json
 data/weather_era5/**
 !data/weather_era5/**/README.md
 data/weather_openmeteo/**
@@ -120,6 +122,12 @@ _RESPONSE_*.json
 _OUTBOX*.json
 
 # ─── Local caches / form-fill scratch (never product) ────────
+# LATAM/AU campaign raw rasters + CEMS zips (keep README/meta tracked)
+data/open_if/latam_au/**/*.tif
+data/open_if/latam_au/**/*.tiff
+data/open_if/latam_au/**/*.zip
+data/open_if/latam_au/**/raw_cems/
+
 data/open_if/**/wfs_cache/
 tests/fixtures/ext_rai_tmp/
 data/open_if/**/_inspect_*.py

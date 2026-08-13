@@ -1,0 +1,717 @@
+{
+  "schema": "wfd_external_ros_inventory_v1",
+  "pack_id": "gofer",
+  "as_of_utc": "2026-08-13T09:46:20.482351Z",
+  "title": "GOES-Observed Fire Event Representation (GOFER)",
+  "license_id": "cc-by-4.0",
+  "requested_doi": "10.5281/zenodo.8327264",
+  "resolved_doi": "10.5281/zenodo.14642378",
+  "url": "https://zenodo.org/records/14642378",
+  "download_url": "https://zenodo.org/api/records/14642378/files/GOFER.zip/content",
+  "version": "0.2",
+  "class": "ml_weak",
+  "role": "open_hourly_goes_progression",
+  "not_official_es_cadastre": true,
+  "not_tactical_ros": true,
+  "not_product_ros": true,
+  "zip": {
+    "rel": "GOFER.zip",
+    "bytes": 75711678,
+    "suffix": ".zip",
+    "sha256": "96eca2e18529eb274ca94af9a730bcf1c9c6da597fb04a9b5cf9167aada451c2",
+    "role": "zenodo_zip",
+    "md5": "8d495af1e4a0ed77df35b5a15d5ebb04",
+    "md5_matches_zenodo": true
+  },
+  "zip_md5_ok": true,
+  "extracted_root": "data/external/gofer/extracted",
+  "n_extracted_files": 56,
+  "extracted_files": [
+    {
+      "rel": ".extracted_ok",
+      "bytes": 27,
+      "suffix": ""
+    },
+    {
+      "rel": "GOFER/fireData.csv",
+      "bytes": 2179,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_cfireLine.dbf",
+      "bytes": 51889678,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_cfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_cfireLine.shp",
+      "bytes": 66335860,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_cfireLine.shx",
+      "bytes": 974548,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireIg.dbf",
+      "bytes": 31254,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireIg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireIg.shp",
+      "bytes": 5412,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireIg.shx",
+      "bytes": 756,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireProg.dbf",
+      "bytes": 8648548,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireProg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireProg.shp",
+      "bytes": 134937876,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_fireProg.shx",
+      "bytes": 162508,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_rfireLine.dbf",
+      "bytes": 7845941,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_rfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_rfireLine.shp",
+      "bytes": 9164400,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_rfireLine.shx",
+      "bytes": 162284,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_scaleVal.csv",
+      "bytes": 597836,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_Combined/GOFERC_summary.csv",
+      "bytes": 3913711,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_cfireLine.dbf",
+      "bytes": 41839912,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_cfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_cfireLine.shp",
+      "bytes": 57117752,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_cfireLine.shx",
+      "bytes": 785820,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireIg.dbf",
+      "bytes": 21426,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireIg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireIg.shp",
+      "bytes": 1668,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireIg.shx",
+      "bytes": 548,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireProg.dbf",
+      "bytes": 8368240,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireProg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireProg.shp",
+      "bytes": 124482228,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_fireProg.shx",
+      "bytes": 157244,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_rfireLine.dbf",
+      "bytes": 7591295,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_rfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_rfireLine.shp",
+      "bytes": 13340128,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_rfireLine.shx",
+      "bytes": 157020,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_scaleVal.csv",
+      "bytes": 608114,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_East/GOFERE_summary.csv",
+      "bytes": 3628760,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_cfireLine.dbf",
+      "bytes": 42069952,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_cfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_cfireLine.shp",
+      "bytes": 56819616,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_cfireLine.shx",
+      "bytes": 790140,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireIg.dbf",
+      "bytes": 26340,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireIg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireIg.shp",
+      "bytes": 4548,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireIg.shx",
+      "bytes": 652,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireProg.dbf",
+      "bytes": 8414248,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireProg.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireProg.shp",
+      "bytes": 119391720,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_fireProg.shx",
+      "bytes": 158108,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_rfireLine.dbf",
+      "bytes": 7609484,
+      "suffix": ".dbf"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_rfireLine.prj",
+      "bytes": 145,
+      "suffix": ".prj"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_rfireLine.shp",
+      "bytes": 9263000,
+      "suffix": ".shp"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_rfireLine.shx",
+      "bytes": 157396,
+      "suffix": ".shx"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_scaleVal.csv",
+      "bytes": 580213,
+      "suffix": ".csv"
+    },
+    {
+      "rel": "GOFER/GOFER_West/GOFERW_summary.csv",
+      "bytes": 3647906,
+      "suffix": ".csv"
+    }
+  ],
+  "fire_catalog": [
+    {
+      "fname": "Kincade",
+      "fyear": 2019,
+      "acres_official_catalog": 77758.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2019-10-24 04",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Walker",
+      "fyear": 2019,
+      "acres_official_catalog": 54612.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2019-09-04 07",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "August Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 1032648.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-16 21",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Bobcat",
+      "fyear": 2020,
+      "acres_official_catalog": 115997.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-09-06 19",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Creek",
+      "fyear": 2020,
+      "acres_official_catalog": 379895.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-09-05 01",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "CZU Lightning Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 86509.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-16 15",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Dolan",
+      "fyear": 2020,
+      "acres_official_catalog": 124924.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-18 18",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Glass",
+      "fyear": 2020,
+      "acres_official_catalog": 67484.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-09-27 10",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "July Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 83261.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-07-22 17",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "LNU Lightning Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 363220.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-17 13",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "North Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 318935.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-17 16",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Red Salmon Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 144698.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-07-27 18",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "SCU Lightning Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 396625.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-16 11",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Slater and Devil",
+      "fyear": 2020,
+      "acres_official_catalog": 166127.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-09-08 13",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "SQF Complex",
+      "fyear": 2020,
+      "acres_official_catalog": 175019.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-19 14",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "W-5 Cold Springs",
+      "fyear": 2020,
+      "acres_official_catalog": 84817.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-08-18 18",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Zogg",
+      "fyear": 2020,
+      "acres_official_catalog": 56338.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2020-09-27 21",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Antelope",
+      "fyear": 2021,
+      "acres_official_catalog": 145632.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-08-01 17",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Beckwourth Complex",
+      "fyear": 2021,
+      "acres_official_catalog": 105670.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-06-30 23",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Caldor",
+      "fyear": 2021,
+      "acres_official_catalog": 221835.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-08-15 01",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Dixie",
+      "fyear": 2021,
+      "acres_official_catalog": 963309.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-07-14 00",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "KNP Complex",
+      "fyear": 2021,
+      "acres_official_catalog": 88307.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-09-10 14",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "McCash",
+      "fyear": 2021,
+      "acres_official_catalog": 94962.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-08-01 02",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "McFarland",
+      "fyear": 2021,
+      "acres_official_catalog": 122653.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-07-30 01",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Monument",
+      "fyear": 2021,
+      "acres_official_catalog": 223124.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-07-31 01",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "River Complex",
+      "fyear": 2021,
+      "acres_official_catalog": 199359.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-07-30 21",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Tamarack",
+      "fyear": 2021,
+      "acres_official_catalog": 68637.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-07-04 18",
+      "local_tz": "America/Los_Angeles"
+    },
+    {
+      "fname": "Windy",
+      "fyear": 2021,
+      "acres_official_catalog": 97528.0,
+      "acres_official_is_author_catalog": true,
+      "not_product_area_ha": true,
+      "goes_ig_utc": "2021-09-10 00",
+      "local_tz": "America/Los_Angeles"
+    }
+  ],
+  "hourly": {
+    "ok": true,
+    "shp": "C:\\Users\\Mariano\\Documents\\ALONSOO\\WildfireFrontDynamics\\data\\external\\gofer\\extracted\\GOFER\\GOFER_Combined\\GOFERC_fireProg.shp",
+    "n_records": 20301,
+    "n_fires": 28,
+    "n_fires_r1_ge3": 28,
+    "fires": [
+      {
+        "fname": "Antelope",
+        "n_hourly_tutcs": 942,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "August Complex",
+        "n_hourly_tutcs": 1465,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Beckwourth Complex",
+        "n_hourly_tutcs": 844,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Bobcat",
+        "n_hourly_tutcs": 433,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "CZU Lightning Complex",
+        "n_hourly_tutcs": 125,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Caldor",
+        "n_hourly_tutcs": 620,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Creek",
+        "n_hourly_tutcs": 1574,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Dixie",
+        "n_hourly_tutcs": 1390,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Dolan",
+        "n_hourly_tutcs": 696,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Glass",
+        "n_hourly_tutcs": 189,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "July Complex",
+        "n_hourly_tutcs": 198,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "KNP Complex",
+        "n_hourly_tutcs": 633,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Kincade",
+        "n_hourly_tutcs": 134,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "LNU Lightning Complex",
+        "n_hourly_tutcs": 270,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "McCash",
+        "n_hourly_tutcs": 1297,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "McFarland",
+        "n_hourly_tutcs": 637,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Monument",
+        "n_hourly_tutcs": 1168,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "North Complex",
+        "n_hourly_tutcs": 1075,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Red Salmon Complex",
+        "n_hourly_tutcs": 1778,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "River Complex",
+        "n_hourly_tutcs": 1353,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "SCU Lightning Complex",
+        "n_hourly_tutcs": 347,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "SQF Complex",
+        "n_hourly_tutcs": 1152,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Slater and Devil",
+        "n_hourly_tutcs": 326,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Tamarack",
+        "n_hourly_tutcs": 504,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "W-5 Cold Springs",
+        "n_hourly_tutcs": 264,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Walker",
+        "n_hourly_tutcs": 193,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Windy",
+        "n_hourly_tutcs": 623,
+        "r1_ge3_hourly": true
+      },
+      {
+        "fname": "Zogg",
+        "n_hourly_tutcs": 71,
+        "r1_ge3_hourly": true
+      }
+    ],
+    "not_product_ros": true,
+    "not_geotiff_contract": true,
+    "reason_no_geotiff": "GOFER ships hourly WGS84 polygons (fireProg), not \u22653 aligned GeoTIFF scenes. Native rasters absent. Rasterizing 20k GOES polygons is out of this pass; PT-FireSprd L1 is the GeoTIFF path."
+  }
+}
