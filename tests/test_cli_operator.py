@@ -114,3 +114,39 @@ def test_build_checklist_structure():
     data = build_checklist(root=ROOT)
     assert data["go_q_met"] is False
     assert len(data["checks"]) == 7
+
+
+def _stamp_fusion() -> str | None:
+    stamp_path = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    if not stamp_path.is_file():
+        return None
+    stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+    if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+        return "ON"
+    rails = stamp.get("rails") or {}
+    raw = rails.get("field_ops_fusion")
+    if raw is None:
+        return "OFF"
+    return str(raw).upper()
+
+
+def test_operator_kill_list_does_not_contradict_stamp():
+    """kill_list[0] must follow stamp. Fusion ON ≠ GO_Q ≠ despacho."""
+    fusion = _stamp_fusion()
+    if fusion is None:
+        import pytest
+
+        pytest.skip("ML product stamp missing — cannot assert kill_list vs stamp")
+    data = build_checklist(root=ROOT)
+    assert data["go_q_met"] is False
+    assert data["rails"]["field_ops_fusion"] == fusion
+    first = data["kill_list"][0]
+    assert first != "No field_ops ML live fusion ON"
+    if fusion == "ON":
+        blob = first.lower()
+        assert "go_q" in blob or "despacho" in blob
+        assert "no field_ops ml live fusion on" not in blob
+    p = _run(["operator", "checklist", "--json"])
+    assert p.returncode == 0, p.stderr
+    listed = json.loads(p.stdout)["kill_list"]
+    assert listed[0] == first

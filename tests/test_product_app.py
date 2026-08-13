@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from wildfire_front.cli import build_parser, main
 from wildfire_front.product.app_spa import (
     SCHEMA,
@@ -25,6 +27,19 @@ ROOT = Path(__file__).resolve().parents[1]
 SLA_WORK = ROOT / "outputs" / "incidents" / "_sla_measure"
 FIXTURE_CSV = ROOT / "tests" / "fixtures" / "firms_sample_hotspots.csv"
 DEMO_FRONTS = ROOT / "outputs" / "demo_v2" / "fronts.geojson"
+_STAMP = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+
+
+def _expected_fusion() -> str:
+    """Stamp is SSOT for fusion rail. Skip honestly if stamp is missing."""
+    if not _STAMP.is_file():
+        pytest.skip("ML product stamp missing — cannot assert fusion rail")
+    stamp = json.loads(_STAMP.read_text(encoding="utf-8"))
+    if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+        return "ON"
+    rails = stamp.get("rails") or {}
+    raw = rails.get("field_ops_fusion")
+    return str(raw).upper() if raw is not None else "OFF"
 
 
 def _run_main(argv: list[str], capsys) -> tuple[int, str, str]:
@@ -77,9 +92,24 @@ def test_shipped_app_list_fires_json_rails():
     assert code == 0, err
     data = json.loads(out)
     rails = data.get("rails") or {}
-    assert rails.get("field_ops_ml_live_fusion") == "ON"
+    assert rails.get("field_ops_ml_live_fusion") == _expected_fusion()
     assert rails.get("go_q_invent_forbidden") is True
     assert rails.get("go_q_met") is not True
+
+
+def test_payload_fusion_follows_stamp_when_cwd_has_no_catalog(tmp_path: Path, monkeypatch):
+    """cwd fail-closed must not contradict stamp/catalog (human #46 ON)."""
+    expected = _expected_fusion()
+    monkeypatch.chdir(tmp_path)
+    payload = build_product_app_payload(live=False, scan=False, repo=ROOT)
+    assert payload["rails"]["field_ops_ml_live_fusion"] == expected
+    assert payload["rails"]["go_q_invent_forbidden"] is True
+    assert payload["rails"]["not_tactical_dispatch"] is True
+    # Package-relative catalog/stamp must win even when repo is omitted
+    payload_cwd = build_product_app_payload(live=False, scan=False)
+    assert payload_cwd["rails"]["field_ops_ml_live_fusion"] == expected
+    html = render_product_app_html(payload_cwd)
+    assert f'"field_ops_ml_live_fusion": "{expected}"' in html
 
 
 def test_parser_registers_app():
@@ -135,7 +165,7 @@ def test_build_payload_brief_only(tmp_path: Path):
     assert payload["schema"] == SCHEMA
     assert payload["brief"]["schema"] == "wfd_operator_brief_v1"
     assert payload["map"]["schema"] == "wfd_fire_status_map_v1"
-    assert payload["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert payload["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
     assert payload["rails"]["not_tactical_dispatch"] is True
     assert payload["rails"]["go_q_invent_forbidden"] is True
     assert payload["brief"]["gates"]["GO_Q"] is not True
@@ -186,7 +216,7 @@ def test_build_payload_brief_only(tmp_path: Path):
     assert "role-seg" in html
     assert "last-act" in html or "Último acto" in html
     # Embedded payload honesty (exact OFF — no soft fusion fallback)
-    assert '"field_ops_ml_live_fusion": "ON"' in html
+    assert f'"field_ops_ml_live_fusion": "{_expected_fusion()}"' in html
     assert '"go_q_invent_forbidden": true' in html
     paths = write_product_app(payload, tmp_path)
     assert paths["html"].is_file()
@@ -244,7 +274,7 @@ def test_cli_list_fires(capsys):
     assert data["schema"] == "wfd_fire_catalog_v1"
     assert "fires" in data
     rails = data.get("rails") or {}
-    assert rails.get("field_ops_ml_live_fusion") == "ON"
+    assert rails.get("field_ops_ml_live_fusion") == _expected_fusion()
     assert rails.get("go_q_invent_forbidden") is True
     assert rails.get("go_q_met") is False
     assert rails.get("not_tactical_dispatch") is True
@@ -267,15 +297,15 @@ def test_cli_app_json_and_html(tmp_path: Path, capsys):
     assert code == 0, err
     data = json.loads(stdout)
     assert data["schema"] == SCHEMA
-    assert data["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert data["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
     assert data["brief"]["gates"].get("GO_Q") is not True
     assert (out / "index.html").is_file()
     assert (out / "app_payload.json").is_file()
     html = (out / "index.html").read_text(encoding="utf-8")
     assert "L.map" in html or "leaflet" in html.lower()
-    assert '"field_ops_ml_live_fusion": "ON"' in html
+    assert f'"field_ops_ml_live_fusion": "{_expected_fusion()}"' in html
     reloaded = json.loads((out / "app_payload.json").read_text(encoding="utf-8"))
-    assert reloaded["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert reloaded["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
     assert reloaded["rails"]["go_q_invent_forbidden"] is True
     assert "liveUnavailableFallback" in html
     assert 'id="btn-act-status"' in html and 'id="btn-act-decide"' in html
@@ -286,7 +316,7 @@ def test_render_operator_front_markers():
     """Shipped payload→HTML: Live Ops acts + honesty + copy-CLI fallback."""
     payload = build_product_app_payload(live=False, scan=False)
     html = render_product_app_html(payload)
-    assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "ON"
+    assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == _expected_fusion()
     assert payload["rails"]["go_q_invent_forbidden"] is True
     assert payload["h1_eng_rehearsal"]["go_q_met"] is False
     for marker in (
@@ -315,7 +345,7 @@ def test_cli_app_human_and_missing_work_dir(tmp_path: Path, capsys):
     assert "PRODUCT SPA" in stdout or "SPA" in stdout
     assert "index.html" in stdout or str(out) in stdout
     assert "despacho" in stdout.lower() or "táctico" in stdout.lower() or "tactical" in stdout.lower()
-    assert "fusion ON" in stdout or "no-serve" in stdout
+    assert f"fusion {_expected_fusion()}" in stdout or "no-serve" in stdout
     assert "copy-CLI" in stdout or "GO_Q" in stdout
 
     missing = tmp_path / "no_such_incident"
@@ -382,7 +412,9 @@ def test_serve_static_spa_http_smoke(tmp_path: Path):
                 body = resp.read().decode("utf-8", errors="replace")
                 result["status"] = resp.status
                 result["shell"] = "#0B1220" in body and "primary-acts" in body
-                result["fusion_off"] = '"field_ops_ml_live_fusion": "ON"' in body
+                result["fusion_off"] = (
+                    f'"field_ops_ml_live_fusion": "{_expected_fusion()}"' in body
+                )
         finally:
             httpd.shutdown()
 
@@ -451,7 +483,7 @@ def test_role_switcher_and_bridge_payload(tmp_path: Path):
     assert "Refrescar card" in html2
     assert "bridgeDecideUrl" in html2
     assert "location.origin" in html2
-    assert '"field_ops_ml_live_fusion": "ON"' in html2
+    assert f'"field_ops_ml_live_fusion": "{_expected_fusion()}"' in html2
 
 
 def test_multi_fire_pack_payload(tmp_path: Path):
@@ -707,7 +739,7 @@ def test_bridge_decide_mock_http_and_proxy(tmp_path: Path):
             assert p["bridge_decide"]["enabled"] is True
             assert p["bridge_decide"]["proxy_path"] == "/bridge/v1/decide"
             assert p["brief"]["gates"].get("GO_Q") is not True
-            assert p["rails"]["field_ops_ml_live_fusion"] == "ON"
+            assert p["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
 
             paths = write_product_app(p, tmp_path / "bridge_spa")
             root = paths["html"].resolve().parent
@@ -749,7 +781,7 @@ def test_bridge_decide_mock_http_and_proxy(tmp_path: Path):
             assert p_down["bridge_decide"]["url"] == "http://127.0.0.1:1"
             assert p_down["brief"]["gates"].get("GO_Q") is not True
             assert p_down["rails"]["go_q_invent_forbidden"] is True
-            assert p_down["rails"]["field_ops_ml_live_fusion"] == "ON"
+            assert p_down["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
             assert p_down["rails"]["not_tactical_dispatch"] is True
         finally:
             upstream.shutdown()
@@ -830,7 +862,7 @@ def test_invalid_role_falls_back_to_operator():
     assert "wildfire_front" in str(op.get("primary_cmd"))
     assert p["rails"]["go_q_invent_forbidden"] is True
     assert p["rails"]["not_tactical_dispatch"] is True
-    assert p["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert p["rails"]["field_ops_ml_live_fusion"] == _expected_fusion()
     assert p["brief"]["gates"].get("GO_Q") is not True
     html = render_product_app_html(p)
     assert '"role": "operator"' in html

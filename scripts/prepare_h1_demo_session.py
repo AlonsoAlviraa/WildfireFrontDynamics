@@ -17,6 +17,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_JSON = ROOT / "docs" / "H1_DEMO_SESSION_READY.json"
@@ -24,6 +25,43 @@ INVITE_MD = ROOT / "docs" / "H1_CALENDAR_INVITE.md"
 CHEATSHEET = ROOT / "docs" / "CHEATSHEET_DEMO_12MIN.md"
 RUNBOOK = ROOT / "docs" / "H1_GO_Q_RUNBOOK.md"
 DRAFT = ROOT / "docs" / "actas" / "ACTA_DEMO_PENDING_HUMAN.md"
+
+
+def load_stamp_rails(root: Path | None = None) -> dict[str, Any]:
+    """Snapshot ML product stamp rails. Never invent GO_Q complete."""
+    root = root or ROOT
+    stamp_path = root / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    fusion = "OFF"
+    go_q: Any = "partial"
+    go_mes = True
+    go_mes_plus = False
+    if stamp_path.is_file():
+        try:
+            stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeError):
+            stamp = {}
+        if isinstance(stamp, dict):
+            if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+                fusion = "ON"
+            rails = stamp.get("rails") if isinstance(stamp.get("rails"), dict) else {}
+            if rails.get("field_ops_fusion") is not None:
+                fusion = str(rails["field_ops_fusion"]).upper()
+            gq = stamp.get("GO_Q", "partial")
+            if gq is True or str(gq).lower() in {"true", "complete", "full"}:
+                go_q = "partial"
+            elif gq is not None:
+                go_q = gq
+            if "GO_MES" in stamp:
+                go_mes = bool(stamp["GO_MES"])
+            if "GO_MES_plus" in stamp:
+                go_mes_plus = bool(stamp["GO_MES_plus"])
+    return {
+        "GO_MES": go_mes,
+        "GO_Q": go_q,
+        "ml_product_go": "true_lab_only",
+        "field_ops_fusion": fusion,
+        "GO_MES_plus": go_mes_plus,
+    }
 
 
 def _rel(p: Path) -> str:
@@ -47,7 +85,13 @@ def _run(cmd: list[str]) -> tuple[int, str]:
     return proc.returncode, out
 
 
-def build_invite_md(*, when_hint: str) -> str:
+def build_invite_md(*, when_hint: str, fusion: str | None = None) -> str:
+    rail = str(fusion or load_stamp_rails()["field_ops_fusion"] or "OFF").upper()
+    kill_fusion = (
+        "fusion ON ≠ GO_Q complete ≠ despacho táctico"
+        if rail == "ON"
+        else "No field_ops ML live fusion ON"
+    )
     return f"""# Invitación calendario — Demo WFD 12 min (H1 / GO_Q)
 
 > **Copia/pega a Google Calendar / Outlook.**  
@@ -58,7 +102,7 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 ```
 
 ## Título
-WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
+WildfireFrontDynamics — demo decisión 12 min (HITL, fusion {rail})
 
 ## Cuándo (propuesta)
 {when_hint}
@@ -74,7 +118,7 @@ WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
 
 | Min | Bloque |
 |----:|--------|
-| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **OFF** · ml_product_go **lab only** · ABSTAIN = feature |
+| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **{rail}** · ml_product_go **lab only** · ABSTAIN = feature · fusion ON ≠ despacho |
 | 1–4 | Ver multi-CCAA (3 contratos) |
 | 4–6 | Callarse (pilot honesty / field_ops se calla) |
 | 6–9 | Decision Card + explain |
@@ -94,7 +138,7 @@ python -m wildfire_front operator checklist
 
 ## Kill list verbal (obligatorio)
 - No ROS inventado  
-- No field_ops ML live fusion ON  
+- {kill_fusion}  
 - No vender Tobarra LOFO ~0.48 como producto de campo  
 - No “apagamos incendios con IA”
 
@@ -225,7 +269,8 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
 
-    invite = build_invite_md(when_hint=when_hint)
+    stamp_rails = load_stamp_rails()
+    invite = build_invite_md(when_hint=when_hint, fusion=str(stamp_rails["field_ops_fusion"]))
     INVITE_MD.parent.mkdir(parents=True, exist_ok=True)
     INVITE_MD.write_text(invite, encoding="utf-8")
 
@@ -243,6 +288,8 @@ def main(argv: list[str] | None = None) -> int:
         "prepared_at_utc": now.isoformat(),
         "product_unlock": False,
         "go_q_met": False,
+        "not_third_party_acta": True,
+        "not_signed_acta": True,
         "go_q_note": "Human third-party demo + signed acta still required",
         "eng_session_ready": bool(eng_ready),
         "suggested_slot_utc": when.isoformat(),
@@ -261,12 +308,16 @@ def main(argv: list[str] | None = None) -> int:
             "python scripts/record_h1_demo_complete.py --acta <acta_firmada>",
         ],
         "steps": steps,
-        "rails": {
-            "GO_MES": True,
-            "GO_Q": "partial",
-            "ml_product_go": "true_lab_only",
-            "field_ops_fusion": "OFF",
-        },
+        "rails": stamp_rails,
+        "not_claims": [
+            "not GO_Q complete",
+            "not invented tercero",
+            (
+                "fusion ON ≠ despacho táctico"
+                if str(stamp_rails.get("field_ops_fusion")).upper() == "ON"
+                else "not field_ops ML live fusion ON"
+            ),
+        ],
     }
     OUT_JSON.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 

@@ -15,10 +15,11 @@ from .product.app_spa import (
 )
 from .product.fire_catalog import scan_fire_catalog
 from .product.policy import field_ops_ml_live_fusion_rail
+from .product.teach_path import honesty_kill_list, ssot_field_ops_fusion
 
-# Product CLI rails snapshot (fusion follows field_ops catalog; GO_Q never invented)
+# Product CLI rails snapshot (fusion follows stamp/catalog; GO_Q never invented)
 _APP_RAILS: dict[str, Any] = {
-    "field_ops_ml_live_fusion": field_ops_ml_live_fusion_rail(),
+    "field_ops_ml_live_fusion": ssot_field_ops_fusion() or field_ops_ml_live_fusion_rail(),
     "go_q_invent_forbidden": True,
     "go_q_met": False,
     "not_tactical_dispatch": True,
@@ -409,7 +410,7 @@ def run_app(args: argparse.Namespace) -> int:
                 "pack_cmd": demo_artifacts.get("pack_cmd"),
                 "kill_list": [
                     "No ROS inventado",
-                    "No field_ops ML live fusion ON",
+                    honesty_kill_list()[0],
                     "No vender Tobarra LOFO como producto de campo",
                     "No «apagamos incendios con IA»",
                     "No inventar GO_Q complete sin acta firmada de tercero",

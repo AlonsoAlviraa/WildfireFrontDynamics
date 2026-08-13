@@ -42,31 +42,99 @@ def resolve_repo_root(preferred: Path | None = None) -> Path:
     return root
 
 
+_STAMP_REL = Path("docs") / "ML_PRODUCT_GO_STATUS.json"
+
+
+def load_ml_go_stamp(repo: Path | None = None) -> dict[str, Any] | None:
+    """Read ``docs/ML_PRODUCT_GO_STATUS.json``; None if missing/unreadable."""
+    root = resolve_repo_root(repo)
+    path = root / _STAMP_REL
+    try:
+        if not path.is_file():
+            return None
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return None
+
+
+def stamp_field_ops_fusion(repo: Path | None = None) -> str:
+    """ON/OFF from ML product stamp. Fail-closed OFF if stamp unreadable."""
+    stamp = load_ml_go_stamp(repo)
+    if stamp is None and repo is not None:
+        stamp = load_ml_go_stamp(repo_root())
+    if not stamp:
+        return "OFF"
+    if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+        return "ON"
+    rails = stamp.get("rails")
+    if isinstance(rails, dict) and rails.get("field_ops_fusion") is not None:
+        return str(rails["field_ops_fusion"]).upper()
+    return "OFF"
+
+
+def ssot_field_ops_fusion(repo: Path | None = None) -> str:
+    """Stamp first (package fallback), then field_ops catalog. Fail-closed OFF."""
+    stamped = stamp_field_ops_fusion(repo)
+    if stamped == "ON":
+        return "ON"
+    stamp = load_ml_go_stamp(repo) or load_ml_go_stamp(repo_root())
+    if stamp is not None:
+        return stamped
+    try:
+        from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+        return field_ops_ml_live_fusion_rail()
+    except Exception:
+        return "OFF"
+
+
+def honesty_kill_list(*, fusion: str | None = None, repo: Path | None = None) -> list[str]:
+    """Verbal kill list. Fusion ON ≠ GO_Q ≠ despacho — never contradict stamp."""
+    rail = str(fusion or ssot_field_ops_fusion(repo) or "OFF").upper()
+    first = (
+        "fusion ON ≠ GO_Q complete ≠ despacho"
+        if rail == "ON"
+        else "No field_ops ML live fusion ON"
+    )
+    return [
+        first,
+        "No silent auto_ml_product_go thrash (explicit promote only)",
+        "No invent Vp/ha",
+        "No IoU = ROS",
+        "No GO_Q without M3.2 human acta",
+        "No replay_ok = crypto authenticity",
+    ]
+
+
+def honesty_claims_forbidden(*, fusion: str | None = None, repo: Path | None = None) -> list[str]:
+    rail = str(fusion or ssot_field_ops_fusion(repo) or "OFF").upper()
+    fusion_claim = (
+        "fusion ON means GO_Q complete or despacho táctico"
+        if rail == "ON"
+        else "field_ops ML live fusion ON"
+    )
+    return [
+        "GO_Q complete without M3.2",
+        fusion_claim,
+        "silent auto_ml_product_go without promote",
+        "replay_ok means cryptographic authenticity",
+    ]
+
+
 # ── Rails constants (honesty by construction; never invent GO_Q=true) ────
 
 DEFAULT_RAILS: dict[str, Any] = {
     "GO_MES": True,
     "GO_Q": "partial",
     "ml_product_go": True,  # human promote 2026-08-05 (lab GO ≠ field fusion)
-    "field_ops_ml_live_fusion": "OFF",
+    "field_ops_ml_live_fusion": ssot_field_ops_fusion(),
     "GO_MES_plus": False,
 }
 
-KILL_LIST: list[str] = [
-    "No field_ops ML live fusion ON",
-    "No silent auto_ml_product_go thrash (explicit promote only)",
-    "No invent Vp/ha",
-    "No IoU = ROS",
-    "No GO_Q without M3.2 human acta",
-    "No replay_ok = crypto authenticity",
-]
+KILL_LIST: list[str] = honesty_kill_list()
 
-CLAIMS_FORBIDDEN: list[str] = [
-    "GO_Q complete without M3.2",
-    "field_ops ML live fusion ON",
-    "silent auto_ml_product_go without promote",
-    "replay_ok means cryptographic authenticity",
-]
+CLAIMS_FORBIDDEN: list[str] = honesty_claims_forbidden()
 
 # ── 4-act learning path (constants; not scraped from markdown) ───────────
 
@@ -225,7 +293,9 @@ def build_teach_payload(
         "next_human": NEXT_HUMAN,
         "course": COURSE_PATH,
         "cheatsheet": CHEATSHEET_PATH,
-        "kill_list": list(KILL_LIST),
+        "kill_list": honesty_kill_list(
+            fusion=str(r.get("field_ops_ml_live_fusion") or ssot_field_ops_fusion())
+        ),
     }
 
 
@@ -285,12 +355,14 @@ def format_teach_human(
             f"  Full course:     {COURSE_PATH}",
             f"  12 min sheet:    {CHEATSHEET_PATH}",
             f"  Next human gate: {NEXT_HUMAN} — not eng alone",
-            "  Kill line: never claim field_ops ML live fusion ON",
+            f"  Kill line: {honesty_kill_list(fusion=str(r.get('field_ops_ml_live_fusion') or ssot_field_ops_fusion()))[0]}",
         ]
     )
     if verbose:
         lines.append("  Kill list:")
-        for item in KILL_LIST:
+        for item in honesty_kill_list(
+            fusion=str(r.get("field_ops_ml_live_fusion") or ssot_field_ops_fusion())
+        ):
             lines.append(f"    · {item}")
         lines.append("  Portal rebuild (heavy): python scripts\\show_all.py")
     lines.append("")
@@ -354,7 +426,7 @@ def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
         "GO_Q": None,
         "GO_MES_plus": False,
         "ml_product_go": True,  # human promote 2026-08-05 (lab GO ≠ field fusion)
-        "field_ops_ml_live_fusion": "OFF",  # fail-closed default (fusion still OFF)
+        "field_ops_ml_live_fusion": "OFF",  # fail-closed until stamp/catalog readable
     }
     sources_status: dict[str, str] = {
         "go_mes_verdict": "ok" if go_mes_doc else "missing",
@@ -398,10 +470,9 @@ def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
             if isinstance(field_ops, dict) and "allow_ml_live_in_fusion" in field_ops:
                 allow = bool(field_ops["allow_ml_live_in_fusion"])
                 gates["field_ops_ml_live_fusion"] = "ON" if allow else "OFF"
-    elif sources_status["policies"] == "missing":
-        # Keep fail-closed OFF if we never had rails either; mark unknown only if
-        # neither plan nor policy provided a value — design: prefer fail-closed.
-        pass
+    if sources_status["policies"] == "missing" and gates["field_ops_ml_live_fusion"] == "OFF":
+        # Preferred repo may be cwd without catalog. Package stamp/catalog is SSOT.
+        gates["field_ops_ml_live_fusion"] = ssot_field_ops_fusion()
 
     # If GO_MES / GO_Q still None after all sources → unknown (do NOT invent true)
     if gates["GO_MES"] is None:
@@ -439,7 +510,9 @@ def load_gate_snapshot(repo: Path | None = None) -> dict[str, Any]:
             "pack_zip_glob": KEY_PATHS["pack_zip_glob"],
         },
         "presence": presence,
-        "claims_forbidden": list(CLAIMS_FORBIDDEN),
+        "claims_forbidden": honesty_claims_forbidden(
+            fusion=str(gates.get("field_ops_ml_live_fusion") or ssot_field_ops_fusion())
+        ),
         "next_human": "H1/M3.2",
         "rails_extra": {
             "invent_vp": False,
