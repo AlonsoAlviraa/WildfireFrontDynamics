@@ -73,5 +73,5 @@ If only Hellín becomes confirmed and Tobarra remains, GO_MES+ may still be fals
 
 - `docs/DATA_INTAKE_STATUS.md` — inventory; may overstate stacks on thin clones
 - `docs/CURRENT_STATE.md` — GO_MES+ still open on 2nd grade A
-- `scripts/check_release_flags.py` — fusion OFF + GO_Q partial rails
+- `scripts/check_release_flags.py` — fusion ON (human 2026-08-13) + GO_Q partial rails
 - `tests/test_data_anchor_honesty.py` — guards against silent promote

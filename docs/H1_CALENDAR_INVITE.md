@@ -24,7 +24,7 @@ WildfireFrontDynamics — demo decisión 12 min (HITL, fusion ON)
 
 | Min | Bloque |
 |----:|--------|
-| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **ON** · ml_product_go **lab only** · ABSTAIN = feature · fusion ON ≠ despacho |
+| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **ON** (cap 0.20 / abstain 0.45) · ml_product_go **lab only** · ABSTAIN = feature · fusion ON ≠ despacho |
 | 1–4 | Ver multi-CCAA (3 contratos) |
 | 4–6 | Callarse (pilot honesty / field_ops se calla) |
 | 6–9 | Decision Card + explain |

@@ -4,7 +4,7 @@
 > - **`VENTA_GO`** = empaque dual-track E1–E6 / scorecard `demo_sellable` (packaging).  
 > - **`GO_Q`** = gate de producto (**partial** hasta demo tercero + acta firmada).  
 > - **`VENTA_GO=true` no autoriza outbound, LinkedIn, web ni “field sell-ready”.**  
-> - field_ops ML fusion **OFF** · FREEZE_ML · no inventar métricas.
+> - field_ops ML fusion **ON** (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho · FREEZE_ML · no inventar métricas. Embargo outbound intacto.
 
 > **Método:** loop-engineering · dual-track (A CLM + B open) · métricas honestas  
 > **Inicio ejecución:** 2026-07-17  

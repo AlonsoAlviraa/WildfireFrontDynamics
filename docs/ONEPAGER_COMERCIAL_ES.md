@@ -1,8 +1,8 @@
 # One-pager — qué se vende (rediseño)
 
 > **EMBARGO outbound** hasta Claims Guardian clear.  
-> **Gates (SSOT `docs/CURRENT_STATE.md`):** GO_Q **partial** · field_ops ML fusion **OFF** · `ml_product_go` **lab only** · FREEZE_ML.  
-> **No** es despacho táctico.
+> **Gates (SSOT `docs/CURRENT_STATE.md`):** GO_Q **partial** · field_ops ML fusion **ON** (cap 0.20 / abstain 0.45) ≠ despacho · `ml_product_go` **lab only** · FREEZE_ML.  
+> **No** es despacho táctico. Fusion ON **no** levanta este embargo.
 
 ## No vendemos
 
@@ -81,7 +81,7 @@ python -m wildfire_front decide --use-ml-v34 --policy research_open  # lab: HOLD
 ## Métricas (siempre visibles)
 
 Ver `docs/METRICS_HUB.md` — ML IoU/Δ/growth, ops ROS/grade/ratio, CEMS ha/timeline/Hausdorff, gates, decision card.  
-IoU de catálogo ≠ ROS / Vp. `ml_product_go` lab ≠ field fusion.
+IoU de catálogo ≠ ROS / Vp. `ml_product_go` lab ≠ field GO. Fusion ON ≠ despacho.
 
 ## Precio / piloto (plantilla)
 

@@ -27,7 +27,7 @@ GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta C
 
 ## Rails (no negociables)
 
-- `field_ops` ML fusion **OFF**
+- `field_ops` ML fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho
 - `GO_Q` **partial** (nunca inventar `true` / complete)
 - `FREEZE_ML_AND_REQUEST_DATA` (no retrain Tobarra)
 - No métricas de campo inventadas · no publish externo sin Alonso
@@ -52,7 +52,7 @@ GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta C
 |------|-----------------|
 | Mes2 PR3-A H1/split-conf | **Shipped** #38 |
 | Mes2 PR3-B sector ROS eng | **#39** merge CI verde (si aún abierto al start: B cierra antes de W1-B) |
-| Gates | GO_MES true · GO_Q partial · fusion OFF · GO_MES+ false · Hellín pending_external |
+| Gates | GO_MES true · GO_Q partial · fusion ON (≠ despacho) · GO_MES+ false · Hellín pending_external |
 
 ---
 
@@ -64,7 +64,7 @@ GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta C
 
 **Scope:** SPA solo lectura de `vv_scorecard` (#34); empty/sin-sidecar honest; párrafo E2E eng en APP/CHEATSHEET.  
 **Done-when:** markers + tests; no inventar field scores; `go_q_met=false`; `make test-spa` CI verde.  
-**Non-goals:** cambiar `vv_sidecar.py` · GO_Q true · fusion ON.
+**Non-goals:** cambiar `vv_sidecar.py` · GO_Q true · fusion ON = despacho / GO_Q complete.
 
 ### PR-W1-B — Agente B
 **Título:** `docs+ci: FREEZE data-request pack + forensics allowlist + CI smokes (mes3 W1)`  
@@ -119,7 +119,7 @@ GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta C
 
 **Scope:** Hellín permanece `pending_external` hasta cite+Alonso; checklist promote; FOI/O2 path docs **sin** inventar flags/scorecards.  
 **Done-when:** DATA_ANCHOR / intake docs alineados; honesty tests PASS; no promote en git.  
-**Non-goals:** rasters bulk · retrain · fusion ON.
+**Non-goals:** rasters bulk · retrain · fusion ON = despacho / GO_Q complete.
 
 ---
 
@@ -152,7 +152,7 @@ GO_Q sigue **partial** hasta acta firmada de Alonso. Marketing embargado hasta C
 | Claims clear | Levanta embargo marketing |
 | Rotar tokens / reconnect GitHub Cursor | Ops |
 
-A/B **nunca** ponen `GO_Q=true` ni fusion ON.
+A/B **nunca** ponen `GO_Q=true` ni venden fusion ON como despacho / GO_Q complete.
 
 ---
 
@@ -169,7 +169,7 @@ A/B **nunca** ponen `GO_Q=true` ni fusion ON.
 
 ## Explicit kill list
 
-- Retrain / fusion ON / GO_Q inventado  
+- Retrain / fusion ON = despacho / GO_Q inventado  
 - Merge #10 / b2-b3  
 - Outbound marketing sin Claims  
 - Ampliar a rasters bulk / FOI fills en git  

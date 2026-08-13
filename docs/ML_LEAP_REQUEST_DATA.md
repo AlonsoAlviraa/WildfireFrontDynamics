@@ -79,7 +79,7 @@ No CONTACTOS / GMAIL / FOI filled en git.
 
 ```bash
 python scripts/check_release_flags.py
-# expect PASS; GO_Q partial; fusion OFF
+# expect PASS; GO_Q partial; fusion ON
 pytest tests/test_data_anchor_honesty.py tests/test_ml_leap_request_data.py -q
 ```
 

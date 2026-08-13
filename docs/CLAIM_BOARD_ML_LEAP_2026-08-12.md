@@ -2,7 +2,7 @@
 
 **Plan:** `docs/PLAN_ML_LEAP_2026-08-12.md`  
 **E1b method:** `docs/ML_LEAP_SELECTIVE_FNR.md` (coverage @50/80/90 · FNR@budget proxy · not dispatch)  
-**Rails:** FREEZE_ML · IoU ≠ ROS · fusion OFF · no invent benchmarks · decision-support ≠ despacho táctico
+**Rails:** FREEZE_ML · IoU ≠ ROS · fusion ON (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho · no invent benchmarks
 
 | ID | Claim | Kind | Board status | Sellable? |
 |----|-------|------|--------------|-----------|

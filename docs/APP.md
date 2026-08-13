@@ -41,7 +41,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 
 ## Demo dry-run eng (A2 / A6)
 
-1. Rails aloud: GO_MES true · GO_Q partial · fusion OFF · ABSTAIN = feature.
+1. Rails aloud: GO_MES true · GO_Q partial · fusion ON (cap 0.20 / abstain 0.45) · ABSTAIN = feature · fusion ON ≠ GO_Q complete ≠ despacho.
 2. `app --serve --fire _sla_measure` (or `--demo-day`).
 3. In browser: **Estado → Decidir → Acta** (Último acto shows result / path).
 4. Offline path: open static SPA, same buttons → CLI copied, not invented GO_Q.
@@ -56,7 +56,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 - Confidence band = **prediction quality**, **no es ROS** · IoU ≠ ROS
 - SPA marker `uncertainty-bar` / payload `uncertainty_bar`: fill from existing `confidence_pred` only (no invented scores, never ROS)
 - Decision log: reads real `#31` `decision_log.jsonl` (latest entry); empty = sin sidecar (no invented `decision_id`); ACK backend only via `app --serve` → `POST /live/v1/ack-decision`
-- V&V panel (`data-marker="vv-scorecard"`): **read-only** `#34` `vv_scorecard.json` via `load_vv_scorecard`. Empty = sin sidecar. **Never** invents field IoU / ROS / grade. `eng_stub` · `go_q_met=false` · fusion OFF.
+- V&V panel (`data-marker="vv-scorecard"`): **read-only** `#34` `vv_scorecard.json` via `load_vv_scorecard`. Empty = sin sidecar. **Never** invents field IoU / ROS / grade. `eng_stub` · `go_q_met=false` · fusion ON (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho.
 - Never invent GO_Q / scores / tactical dispatch claims
 - Decision may **ABSTAIN** / **HOLD** (feature)
 

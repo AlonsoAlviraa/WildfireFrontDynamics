@@ -46,9 +46,9 @@ Se abre el **portal** (`docs/PORTAL.html`) con números, trabajo hecho y enlaces
 
 1. **Pitch with U1 TEST honest** metrics (mean IoU eval ~**0.86**, selective@80 ~**0.90**, ECE ~**0.15**) from `docs/ML_PRODUCT_SCORECARD.json` / `docs/ML_U1_PROMOTE_RECORD.json`. Catalog holdout **0.8963** is **provenance only** — protocol-clean next-day **mask** research quality; **not** live fire certainty, **not** ops ROS, **not** Tobarra tactical speed, **not** REDIAM O2 perimeter truth.
 2. **Live confidence** comes from ensemble disagreement + **VAL-fit** Head A calibrator (frozen JSON); the Decision Card can **HOLD** or **ABSTAIN** when patch reliability is low (ML-only / research paths). Demo: `python scripts/run_ml_live_card_demo.py --mode offline`.
-3. **`research_open` live fusion is experimental** after U1 TEST honest promote; **`field_ops.allow_ml_live_in_fusion` remains false**. VAL-only U1 is a **lab** diagnostic and does not alone promote fusion.
+3. **`research_open` live fusion is experimental** after U1 TEST honest promote. **`field_ops.allow_ml_live_in_fusion` is ON** after human promote 2026-08-13 (cap 0.20 / abstain 0.45). Fusion ON ≠ GO_Q complete ≠ despacho. VAL-only U1 is a **lab** diagnostic and did not alone promote field fusion.
 4. Dual product: ML mask product ≠ ops `front_dynamics_v1`. Promote checklist: `scripts/promote_ml_live_fusion.py` (never flips policy without `--apply-policy`, and only `research_open`).
-5. **Lab claim surface** (not tactical): scorecard + abstain/ECE note `docs/ML_LIVE_ABSTAIN_ECE_NOTE.md` — research quality only; no ROS / no field_ops.
+5. **Lab claim surface** (not tactical): scorecard + abstain/ECE note `docs/ML_LIVE_ABSTAIN_ECE_NOTE.md` — research quality only; no ROS / not despacho.
 
 ## Documentos clave
 

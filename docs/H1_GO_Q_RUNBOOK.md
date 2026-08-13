@@ -2,7 +2,7 @@
 
 > **Gate:** M3.2 → cierra el bloqueante humano de **GO_Q** (junto con M3.4 eng-filled).  
 > **Eng no cierra GO_Q.** Este runbook es para el presentador humano.  
-> **As of:** 2026-08-04 · Graph v6.1 · GO_MES **true** · GO_Q **partial**
+> **As of:** 2026-08-13 · Graph v6.1 · GO_MES **true** · GO_Q **partial** · field_ops ML fusion **ON** (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho
 
 ---
 
@@ -10,7 +10,7 @@
 
 1. **Rails** (no negociables en la call):
    - `GO_MES=true` · `GO_Q=partial` hasta firma  
-   - `field_ops` ML fusion **OFF** · `ml_product_go=true` (**lab only**, ≠ field fusion)  
+   - `field_ops` ML fusion **ON** (cap 0.20 / abstain 0.45) · `ml_product_go=true` (**lab only**) · fusion ON ≠ GO_Q complete ≠ despacho  
    - ABSTAIN / HOLD = feature, no fallo  
 2. **Prep one-shot eng (recomendado):**
    ```powershell
@@ -57,7 +57,7 @@
 | cierre | Límites + ask | kill list verbal · GO_Q = falta acta |
 
 **Kill list verbal (obligatorio):**  
-no ROS inventado · no fusión ML live en field_ops · no vender lab `ml_product_go` como field GO · no “apagamos incendios con IA” · no Tobarra LOFO ~0.48 como producto.
+no ROS inventado · fusion ON ≠ GO_Q complete ≠ despacho táctico · no vender lab `ml_product_go` como field GO · no “apagamos incendios con IA” · no Tobarra LOFO ~0.48 como producto.
 
 ---
 

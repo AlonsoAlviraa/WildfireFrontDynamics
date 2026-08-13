@@ -1,7 +1,7 @@
 # CURRENT_STATE — WildfireFrontDynamics
 
 > **SSOT for release flags** (`scripts/check_release_flags.py`)  
-> **As of:** 2026-08-13 (1M S1–S4 eng half · H1 slot **not_booked** · fusion ON · GO_Q partial · #39 merged)  
+> **As of:** 2026-08-13 (1M S1–S4 eng half · H1 slot **not_booked** · fusion ON · GO_Q partial · #39 merged · SPA fusion chip #52)  
 > **Companion stamp:** `docs/ML_PRODUCT_GO_STATUS.json`  
 > **Bottlenecks:** `docs/BOTTLENECKS_B1_B6_STATUS.md`  
 > **Anchors SSOT:** `docs/DATA_ANCHOR_SSOT.md` + `data/infocam_anchors.json`  
@@ -16,7 +16,7 @@
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab) · field_ops ML fusion ON · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · CLI/front #43 · V&V UI #45 · Mes3 plan filed.**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab) · field_ops ML fusion ON (cap 0.20 / abstain 0.45) · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · CLI/front #43 · V&V UI #45 · SPA fusion chip #52 · Mes3 plan filed.**
 
 ## Gates
 

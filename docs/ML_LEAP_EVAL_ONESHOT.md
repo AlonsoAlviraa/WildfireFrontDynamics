@@ -3,7 +3,7 @@
 > **As of:** 2026-08-12  
 > **Plan:** `docs/PLAN_ML_LEAP_2026-08-12.md` (pack E1)  
 > **Product:** `clm_ensemble_v34` · protocol `clm_holdout_test_seed42_v1`  
-> **Rails:** FREEZE_ML · never fit cal on TEST · fusion OFF · IoU ≠ ROS  
+> **Rails:** FREEZE_ML · never fit cal on TEST · fusion ON (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho · IoU ≠ ROS  
 > **Authority scorecard:** `docs/ML_PRODUCT_SCORECARD.json`
 
 One-shot de **repro / drift**, no de retrain. SKIP sin weights **≠** honesty green.
@@ -42,7 +42,7 @@ Windows PowerShell: `$env:PYTHONPATH = "."` si hace falta.
 | **Do not** `--allow-identity` on honesty/promote path | Identity cal is research-only |
 | **SKIP without weights/NPZ** | Exit 0 skip ≠ U1 pass; do not sell as green |
 | **Compare** latest vs `docs/ML_PRODUCT_SCORECARD.json` | Drift note; do not silently replace sealed numbers |
-| **No** `promote_ml_live_fusion` | fusion stays OFF |
+| **No** `promote_ml_live_fusion` from this pack | field fusion already ON via human #46; this oneshot must not flip gates |
 
 If `eval_ml_uncertainty_u1` prints `ERROR: calibrator claims fit_split=test` → **stop**. Do not “fix” by refitting.
 

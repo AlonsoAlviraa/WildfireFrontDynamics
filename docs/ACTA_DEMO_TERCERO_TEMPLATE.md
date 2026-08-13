@@ -48,8 +48,8 @@ Marcar lo **realmente** enseñado (no lo ideal):
 | 5 | Open multi-CCAA (Níjar / Caminomorisco o portal) | [ ] |
 | 6 | Decision Card GO/HOLD/ABSTAIN + contraste `field_ops` vs `research_open` | [ ] |
 | 7 | Fuel / AEMET / envelope **solo contexto** (peso 0 táctico en Card) | [ ] |
-| 8 | Kill list verbal (sin inventar ROS, sin fusión field_ops live) | [ ] |
-| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **OFF**, GO_Q **partial**) | [ ] |
+| 8 | Kill list verbal (sin inventar ROS; fusion ON ≠ GO_Q complete ≠ despacho) | [ ] |
+| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **ON** cap 0.20 / abstain 0.45, GO_Q **partial**) | [ ] |
 | 10 | Ask / next step con el tercero | [ ] |
 
 **Artefactos abiertos en la sesión (paths o capturas):**
@@ -69,15 +69,15 @@ Marcar lo **realmente** enseñado (no lo ideal):
 - [ ] Hellín: 2ª ancla solo si **confirmed** en SSOT; ratio in-band posible **sin** grade A
 - [ ] ML CLM v34: métricas de **laboratorio**; no orden de mando
 - [ ] Open multi-CCAA: perímetros institucionales donde existen (REDIAM/RAI/CEMS) — proxy ≠ cadastro nacional
-- [ ] `field_ops`: fusión ML live **OFF** a propósito
+- [ ] `field_ops`: fusión ML live **ON** (peso máx 0.20, abstain_below 0.45) · **≠** despacho táctico · GO_Q partial
 - [ ] Envelope / fuel: **no** claim táctico de despacho
 - [ ] `ml_product_go=true` **lab only** (honesto) — **nunca** como field GO
 
 ### Prohibido (y no se afirmó)
 
 - [ ] No se inventó **ROS / Vp / ha** sin fuente
-- [ ] No se afirmó que **field_ops fusiona ML live**
-- [ ] No se vendió **`ml_product_go` lab como field GO / fusion ON** (el token lab honest sí es permitido)
+- [ ] No se vendió **fusion ON como GO_Q complete / despacho táctico**
+- [ ] No se vendió **`ml_product_go` lab como field GO** (el token lab honest sí es permitido)
 - [ ] No se recalibró **k único** Tobarra(7) + Hellín(50) en silencio
 - [ ] No se presentó hull FIRMS como **área quemada oficial**
 - [ ] No se dijo “apagamos incendios con IA” / “99 % de precisión del fuego” / silent-GO ≤1e-6

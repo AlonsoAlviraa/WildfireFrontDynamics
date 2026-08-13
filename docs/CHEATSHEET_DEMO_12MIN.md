@@ -63,7 +63,7 @@ Panel **V&V eng** (`data-marker="vv-scorecard"`): si `work_dir` tiene `vv_scorec
 ```powershell
 python scripts/run_vv_sidecar.py --work-dir outputs/incidents/_sla_measure
 python -m wildfire_front app --fire _sla_measure --open
-# UI: panel V&V eng · eng_stub · fusion OFF · go_q_met=false
+# UI: panel V&V eng · eng_stub · fusion ON (cap 0.20 / abstain 0.45) · go_q_met=false · ≠ despacho
 ```
 
 ```powershell

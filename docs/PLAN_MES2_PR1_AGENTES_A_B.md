@@ -1,6 +1,7 @@
 # Mes 2 — PR1 para Agentes A y B (humanos)
 
 **Ventana:** 2026-09-12 → 2026-10-11 (después del plan 30d #20)  
+> **Historical Mes2 brief.** Living gates: `docs/CURRENT_STATE.md` — fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho.
 **Repo:** AlonsoAlviraa/WildfireFrontDynamics · tip `main` post-#19 SPA + #22 operator  
 **Quién:** compañeros humanos **A** (Product Surface) y **B** (Platform & Data Honesty) — **no** bots Grok.  
 **SSOT previa:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md` · `docs/CURRENT_STATE.md`

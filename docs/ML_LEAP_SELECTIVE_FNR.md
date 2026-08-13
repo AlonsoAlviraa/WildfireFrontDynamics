@@ -3,7 +3,7 @@
 > **As of:** 2026-08-12  
 > **Plan:** `docs/PLAN_ML_LEAP_2026-08-12.md` (pack E1b)  
 > **Product:** `clm_ensemble_v34` · protocol `clm_holdout_test_seed42_v1`  
-> **Rails:** FREEZE_ML · fusion OFF · IoU ≠ ROS · no despacho táctico  
+> **Rails:** FREEZE_ML · fusion ON (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho · IoU ≠ ROS  
 > **Claims:** `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md` (L1–L8)  
 > **Sealed card:** `docs/ML_PRODUCT_SCORECARD.json`  
 > **Helpers:** `patch_miss_rate_at_coverage` · `fnr_proxy_at_budget` in `wildfire_front/ml/reliability_metrics.py`
@@ -119,7 +119,7 @@ Reglas **cualitativas** (no son gates de producto; no flipan GO_Q / fusion / GO_
 |-----------------------------------|---------------|-------|
 | No `beats_random` **o** ECE alto y miss_rate no medido / alto **o** identity cal | **ABSTAIN** | Inventar GO |
 | `beats_random` pero miss_rate alto o fuentes débiles | **HOLD** | Despacho / ROS |
-| `beats_random` y miss_rate aceptable **y** política lo permite | **GO** = apoyo a decisión | field_ops fusion ON · táctico |
+| `beats_random` y miss_rate aceptable **y** política lo permite | **GO** = apoyo a decisión | despacho táctico · fusion ON = GO_Q complete |
 
 `field_ops` sigue **más estricto** (`config/decision_policies.json`). Lab `research_open` no es sala.
 
@@ -166,6 +166,6 @@ Si no hay weights/NPZ: `E1b SKIP: no weights — not honesty green`.
 
 ```bash
 python scripts/check_release_flags.py
-# expect PASS; GO_Q partial; fusion OFF
+# expect PASS; GO_Q partial; fusion ON
 pytest tests/test_ml_leap_e1b.py tests/test_ml_leap_request_data.py tests/test_data_anchor_honesty.py -q
 ```
