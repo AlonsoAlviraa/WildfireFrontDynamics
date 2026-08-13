@@ -33,6 +33,30 @@ def _rel(p: Path) -> str:
         return str(p).replace("\\", "/")
 
 
+def snapshot_field_ops_fusion() -> str:
+    """Same source as check_release_flags / catalog rail. Fail-closed OFF."""
+    try:
+        from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+        rail = str(field_ops_ml_live_fusion_rail()).upper()
+        if rail in {"ON", "OFF"}:
+            return rail
+    except Exception:
+        pass
+    stamp_path = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    try:
+        stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+        rails = stamp.get("rails") or {}
+        fusion = str(rails.get("field_ops_fusion") or "").upper()
+        if fusion in {"ON", "OFF"}:
+            return fusion
+        if stamp.get("field_ops_allow_ml_live_in_fusion") is True:
+            return "ON"
+    except (OSError, json.JSONDecodeError, TypeError, AttributeError):
+        pass
+    return "OFF"
+
+
 def _run(cmd: list[str]) -> tuple[int, str]:
     env = {**os.environ, "PYTHONPATH": str(ROOT)}
     proc = subprocess.run(
@@ -47,7 +71,16 @@ def _run(cmd: list[str]) -> tuple[int, str]:
     return proc.returncode, out
 
 
-def build_invite_md(*, when_hint: str) -> str:
+def build_invite_md(*, when_hint: str, fusion: str) -> str:
+    fusion = str(fusion or "OFF").upper()
+    if fusion == "ON":
+        fusion_title = "fusion ON ≠ despacho"
+        fusion_kill = (
+            "No vender fusion ON (cap 0.20 / abstain 0.45) como GO_Q / despacho / field GO"
+        )
+    else:
+        fusion_title = "fusion OFF"
+        fusion_kill = "No field_ops ML live fusion ON"
     return f"""# Invitación calendario — Demo WFD 12 min (H1 / GO_Q)
 
 > **Copia/pega a Google Calendar / Outlook.**  
@@ -58,7 +91,7 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 ```
 
 ## Título
-WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
+WildfireFrontDynamics — demo decisión 12 min (HITL, {fusion_title})
 
 ## Cuándo (propuesta)
 {when_hint}
@@ -74,7 +107,7 @@ WildfireFrontDynamics — demo decisión 12 min (HITL, fusion OFF)
 
 | Min | Bloque |
 |----:|--------|
-| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **OFF** · ml_product_go **lab only** · ABSTAIN = feature |
+| 0–1 | Rails en voz alta: GO_MES true · GO_Q partial · fusion **{fusion}** · ml_product_go **lab only** · ABSTAIN = feature |
 | 1–4 | Ver multi-CCAA (3 contratos) |
 | 4–6 | Callarse (pilot honesty / field_ops se calla) |
 | 6–9 | Decision Card + explain |
@@ -94,7 +127,7 @@ python -m wildfire_front operator checklist
 
 ## Kill list verbal (obligatorio)
 - No ROS inventado  
-- No field_ops ML live fusion ON  
+- {fusion_kill}  
 - No vender Tobarra LOFO ~0.48 como producto de campo  
 - No “apagamos incendios con IA”
 
@@ -117,7 +150,17 @@ def main(argv: list[str] | None = None) -> int:
         default=3,
         help="Suggested start offset in days from now (default 3)",
     )
+    ap.add_argument(
+        "--out-dir",
+        type=Path,
+        default=None,
+        help="Write invite + session JSON here (default: docs/). Use a temp dir in tests.",
+    )
     args = ap.parse_args(argv)
+    fusion = snapshot_field_ops_fusion()
+    out_dir = Path(args.out_dir).resolve() if args.out_dir else (ROOT / "docs")
+    out_json = out_dir / "H1_DEMO_SESSION_READY.json"
+    invite_md = out_dir / "H1_CALENDAR_INVITE.md"
 
     now = datetime.now(UTC)
     when = (now + timedelta(days=max(1, args.when_days))).replace(
@@ -225,16 +268,16 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
 
-    invite = build_invite_md(when_hint=when_hint)
-    INVITE_MD.parent.mkdir(parents=True, exist_ok=True)
-    INVITE_MD.write_text(invite, encoding="utf-8")
+    invite = build_invite_md(when_hint=when_hint, fusion=fusion)
+    invite_md.parent.mkdir(parents=True, exist_ok=True)
+    invite_md.write_text(invite, encoding="utf-8")
 
     # eng_session_ready requires measured refuse-PENDING (exit 2). Does not flip GO_Q.
     dry_ok = dry.get("skipped") or dry.get("ok")
     eng_ready = bool(
         dry_ok
         and refuse_verified
-        and INVITE_MD.is_file()
+        and invite_md.is_file()
         and (CHEATSHEET.is_file() or RUNBOOK.is_file())
     )
 
@@ -249,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
         "artifacts": {
             "cheatsheet": _rel(CHEATSHEET),
             "runbook": _rel(RUNBOOK),
-            "calendar_invite": _rel(INVITE_MD),
+            "calendar_invite": _rel(invite_md),
             "acta_draft": _rel(DRAFT) if DRAFT.is_file() else None,
             "record_cli": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
             "b4_b5_calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md",
@@ -265,17 +308,17 @@ def main(argv: list[str] | None = None) -> int:
             "GO_MES": True,
             "GO_Q": "partial",
             "ml_product_go": "true_lab_only",
-            "field_ops_fusion": "OFF",
+            "field_ops_fusion": fusion,
         },
     }
-    OUT_JSON.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    out_json.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     print(
         json.dumps(
             {
                 "ok": eng_ready,
-                "session": _rel(OUT_JSON),
-                "invite": _rel(INVITE_MD),
+                "session": _rel(out_json),
+                "invite": _rel(invite_md),
                 "go_q_met": False,
             },
             indent=2,
