@@ -1,7 +1,7 @@
 # CURRENT_STATE — WildfireFrontDynamics
 
 > **SSOT for release flags** (`scripts/check_release_flags.py`)  
-> **As of:** 2026-08-13 (1M S1–S4 eng half · H1 slot **not_booked** · fusion ON · GO_Q partial · #39 merged · SPA fusion chip #52)  
+> **As of:** 2026-08-13 (1M S1–S4 eng half · H1 slot **not_booked** · fusion ON · GO_Q partial · CLI #51 · docs #53 · SPA fusion chip #52)  
 > **Companion stamp:** `docs/ML_PRODUCT_GO_STATUS.json`  
 > **Bottlenecks:** `docs/BOTTLENECKS_B1_B6_STATUS.md`  
 > **Anchors SSOT:** `docs/DATA_ANCHOR_SSOT.md` + `data/infocam_anchors.json`  
@@ -16,7 +16,7 @@
 
 ## One-line truth
 
-**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab) · field_ops ML fusion ON (cap 0.20 / abstain 0.45) · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · CLI/front #43 · V&V UI #45 · SPA fusion chip #52 · Mes3 plan filed.**
+**GO_MES true · GO_Q partial (H1 third-party acta) · ml_product_go true (lab) · field_ops ML fusion ON (cap 0.20 / abstain 0.45) · FREEZE_ML_AND_REQUEST_DATA · Tobarra KEEP KILL · sealed LOFO pitch ~0.79 · catalog 0.8963 provenance only · Hellín pending_external · SPA Live Ops on main (#19) · Mes2 eng shipped (#31/#32/#34/#35/#38) · CLI/front #43 · V&V UI #45 · SPA fusion chip #52 · CLI honesty #51 · docs SSOT #53 · Mes3 plan filed.**
 
 ## Gates
 
@@ -72,8 +72,7 @@
 | ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |
 | ML leap E1b selective/FNR | **Filed** — `ML_LEAP_SELECTIVE_FNR.md` (method; @50/@90 not run; no L6) |
 | IF weakness / candidate board | **Shipped** — `docs/WEAKNESS_BOARD.md` (R1–R6 / H1–H7 fail-closed; measured on-disk counts; no Vp/ha invention; no FREEZE lift / no KEEP reopen) |
-| Weakness-board SPA (read-only) | **Shipped** — `data-marker="weakness-board"`; missing JSON → honest empty; 2ª ancla hidden unless JSON `grade_a_ops_anchors>=2` **and** two confirmed cited fires |
-| PR #48 weakness board | **Open** on `feat/agent-b-weakness-board` until Tests CI green (do not merge red) |
+| Weakness-board SPA (read-only) | **Shipped** on main — `data-marker="weakness-board"`; missing JSON → honest empty; 2ª ancla hidden unless JSON `grade_a_ops_anchors>=2` **and** two confirmed cited fires. No open PR #48. |
 | Hellín/Cardoso outreach templates | **Filed, not sent** — `docs/data_campaigns/HELLIN_CARDOSO_OUTREACH/` (`sent=false`, owner=human) |
 | no-cite = no-promote | **Hardened** — `scripts/refuse_promote_without_cite.py`; H1=0 / null vp/ha/source cannot confirm; `--attempt-promote --fire-id hellin_2024` exits 1 |
 | H1 dry-run | **≠ acta** — `scripts/dry_run_h1.py` pins `go_q_met=false` · `not_third_party_acta=true` · `not_signed_acta=true` |
