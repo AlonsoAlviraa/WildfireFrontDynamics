@@ -511,28 +511,19 @@ def classify_row(
 ) -> tuple[str, str, str, str]:
     """Return honesty_class, status, blocking_gap, owner. Fail-closed."""
     pack_kind = str(inv.get("pack_kind") or "clm")
-    tif_count = int(inv["on_disk_tif_count"])
     dated = int(inv["dated_scene_count"])
-    usable = int(inv.get("usable_dated_scene_count") or 0)
 
     if fire_id in NO_USE_REASONS:
         honesty = "discard"
     elif pack_kind == "open_proxy":
         honesty = "ml_weak" if r["R1"] == 1 and r["R2"] == 1 else "proxy"
-    elif usable <= 1 and tif_count <= 1:
-        # Named historical NO_USE only (Retuerta FOV / Polán <3). A thin clone
-        # with no trees present is not a discard decision — CI must not flip
-        # Hellín pending_external → NO_USE just because rasters are gitignored.
-        if inv.get("trees_present"):
-            honesty = "discard"
-        else:
-            honesty = "ml_weak" if pack_kind == "clm" else "context_only"
     elif r["R1"] == 1 and r["R2"] == 1:
         honesty = "ml_weak"
     elif dated == 0 and not inv.get("has_geometry"):
-        honesty = "context_only" if inv.get("has_weather") else "discard"
+        # Thin clone / gitignored rasters are not a historical discard.
+        honesty = "context_only" if inv.get("has_weather") else "ml_weak"
     else:
-        honesty = "context_only"
+        honesty = "context_only" if pack_kind != "clm" else "ml_weak"
 
     r_all = all(r[k] == 1 for k in R_KEYS)
     aligned_ok = int(inv.get("aligned_tif_count") or 0) >= 3 or int(inv.get("mask_tif_count") or 0) >= 3
@@ -554,11 +545,13 @@ def classify_row(
     anchor_status = str((anchor or {}).get("status") or "").strip().lower()
     if fire_id in NO_USE_REASONS:
         status = "NO_USE"
-    elif honesty == "discard":
-        # Unnamed thin stack: never override pending_external SSOT (Hellín).
-        if anchor_status == "pending_external":
+        honesty = "discard"
+    elif honesty == "discard" and fire_id not in NO_USE_REASONS:
+        honesty = "ml_weak" if pack_kind == "clm" else "context_only"
+        if anchor_status == "confirmed" and h["H1"] == 1:
+            status = "confirmed"
+        elif anchor_status == "pending_external":
             status = "pending_external"
-            honesty = "ml_weak" if pack_kind == "clm" else "context_only"
         elif pack_kind == "open_proxy":
             status = "inventory_only"
         else:
