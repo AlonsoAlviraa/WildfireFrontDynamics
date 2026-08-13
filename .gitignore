@@ -28,6 +28,11 @@ data/fuel_map/**/*.tiff
 
 # ─── Raw real data (never commit — privacy + size) ───────────
 data/real_if/raw_dropbox/
+# Official cite drops (PDF/KMZ) — never commit bytes
+data/real_if/**/cite/
+data/real_if/cite_drops/**
+!data/real_if/cite_drops/README.md
+!data/real_if/cite_drops/.gitkeep
 
 # ─── Python ──────────────────────────────────────────────────
 __pycache__/

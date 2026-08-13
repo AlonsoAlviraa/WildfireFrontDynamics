@@ -1,0 +1,285 @@
+{
+  "schema": "wfd_if_ondisk_inventory_v1",
+  "as_of_utc": "2026-08-13T12:55:48.374759Z",
+  "hash_mode": "tree_fingerprint_path_size_plus_small_manifests",
+  "note": "Does not hash raw GeoTIFF payloads (too large; not committed). Counts are measured.",
+  "fires": [
+    {
+      "fire_id": "tobarra_20240802",
+      "on_disk_tif_count": 138,
+      "dated_scene_count": 35,
+      "usable_dated_scene_count": 35,
+      "on_disk_kmz_count": 2,
+      "aligned_tif_count": 68,
+      "mask_tif_count": 69,
+      "tree_fingerprint": "cf8185b19ae1f22e31612818b41bd0563ca834ae66a0aff13c160214965ba091",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/tobarra_20240802/align_manifest.json": "665bdc394423cb561b81198c0e8c65605321897edb4b070cffd7403345c4aa4c",
+        "data/real_if/pablo_geacam_20260730_tobarra/inventory.json": "11f129c0829c4f5d03a5a6e498d94c3bfa14e31def9569622e9db5cbbc6f00d6"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/tobarra_20240802",
+        "artifacts/tobarra_reprojected_lwir",
+        "artifacts/tobarra_lwir_masks",
+        "data/real_if/pablo_geacam_20260730_tobarra"
+      ]
+    },
+    {
+      "fire_id": "cardoso_2025",
+      "on_disk_tif_count": 488,
+      "dated_scene_count": 85,
+      "usable_dated_scene_count": 85,
+      "on_disk_kmz_count": 146,
+      "aligned_tif_count": 178,
+      "mask_tif_count": 168,
+      "tree_fingerprint": "a6708e6d9718dcadd21b5c44dca136b8dac5b1ca4981161bab2d381db3608093",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/CARDOSO/align_manifest.json": "0cdcd6f182c418b727f4679bb6d77f78a9a07cc56aadb106cf0810bf7dd8f24f"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/CARDOSO",
+        "artifacts/aligned_spatial_v1/cardoso_2025_extra_reproj",
+        "artifacts/cardoso_2025_reprojected_lwir",
+        "artifacts/cardoso_2025_lwir_masks",
+        "data/real_if/raw_dropbox/organized/CARDOSO"
+      ]
+    },
+    {
+      "fire_id": "hellin_2024",
+      "on_disk_tif_count": 152,
+      "dated_scene_count": 36,
+      "usable_dated_scene_count": 36,
+      "on_disk_kmz_count": 88,
+      "aligned_tif_count": 30,
+      "mask_tif_count": 31,
+      "tree_fingerprint": "f1a30928af05992e7e38e48cdc5e054436514a0f3e26c8b6c5742805a1ca831c",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/hellin_2024/align_manifest.json": "e230b5d0f0cb7dc1e450a9ca0d2a6ff5596b2bd7f70d103fd4b6eeefdb41d568"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/hellin_2024",
+        "artifacts/hellin_2024_reprojected_lwir",
+        "artifacts/hellin_2024_lwir_masks",
+        "data/real_if/raw_dropbox/organized/HELLIN20240719"
+      ]
+    },
+    {
+      "fire_id": "la_estrella_acom1_2024",
+      "on_disk_tif_count": 1065,
+      "dated_scene_count": 199,
+      "usable_dated_scene_count": 199,
+      "on_disk_kmz_count": 361,
+      "aligned_tif_count": 324,
+      "mask_tif_count": 343,
+      "tree_fingerprint": "ff6aeeeed579964ae6d3e1b168e2d46b0e6bc827010af25d918eaf368de427c1",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM1/align_manifest.json": "5cd7d004589b943a65cae77d477388255129d07ad7dbd19d227dc92823b19dfc"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM1",
+        "artifacts/la_estrella_acom1_2024_reprojected_lwir",
+        "artifacts/la_estrella_acom1_2024_lwir_masks",
+        "data/real_if/raw_dropbox/organized/LA_ESTRELLA_ACOM1"
+      ]
+    },
+    {
+      "fire_id": "retuerta_2025",
+      "on_disk_tif_count": 48,
+      "dated_scene_count": 10,
+      "usable_dated_scene_count": 10,
+      "on_disk_kmz_count": 16,
+      "aligned_tif_count": 14,
+      "mask_tif_count": 15,
+      "tree_fingerprint": "380b5a4dc3bafd7e4584a71893a9d36a10b120043996f740c60e9707966ef257",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/retuerta_2025/align_manifest.json": "3f215a6123c8b2ff3e90f233ef05a2801c44eeb24004602800673eb726791922"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/retuerta_2025",
+        "artifacts/retuerta_2025_reprojected_lwir",
+        "artifacts/retuerta_2025_lwir_masks",
+        "data/real_if/raw_dropbox/organized/04_09_2025_IF.RETUERTA"
+      ]
+    },
+    {
+      "fire_id": "la_estrella_acom2_2024",
+      "on_disk_tif_count": 236,
+      "dated_scene_count": 67,
+      "usable_dated_scene_count": 67,
+      "on_disk_kmz_count": 128,
+      "aligned_tif_count": 26,
+      "mask_tif_count": 30,
+      "tree_fingerprint": "57403250742a718ba147308f83038a04c7e7528c2582e669818bd03a3ad69270",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM2/align_manifest.json": "87547c3f4b26bf888fc97fc91f02527a3530ccc54b2eef2a79644bbbc68e4ec8"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM2",
+        "artifacts/la_estrella_acom2_2024_reprojected_lwir",
+        "artifacts/la_estrella_acom2_2024_lwir_masks",
+        "data/real_if/raw_dropbox/organized/LA_ESTRELLA_ACOM2"
+      ]
+    },
+    {
+      "fire_id": "brazatortas_2025",
+      "on_disk_tif_count": 57,
+      "dated_scene_count": 16,
+      "usable_dated_scene_count": 16,
+      "on_disk_kmz_count": 19,
+      "aligned_tif_count": 14,
+      "mask_tif_count": 15,
+      "tree_fingerprint": "689266672256005b4861eeb1936ba7feec3abe0680107e5a8058a0d85c769b9f",
+      "manifest_sha256": {
+        "artifacts/aligned_spatial_v1/brazatortas_2025/align_manifest.json": "e80f1fbcb7cc17d70459c519be587051874ff71bd3190a7f97a1d0236582106b"
+      },
+      "trees_present": [
+        "artifacts/aligned_spatial_v1/brazatortas_2025",
+        "artifacts/brazatortas_2025_reprojected_lwir",
+        "artifacts/brazatortas_2025_lwir_masks",
+        "data/real_if/raw_dropbox/organized/05_10_2025_IF.BRAZATORTAS"
+      ]
+    },
+    {
+      "fire_id": "polan_2025",
+      "on_disk_tif_count": 14,
+      "dated_scene_count": 9,
+      "usable_dated_scene_count": 1,
+      "on_disk_kmz_count": 13,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "0bb776fd368f89be69a3e9c56803916baa99892f8a4be43a5e8bd7fa0d1247ad",
+      "manifest_sha256": {},
+      "trees_present": [
+        "artifacts/polan_2025_reprojected_lwir",
+        "artifacts/polan_2025_lwir_masks",
+        "data/real_if/raw_dropbox/organized/13_09_2025_IF.POLAN"
+      ]
+    },
+    {
+      "fire_id": "AU_EMSR408_NSW",
+      "on_disk_tif_count": 7,
+      "dated_scene_count": 7,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "216b8a404be356b3d32b81e0774f59a82dc7163237c1c6615bed44c1e50494b9",
+      "manifest_sha256": {
+        "data/open_if/latam_au/au/AU_EMSR408_NSW/meta.json": "a3c332a083abaa325109903479094407118fad4880cd09dc3d3d2c53ab3747f7"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/au/AU_EMSR408_NSW"
+      ]
+    },
+    {
+      "fire_id": "AU_EMSR500_PERTH",
+      "on_disk_tif_count": 20,
+      "dated_scene_count": 6,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "73f4c652449f7c5cbaab2059f5afbd0f9ba8d65982184e2210b1845d54999661",
+      "manifest_sha256": {
+        "data/open_if/latam_au/au/AU_EMSR500_PERTH/meta.json": "8c85f54ee358fb00904b2e330967fd88136d5c9c384de30149874e7eec3b1247"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/au/AU_EMSR500_PERTH"
+      ]
+    },
+    {
+      "fire_id": "AU_NAFI_NT_SEASON_2023",
+      "on_disk_tif_count": 9,
+      "dated_scene_count": 6,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "1e3353c9f4abf20780a418ed20cd4357baaca7aa765b8abb0a7912b74fefc008",
+      "manifest_sha256": {
+        "data/open_if/latam_au/au/AU_NAFI_NT_SEASON_2023/meta.json": "d7289ade744e66fd05b87f952c05bb255c4a0875a04997a40000efad85046af1"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/au/AU_NAFI_NT_SEASON_2023"
+      ]
+    },
+    {
+      "fire_id": "BR_PANTANAL_2020_MAPBIOMAS",
+      "on_disk_tif_count": 9,
+      "dated_scene_count": 6,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "0495ead3ecfd07c96454085d722388b106268e4057f8693444e367a22f8a5855",
+      "manifest_sha256": {
+        "data/open_if/latam_au/br/BR_PANTANAL_2020_MAPBIOMAS/meta.json": "bd33a26e5eedaf5de734ea84f6dbcc6fe935471a02e1481623a27d2c22120d98"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/br/BR_PANTANAL_2020_MAPBIOMAS"
+      ]
+    },
+    {
+      "fire_id": "CL_EMSR647_NACIMIENTO",
+      "on_disk_tif_count": 20,
+      "dated_scene_count": 6,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "7adbf6e19b3497570792194c2f5be242f8016ed85a08170f5879070f7aa70738",
+      "manifest_sha256": {
+        "data/open_if/latam_au/cl/CL_EMSR647_NACIMIENTO/meta.json": "28d4ca362177868e415ee142449510b97b00eb6a2454686b4ef755e54f6c7f93"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/cl/CL_EMSR647_NACIMIENTO"
+      ]
+    },
+    {
+      "fire_id": "CL_EMSR715_VALPARAISO",
+      "on_disk_tif_count": 6,
+      "dated_scene_count": 6,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "9e709054759228b1695d04aca44726307b6e3ff16ca187f3ced5240a4b9dcfaf",
+      "manifest_sha256": {
+        "data/open_if/latam_au/cl/CL_EMSR715_VALPARAISO/meta.json": "4f2aa5bd4b852fcfd1898b693bc78cfbf4b20a86adcd3a87bed667c0c996c1b7"
+      },
+      "trees_present": [
+        "data/open_if/latam_au/cl/CL_EMSR715_VALPARAISO"
+      ]
+    },
+    {
+      "fire_id": "pt_firesprd",
+      "on_disk_tif_count": 0,
+      "dated_scene_count": 0,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "1c194bfd12e9955896d69724a04049270009a5afe3477584e642b2688118417e",
+      "manifest_sha256": {
+        "data/external/pt_firesprd/inventory.json": "1ca29c627c5ab97bba0ea1420f54e2c0d6b36a0fb3adb97c44a726d0bc11f237"
+      },
+      "trees_present": [
+        "data/external/pt_firesprd"
+      ]
+    },
+    {
+      "fire_id": "extremadura_rai_2025",
+      "on_disk_tif_count": 0,
+      "dated_scene_count": 0,
+      "usable_dated_scene_count": 0,
+      "on_disk_kmz_count": 0,
+      "aligned_tif_count": 0,
+      "mask_tif_count": 0,
+      "tree_fingerprint": "e48fc58fd790ad8add98bc7c37b64bc86bdb500f8d9244df8deddd588ca60602",
+      "manifest_sha256": {},
+      "trees_present": [
+        "data/open_if/extremadura_rai_2025"
+      ]
+    }
+  ]
+}

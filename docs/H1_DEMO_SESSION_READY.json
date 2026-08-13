@@ -1,18 +1,24 @@
 {
   "schema": "wfd_h1_demo_session_ready_v1",
-  "prepared_at_utc": "2026-08-10T13:42:31.496441+00:00",
+  "prepared_at_utc": "2026-08-13T14:15:23.339084+00:00",
   "product_unlock": false,
   "go_q_met": false,
+  "not_third_party_acta": true,
+  "not_signed_acta": true,
   "go_q_note": "Human third-party demo + signed acta still required",
   "eng_session_ready": true,
-  "suggested_slot_utc": "2026-08-13T10:00:00+00:00",
+  "h1_slot": "not_booked",
+  "suggested_slot_utc": "2026-08-16T10:00:00+00:00",
   "artifacts": {
     "cheatsheet": "docs/CHEATSHEET_DEMO_12MIN.md",
     "runbook": "docs/H1_GO_Q_RUNBOOK.md",
     "calendar_invite": "docs/H1_CALENDAR_INVITE.md",
     "acta_draft": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md",
     "record_cli": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
-    "b4_b5_calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md"
+    "b4_b5_calendar": "docs/B4_B5_UNBLOCK_CALENDAR.md",
+    "go_total_status": "docs/GO_TOTAL_STATUS.json",
+    "eng_checklist": "docs/H1_ENG_CHECKLIST.md",
+    "pack": "outputs/demo_third_party"
   },
   "human_next": [
     "Agendar tercero externo (copiar docs/H1_CALENDAR_INVITE.md)",
@@ -21,6 +27,17 @@
     "python scripts/record_h1_demo_complete.py --acta <acta_firmada>"
   ],
   "steps": [
+    {
+      "id": "demo_third_party_pack",
+      "ok": true,
+      "missing": [],
+      "path": "outputs/demo_third_party"
+    },
+    {
+      "id": "reliability_third_party",
+      "ok": true,
+      "path": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md"
+    },
     {
       "id": "prepare_acta_draft",
       "exit_code": null,
@@ -39,16 +56,22 @@
     },
     {
       "id": "check_release_flags",
-      "exit_code": 2,
-      "ok": false,
+      "exit_code": 0,
+      "ok": true,
       "blocking": false,
-      "tail": "status=ERROR exit=2\nerror: missing docs\\CURRENT_STATE.md"
+      "tail": "  [OK] narrative_mentions_fusion_on: CURRENT_STATE must keep field fusion ON visible\n  [OK] go_q_stamp_not_complete: stamp GO_Q='partial' (must stay partial until human acta)\n  [OK] go_q_current_state_partial: CURRENT_STATE GO_Q='partial' (must be partial; never invent true)\n  [OK] narrative_go_q_partial: CURRENT_STATE narrative must keep GO_Q partial visible"
     }
   ],
   "rails": {
     "GO_MES": true,
     "GO_Q": "partial",
     "ml_product_go": "true_lab_only",
-    "field_ops_fusion": "OFF"
-  }
+    "field_ops_fusion": "ON",
+    "GO_MES_plus": false
+  },
+  "not_claims": [
+    "not GO_Q complete",
+    "not invented tercero",
+    "fusion ON ≠ despacho táctico"
+  ]
 }

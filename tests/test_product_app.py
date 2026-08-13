@@ -300,6 +300,7 @@ def test_render_operator_front_markers():
         "go_q_met",
         "decision-log",
         "vv-scorecard",
+        "weakness-board",
     ):
         assert marker in html, f"missing front marker {marker}"
 

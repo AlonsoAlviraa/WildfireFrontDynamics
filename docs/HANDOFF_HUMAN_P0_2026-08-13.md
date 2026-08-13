@@ -89,6 +89,14 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 
 ---
 
+## Eng inventory (does **not** close this handoff)
+
+Agent B added a fail-closed board: `docs/WEAKNESS_BOARD.md` + `docs/WEAKNESS_BOARD.json` (`scripts/score_if_weakness_board.py`). It **measures** on-disk tif/dated-scene counts and scores R1–R6 / H1–H7 with unknown=0.
+
+That board does **not** complete any P0 leftover above: Hellín stays `pending_external`, Cardoso is not a 2nd grade A, H1 acta is still human, GO_Q stays **partial**, FREEZE stays, no v34 retrain.
+
+---
+
 ## Agent B already shipped (do not redo)
 
 | PR | Merge SHA | What |
@@ -96,7 +104,7 @@ python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<
 | [#47](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/47) | `ea4c7eb` | PT-FireSprd/GOFER ingest + `honesty_class` + E1 + latency; **no FREEZE lift** |
 | [#39](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/39) | `52b427e` | `sector_ros_eng_default` + tests; fusion **ON**; **not** field ROS |
 
-No third Agent B PR. No v34 retrain. No merge of #10 / secret-bearing base. No PII / FOI fills in git.
+A follow-up Agent B PR may add the weakness board (scripts/tests/docs only). It does **not** close this human P0. No v34 retrain. No merge of #10 / secret-bearing base. No PII / FOI fills in git.
 
 ## Rails snapshot (post-#47 + #39, `check_release_flags.py` **PASS** 13/13)
 

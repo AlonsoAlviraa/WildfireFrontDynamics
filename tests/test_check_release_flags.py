@@ -30,6 +30,7 @@ def test_live_repo_flags_pass():
         "go_q_current_state_partial",
         "go_mes_plus_false",
         "tobarra_keep_reopen_false",
+        "no_cite_no_promote",
     ):
         assert required in by_id, required
         assert by_id[required]["ok"], by_id[required]

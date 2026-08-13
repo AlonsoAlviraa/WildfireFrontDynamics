@@ -1,0 +1,29 @@
+{
+  "schema": "wfd_hellin_cardoso_outreach_status_v1",
+  "as_of_utc": "2026-08-13T00:00:00Z",
+  "package_dir": "docs/data_campaigns/HELLIN_CARDOSO_OUTREACH",
+  "files": [
+    "EMAIL_HELLIN_PDF_KMZ.md",
+    "EMAIL_CARDOSO_VP_HA.md",
+    "EMAIL_R4_CESSION.md",
+    "H1_SCHEDULE_NOTE.md",
+    "SEND_CHECKLIST.md",
+    "send_status.json"
+  ],
+  "sent": false,
+  "owner": "human",
+  "to_resolved": null,
+  "sent_utc": null,
+  "sent_by": null,
+  "rails": {
+    "go_q": "partial",
+    "freeze_intact": true,
+    "no_auto_send": true,
+    "invented_vp_ha": false
+  },
+  "notes": [
+    "Templates only. Do not send from engineering or CI.",
+    "sent stays false until a human logs a real send.",
+    "No .eml pretending sent."
+  ]
+}

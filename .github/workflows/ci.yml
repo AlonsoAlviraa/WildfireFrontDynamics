@@ -255,3 +255,60 @@ jobs:
       - name: Note inference skipped on PR
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
         run: echo "Inference image build skipped on PR (built only on main/tags)."
+
+  weakness-board-smoke:
+    name: Weakness board smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install pytest (unit smoke; no GDAL walk)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest numpy
+
+      - name: Board CLI --help and missing/unknown fire-id
+        env:
+          PYTHONPATH: .
+        run: |
+          python scripts/score_if_weakness_board.py --help
+          python scripts/refuse_promote_without_cite.py --help
+          python scripts/copy_cite_to_real_if.py --help
+          python scripts/dry_run_h1.py --help
+          python scripts/export_clm_audit_packs.py --help
+          set +e
+          python scripts/score_if_weakness_board.py --fire-id not_a_real_fire_xyz
+          code=$?
+          set -e
+          test "$code" -eq 1
+          set +e
+          python scripts/copy_cite_to_real_if.py
+          code=$?
+          set -e
+          test "$code" -eq 1
+          set +e
+          python scripts/refuse_promote_without_cite.py --attempt-promote --fire-id hellin_2024
+          code=$?
+          set -e
+          test "$code" -eq 1
+
+      - name: Unit smoke (board / anchors / flags / packs / cite / dry-run)
+        env:
+          PYTHONPATH: .
+        run: >
+          pytest
+          tests/test_if_weakness_board.py
+          tests/test_data_anchor_honesty.py
+          tests/test_check_release_flags.py
+          tests/test_clm_audit_packs.py
+          tests/test_copy_cite_to_real_if.py
+          tests/test_refuse_promote_without_cite.py
+          tests/test_dry_run_h1.py
+          -q
+

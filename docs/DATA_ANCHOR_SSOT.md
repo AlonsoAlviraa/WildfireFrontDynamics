@@ -49,6 +49,15 @@ Hellín IDs **H1–H7** (ML LEAP D0): see also `docs/ML_LEAP_REQUEST_DATA.md`.
 - Promoting Hellín to close a sales story or demo dry-run.
 - Treating inventory “listo ops” in `DATA_INTAKE_STATUS.md` as confirmed anchor.
 
+### No cite = no promote (W3-B)
+
+There is **no official cite today**. Engineering **must not** open a promote PR.
+
+- `scripts/refuse_promote_without_cite.py` exits **0** while only Tobarra is `confirmed`.
+- `--attempt-promote --fire-id hellin_2024` exits **1** with `error: no cite = no promote`.
+- `can_promote_to_confirmed` refuses H1=0 and null vp/ha/source. `force` never bypasses.
+- Cite bytes, if they arrive, go to gitignored `data/real_if/<fire_id>/cite/` via `scripts/copy_cite_to_real_if.py` (missing file → exit 1). Copy ≠ promote.
+
 ### After promote (human)
 
 ```bash

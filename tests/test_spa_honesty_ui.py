@@ -307,6 +307,11 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert 'data-marker="decision-log"' in html
     assert 'data-marker="vv-scorecard"' in html
     assert "paintVvScorecard" in html
+    assert 'data-marker="weakness-board"' in html
+    assert "paintWeaknessBoard" in html
+    assert payload["weakness_board"]["marker"] == "weakness-board"
+    assert payload["weakness_board"]["go_q_met"] is False
+    assert payload["weakness_board"]["invents_counts"] is False
     assert "eng_stub" in html
     assert 'data-marker="split-conf"' in html
     assert 'data-marker="split-conf-ml"' in html

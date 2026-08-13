@@ -32,6 +32,35 @@ def test_only_tobarra_confirmed_for_o1():
     assert doc.get("grade_a_requires_confirmed_anchor") is True
 
 
+def test_confirmed_with_h1_zero_or_null_fields_cannot_promote():
+    from wildfire_front.open_if.anchor_guard import can_promote_to_confirmed
+
+    ok, reasons = can_promote_to_confirmed(
+        {
+            "fire_id": "hellin_2024",
+            "vp_m_min": 50.0,
+            "area_ha": 200.0,
+            "source": "INFOCAM 2024 parte operativo",
+            "H1": 0,
+        }
+    )
+    assert ok is False
+    assert any("h1_zero_no_cite" in r for r in reasons)
+
+    ok_null, reasons_null = can_promote_to_confirmed(
+        {
+            "fire_id": "hellin_2024",
+            "vp_m_min": None,
+            "area_ha": None,
+            "source": None,
+        }
+    )
+    assert ok_null is False
+    assert any("missing_vp_m_min" in r for r in reasons_null)
+    assert any("missing_area_ha" in r for r in reasons_null)
+    assert any("missing_source" in r for r in reasons_null)
+
+
 def test_confirmed_anchors_require_numeric_and_source():
     """Schema honesty: confirmed rows must carry Vp/ha/source (no empty promote)."""
     doc = _anchors()
