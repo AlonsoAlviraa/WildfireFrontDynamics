@@ -1,0 +1,493 @@
+{
+  "schema": "wfd_external_ros_inventory_v1",
+  "pack_id": "cfsds",
+  "as_of_utc": "2026-08-13T09:58:38.610126Z",
+  "title": "Canadian Fire Spread Dataset (CFSDS)",
+  "license_id": "cc-by-4.0",
+  "license_note": "Scientific Data open descriptor; confirm on OSF/paper. Treated as CC-BY research proxy.",
+  "requested_doi": "10.17605/OSF.IO/F48RY",
+  "paper_doi": "10.1038/s41597-024-03436-4",
+  "url": "https://osf.io/f48ry/",
+  "api_url": "https://api.osf.io/v2/nodes/f48ry/files/osfstorage/",
+  "version": "v1.0_plus_osf_listing",
+  "class": "ml_weak",
+  "role": "open_daily_progression_proxy",
+  "not_official_es_cadastre": true,
+  "not_tactical_ros": true,
+  "not_product_ros": true,
+  "n_downloaded_files": 26,
+  "downloaded_bytes": 62726634,
+  "downloaded": [
+    {
+      "rel": "version_record_OSF.txt",
+      "bytes": 2041,
+      "sha256": "f531a0a8447fad69cd336521d015061eb5624e8746c8cfb4501d708556d74789",
+      "osf_id": "6854711f63943f9f5fd16601",
+      "osf_path": "/version_record_OSF.txt"
+    },
+    {
+      "rel": "R Code/CFSDS_example.R",
+      "bytes": 6857,
+      "sha256": "4faf279527c069a90e01b55fe7cdb31196642bb8a851dd2425312a81b2451a84",
+      "osf_id": "654c21c8f5503206fc8a1485",
+      "osf_path": "/R Code/CFSDS_example.R"
+    },
+    {
+      "rel": "Fire growth points/Firegrowth_pts_v1_1_2020.zip",
+      "bytes": 24337403,
+      "sha256": "b4bf929c9c70ee4e8681a2a17c491453d675469fbb84f5e7d26533f25deb1c83",
+      "osf_id": "690b8673d4d2e7bf94be380a",
+      "osf_path": "/Fire growth points/Firegrowth_pts_v1_1_2020.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2015.zip",
+      "bytes": 2054648,
+      "sha256": "55d0bb773866faf0f596a013925896055754ba40ed29dc91362ceeeea4c88326",
+      "osf_id": "690b896cde7c92a5d5be3084",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2015.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2003.zip",
+      "bytes": 1377562,
+      "sha256": "f8c0087746a915ff810b80670c1261e3adf2e7216430b6f65609a48a07a1651a",
+      "osf_id": "690b896aa38adae9049c3b36",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2003.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2002.zip",
+      "bytes": 502930,
+      "sha256": "8ff633eab8ff0d64955f901cc0dcacba0d4e4f9ac93d7b6015445ea00d08e9d9",
+      "osf_id": "690b896c096f7cf0d5e0475e",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2002.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2004.zip",
+      "bytes": 2089335,
+      "sha256": "cc8a0818b8885daa66d32c66e7d92ae51416cc4183cbcd3822399d88fd8d0ccf",
+      "osf_id": "690b896c86033b3635c1855a",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2004.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2008.zip",
+      "bytes": 592837,
+      "sha256": "b3b06fc7d13d892310be0731bd729ccf26f3181d0fed4d6eff9c687688c53e76",
+      "osf_id": "690b896c5b473ed27096c90f",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2008.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2012.zip",
+      "bytes": 1731646,
+      "sha256": "f20ba62319de1c0590035c38a1d3a6e028bb3867ba4f1664241381c5ace649bb",
+      "osf_id": "690b896ce4e0e9629ee03c12",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2012.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2005.zip",
+      "bytes": 654208,
+      "sha256": "44b627bf61b8bbc115b2041d9095cf1fee417ca91e6ca2586951e1c59a8bb1c9",
+      "osf_id": "690b896b86033b3635c18558",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2005.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2021.zip",
+      "bytes": 3116550,
+      "sha256": "62631aad5a2350cf1caed72f97c4503f322bcd81b4367825c77ffc24f8724fb9",
+      "osf_id": "690b896bb195fcc7ccc18541",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2021.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2018.zip",
+      "bytes": 1723159,
+      "sha256": "5cd96e243bb3bec6adf0db819f080ed7462baf1aea38a2aefe180793acd6ed16",
+      "osf_id": "690b896b164d193e0996cbf6",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2018.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2022.zip",
+      "bytes": 1925517,
+      "sha256": "7049f56da221fd2f57392a2edd86a4d381a769a6c89d32d6e7ee0cf69c149797",
+      "osf_id": "690b896d5b473ed27096c911",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2022.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2009.zip",
+      "bytes": 541011,
+      "sha256": "764096010a41a6c6c60359e173f885f522337e3e5def5c8fd0ed5f9bab1767bd",
+      "osf_id": "690b896b096f7cf0d5e0475a",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2009.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2007.zip",
+      "bytes": 556763,
+      "sha256": "3616a094c3329fc14a9d59259bb5993736a5b1d3f9cfb0908526d6b5e86d2f4e",
+      "osf_id": "690b896cf2eba9cee8c1901d",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2007.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2016.zip",
+      "bytes": 606948,
+      "sha256": "7a8c28e1e1a20f1b0368a8080cbbc5339b3fb155f2224c734b90f8db25110c34",
+      "osf_id": "690b896df2eba9cee8c19024",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2016.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2023.zip",
+      "bytes": 6802010,
+      "sha256": "fb3418a7bda42df7c208310ab75eb3c34da1322190934afbf728889fe287941a",
+      "osf_id": "690b896bf2eba9cee8c19014",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2023.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2013.zip",
+      "bytes": 1901648,
+      "sha256": "912abfd34a4301df860daa12370789866908d50ccddc6162302b4858f9031bc7",
+      "osf_id": "690b896cd4d2e7bf94be3afd",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2013.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2011.zip",
+      "bytes": 636679,
+      "sha256": "c6ba1f0cfbd015b971e3f48a6223b6b5f2fd827cb345dc086e460b0b1c3ea5cb",
+      "osf_id": "690b896d82b8094df8be33dd",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2011.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2024.zip",
+      "bytes": 3972006,
+      "sha256": "99cdecc243640a24da4ae996e77a367662e9dcdb15001114e3f4396a94f7e8d0",
+      "osf_id": "690b896b5b473ed27096c908",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2024.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2014.zip",
+      "bytes": 2115149,
+      "sha256": "91883309f14f51a3dfbf732e16cecf5357301d1ca4129916ca6360e1cc875ca0",
+      "osf_id": "690b896c096f7cf0d5e0475c",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2014.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2019.zip",
+      "bytes": 775877,
+      "sha256": "55a97b20655b8ba6a3c83817b898ebfc3664c0119854365fe31e2a149d8bbfea",
+      "osf_id": "690b896b3b7fa18c189c3f86",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2019.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2010.zip",
+      "bytes": 1211965,
+      "sha256": "7f4172d13f35823bf8847a0fca7b4de18f91d8f4e607ce5cb76b1b86993280be",
+      "osf_id": "690b896c80872071c596bf27",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2010.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2006.zip",
+      "bytes": 826955,
+      "sha256": "c07596e8e70cbc4b14cc08c87196dcbdc5b5ede1adac0fe7caa380c63d42cbde",
+      "osf_id": "690b896c3954a0663d9c3f29",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2006.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2020.zip",
+      "bytes": 127760,
+      "sha256": "289654c15cbbf61e2e3932bc0a8b639399ef7c8352a6f0880731f1bae03cfd35",
+      "osf_id": "690b896be4e0e9629ee03c0b",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2020.zip"
+    },
+    {
+      "rel": "Fire growth daily summaries/Firegrowth_groups_v1_1_2017.zip",
+      "bytes": 2537170,
+      "sha256": "46348459f37b22e68b0473146d858a096512652f3e47401ef6db425cd6f8dd63",
+      "osf_id": "690b896bf2eba9cee8c19016",
+      "osf_path": "/Fire growth daily summaries/Firegrowth_groups_v1_1_2017.zip"
+    }
+  ],
+  "skipped": [
+    {
+      "folder": "/Fire growth rasters/",
+      "n_files": 23,
+      "bytes_listed": 64024906,
+      "reason": "bulk_doy_rasters_not_r1_aligned_scenes; listed_not_downloaded"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2013.zip",
+      "bytes": 552881162,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2004.zip",
+      "bytes": 425363542,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2015.zip",
+      "bytes": 436246978,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2021.zip",
+      "bytes": 555375377,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2002.zip",
+      "bytes": 419444730,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2014.zip",
+      "bytes": 564691966,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2017.zip",
+      "bytes": 438595461,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2007.zip",
+      "bytes": 216827556,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2019.zip",
+      "bytes": 202667581,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2018.zip",
+      "bytes": 253972613,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2003.zip",
+      "bytes": 286733080,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2022.zip",
+      "bytes": 199424895,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2024.zip",
+      "bytes": 675595137,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2006.zip",
+      "bytes": 268598943,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2012.zip",
+      "bytes": 220309860,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2011.zip",
+      "bytes": 285122819,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2023.zip",
+      "bytes": 2013635249,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2005.zip",
+      "bytes": 237091507,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2009.zip",
+      "bytes": 96848034,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2010.zip",
+      "bytes": 443263469,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2016.zip",
+      "bytes": 158981121,
+      "reason": "over_budget_or_empty"
+    },
+    {
+      "path": "/Fire growth points/Firegrowth_pts_v1_1_2008.zip",
+      "bytes": 234405432,
+      "reason": "over_budget_or_empty"
+    }
+  ],
+  "osf_listing": {
+    "root": [
+      {
+        "kind": "folder",
+        "size": null,
+        "path": "/Fire growth rasters/",
+        "id": "6854179ee993e0295d4588fa"
+      },
+      {
+        "kind": "folder",
+        "size": null,
+        "path": "/R Code/",
+        "id": "648b7ffc6513ba00653a3916"
+      },
+      {
+        "kind": "file",
+        "size": 2041,
+        "path": "/version_record_OSF.txt",
+        "id": "6854711f63943f9f5fd16601"
+      },
+      {
+        "kind": "folder",
+        "size": null,
+        "path": "/Fire growth points/",
+        "id": "684b3ddc0288d0a7d6b7876b"
+      },
+      {
+        "kind": "folder",
+        "size": null,
+        "path": "/Fire growth daily summaries/",
+        "id": "690a34e60e2a0a648996cde8"
+      }
+    ],
+    "folder_counts": {
+      "/Fire growth rasters/": 23,
+      "/R Code/": 2,
+      "/Fire growth points/": 23,
+      "/Fire growth daily summaries/": 23
+    },
+    "raster_years": [
+      {
+        "path": "/Fire growth rasters/2013_fireDOYrasters.zip",
+        "bytes": 3687392,
+        "id": "685417b671717b0353eb70ac"
+      },
+      {
+        "path": "/Fire growth rasters/2012_fireDOYrasters.zip",
+        "bytes": 1630266,
+        "id": "685417b4e636ba8cc8ab6231"
+      },
+      {
+        "path": "/Fire growth rasters/2022_fireDOYrasters.zip",
+        "bytes": 1415378,
+        "id": "685417c6c57c0db49eeb6fa3"
+      },
+      {
+        "path": "/Fire growth rasters/2005_fireDOYrasters.zip",
+        "bytes": 1294995,
+        "id": "685417aa50d00cd2d4458b36"
+      },
+      {
+        "path": "/Fire growth rasters/2020_fireDOYrasters.zip",
+        "bytes": 165971,
+        "id": "685417c3a4441a6ad8c89ae1"
+      },
+      {
+        "path": "/Fire growth rasters/2024_fireDOYrasters.zip",
+        "bytes": 5543425,
+        "id": "685417cf50d00cd2d4458b46"
+      },
+      {
+        "path": "/Fire growth rasters/2015_fireDOYrasters.zip",
+        "bytes": 3088637,
+        "id": "685417b9f0c3cabaf1ab62cb"
+      },
+      {
+        "path": "/Fire growth rasters/2003_fireDOYrasters.zip",
+        "bytes": 1639356,
+        "id": "685417a6e993e0295d458903"
+      },
+      {
+        "path": "/Fire growth rasters/2007_fireDOYrasters.zip",
+        "bytes": 1271185,
+        "id": "685417ace993e0295d458907"
+      },
+      {
+        "path": "/Fire growth rasters/2008_fireDOYrasters.zip",
+        "bytes": 1174824,
+        "id": "685417aee636ba8cc8ab622e"
+      },
+      {
+        "path": "/Fire growth rasters/2019_fireDOYrasters.zip",
+        "bytes": 1413428,
+        "id": "685417c0a81bd291c2eb6fb8"
+      },
+      {
+        "path": "/Fire growth rasters/2011_fireDOYrasters.zip",
+        "bytes": 1790453,
+        "id": "685417b3a4a71c730d9f6496"
+      },
+      {
+        "path": "/Fire growth rasters/2017_fireDOYrasters.zip",
+        "bytes": 3317054,
+        "id": "685417be1572426516eb7055"
+      },
+      {
+        "path": "/Fire growth rasters/2004_fireDOYrasters.zip",
+        "bytes": 2605721,
+        "id": "685417aa157b88bc52c89d01"
+      },
+      {
+        "path": "/Fire growth rasters/2023_fireDOYrasters.zip",
+        "bytes": 16175009,
+        "id": "685417cd9f849586fc458b29"
+      },
+      {
+        "path": "/Fire growth rasters/2006_fireDOYrasters.zip",
+        "bytes": 1590832,
+        "id": "685417ad50d00cd2d4458b39"
+      },
+      {
+        "path": "/Fire growth rasters/2010_fireDOYrasters.zip",
+        "bytes": 2448259,
+        "id": "685417b1501741bbbf9f6599"
+      },
+      {
+        "path": "/Fire growth rasters/2009_fireDOYrasters.zip",
+        "bytes": 666497,
+        "id": "685417b0d11fd2fbeeab6077"
+      },
+      {
+        "path": "/Fire growth rasters/2016_fireDOYrasters.zip",
+        "bytes": 1102149,
+        "id": "685417bc195aefa32cc89b65"
+      },
+      {
+        "path": "/Fire growth rasters/2014_fireDOYrasters.zip",
+        "bytes": 4293164,
+        "id": "685417b71dfff39a35ab6360"
+      },
+      {
+        "path": "/Fire growth rasters/2002_fireDOYrasters.zip",
+        "bytes": 2051686,
+        "id": "685417a6a81bd291c2eb6fa4"
+      },
+      {
+        "path": "/Fire growth rasters/2021_fireDOYrasters.zip",
+        "bytes": 3821507,
+        "id": "685417c3288e4dad7a9f64b0"
+      },
+      {
+        "path": "/Fire growth rasters/2018_fireDOYrasters.zip",
+        "bytes": 1837718,
+        "id": "685417bff0c3cabaf1ab62cf"
+      }
+    ]
+  },
+  "geotiff_contract": {
+    "skipped": true,
+    "reason": "CFSDS ships yearly fire-DOY arrival rasters and point/daily summaries, not >=3 timestamped aligned GeoTIFF scenes per incident under GEOTIFF_INPUT_CONTRACT. Not product ROS."
+  },
+  "used_groups_2023": {
+    "zip": "data/external/cfsds/Fire growth daily summaries/Firegrowth_groups_v1_1_2023.zip",
+    "member": "Firegrowth_groups_v1_1_2023.csv",
+    "n_rows": 21717,
+    "n_unique_ID": 621,
+    "n_IDs_with_ge3_rows": 593,
+    "author_fields_not_used_as_product_ros": ["sprdistm", "pctgrowth", "prevgrow", "firearea"],
+    "not_product_ros": true,
+    "not_official_ha": true
+  }
+}

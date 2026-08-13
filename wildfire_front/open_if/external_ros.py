@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
@@ -243,6 +244,61 @@ def inventory_path_counts(root: Path, *, max_files: int = 64) -> dict[str, Any]:
         "n_files": n_files,
         "bytes": total,
         "sample": sample,
+    }
+
+
+def inventory_cfsds_pack(repo_root: Path) -> dict[str, Any]:
+    """Read staged CFSDS OSF inventory. Author sprdistm/firearea stay unused."""
+    inv_path = Path(repo_root) / "data" / "external" / "cfsds" / "inventory.json"
+    if not inv_path.is_file():
+        return {
+            "ok": False,
+            "status": "not_staged",
+            "reason": "data/external/cfsds/inventory.json missing",
+            "not_product_ros": True,
+        }
+    try:
+        inv = json.loads(inv_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"ok": False, "status": "unreadable", "reason": str(exc), "not_product_ros": True}
+    groups = inv.get("used_groups_2023") or {}
+    geotiff = inv.get("geotiff_contract") or {}
+    return {
+        "ok": True,
+        "status": "catalogs_staged",
+        "inventory": "data/external/cfsds/inventory.json",
+        "url": inv.get("url"),
+        "license_id": inv.get("license_id"),
+        "osf_doi": inv.get("requested_doi"),
+        "paper_doi": inv.get("paper_doi"),
+        "n_downloaded_files": inv.get("n_downloaded_files"),
+        "downloaded_bytes": inv.get("downloaded_bytes"),
+        "n_raster_years_listed_not_downloaded": len(inv.get("osf_listing", {}).get("raster_years") or []),
+        "groups_2023_n_rows": groups.get("n_rows"),
+        "groups_2023_n_fires": groups.get("n_unique_ID"),
+        "groups_2023_n_fires_ge3_days": groups.get("n_IDs_with_ge3_rows"),
+        "geotiff_skipped": True,
+        "skip_reason": geotiff.get("reason"),
+        "used_as": "catalog_plus_2023_groups_count",
+        "not_product_ros": True,
+        "not_official_es_cadastre": True,
+    }
+
+
+def inventory_nirops_mendeley() -> dict[str, Any]:
+    """Honest skip: Mendeley 95rj5d379g has no unauthenticated file list."""
+    return {
+        "ok": False,
+        "status": "not_run",
+        "dataset": "95rj5d379g",
+        "doi": "10.17632/95rj5d379g.1",
+        "url": "https://data.mendeley.com/datasets/95rj5d379g/1",
+        "reason": (
+            "Mendeley public-api /datasets/95rj5d379g/files returned HTTP 400; "
+            "/1/files returned 404; api.mendeley.com/datasets/.../files returned "
+            "401 oauth/NOT_AUTHORIZED. No unauthenticated file URL. Not downloaded."
+        ),
+        "not_product_ros": True,
     }
 
 

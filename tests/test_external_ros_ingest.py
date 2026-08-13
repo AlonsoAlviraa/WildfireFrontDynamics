@@ -14,7 +14,9 @@ from wildfire_front.open_if.external_ros import (
     PACK_CATALOG,
     build_zip_inventory,
     inventory_caldor_kml,
+    inventory_cfsds_pack,
     inventory_ndws_kaggle_proxy,
+    inventory_nirops_mendeley,
     inventory_path_counts,
     parse_gofer_fire_catalog,
     write_pack_readme,
@@ -318,6 +320,46 @@ def test_path_counts_and_ndws_inventory(tmp_path: Path) -> None:
     assert rec["not_clm_v34_retrain"] is True
     assert rec["documentation_pdf_bytes"] == 9
     assert rec["proxy"]["n_files"] == 1
+
+
+def test_cfsds_inventory_missing_and_staged(tmp_path: Path) -> None:
+    missing = inventory_cfsds_pack(tmp_path)
+    assert missing["ok"] is False
+    assert missing["status"] == "not_staged"
+    dest = tmp_path / "data" / "external" / "cfsds"
+    dest.mkdir(parents=True)
+    (dest / "inventory.json").write_text(
+        json.dumps(
+            {
+                "license_id": "cc-by-4.0",
+                "requested_doi": "10.17605/OSF.IO/F48RY",
+                "paper_doi": "10.1038/s41597-024-03436-4",
+                "url": "https://osf.io/f48ry/",
+                "n_downloaded_files": 2,
+                "downloaded_bytes": 100,
+                "osf_listing": {"raster_years": [{"path": "a.zip"}, {"path": "b.zip"}]},
+                "geotiff_contract": {"reason": "not aligned scenes"},
+                "used_groups_2023": {
+                    "n_rows": 21717,
+                    "n_unique_ID": 621,
+                    "n_IDs_with_ge3_rows": 593,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    rec = inventory_cfsds_pack(tmp_path)
+    assert rec["ok"] is True
+    assert rec["groups_2023_n_fires"] == 621
+    assert rec["n_raster_years_listed_not_downloaded"] == 2
+    assert rec["not_product_ros"] is True
+
+
+def test_nirops_skip_is_honest() -> None:
+    rec = inventory_nirops_mendeley()
+    assert rec["ok"] is False
+    assert rec["status"] == "not_run"
+    assert "401" in rec["reason"]
 
 
 def test_live_flags_untouched() -> None:

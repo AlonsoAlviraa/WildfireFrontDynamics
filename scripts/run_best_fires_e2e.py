@@ -20,7 +20,9 @@ from check_release_flags import evaluate as evaluate_flags  # noqa: E402
 
 from wildfire_front.open_if.external_ros import (  # noqa: E402
     inventory_caldor_kml,
+    inventory_cfsds_pack,
     inventory_ndws_kaggle_proxy,
+    inventory_nirops_mendeley,
     utc_now,
 )
 from wildfire_front.open_if.latam_au import (  # noqa: E402
@@ -107,6 +109,8 @@ def _write_report_md(report: dict, dest: Path) -> None:
     caldor = report.get("firebench_caldor") or {}
     tobarra = report.get("tobarra") or {}
     ndws = report.get("ndws_kaggle_proxy") or {}
+    cfsds = report.get("cfsds") or {}
+    nirops = report.get("nirops") or {}
     rails = report.get("rails") or {}
     cmds = report.get("commands") or []
     lines = [
@@ -179,6 +183,23 @@ def _write_report_md(report: dict, dest: Path) -> None:
         f"- hourly fireProg: ok={gofer.get('hourly_ok')} n_records={gofer.get('n_hourly_records')} "
         f"n_fires_r1_hourly={gofer.get('n_fires_r1_hourly')}",
         f"- GeoTIFF contract: **skipped** — {gofer.get('skip_reason')}",
+        "",
+        "## CFSDS (OSF catalogs downloaded + used as row counts)",
+        "",
+        f"- status: **{cfsds.get('status')}** files={cfsds.get('n_downloaded_files')} "
+        f"bytes={cfsds.get('downloaded_bytes')}",
+        f"- OSF DOI: `{cfsds.get('osf_doi')}` paper: `{cfsds.get('paper_doi')}`",
+        f"- 2023 daily groups: rows={cfsds.get('groups_2023_n_rows')} "
+        f"fires={cfsds.get('groups_2023_n_fires')} "
+        f"fires_ge3_days={cfsds.get('groups_2023_n_fires_ge3_days')}",
+        f"- GeoTIFF contract: **skipped** — {cfsds.get('skip_reason')}",
+        f"- DOY rasters listed not downloaded: {cfsds.get('n_raster_years_listed_not_downloaded')}",
+        "- Author sprdistm/firearea/pctgrowth: counted as dataset attributes only — **not product ROS**",
+        "",
+        "## NIROPS Mendeley 95rj5d379g",
+        "",
+        f"- status: **{nirops.get('status')}**",
+        f"- reason: {nirops.get('reason')}",
         "",
         "## FireBench Caldor 2021 (already on disk; used as KML inventory)",
         "",
@@ -279,6 +300,8 @@ def main(argv: list[str] | None = None) -> int:
         ROOT / "data" / "external" / "firebench" / "caldor_2021" / "v2026.1" / "kml"
     )
     ndws = inventory_ndws_kaggle_proxy(ROOT)
+    cfsds = inventory_cfsds_pack(ROOT)
+    nirops = inventory_nirops_mendeley()
 
     tobarra_src = ROOT / "data" / "real_if" / "pablo_geacam_20260730_tobarra"
     tobarra_out = OUT / "tobarra_pablo_inventory.csv"
@@ -363,12 +386,12 @@ def main(argv: list[str] | None = None) -> int:
             "data/external/wildfirespreadts/ndws_kaggle_proxy",
             "data/real_if/pablo_geacam_20260730_tobarra (inventory only; no KEEP reopen)",
         ],
+        "cfsds": cfsds,
+        "nirops": nirops,
         "cfsds_nirops": {
-            "status": "not_run",
-            "reason": (
-                "PT-FireSprd + GOFER downloads succeeded; extra CFSDS/NIROPS "
-                "not started this pass (time box; two CC-BY packs already staged)."
-            ),
+            "cfsds": cfsds.get("status"),
+            "nirops": nirops.get("status"),
+            "reason_nirops": nirops.get("reason"),
         },
         "ndws_kaggle_proxy": ndws,
         "not_run": [
@@ -376,8 +399,8 @@ def main(argv: list[str] | None = None) -> int:
             "Tobarra KEEP reopen",
             "Hellín promote pending_external → confirmed",
             "PR #10 / secret bases",
-            "CFSDS (Barber 2024 / OSF) download",
-            "NIROPS Mendeley 95rj5d379g download",
+            "CFSDS yearly fire-DOY rasters (listed on OSF; not downloaded this pass)",
+            "NIROPS Mendeley 95rj5d379g download (no unauthenticated file list)",
             "WildfireSpreadTS full 48 GB zip",
         ],
         "not_claims": [
@@ -386,7 +409,7 @@ def main(argv: list[str] | None = None) -> int:
             "not tactical dispatch",
             "not official ES cadastre / O2",
             "not invented Vp/ha/IoU/ROS",
-            "not product ROS from PT-FireSprd L2/L3 or GOFER farea",
+            "not product ROS from PT-FireSprd L2/L3, GOFER farea, or CFSDS sprdistm",
             "not Hellín confirmed",
         ],
     }
