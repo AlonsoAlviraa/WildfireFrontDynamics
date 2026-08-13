@@ -1,7 +1,8 @@
-"""SPA honesty UI helpers (Agent A): uncertainty bar, H1, SR, decision-log, V&V read.
+"""SPA honesty UI helpers: uncertainty bar, H1, SR, decision-log, V&V, weakness board.
 
-Pure payload builders — no fusion ON, never invent GO_Q=true, never invent backend ACK.
+Pure payload builders — never invent GO_Q=true, never invent backend ACK.
 Uncertainty bar is conf-only (existing confidence_pred) — never ROS / never invented scores.
+Weakness board is read-only JSON — never invent counts / Vp/ha / 2nd grade-A.
 """
 
 from __future__ import annotations
@@ -547,6 +548,245 @@ def load_vv_scorecard_surface(
         "note": (
             "Sidecar #34 vv_scorecard.json (lectura) · eng_stub · "
             "no field IoU/ROS/grade · no inventa GO_Q · fusion ON · no es despacho"
+        ),
+        "field_ops_ml_live_fusion": _fusion_rail(),
+    }
+
+
+WEAKNESS_BOARD_REL = Path("docs") / "WEAKNESS_BOARD.json"
+_SECOND_ANCHOR_HIDDEN_COPY = "1 ancla grade-A (Tobarra) · no inventar 2ª"
+
+
+def _cited_number(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    num = float(value)
+    if not math.isfinite(num) or num <= 0:
+        return None
+    return num
+
+
+def _confirmed_cited_fires(board: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    fires = board.get("fires")
+    if not isinstance(fires, list):
+        return rows
+    for row in fires:
+        if not isinstance(row, dict):
+            continue
+        status = str(row.get("status") or "").strip().lower()
+        astatus = str(row.get("anchor_status") or "").strip().lower()
+        if status != "confirmed" and astatus != "confirmed":
+            continue
+        vp = _cited_number(row.get("vp_m_min_cited"))
+        ha = _cited_number(row.get("area_ha_cited"))
+        if vp is None or ha is None:
+            continue
+        rows.append(row)
+    return rows
+
+
+def second_anchor_surface(board_json: dict[str, Any] | None) -> dict[str, Any]:
+    """W3-A: show 2nd confirmed anchor only if JSON summary *and* rows agree.
+
+    Fail-closed: a lying ``grade_a_ops_anchors >= 2`` with only one confirmed
+    cited fire stays hidden. Never invent a 2nd grade-A.
+    """
+    hidden = {
+        "visible": False,
+        "n_confirmed_cited": 0,
+        "grade_a_ops_anchors": None,
+        "copy": _SECOND_ANCHOR_HIDDEN_COPY,
+        "fires": [],
+        "invents_second_anchor": False,
+    }
+    if not isinstance(board_json, dict):
+        return hidden
+    summary = board_json.get("summary")
+    summary_d = summary if isinstance(summary, dict) else {}
+    try:
+        grade_a = int(summary_d.get("grade_a_ops_anchors") or 0)
+    except (TypeError, ValueError):
+        grade_a = 0
+    confirmed = _confirmed_cited_fires(board_json)
+    hidden["n_confirmed_cited"] = len(confirmed)
+    hidden["grade_a_ops_anchors"] = grade_a
+    if grade_a < 2 or len(confirmed) < 2:
+        return hidden
+    shown = []
+    for row in confirmed:
+        shown.append(
+            {
+                "fire_id": row.get("fire_id"),
+                "status": row.get("status"),
+                "vp_m_min_cited": _cited_number(row.get("vp_m_min_cited")),
+                "area_ha_cited": _cited_number(row.get("area_ha_cited")),
+            }
+        )
+    return {
+        "visible": True,
+        "n_confirmed_cited": len(confirmed),
+        "grade_a_ops_anchors": grade_a,
+        "copy": f"{len(confirmed)} anclas grade-A confirmadas (cite)",
+        "fires": shown,
+        "invents_second_anchor": False,
+    }
+
+
+def _empty_weakness_board_surface(*, note: str | None = None) -> dict[str, Any]:
+    """Honest empty / missing board — never invent counts, Vp/ha, or 2nd grade-A."""
+    return {
+        "schema": "wfd_if_weakness_board_ui_v1",
+        "marker": "weakness-board",
+        "mode": "sin_board",
+        "source": "sin_board",
+        "path_rel": None,
+        "empty": True,
+        "n_fires": None,
+        "n_confirmed": None,
+        "n_ml_strong": None,
+        "n_no_use": None,
+        "grade_a_ops_anchors": None,
+        "go_q": "partial",
+        "go_q_met": False,
+        "field_ops_ml_fusion": "ON",
+        "hellin_status": None,
+        "freeze_ml": True,
+        "invented_vp_ha": False,
+        "second_anchor": second_anchor_surface(None),
+        "fires": [],
+        "invents_counts": False,
+        "invents_vp_ha": False,
+        "invents_ml_strong": False,
+        "note": note
+        or (
+            "Sin docs/WEAKNESS_BOARD.json · no inventa n_fires/n_confirmed/"
+            "n_ml_strong/grade_a · fusion ON · GO_Q partial · no es despacho"
+        ),
+        "field_ops_ml_live_fusion": _fusion_rail(),
+    }
+
+
+def _int_or_none(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def load_weakness_board_surface(
+    *,
+    repo_root: Path | None = None,
+    board_path: Path | None = None,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    """W1-A / W3-A: read-only map of ``docs/WEAKNESS_BOARD.json`` → SPA.
+
+    Allowlisted under repo_root (or ``base``). Missing/unreadable → honest empty.
+    Never mutates disk, never invents counts / Vp/ha / 2nd grade-A / GO_Q.
+    """
+    from wildfire_front.product.path_sandbox import (
+        PathNotAllowedError,
+        exists_file,
+        is_under,
+        read_json,
+        realpath,
+    )
+
+    root = Path(repo_root) if repo_root is not None else Path.cwd()
+    allow = Path(base) if base is not None else root
+    path = Path(board_path) if board_path is not None else (root / WEAKNESS_BOARD_REL)
+
+    try:
+        allow_real = realpath(allow)
+        path_real = realpath(path)
+    except OSError:
+        return _empty_weakness_board_surface(
+            note="path ilegible · no inventa conteos · fusion ON · GO_Q partial"
+        )
+
+    if not is_under(path_real, allow_real):
+        return _empty_weakness_board_surface(
+            note=(
+                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · "
+                "fusion ON · GO_Q partial"
+            ),
+        )
+    if not exists_file(path_real):
+        return _empty_weakness_board_surface()
+
+    try:
+        raw = read_json(path_real, roots=[allow_real])
+    except FileNotFoundError:
+        return _empty_weakness_board_surface()
+    except PathNotAllowedError:
+        return _empty_weakness_board_surface(
+            note=(
+                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · "
+                "fusion ON · GO_Q partial"
+            ),
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, TypeError):
+        return _empty_weakness_board_surface(
+            note=(
+                "Error leyendo WEAKNESS_BOARD.json · no inventa conteos/Vp/ha · "
+                "fusion ON · GO_Q partial"
+            ),
+        )
+
+    if not isinstance(raw, dict) or raw.get("schema") != "wfd_if_weakness_board_v1":
+        return _empty_weakness_board_surface(
+            note="schema inválido · no inventa conteos · fusion ON · GO_Q partial"
+        )
+
+    summary = raw.get("summary") if isinstance(raw.get("summary"), dict) else {}
+    rails = raw.get("rails") if isinstance(raw.get("rails"), dict) else {}
+    fires_in = raw.get("fires") if isinstance(raw.get("fires"), list) else []
+    fires: list[dict[str, Any]] = []
+    for row in fires_in:
+        if not isinstance(row, dict):
+            continue
+        fires.append(
+            {
+                "fire_id": row.get("fire_id"),
+                "honesty_class": row.get("honesty_class"),
+                "status": row.get("status"),
+                "use_flag": row.get("use_flag"),
+                "blocking_gap": row.get("blocking_gap"),
+                "vp_m_min_cited": _cited_number(row.get("vp_m_min_cited")),
+                "area_ha_cited": _cited_number(row.get("area_ha_cited")),
+            }
+        )
+    hellin = next((f for f in fires if f.get("fire_id") == "hellin_2024"), None)
+    hellin_status = rails.get("hellin_status_ssot") or (hellin or {}).get("status")
+    return {
+        "schema": "wfd_if_weakness_board_ui_v1",
+        "marker": "weakness-board",
+        "mode": "board_read",
+        "source": "weakness_board_json",
+        "path_rel": "docs/WEAKNESS_BOARD.json",
+        "empty": False,
+        "n_fires": _int_or_none(summary.get("n_fires")),
+        "n_confirmed": _int_or_none(summary.get("n_confirmed")),
+        "n_ml_strong": _int_or_none(summary.get("n_ml_strong")),
+        "n_no_use": _int_or_none(summary.get("n_no_use")),
+        "grade_a_ops_anchors": _int_or_none(summary.get("grade_a_ops_anchors")),
+        "go_q": rails.get("go_q") or "partial",
+        "go_q_met": False,
+        "field_ops_ml_fusion": rails.get("field_ops_ml_fusion") or "ON",
+        "hellin_status": hellin_status,
+        "freeze_ml": bool(rails.get("freeze_ml", True)),
+        "invented_vp_ha": False,
+        "second_anchor": second_anchor_surface(raw),
+        "fires": fires,
+        "invents_counts": False,
+        "invents_vp_ha": False,
+        "invents_ml_strong": False,
+        "note": (
+            "docs/WEAKNESS_BOARD.json (lectura) · no POST · no promote · "
+            "no inventa Vp/ha · fusion ON · GO_Q partial · no es despacho"
         ),
         "field_ops_ml_live_fusion": _fusion_rail(),
     }

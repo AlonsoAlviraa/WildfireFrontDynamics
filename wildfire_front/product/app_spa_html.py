@@ -238,6 +238,11 @@ body.mode-advanced .simp{display:none!important}
 .vv-scorecard .vv-status{font-family:var(--mono);font-size:10px;color:var(--local);word-break:break-all}
 .vv-scorecard .vv-meta{font-size:10px;color:var(--faint);margin-top:4px;line-height:1.35}
 .vv-scorecard .vv-note{font-size:9px;color:var(--faint);margin-top:4px}
+.weakness-board .wb-fires{margin-top:6px;overflow:auto;max-height:160px}
+.weakness-board table{width:100%;border-collapse:collapse;font-size:9px;font-family:var(--mono)}
+.weakness-board th,.weakness-board td{text-align:left;padding:2px 4px;border-bottom:1px solid var(--line);color:var(--muted)}
+.weakness-board th{color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+.weakness-board .wb-second{margin-top:6px;font-size:10px;color:var(--hold)}
 /* A5 split conf: ML conf ≠ ROS conf */
 .split-conf{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 .split-conf .sc-banner{
@@ -507,6 +512,16 @@ def _shell() -> str:
         <div class="vv-note" id="vv-note">lectura #34 · no scores de campo · no es despacho táctico</div>
       </div>
 
+      <div class="vv-scorecard weakness-board" id="weakness-board" data-marker="weakness-board" aria-label="Tablero IF (lectura)">
+        <b>Tablero IF (lectura)</b>
+        <div class="vv-status" id="wb-summary">sin tablero WEAKNESS_BOARD.json</div>
+        <div class="vv-meta" id="wb-rails">GO_Q partial · fusion ON · FREEZE · no inventar Vp/ha</div>
+        <div class="vv-meta" id="wb-hellin">Hellín: —</div>
+        <div class="wb-second" id="wb-second" hidden>1 ancla grade-A (Tobarra) · no inventar 2ª</div>
+        <div class="wb-fires" id="wb-fires"></div>
+        <div class="vv-note" id="wb-note">lectura · no POST · no promote · no es despacho</div>
+      </div>
+
       <div class="split-conf" id="split-conf" data-marker="split-conf" aria-label="Confianza ML vs ROS">
         <div class="sc-banner" id="sc-banner" data-marker="split-conf-banner">Conf. ML ≠ Conf. ROS · no es despacho táctico</div>
         <div class="sc-box ml" data-marker="split-conf-ml">
@@ -628,6 +643,7 @@ const srLadder = P.sr_ladder || {};
 const splitConf = P.split_conf || {};
 let decisionLog = P.decision_log || {};
 const vvScorecard = P.vv_scorecard || {};
+const weaknessBoard = P.weakness_board || {};
 let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
@@ -1212,6 +1228,7 @@ function applyHero(h) {
   // A4/A8/PR2-A decision-log surface (real #31 sidecar or honest empty)
   paintDecisionLog();
   paintVvScorecard();
+  paintWeaknessBoard();
   renderH1Eng();
   renderSrLadder();
 }
@@ -1239,6 +1256,95 @@ function paintVvScorecard() {
   }
   if (noteEl) {
     noteEl.textContent = vv.note || 'lectura · no scores de campo · no es despacho';
+  }
+}
+
+function _wbDash(v) {
+  return (v === null || v === undefined || v === '') ? '—' : String(v);
+}
+
+function paintWeaknessBoard() {
+  const wb = weaknessBoard || {};
+  const sumEl = document.getElementById('wb-summary');
+  const railsEl = document.getElementById('wb-rails');
+  const hellinEl = document.getElementById('wb-hellin');
+  const secondEl = document.getElementById('wb-second');
+  const firesEl = document.getElementById('wb-fires');
+  const noteEl = document.getElementById('wb-note');
+  const empty = wb.empty === true || wb.mode !== 'board_read';
+  if (sumEl) {
+    if (empty) {
+      sumEl.textContent = 'sin tablero WEAKNESS_BOARD.json · no inventar conteos';
+    } else {
+      sumEl.textContent = 'n_fires=' + _wbDash(wb.n_fires)
+        + ' · confirmed=' + _wbDash(wb.n_confirmed)
+        + ' · ml_strong=' + _wbDash(wb.n_ml_strong)
+        + ' · NO_USE=' + _wbDash(wb.n_no_use)
+        + ' · grade_a=' + _wbDash(wb.grade_a_ops_anchors);
+    }
+  }
+  if (railsEl) {
+    railsEl.textContent = 'GO_Q ' + String(wb.go_q || 'partial')
+      + ' · fusion ' + String(wb.field_ops_ml_fusion || 'ON')
+      + ' · FREEZE=' + String(wb.freeze_ml !== false)
+      + ' · go_q_met=' + String(wb.go_q_met === true)
+      + ' · no inventar Vp/ha';
+  }
+  if (hellinEl) {
+    hellinEl.textContent = 'Hellín: ' + _wbDash(wb.hellin_status);
+  }
+  const second = wb.second_anchor || {};
+  if (secondEl) {
+    const showSecond = second.visible === true
+      && Number(second.grade_a_ops_anchors) >= 2
+      && Number(second.n_confirmed_cited) >= 2;
+    secondEl.hidden = !showSecond;
+    secondEl.textContent = showSecond
+      ? String(second.copy || '')
+      : '1 ancla grade-A (Tobarra) · no inventar 2ª';
+    if (!showSecond) {
+      secondEl.hidden = false;
+    }
+  }
+  if (firesEl) {
+    firesEl.innerHTML = '';
+    const rows = Array.isArray(wb.fires) ? wb.fires : [];
+    if (!empty && rows.length) {
+      const tbl = document.createElement('table');
+      const thead = document.createElement('thead');
+      const hr = document.createElement('tr');
+      ['fire_id', 'class', 'status', 'use', 'gap', 'Vp', 'ha'].forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        hr.appendChild(th);
+      });
+      thead.appendChild(hr);
+      tbl.appendChild(thead);
+      const tb = document.createElement('tbody');
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        const cells = [
+          r.fire_id,
+          r.honesty_class,
+          r.status,
+          r.use_flag,
+          r.blocking_gap,
+          r.vp_m_min_cited,
+          r.area_ha_cited,
+        ];
+        cells.forEach(c => {
+          const td = document.createElement('td');
+          td.textContent = _wbDash(c);
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb);
+      firesEl.appendChild(tbl);
+    }
+  }
+  if (noteEl) {
+    noteEl.textContent = wb.note || 'lectura · no POST · no promote · no es despacho';
   }
 }
 

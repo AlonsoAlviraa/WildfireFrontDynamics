@@ -1,0 +1,40 @@
+{
+  "schema": "wfd_clm_audit_pack_v1",
+  "fire_id": "la_estrella_acom2_2024",
+  "trees_present": [
+    "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM2",
+    "artifacts/la_estrella_acom2_2024_reprojected_lwir",
+    "artifacts/la_estrella_acom2_2024_lwir_masks",
+    "data/real_if/raw_dropbox/organized/LA_ESTRELLA_ACOM2"
+  ],
+  "on_disk_tif_count": 236,
+  "on_disk_kmz_count": 128,
+  "aligned_tif_count": 26,
+  "mask_tif_count": 30,
+  "tree_fingerprint": "57403250742a718ba147308f83038a04c7e7528c2582e669818bd03a3ad69270",
+  "manifest_sha256": {
+    "artifacts/aligned_spatial_v1/LA_ESTRELLA_ACOM2/align_manifest.json": "87547c3f4b26bf888fc97fc91f02527a3530ccc54b2eef2a79644bbbc68e4ec8"
+  },
+  "honesty_class": "ml_weak",
+  "use_flag": "review",
+  "blocking_gap": "cite",
+  "status": "inventory_only",
+  "R1": 1,
+  "R2": 1,
+  "R3": 1,
+  "R4": 0,
+  "R5": 1,
+  "R6": 1,
+  "H1": 0,
+  "H2": 0,
+  "H3": 1,
+  "H4": 0,
+  "H5": 0,
+  "H6": 0,
+  "H7": 1,
+  "invented_vp_ha": false,
+  "usable_pack": true,
+  "no_rasters_copied": true,
+  "confirmed": false,
+  "ml_strong": false
+}

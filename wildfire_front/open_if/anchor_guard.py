@@ -89,6 +89,14 @@ def can_promote_to_confirmed(anchor: Mapping[str, Any]) -> tuple[bool, list[str]
         except (TypeError, ValueError):
             reasons.append("area_ha_not_numeric")
 
+    h1 = anchor.get("H1")
+    if h1 is not None:
+        try:
+            if int(h1) == 0:
+                reasons.append("h1_zero_no_cite")
+        except (TypeError, ValueError):
+            reasons.append("h1_not_numeric")
+
     source = anchor.get("source")
     if _is_missing(source):
         reasons.append("missing_source")

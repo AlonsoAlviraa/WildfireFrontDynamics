@@ -1,0 +1,12 @@
+{
+  "schema": "wfd_h1_dry_run_v1",
+  "as_of_utc": "2026-08-13T14:29:06Z",
+  "go_q_met": false,
+  "GO_Q": "partial",
+  "not_third_party_acta": true,
+  "not_signed_acta": true,
+  "product_unlock": false,
+  "calls_record_h1_demo_complete": false,
+  "field_ops_fusion": "ON",
+  "note": "dry-run ≠ acta · no inventa GO_Q · fusion ON ≠ despacho"
+}

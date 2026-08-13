@@ -485,6 +485,37 @@ def test_live_repo_board_does_not_flip_hellin_or_invent_u1() -> None:
     assert payload["summary"]["n_confirmed"] == 1
 
 
+def test_thin_clone_does_not_flip_hellin_to_no_use(tmp_path: Path) -> None:
+    """CI / thin checkout: missing Hellín trees stay pending_external, not NO_USE."""
+    root = tmp_path / "thin"
+    anchors = root / "data" / "infocam_anchors.json"
+    _write_anchors(anchors)
+    (root / "docs").mkdir(parents=True, exist_ok=True)
+    payload = board.build_board(
+        root=root,
+        anchors_path=anchors,
+        fire_ids=["hellin_2024", "retuerta_2025", "polan_2025", "tobarra_20240802"],
+    )
+    by_id = {row["fire_id"]: row for row in payload["fires"]}
+    hellin = by_id["hellin_2024"]
+    assert hellin["status"] == "pending_external"
+    assert hellin["use_flag"] != "NO_USE"
+    assert hellin["honesty_class"] != "ml_strong"
+    assert hellin["honesty_class"] != "discard"
+    assert hellin["H1"] == 0
+    assert hellin["on_disk_tif_count"] == 0
+    assert hellin["vp_m_min_cited"] is None
+    assert hellin["area_ha_cited"] is None
+    assert hellin["invented_vp_ha"] is False
+    assert by_id["retuerta_2025"]["status"] == "NO_USE"
+    assert by_id["retuerta_2025"]["honesty_class"] == "discard"
+    assert by_id["polan_2025"]["status"] == "NO_USE"
+    assert by_id["polan_2025"]["honesty_class"] == "discard"
+    assert by_id["tobarra_20240802"]["status"] == "confirmed"
+    assert by_id["tobarra_20240802"]["vp_m_min_cited"] == 7.0
+    assert by_id["tobarra_20240802"]["area_ha_cited"] == 39.0
+
+
 def test_open_proxy_pack_is_not_second_grade_a(tmp_path: Path) -> None:
     root = _mini_root(tmp_path)
     pack = root / "data" / "open_if" / "latam_au" / "au" / "AU_EMSR500_PERTH"

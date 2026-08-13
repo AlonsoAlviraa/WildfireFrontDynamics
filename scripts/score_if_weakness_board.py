@@ -520,7 +520,13 @@ def classify_row(
     elif pack_kind == "open_proxy":
         honesty = "ml_weak" if r["R1"] == 1 and r["R2"] == 1 else "proxy"
     elif usable <= 1 and tif_count <= 1:
-        honesty = "discard"
+        # Named historical NO_USE only (Retuerta FOV / Polán <3). A thin clone
+        # with no trees present is not a discard decision — CI must not flip
+        # Hellín pending_external → NO_USE just because rasters are gitignored.
+        if inv.get("trees_present"):
+            honesty = "discard"
+        else:
+            honesty = "ml_weak" if pack_kind == "clm" else "context_only"
     elif r["R1"] == 1 and r["R2"] == 1:
         honesty = "ml_weak"
     elif dated == 0 and not inv.get("has_geometry"):
@@ -546,8 +552,17 @@ def classify_row(
         honesty = "discard"
 
     anchor_status = str((anchor or {}).get("status") or "").strip().lower()
-    if honesty == "discard":
+    if fire_id in NO_USE_REASONS:
         status = "NO_USE"
+    elif honesty == "discard":
+        # Unnamed thin stack: never override pending_external SSOT (Hellín).
+        if anchor_status == "pending_external":
+            status = "pending_external"
+            honesty = "ml_weak" if pack_kind == "clm" else "context_only"
+        elif pack_kind == "open_proxy":
+            status = "inventory_only"
+        else:
+            status = "inventory_only"
     elif anchor_status == "confirmed" and h["H1"] == 1:
         status = "confirmed"
     elif anchor_status == "confirmed" and h["H1"] == 0:

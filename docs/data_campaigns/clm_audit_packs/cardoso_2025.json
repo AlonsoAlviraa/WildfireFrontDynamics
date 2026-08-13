@@ -1,0 +1,41 @@
+{
+  "schema": "wfd_clm_audit_pack_v1",
+  "fire_id": "cardoso_2025",
+  "trees_present": [
+    "artifacts/aligned_spatial_v1/CARDOSO",
+    "artifacts/aligned_spatial_v1/cardoso_2025_extra_reproj",
+    "artifacts/cardoso_2025_reprojected_lwir",
+    "artifacts/cardoso_2025_lwir_masks",
+    "data/real_if/raw_dropbox/organized/CARDOSO"
+  ],
+  "on_disk_tif_count": 488,
+  "on_disk_kmz_count": 146,
+  "aligned_tif_count": 178,
+  "mask_tif_count": 168,
+  "tree_fingerprint": "a6708e6d9718dcadd21b5c44dca136b8dac5b1ca4981161bab2d381db3608093",
+  "manifest_sha256": {
+    "artifacts/aligned_spatial_v1/CARDOSO/align_manifest.json": "0cdcd6f182c418b727f4679bb6d77f78a9a07cc56aadb106cf0810bf7dd8f24f"
+  },
+  "honesty_class": "ml_weak",
+  "use_flag": "review",
+  "blocking_gap": "cite",
+  "status": "pending_external",
+  "R1": 1,
+  "R2": 1,
+  "R3": 1,
+  "R4": 0,
+  "R5": 1,
+  "R6": 1,
+  "H1": 0,
+  "H2": 0,
+  "H3": 1,
+  "H4": 0,
+  "H5": 0,
+  "H6": 0,
+  "H7": 1,
+  "invented_vp_ha": false,
+  "usable_pack": true,
+  "no_rasters_copied": true,
+  "confirmed": false,
+  "ml_strong": false
+}

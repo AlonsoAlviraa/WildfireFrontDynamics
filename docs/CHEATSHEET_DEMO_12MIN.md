@@ -4,6 +4,20 @@
 
 GO_MES **true** (mínimo) · GO_Q **partial** (H1 demo) · field_ops ML fusion **ON** · ml_product_go **true** (lab) · Tobarra LOFO **KILL** (lab) · **ABSTAIN = feature** · fusion ON ≠ despacho
 
+> **Dry-run ≠ acta.** Un ensayo eng / `scripts/dry_run_h1.py` **no** cierra GO_Q y **no** es acta H1 de tercero.
+
+## KILL LIST VERBAL (obligatorio — decir en voz alta)
+
+Operadores **deben** decir:
+
+1. **No inventar ROS / Vp** — si no hay cite, el número no existe.
+2. **fusion ON ≠ GO_Q complete ≠ despacho táctico.**
+3. **No** «apagamos incendios con IA».
+4. **Sealed LOFO ~0.79 no es certeza de campo.**
+5. **Catalog 0.8963 es provenance only; IoU ≠ ROS.**
+6. **ABSTAIN / HOLD son features**, no fallos.
+7. **Solo 1 ancla grade-A (Tobarra).** Hellín sigue `pending_external`.
+
 ## Setup
 
 ```powershell

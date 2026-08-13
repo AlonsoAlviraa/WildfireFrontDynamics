@@ -305,6 +305,29 @@ def evaluate(
     if not narrative_goq:
         hard_fail = True
 
+    # W3-B: no cite = no promote (Hellín/Cardoso stay pending without H1)
+    try:
+        _scripts = Path(__file__).resolve().parent
+        if str(_scripts) not in sys.path:
+            sys.path.insert(0, str(_scripts))
+        from refuse_promote_without_cite import evaluate_anchors_file
+
+        anchors_path = Path(__file__).resolve().parents[1] / "data" / "infocam_anchors.json"
+        cite_code, cite_detail = evaluate_anchors_file(anchors_path)
+        cite_ok = cite_code == 0
+    except Exception as exc:  # noqa: BLE001 — fail-closed
+        cite_ok = False
+        cite_detail = f"error: no cite = no promote ({exc})"
+    checks.append(
+        {
+            "id": "no_cite_no_promote",
+            "ok": cite_ok,
+            "detail": cite_detail,
+        }
+    )
+    if not cite_ok:
+        hard_fail = True
+
     status = "FAIL" if hard_fail else "PASS"
     return {
         "status": status,

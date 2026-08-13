@@ -66,3 +66,8 @@ A `--fire-id` subset without `--out-json` / `--out-md` / `--inventory-*` does no
 
 Human leftovers (cite / 2nd grade A / H1 acta) stay in `docs/HANDOFF_HUMAN_P0_2026-08-13.md`.
 
+## No cite = no promote
+
+Missing official cite ⇒ **not** `confirmed`. Hellín / Cardoso stay `pending_external`.
+`scripts/refuse_promote_without_cite.py` enforces this. Do not invent a 2nd grade-A.
+

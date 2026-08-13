@@ -1,0 +1,23 @@
+{
+  "schema": "wfd_clm_audit_packs_index_v1",
+  "as_of_utc": "2026-08-13T14:29:06.468830Z",
+  "usable_fire_ids": [
+    "hellin_2024",
+    "cardoso_2025",
+    "la_estrella_acom1_2024",
+    "la_estrella_acom2_2024"
+  ],
+  "excluded_no_use": [
+    {
+      "fire_id": "retuerta_2025",
+      "reason": "FOV"
+    },
+    {
+      "fire_id": "polan_2025",
+      "reason": ">=3 frames"
+    }
+  ],
+  "invented_vp_ha": false,
+  "rasters_copied": false,
+  "note": "Manifests only. Retuerta/Polán excluded from usable packs."
+}

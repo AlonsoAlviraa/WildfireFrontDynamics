@@ -1,14 +1,16 @@
 # CURRENT_STATE — WildfireFrontDynamics
 
 > **SSOT for release flags** (`scripts/check_release_flags.py`)  
-> **As of:** 2026-08-12 (Mes2 PR3-A shipped · Mes3 plan filed)  
+> **As of:** 2026-08-13 (1M S1–S4 eng half · H1 slot **not_booked** · fusion ON · GO_Q partial · #39 merged)  
 > **Companion stamp:** `docs/ML_PRODUCT_GO_STATUS.json`  
 > **Bottlenecks:** `docs/BOTTLENECKS_B1_B6_STATUS.md`  
 > **Anchors SSOT:** `docs/DATA_ANCHOR_SSOT.md` + `data/infocam_anchors.json`  
-> **30d plan:** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
+> **1M plan (13 ago–12 sep):** `docs/PLAN_1M_GO_LATAM_2026-08-13.md` · GO total `docs/GO_TOTAL_STATUS.json`  
+> **30d plan (A/B surface):** `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md`  
 > **Mes2 PR3:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md` · handoff `docs/HANDOFF_MES2_PR3_HUMANOS_2026-08-12.md`  
 > **Mes 3 (12 sep–11 oct):** `docs/PLAN_MES3_AGENTES_A_B_2026-09-12.md` · handoff `docs/HANDOFF_MES3_HUMANOS_2026-09-12.md`  
 > **ML leap:** `docs/PLAN_ML_LEAP_2026-08-12.md` · D0 `docs/ML_LEAP_REQUEST_DATA.md` · E1 `docs/ML_LEAP_EVAL_ONESHOT.md` · E1b `docs/ML_LEAP_SELECTIVE_FNR.md` · claims `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md`  
+> **LATAM+AU campaign:** `docs/PLAN_ML_DATA_LATAM_AU_2026-08-13.md` · status `docs/data_campaigns/LATAM_AU_CAMPAIGN_STATUS.md`  
 
 > **Product:** decision support for wildfires — **not** tactical dispatch.
 
@@ -59,7 +61,9 @@
 | Mes2 PR2-A decision-log UI + ACK | **Shipped** (#35) — SPA wire to real sidecar |
 | Mes2 PR2-B V&V scorecard stub | **Shipped** (#34) — `vv_sidecar` eng_stub, no field claims |
 | Mes2 PR3-A H1 / split-conf polish | **Shipped** (#38) |
-| Mes2 PR3-B sector ROS eng + tests | **In flight** (#39) — `sector_ros_eng_default` (physics/quartile; not tactical / not field ROS) |
+| Mes2 PR3-B sector ROS eng + tests | **Shipped** (#39 merged 2026-08-13) — `sector_ros_eng_default` (physics/quartile; **not** field-validated ROS / not tactical) |
+| 1M plan eng half (S1–S4) | **In progress / eng snapshot** — `PLAN_1M_GO_LATAM_2026-08-13.md` · exec `PLAN_1M_EXECUTION_STATUS.json` · H1 `h1_slot=not_booked` |
+| H1 calendar slot | **not_booked** (human Alonso) — eng pack ready; no invented tercero |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
 | Mes3 W1-A V&V UI read | **Shipped** — SPA `vv-scorecard` read-only #34; empty honest; no field scores |
 | field_ops ML live fusion | **ON** — human promote 2026-08-13 (catalog + stamp; ≠ despacho; GO_Q partial) |
@@ -68,6 +72,12 @@
 | ML leap E1 eval oneshot | **Doc shipped** (#42) — frozen cal TEST path; SKIP ≠ green |
 | ML leap E1b selective/FNR | **Filed** — `ML_LEAP_SELECTIVE_FNR.md` (method; @50/@90 not run; no L6) |
 | IF weakness / candidate board | **Shipped** — `docs/WEAKNESS_BOARD.md` (R1–R6 / H1–H7 fail-closed; measured on-disk counts; no Vp/ha invention; no FREEZE lift / no KEEP reopen) |
+| Weakness-board SPA (read-only) | **Shipped** — `data-marker="weakness-board"`; missing JSON → honest empty; 2ª ancla hidden unless JSON `grade_a_ops_anchors>=2` **and** two confirmed cited fires |
+| PR #48 weakness board | **Open** on `feat/agent-b-weakness-board` until Tests CI green (do not merge red) |
+| Hellín/Cardoso outreach templates | **Filed, not sent** — `docs/data_campaigns/HELLIN_CARDOSO_OUTREACH/` (`sent=false`, owner=human) |
+| no-cite = no-promote | **Hardened** — `scripts/refuse_promote_without_cite.py`; H1=0 / null vp/ha/source cannot confirm; `--attempt-promote --fire-id hellin_2024` exits 1 |
+| H1 dry-run | **≠ acta** — `scripts/dry_run_h1.py` pins `go_q_met=false` · `not_third_party_acta=true` · `not_signed_acta=true` |
+| Human leftovers (GAP) | Hellín cite · Cardoso Vp/ha · R4 cession · H1 demo+acta — owner=human; do not invent |
 
 ## Bottlenecks snapshot (B1–B6)
 

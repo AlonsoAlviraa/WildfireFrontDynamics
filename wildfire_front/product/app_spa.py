@@ -41,6 +41,7 @@ from wildfire_front.product.spa_honesty_ui import (
     build_uncertainty_bar_view,
     load_decision_log_surface,
     load_vv_scorecard_surface,
+    load_weakness_board_surface,
 )
 
 SCHEMA = "wfd_product_app_v1"
@@ -653,6 +654,9 @@ def build_product_app_payload(
         ),
         "vv_scorecard": load_vv_scorecard_surface(
             work_dir=wd,
+            repo_root=repo_root,
+        ),
+        "weakness_board": load_weakness_board_surface(
             repo_root=repo_root,
         ),
         "disclaimer": (
