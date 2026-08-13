@@ -10,7 +10,7 @@ Turn industrial SPA C2 from “copy CLI and open terminal” into a **loopback L
 |--------|------|----------------|
 | GET | `/live/v1/health` | `live_ops.handle_health` |
 | POST | `/live/v1/status` | Lightweight outbox JSON (no `incident.pipeline` import) |
-| POST | `/live/v1/decide` | `decide_from_request` · channel `live_ops_loopback` · `field_ops` · fusion OFF |
+| POST | `/live/v1/decide` | `decide_from_request` · channel `live_ops_loopback` · `field_ops` · fusion ON (cap 0.20 / abstain 0.45) ≠ despacho |
 | POST | `/live/v1/export-acta` | `forensics.write_forensic_bundle` |
 | POST | `/live/v1/replay-third-party` | Pack forensic replay (`replay_ok` consistency only) |
 
@@ -27,7 +27,7 @@ python -m wildfire_front app --demo-day --json   # CI snapshot (no hang)
 
 ## Honesty rails (always)
 
-- `field_ops_ml_live_fusion = OFF`
+- `field_ops_ml_live_fusion = ON` (stamp/catalog; cap 0.20 / abstain 0.45) · fusion ON ≠ GO_Q complete ≠ despacho
 - `go_q_invent_forbidden = true` · demo-day never sets `go_q_met`
 - Not tactical dispatch · IoU ≠ ROS · FIRMS ≠ perimeter
 - No free-form shell from browser (fixed argv / importable functions only)
@@ -43,4 +43,4 @@ python -m wildfire_front app --demo-day --json   # CI snapshot (no hang)
 ## Non-goals
 
 - GO_Q complete / signed acta invent  
-- Fusion ON · cloud multi-tenant · offline basemap tiles  
+- Claiming fusion ON = despacho / GO_Q complete · cloud multi-tenant · offline basemap tiles  

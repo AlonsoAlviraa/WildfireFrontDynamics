@@ -1,6 +1,7 @@
 # Handoff Mes2 PR3 — Agentes humanos A y B
 
 **Fecha:** 2026-08-12 · **Repo tip:** `main` post-#31/#32/#34/#35  
+> **Historical handoff.** Living gates: `docs/CURRENT_STATE.md` — field_ops ML fusion **ON** (human 2026-08-13) ≠ GO_Q complete ≠ despacho. Table below is the rail **at filing**.
 **Plan:** `docs/PLAN_MES2_PR3_AGENTES_A_B.md` · **SSOT gates:** `docs/CURRENT_STATE.md`  
 **Quién:** compañeros humanos A/B — **no** bots Grok como “Agente A/B”.
 

@@ -11,7 +11,7 @@
 
 > **BORRADOR eng** preparado `2026-08-04T11:45:43.654311+00:00` — **NO firmado** · **NO cierra GO_Q**
 > **Commit:** `eb95049` · producto WildfireFrontDynamics
-> **Rails prefill:** GO_MES=`True` · GO_Q=`partial` · ml_product_go=`True` (lab only) · field_ops ML fusion=`OFF`
+> **Rails prefill:** GO_MES=`True` · GO_Q=`partial` · ml_product_go=`True` (lab only) · field_ops ML fusion=`ON` (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho
 > **Humano:** rellenar Fecha, Presentador, Tercero (externo), checklists, firmas.
 > **Cerrar GO_Q:** tras demo real → `python scripts/record_h1_demo_complete.py --acta PATH`
 > (rechaza placeholders; no inventar tercero).
@@ -59,8 +59,8 @@ Marcar lo **realmente** enseñado (no lo ideal):
 | 5 | Open multi-CCAA (Níjar / Caminomorisco o portal) | [ ] |
 | 6 | Decision Card GO/HOLD/ABSTAIN + contraste `field_ops` vs `research_open` | [ ] |
 | 7 | Fuel / AEMET / envelope **solo contexto** (peso 0 táctico en Card) | [ ] |
-| 8 | Kill list verbal (sin inventar ROS, sin fusión field_ops live) | [ ] |
-| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **OFF**) | [ ] |
+| 8 | Kill list verbal (sin inventar ROS; fusion ON ≠ GO_Q complete ≠ despacho) | [ ] |
+| 9 | Límites abiertos (O2 nacional, GO_MES+ false, `ml_product_go=true` **lab only**, field fusion **ON** cap 0.20 / abstain 0.45, GO_Q **partial**) | [ ] |
 | 10 | Ask / next step con el tercero | [ ] |
 
 **Artefactos abiertos en la sesión (paths o capturas):**
@@ -80,13 +80,13 @@ Marcar lo **realmente** enseñado (no lo ideal):
 - [ ] Hellín: 2ª ancla **confirmed**; ratio in-band posible **sin** grade A
 - [ ] ML CLM v34: métricas de **laboratorio**; no orden de mando
 - [ ] Open multi-CCAA: perímetros institucionales donde existen (REDIAM/RAI/CEMS)
-- [ ] `field_ops`: fusión ML live **OFF** a propósito
+- [ ] `field_ops`: fusión ML live **ON** (peso máx 0.20, abstain_below 0.45) · **≠** despacho táctico · GO_Q partial
 - [ ] Envelope / fuel: **no** claim táctico de despacho
 
 ### Prohibido (y no se afirmó)
 
 - [ ] No se inventó **ROS / Vp / ha** sin fuente
-- [ ] No se afirmó que **field_ops fusiona ML live**
+- [ ] No se vendió **fusion ON como GO_Q complete / despacho táctico**
 - [ ] No se afirmó **`ml_product_go=true`** ni GO de producto ML en campo
 - [ ] No se recalibró **k único** Tobarra(7) + Hellín(50) en silencio
 - [ ] No se presentó hull FIRMS como **área quemada oficial**

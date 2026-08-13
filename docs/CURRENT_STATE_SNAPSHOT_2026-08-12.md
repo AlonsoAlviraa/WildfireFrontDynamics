@@ -1,5 +1,7 @@
 # CURRENT_STATE snapshot — 2026-08-12 (Europe/Madrid)
 
+> **Historical snapshot** (pre human fusion promote). Living SSOT: `docs/CURRENT_STATE.md` — field_ops ML fusion **ON** as of 2026-08-13 (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho.
+
 Companion to `docs/CURRENT_STATE.md` on main. Honest ops snapshot after P0 eng close + SPA land attempt.
 
 ## One-line truth

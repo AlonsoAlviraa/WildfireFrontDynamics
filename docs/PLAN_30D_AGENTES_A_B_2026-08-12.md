@@ -1,7 +1,8 @@
 # Plan 30 días — Agentes A y B (2026-08-13 → 2026-09-11)
 
 **Repo:** AlonsoAlviraa/WildfireFrontDynamics  
-**Rails (no negociables):** `field_ops` ML fusion **OFF** · `GO_Q` **partial** (nunca inventar `true`) · `FREEZE_ML_AND_REQUEST_DATA` · no métricas inventadas · no publish externo sin Alonso · no merge de ramas con secretos (`fix/b2-b3-flags-noise*`, tip #10).
+> **Historical 30d brief** (filed 2026-08-12). Living gates: `docs/CURRENT_STATE.md` — field_ops ML fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. Rails below were the constraint **at filing**.
+**Rails (at filing, 2026-08-12):** `field_ops` ML fusion **OFF** · `GO_Q` **partial** (nunca inventar `true`) · `FREEZE_ML_AND_REQUEST_DATA` · no métricas inventadas · no publish externo sin Alonso · no merge de ramas con secretos (`fix/b2-b3-flags-noise*`, tip #10).
 
 **Objetivo del mes:** SPA Live Ops usable en `main` + honesty/V&V/data path + eng H1 listo. Demo+acta tercero = **humano Alonso** (fuera del stack A/B).
 

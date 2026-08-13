@@ -1,7 +1,7 @@
 # PLAN_ML_LEAP — salto métricas / eval / modelo (2026-08-12)
 
 **Repo:** AlonsoAlviraa/WildfireFrontDynamics  
-**Product:** `clm_ensemble_v34` (lab) · **No** field_ops fusion  
+**Product:** `clm_ensemble_v34` (lab) · field_ops fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. This pack does **not** flip gates.  
 **Quién:** Alonso (datos/promote) · Data Steward · ML Lab · Research · eng A/B solo donde paths toquen docs/CI  
 **SSOT gates:** `docs/CURRENT_STATE.md` · `docs/ML_PRODUCT_GO_STATUS.json` · `docs/ML_PRODUCT_SCORECARD.json`  
 **Claims:** `docs/CLAIM_BOARD_ML_LEAP_2026-08-12.md`  
@@ -15,7 +15,7 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 ## Rails (no negociables)
 
 - `FREEZE_ML_AND_REQUEST_DATA` · Tobarra KEEP reopen = **false** (KILL)
-- `field_ops` ML fusion **OFF**
+- `field_ops` ML fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho — leap pack must not flip it OFF or sell as despacho
 - `GO_Q` **partial** (nunca inventar complete)
 - IoU ≠ ROS / Vp · catalog holdout **0.8963** = provenance only
 - No inventar grade A / GO_MES+ / métricas no medidas
@@ -74,7 +74,7 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 - [x] Explicit: **no** overwrite `uncertainty_calibration_v1.json` under FREEZE; SKIP-without-weights ≠ honesty green
 - [x] Compare latest scorecard vs `docs/ML_PRODUCT_SCORECARD.json` (drift note template)
 
-**Non-goals:** refit cal on TEST · promote script flip · fusion ON
+**Non-goals:** refit cal on TEST · promote script flip · sell fusion ON as despacho
 
 ---
 
@@ -104,7 +104,7 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 **Gate:** nuevo IF class on-disk + scorecard path **o** OK escrito lift parcial FREEZE.  
 **PR-M1 (solo entonces):** hipótesis H1 mix / H2 cal / H3 arch+multi_if — nuevo `product_id` candidato; done-when **vs v34 TEST**; KEEP Tobarra sigue false salvo flip humano aparte.
 
-**Non-goals under FREEZE:** M5 v35 GO · Swin/FireCast as default leap · field fusion ON
+**Non-goals under FREEZE:** M5 v35 GO · Swin/FireCast as default leap · sell field fusion as despacho
 
 ---
 
@@ -119,7 +119,7 @@ El salto ML **no** es retrain/transformer ahora. Es **REQUEST_DATA (Hellín / 2�
 
 ## Kill list
 
-- Tobarra KEEP thrash · TEST refit cal · fusion ON · IoU→ROS  
+- Tobarra KEEP thrash · TEST refit cal · fusion ON = despacho · IoU→ROS  
 - Catalog 0.8963 as live · invent grade A / GO_MES+  
 - “Transformer = leap” under FREEZE · FOI spam / CyL silence breach
 

@@ -2,7 +2,7 @@
 
 **Para:** aprender el proyecto de punta a punta y poder **enseñarlo** sin overclaim  
 **Nivel:** de cero a dominio operativo (producto + CLI + rails + evidencia)  
-**Estado de referencia:** 2026-08 · Graph **v6.1** · **GO_MES = true** · **GO_Q = partial** (falta demo+acta humana)
+**Estado de referencia:** 2026-08-13 · Graph **v6.1** · **GO_MES = true** · **GO_Q = partial** · field_ops ML fusion **ON** (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho
 
 | Ruta | Tiempo | Qué cubres |
 |------|--------|------------|
@@ -59,7 +59,7 @@ WFD prefiere **HOLD / ABSTAIN** cuando faltan datos o la fiabilidad es baja.
 | Sistema de extinción con IA | No manda medios |
 | GPS táctico ROS garantizado | Sin térmico no inventa Vp |
 | “Copernicus más guapo” | El valor es **postura + honestidad** |
-| GO de campo con ML fusionado | `field_ops` fusion **OFF** |
+| GO de campo con ML fusionado como despacho | fusion ON ≠ GO_Q complete ≠ despacho táctico |
 | Predicción nacional next-day operativa | ML = protocol patches lab |
 
 ## 0.4 Foto de gates (hoy)
@@ -70,8 +70,8 @@ WFD prefiere **HOLD / ABSTAIN** cuando faltan datos o la fiabilidad es baja.
 | **GO_MES** | **true** | Mínimo del mes (O1∧O4∧P1∧M2∧E1) |
 | **GO_Q** | **partial** | Falta **demo tercero + acta (M3.2)** |
 | **GO_MES+** | false | O2 oficial, O5 2º grade A, etc. |
-| **ml_product_go** | true (lab) | Lab product GO · **≠** field fusion (OFF) |
-| **field_ops ML fusion** | **OFF** | Rail no negociable en demos serias |
+| **ml_product_go** | true (lab) | Lab product GO · **≠** field GO / despacho |
+| **field_ops ML fusion** | **ON** | cap 0.20 / abstain 0.45 · **≠** GO_Q complete ≠ despacho |
 
 **Ejercicio 0:** explica en voz alta, sin papel:  
 *“GO_MES true no implica GO_Q; GO_Q necesita un humano y un acta.”*
@@ -343,7 +343,7 @@ Superficie lab usable (offline list/show/doctor sin pesos):
 ```powershell
 $env:PYTHONPATH = "."
 python -m wildfire_front ml list              # catálogo + default + not_for
-python -m wildfire_front ml show              # U1 IoU, ECE, ml_product_go, fusion OFF
+python -m wildfire_front ml show              # U1 IoU, ECE, ml_product_go lab, fusion ON ≠ despacho
 python -m wildfire_front ml show --json
 python -m wildfire_front ml cases             # fail buckets + LOFO + reject teach board
 python -m wildfire_front ml cases --bucket accepted_low_iou
@@ -355,7 +355,7 @@ python -m wildfire_front ml card --mode offline --scenario abstain
 python -m wildfire_front ml predict --list-products
 ```
 
-**Banner de honestidad:** lab product · not field_ops fusion · IoU ≠ ROS  
+**Banner de honestidad:** lab product · field_ops fusion ON (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho · IoU ≠ ROS  
 
 Entrada 5 min: `docs/ML_PRODUCT_START_HERE.md` · cheatsheet: `docs/CHEATSHEET_ML_LAB.md` · plan: `docs/PLAN_ML_PRODUCT_USABLE.md`
 
@@ -369,7 +369,7 @@ Entrada 5 min: `docs/ML_PRODUCT_START_HERE.md` · cheatsheet: `docs/CHEATSHEET_M
 | ECE | ~**0.15** | calibración imperfecta (post-hoc no arregló) |
 | Lab reject thr | ~**0.80** | ABSTAIN de máscara; IoU acc ~0.95 |
 | Catalog holdout IoU | **0.8963** | **provenance only** |
-| `ml_product_go` | **true (lab)** | lab only · field fusion OFF |
+| `ml_product_go` | **true (lab)** | lab only · field fusion ON ≠ despacho |
 | NDWS v21 / G1 | KILL features | no reabrir como primary |
 
 ## 6.3b Fail cases al enseñar (`ml cases`)
@@ -396,7 +396,7 @@ Selective ranking **≠** thr-based reject. Enseña ambos.
 | Claim | Valor al enseñar |
 |-------|------------------|
 | lab_usable_freeze | true (CLI + evidencia completa) |
-| ml_product_go / field fusion | **true (lab)** / **OFF** |
+| ml_product_go / field fusion | **true (lab)** / **ON** (cap 0.20 / abstain 0.45) ≠ despacho |
 | ece_fixed | **false** |
 | surface | iter1 reject thr ~0.80 |
 
@@ -421,8 +421,8 @@ Freeze **≠** promote a campo.
 - [ ] 0.86 vs 0.8963 en una frase cada uno  
 - [ ] LOFO ~0.76 ≠ U1 ~0.86 (protocolos distintos)  
 - [ ] Nunca digas IoU = velocidad  
-- [ ] ml_product_go true (lab) · fusion OFF  
-- [ ] Sé lanzar `wildfire-front ml show` y `ml cases`; fusion OFF  
+- [ ] ml_product_go true (lab) · fusion ON ≠ GO_Q complete ≠ despacho  
+- [ ] Sé lanzar `wildfire-front ml show` y `ml cases`; fusion ON ≠ despacho  
 
 ---
 
@@ -549,7 +549,7 @@ Scripts sueltos (`build_demo_multi_ccaa.py`, …) siguen existiendo; el operario
 4. **ABSTAIN es feature.**  
 5. 0.8963 = provenance, no certeza en vivo.  
 6. U1 ~0.86 = lab, no “Níjar mañana”.  
-7. field_ops no fusiona ML live.  
+7. fusion ON ≠ GO_Q complete ≠ despacho táctico.  
 8. O2 nacional sigue BLOCKED aunque tengas CEMS.  
 9. Replay_ok ≠ autenticidad criptográfica.  
 10. Un email de CCAA no inventa ancla.
@@ -736,7 +736,7 @@ Marca solo si puedes **explicar en voz alta sin el PDF**:
 ### ML
 - [ ] U1 ~0.86 y catalog 0.8963 etiquetados  
 - [ ] IoU ≠ ROS  
-- [ ] ml_product_go true (lab) · fusion OFF  
+- [ ] ml_product_go true (lab) · fusion ON ≠ GO_Q complete ≠ despacho  
 
 ### Evidencia y gates
 - [ ] Cómo construir pack y qué es replay_ok  
@@ -833,7 +833,7 @@ python -m pytest tests\test_demo_third_party_pack.py tests\test_pilot_honesty_ca
 - [ ] Overclaim list repasada (M9)  
 - [ ] Guion 12 o 30 min impreso/abierto  
 - [ ] Acta template lista para rellenar **el mismo día**  
-- [ ] No prometo O2/O5/ml fusion en la demo  
+- [ ] No prometo O2/O5/despacho táctico en la demo; fusion ON ≠ GO_Q complete  
 
 ---
 

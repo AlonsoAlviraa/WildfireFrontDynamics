@@ -1,8 +1,9 @@
 # Project status — WildfireFrontDynamics
 
-> **Updated:** 2026-08-03  
+> **Updated:** 2026-08-03 (snapshot). **Living gates SSOT:** `docs/CURRENT_STATE.md` (2026-08-13).  
+> field_ops ML fusion is **ON** (human #46; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. Table below is historical.  
 > **HEAD baseline at write:** regenerate with `python scripts/run_plan_cycle.py --execute-m1`  
-> **Authority:** live scorecards + this file; archive docs are historical only.
+> **Authority:** `docs/CURRENT_STATE.md` + stamp; archive docs are historical only.
 
 ---
 
@@ -16,7 +17,7 @@
 | **GO_MES** | **false** — O1 second anchor OPEN |
 | **GO_Q** | **partial** — product stack green; quarter report + external demo pending |
 | **ml_product_go** | **false** (U1 TEST honest true; ECE ~0.15) |
-| **field_ops live fusion** | **OFF** |
+| **field_ops live fusion** | **ON** (see `CURRENT_STATE.md`; this 2026-08-03 row was OFF) |
 | **Confirmed anchors** | **1** (Tobarra only) |
 | **AEMET Tobarra path** | **live** — station 8175 · 2024-08-02 · envelope scorecard **PASS** |
 | **PR land stack** | **PR-α** core physics **ready** · **PR-β** envelope+AEMET **ready** · PR-11 optional |
@@ -30,7 +31,7 @@
 | Physics head | **6.19 m/min** (raw spatial MED_GRASS; ratio vs obs 1.08 · vs Vp 0.88) |
 | Hybrid head | **5.71** obs-locked · primary=head · α≈0.79 |
 | Envelope 15' head | **85.65 m** · product `short_horizon_envelope_v3_hybrid` · status `inputs_assumed` |
-| Decision Card attach | **weight 0** · fusion stays OFF · incident default still **envelope v2** |
+| Decision Card attach | **weight 0** at write (2026-08-03) · field_ops fusion later **ON** (see CURRENT_STATE) · incident default still **envelope v2** |
 | Scorecard | **PASS** (12 pass / 0 fail) |
 | One-shot | `python scripts/run_tobarra_aemet_pipeline.py` (`.env` or cached weather) |
 | PR plan | `docs/design/PR_PLAN_FUEL_AEMET_ENVELOPE.md` |
@@ -49,7 +50,7 @@
 | Ops | `front_dynamics_v1` | Tobarra grade **A**, ROS ~5.71 vs Vp 7 |
 | Decision | Decision Card | GO / HOLD / **ABSTAIN** + audit |
 
-Policies: `config/decision_policies.json` — `research_open` fusion experimental ON; **`field_ops` fusion OFF**.
+Policies: `config/decision_policies.json` — `research_open` fusion experimental ON; **`field_ops` fusion ON** after human 2026-08-13 (cap 0.20 / abstain 0.45) ≠ despacho. This 2026-08-03 snapshot predated that promote.
 
 ---
 

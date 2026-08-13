@@ -6,7 +6,7 @@
 | **Date** | 2026-07-24 |
 | **Product** | `clm_ensemble_v34` |
 | **Policy for demos** | `research_open` (experimental live fusion) |
-| **field_ops fusion** | **OFF** (non-negotiable) |
+| **field_ops fusion** | **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. This 2026-07-24 note predates that promote. |
 
 ## Why this note exists
 
@@ -25,8 +25,9 @@ Source: `docs/ML_PRODUCT_SCORECARD.json`, `docs/ML_U1_PROMOTE_RECORD.json`.
 | ECE patch conf | **~0.15** | Calibration error of Head A confidence |
 | catalog holdout TEST IoU | 0.8963 | Provenance only — **not** live certainty |
 
-`gates.u1_test_honest == true` enables **recommended** experimental fusion on
-`research_open` only. It does **not** flip `field_ops.allow_ml_live_in_fusion`.
+`gates.u1_test_honest == true` enabled **recommended** experimental fusion on
+`research_open`. Field `field_ops.allow_ml_live_in_fusion` was later set **ON**
+by human promote 2026-08-13 (not by this lab note). Fusion ON ≠ despacho.
 
 ## When the Card ABSTAINs
 

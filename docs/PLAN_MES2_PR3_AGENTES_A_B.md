@@ -1,6 +1,7 @@
 # Mes 2 — PR3 para Agentes A y B (humanos)
 
 **Quién:** compañeros humanos A/B — **no** bots Grok.  
+> **Historical Mes2 brief.** Living gates: `docs/CURRENT_STATE.md` — fusion **ON** (human 2026-08-13; cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. Rails below were **at filing**.
 **Tras:** PR2-A [#35](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/35) decision-log UI+ACK · PR2-B [#34](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/34) V&V sidecar.  
 **SSOT:** `docs/PLAN_MES2_PR2_AGENTES_A_B.md` · `docs/PLAN_30D_AGENTES_A_B_2026-08-12.md` (A5/A6 · B6) · `docs/CURRENT_STATE.md` · `docs/HANDOFF_MES2_PR3_HUMANOS_2026-08-12.md`
 

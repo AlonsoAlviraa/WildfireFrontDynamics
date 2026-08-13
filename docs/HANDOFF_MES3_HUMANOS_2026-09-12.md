@@ -6,7 +6,7 @@
 
 ## Tip esperado al start
 
-- Gates: GO_MES true · GO_Q **partial** · fusion **OFF** · FREEZE_ML · Hellín `pending_external` · GO_MES+ false
+- Gates: GO_MES true · GO_Q **partial** · fusion **ON** (cap 0.20 / abstain 0.45) ≠ despacho · FREEZE_ML · Hellín `pending_external` · GO_MES+ false
 - Mes2 eng: PR1–PR3-A en main (#31/#32/#34/#35/#38); **cerrar #39** PR3-B si sigue abierto
 - SSOT: `docs/CURRENT_STATE.md`
 
