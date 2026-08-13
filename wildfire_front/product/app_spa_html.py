@@ -159,6 +159,7 @@ body.mode-advanced .simp{display:none!important}
   color:var(--d,#94a3b8);line-height:1;margin:0;
 }
 .decision .one{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.decision .kind{margin-top:4px;font-size:10px;color:var(--faint);letter-spacing:.02em;line-height:1.35}
 .decision .pct{margin-top:4px;font-size:12px;font-weight:600;color:var(--cyan);font-variant-numeric:tabular-nums}
 /* Uncertainty bar (UI only): existing conf bands — never invent scores; IoU ≠ ROS */
 .unc-bar{margin-top:8px}
@@ -466,6 +467,7 @@ def _shell() -> str:
       <div class="decision brief" id="hero">
         <div class="word" id="hero-word">—</div>
         <p class="one" id="hero-plain"></p>
+        <div class="kind" id="hero-kind" data-marker="hero-orientation">orientación de card · no es GO_Q</div>
         <div class="pct" id="hero-conf"></div>
         <div class="unc-bar" id="uncertainty-bar" data-marker="uncertainty-bar" aria-label="Banda de incertidumbre (no es ROS)">
           <div class="unc-track" role="presentation"><div class="unc-fill" id="unc-fill"></div></div>
@@ -493,15 +495,15 @@ def _shell() -> str:
         </div>
       </div>
 
-      <div class="decision-log" id="decision-log" data-marker="decision-log" aria-label="Decision log">
-        <b>Decision log</b>
+      <div class="decision-log" id="decision-log" data-marker="decision-log" aria-label="Decision log sidecar">
+        <b>Decision log (sidecar ACK)</b>
         <div class="dlog-id" id="dlog-id">id: — (sin sidecar decision_log.jsonl)</div>
-        <div class="dlog-meta" id="dlog-meta">Última entrada #31. ACK backend solo con app --serve; sin inventar decision_id.</div>
+        <div class="dlog-meta" id="dlog-meta">Sidecar #31 · no es hero orientación · ACK backend solo con app --serve.</div>
         <div class="dlog-ack">
           <button type="button" class="btn sm" id="btn-dlog-ack" title="ACK sidecar (loopback --serve)">ACK</button>
           <span class="dlog-meta" id="dlog-ack-state">ack: —</span>
         </div>
-        <div class="dlog-note" id="dlog-note">fusion ON · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS</div>
+        <div class="dlog-note" id="dlog-note">fusion ON · no GO_Q invent · sidecar ACK ≠ hero orientación · conf ML ≠ ROS</div>
       </div>
 
       <div class="vv-scorecard" id="vv-scorecard" data-marker="vv-scorecard" aria-label="V&amp;V eng sidecar">
@@ -550,7 +552,7 @@ def _shell() -> str:
       <div class="sr-ladder" id="sr-ladder" data-marker="sr-ladder" aria-label="Escala SR">
         <b>Escala SR (soporte / recomendación)</b>
         <div class="sr-levels" id="sr-levels"></div>
-        <div class="sr-claims" id="sr-claims">Claims Guardian: no field GO · no fusion ON · no GO_Q invent</div>
+        <div class="sr-claims" id="sr-claims">Claims Guardian: fusion ON ≠ GO_Q complete ≠ despacho · go_q_met=false · ABSTAIN/HOLD son feature</div>
       </div>
 
       <!-- 3 actos prioritarios (Everbridge/InformaCast pattern: critical path first) -->
@@ -659,13 +661,43 @@ const liveOps = P.live_ops || {};
 // /live/v1/status · /live/v1/decide · /live/v1/export-acta · /live/v1/replay-third-party
 const outboxSnap = P.outbox_last_run || null;
 
-const SHORT = { GO:'Propone orientación', HOLD:'Espera / revisa', ABSTAIN:'Se calla a propósito', BRIEF:'Sin tarjeta local' };
+const SHORT = { GO:'Orientación de card (no es GO_Q)', HOLD:'Espera / revisa', ABSTAIN:'Se calla a propósito', BRIEF:'Sin tarjeta local' };
 let uiMode = P.ui_mode === 'advanced' ? 'advanced' : 'simple';
 let activeGroup = 'Todos';
 let currentRole = P.role || 'operator';
 let lastAct = Object.assign({ act:null, cmd:null, ts:null, hint:null }, P.last_act || {});
 let mapLayers = [];
 let bounds = [];
+
+function fusionRailOn() {
+  const r = (rails && rails.field_ops_ml_live_fusion)
+    || ((liveOps && liveOps.honesty_rails) || {}).field_ops_ml_live_fusion;
+  const s = String(r == null ? '' : r).toUpperCase();
+  return s === 'ON' || s === 'TRUE';
+}
+function fusionRailLabel() {
+  return fusionRailOn() ? 'Fusion ON' : 'Fusion OFF';
+}
+function missingSourceIds(c) {
+  const out = [];
+  ((c && c.sources) || []).forEach(s => {
+    if (s && s.available === false) out.push(String(s.id || '?'));
+  });
+  ((c && c.reasons) || []).forEach(r => {
+    const m = String(r).match(/^missing:(.+)$/);
+    if (m) out.push(m[1]);
+  });
+  return out;
+}
+function sistemaFail(c) {
+  return !!(c && c.system_reliability_pass === false);
+}
+function sourcesThin(c) {
+  const miss = missingSourceIds(c);
+  return miss.indexOf('ml_clm_ensemble') >= 0
+    || miss.indexOf('open_cems') >= 0
+    || miss.indexOf('open_cems_perimeter') >= 0;
+}
 
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -958,13 +990,19 @@ function paintDecisionLog() {
       : ('id: — (' + mode + ' · no inventa decision_id)');
   }
   if (dlogMeta) {
-    const dec = dlog.decision || (card && card.decision) || '—';
+    const sidecarDec = dlog.mode === 'sidecar_read'
+      ? String(dlog.decision || '—').toUpperCase()
+      : null;
+    const heroDec = String((hero && hero.decision) || (card && card.decision) || '—').toUpperCase();
     const conf = dlog.confidence_pred != null
       ? (' · conf ' + dlog.confidence_pred + ' (no es ROS)')
       : '';
     const gq = 'go_q_met=' + String(dlog.go_q_met === true);
-    dlogMeta.textContent = 'decisión ' + String(dec).toUpperCase() + conf
-      + ' · fusion ON · ' + gq + ' · ' + (dlog.note || '');
+    dlogMeta.textContent = (sidecarDec
+      ? ('sidecar log ' + sidecarDec + conf + ' (ACK · no es hero orientación)')
+      : ('sin sidecar (no es hero ' + heroDec + ')'))
+      + ' · fusion ' + (fusionRailOn() ? 'ON' : 'OFF')
+      + ' · ' + gq + ' · ' + (dlog.note || '');
   }
   if (st) {
     if (dlog.acked || (dlog.ack && dlog.ack.acked)) {
@@ -978,7 +1016,16 @@ function paintDecisionLog() {
     }
   }
   if (noteEl) {
-    noteEl.textContent = 'fusion ON · no GO_Q invent · ACK ≠ acta H1 · conf ML ≠ ROS';
+    const sidecarDec = dlog.mode === 'sidecar_read'
+      ? String(dlog.decision || '').toUpperCase()
+      : '';
+    const heroDec = String((hero && hero.decision) || (card && card.decision) || '').toUpperCase();
+    let note = (fusionRailOn() ? 'fusion ON' : 'fusion OFF')
+      + ' · no GO_Q invent · ACK ≠ acta H1 · sidecar ≠ hero orientación · conf ML ≠ ROS';
+    if (sidecarDec && heroDec && sidecarDec !== heroDec) {
+      note += ' · hero ' + heroDec + ' ≠ sidecar ' + sidecarDec;
+    }
+    noteEl.textContent = note;
   }
 }
 async function runDlogAck() {
@@ -1116,7 +1163,7 @@ function addTop(text, cls) {
   s.innerHTML = '<i></i>' + text;
   topChips.appendChild(s);
 }
-addTop('Fusion OFF', 'ok');
+addTop(fusionRailLabel(), fusionRailOn() ? 'ok' : 'warn');
 addTop((P.fire_count || fires.length || 0) + ' IF', 'live');
 if (liveOps && liveOps.enabled) addTop('Live Ops', 'live');
 const light = hero.overall_light || brief.overall_light || '—';
@@ -1159,9 +1206,29 @@ function applyHero(h) {
   hero = h || {};
   const word = String(hero.decision || 'BRIEF').toUpperCase();
   const heroEl = document.getElementById('hero');
-  heroEl.className = 'decision ' + ({GO:'go',HOLD:'hold',ABSTAIN:'abstain',BRIEF:'brief'}[word] || 'brief');
+  const sysFail = sistemaFail(card);
+  const thin = sourcesThin(card);
+  // Card GO + sistema FAIL / missing artifacts is orientation, not product GO
+  let cls = ({GO:'go',HOLD:'hold',ABSTAIN:'abstain',BRIEF:'brief'}[word] || 'brief');
+  if (word === 'GO' && (sysFail || thin)) cls = 'hold';
+  heroEl.className = 'decision ' + cls;
   document.getElementById('hero-word').textContent = word;
   document.getElementById('hero-plain').textContent = SHORT[word] || (hero.plain || '');
+  const kindEl = document.getElementById('hero-kind');
+  if (kindEl) {
+    const dlogDec = (decisionLog && decisionLog.mode === 'sidecar_read')
+      ? String(decisionLog.decision || '').toUpperCase()
+      : '';
+    let kind = 'orientación de card · no es GO_Q';
+    if (word === 'GO') {
+      kind = 'orientación de card (no es GO_Q · no es despacho)';
+      if (sysFail || thin) kind += ' · sistema FAIL / fuentes incompletas';
+    }
+    if (dlogDec && dlogDec !== word) {
+      kind += ' · sidecar log ' + dlogDec + ' (ACK) ≠ hero';
+    }
+    kindEl.textContent = kind;
+  }
   const confEl = document.getElementById('hero-conf');
   const fill = document.getElementById('unc-fill');
   const bandEl = document.getElementById('unc-band');
@@ -1435,25 +1502,43 @@ function renderDecisionTab() {
     dbody.className = '';
     dbody.innerHTML = '<div class="grid2" id="dec-kv"></div><div id="src-list" style="margin-top:8px"></div>' +
       ((card.reasons || []).length ? '<ul id="dec-reasons" style="padding-left:1.1rem;margin:8px 0;color:var(--muted);font-size:11px"></ul>' : '') +
+      '<div class="dlog-note" id="dec-honest" data-marker="decision-honest"></div>' +
       '<button type="button" class="btn primary block" id="btn-copy-decision" style="margin-top:8px">Copiar</button>';
     const dkv = document.getElementById('dec-kv');
     metric(dkv, 'Decisión', card.decision);
     metric(dkv, 'Conf.', card.confidence_pred != null ? Math.round(card.confidence_pred * 100) + '%' : '—');
     metric(dkv, 'Evento', card.event_id || '—');
-    metric(dkv, 'Sistema', card.system_reliability_pass === true ? 'OK' : (card.system_reliability_pass === false ? 'FAIL' : '—'));
+    const sys = card.system_reliability_pass === true ? 'OK'
+      : (card.system_reliability_pass === false ? 'FAIL' : '—');
+    metric(dkv, 'Sistema', sys);
     (card.sources || []).slice(0, 6).forEach(s => {
       const row = document.createElement('div');
       row.className = 'src';
-      row.innerHTML = '<span>' + (s.id || '?') + '</span><span>' + Math.round(Number(s.confidence || 0) * 100) + '%</span>';
+      const avail = s.available === false ? ' · ausente' : '';
+      row.innerHTML = '<span>' + (s.id || '?') + avail + '</span><span>' + Math.round(Number(s.confidence || 0) * 100) + '%</span>';
       document.getElementById('src-list').appendChild(row);
     });
     const ur = document.getElementById('dec-reasons');
     if (ur) (card.reasons || []).slice(0, 4).forEach(r => {
       const li = document.createElement('li'); li.textContent = r; ur.appendChild(li);
     });
+    const miss = missingSourceIds(card);
+    const honest = document.getElementById('dec-honest');
+    if (honest) {
+      const isGo = String(card.decision || '').toUpperCase() === 'GO';
+      if (sys === 'FAIL' || miss.length) {
+        honest.textContent = (isGo ? 'Card GO = orientación de outbox ≠ GO_Q · ' : '')
+          + (sys === 'FAIL' ? 'sistema FAIL (fail-closed / artefactos incompletos) · ' : '')
+          + (miss.length ? ('fuentes incompletas: ' + miss.join(', ') + ' · ') : '')
+          + 'no es despacho · fusion ON ≠ GO_Q complete';
+      } else {
+        honest.textContent = 'Card = orientación · no es GO_Q · no es despacho táctico';
+      }
+    }
     document.getElementById('btn-copy-decision').onclick = () => copyText([
-      'Decisión: ' + (card.decision || '—'),
+      'Decisión: ' + (card.decision || '—') + ' (orientación de card · no es GO_Q)',
       'Confianza: ' + (card.confidence_pred != null ? Math.round(card.confidence_pred * 100) + '%' : '—'),
+      'Sistema: ' + sys,
       ...(card.reasons || []).slice(0, 4).map(r => '- ' + r),
     ].join('\n'), 'Decisión', { act: 'Decisión', hint: 'Resumen Decision Card copiado' });
   } else {
@@ -1650,8 +1735,9 @@ function metric(parent, k, v) {
 renderOpsKv();
 
 const railsEl = document.getElementById('rails');
+const fusionOn = fusionRailOn();
 [
-  ['Fusion ON', rails.field_ops_ml_live_fusion === 'ON' || rails.field_ops_ml_live_fusion === true],
+  [fusionRailLabel(), fusionOn],
   ['No despacho', !!rails.not_tactical_dispatch],
   ['NRT ≠ perímetro', !!rails.nrt_not_official_perimeter],
 ].forEach(([label, on]) => {

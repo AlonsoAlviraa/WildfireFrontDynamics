@@ -20,10 +20,9 @@ def _fusion_rail() -> str:
 
     return field_ops_ml_live_fusion_rail()
 
+
 # Mes2 PR1-A fixed honesty strings (tests pin exact phrases)
-UNCERTAINTY_BAR_NOTE = (
-    "no es ROS · IoU ≠ ROS · banda de calidad existente, sin inventar scores"
-)
+UNCERTAINTY_BAR_NOTE = "no es ROS · IoU ≠ ROS · banda de calidad existente, sin inventar scores"
 UNCERTAINTY_BAR_LABEL = "Conf. predicción (no es ROS)"
 
 # Support / recommendation ladder (eng UI only — not field GO sell)
@@ -52,9 +51,10 @@ SR_LADDER_LEVELS: tuple[dict[str, str], ...] = (
 
 SR_NON_CLAIMS: tuple[str, ...] = (
     "No es despacho táctico",
-    "No vende field GO / fusion ON",
+    "Fusion ON ≠ GO_Q complete ≠ despacho",
     "IoU ≠ ROS · conf ML ≠ conf ROS",
-    "GO_Q partial hasta acta tercero humana",
+    "GO_Q partial hasta acta tercero humana · go_q_met=false",
+    "ABSTAIN/HOLD son feature",
     "Claims Guardian: no outbound marketing sin clear",
 )
 
@@ -67,7 +67,7 @@ def build_uncertainty_bar_view(
     """Mes2 PR1-A: pure conf-only uncertainty bar for SPA payload.
 
     Uses only existing confidence_pred / label from the decision card / hero.
-    Never invents numeric scores, never maps IoU→ROS, never sets fusion ON / GO_Q.
+    Never invents numeric scores, never maps IoU→ROS, never invents GO_Q.
     Empty conf → honest empty fill + band ``sin conf``.
     """
     conf: float | None = None
@@ -124,7 +124,7 @@ def build_split_conf_view(
 ) -> dict[str, Any]:
     """Mes2 PR3-A: split ML vs ROS confidence from existing fields only.
 
-    Never invents ROS scores, never maps IoU→ROS, never sets fusion ON / GO_Q.
+    Never invents ROS scores, never maps IoU→ROS, never invents GO_Q.
     Missing ops → honest ``sin conf ROS``.
     """
     ml_bar = build_uncertainty_bar_view(
@@ -155,9 +155,7 @@ def build_split_conf_view(
         ros_display = "— (sin conf ROS)"
         ros_empty = True
 
-    ml_display = (
-        f"{ml_bar['fill_pct']}% · {ml_bar['band']}" if not ml_bar["empty"] else "—"
-    )
+    ml_display = f"{ml_bar['fill_pct']}% · {ml_bar['band']}" if not ml_bar["empty"] else "—"
 
     return {
         "schema": "wfd_split_conf_ui_v1",
@@ -194,7 +192,7 @@ def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:
     if dec == "GO":
         # Lab/eng GO on card ≠ field GO sell — clamp ladder highlight to S2
         active = "S2"
-        note = "Card GO (lab/eng) ≠ field GO · fusion ON · no vender despacho"
+        note = "Card GO = orientación (lab/eng) ≠ GO_Q · fusion ON ≠ despacho"
     elif dec == "HOLD":
         active = "S1"
         note = "HOLD: soporte limitado · no inventar certeza"
@@ -213,8 +211,9 @@ def build_sr_ladder(*, decision: str | None = None) -> dict[str, Any]:
         "levels": [dict(x) for x in SR_LADDER_LEVELS],
         "non_claims": list(SR_NON_CLAIMS),
         "claims_guardian": (
-            "Claims Guardian checklist: no field GO sell · no fusion ON · "
-            "no GO_Q complete · no IoU=ROS · marketing embargado hasta clear humano"
+            "Claims Guardian: fusion ON ≠ GO_Q complete ≠ despacho · "
+            "go_q_met=false · ABSTAIN/HOLD son feature · no field GO sell · "
+            "no IoU=ROS · marketing embargado hasta clear humano"
         ),
         "note": note,
         "field_ops_ml_live_fusion": _fusion_rail(),
@@ -302,7 +301,7 @@ def build_h1_eng_rehearsal(
         "non_claims": [
             "go_q_met=false en esta superficie de producto",
             "No es acta H1 con tercero",
-            "No fusion ON · no despacho táctico",
+            "fusion ON ≠ GO_Q complete ≠ despacho · ABSTAIN/HOLD son feature",
         ],
         "eng_only": True,
         "not_third_party_acta": True,
@@ -359,7 +358,7 @@ def load_decision_log_surface(
 
     Uses shipped ``load_decision_log`` (allowlisted). Latest entry wins.
     Empty / path fail → honest stub (no invented decision_id, no fake ACK).
-    Never mutates disk, never sets GO_Q, fusion stays OFF.
+    Never mutates disk, never sets GO_Q. Fusion follows field_ops catalog.
     """
     from wildfire_front.product.decide_service import PathNotAllowedError
     from wildfire_front.product.decision_log import (
@@ -373,8 +372,8 @@ def load_decision_log_surface(
     if work_dir is None:
         return _empty_decision_log_surface(decision_card=card)
 
-    allow_base = Path(base) if base is not None else (
-        Path(repo_root) if repo_root is not None else None
+    allow_base = (
+        Path(base) if base is not None else (Path(repo_root) if repo_root is not None else None)
     )
 
     try:
@@ -409,10 +408,7 @@ def load_decision_log_surface(
     if not did:
         return _empty_decision_log_surface(
             decision_card=card,
-            note=(
-                "Sidecar sin decision_id válido · fail closed · "
-                "no inventa id · fusion ON"
-            ),
+            note=("Sidecar sin decision_id válido · fail closed · no inventa id · fusion ON"),
         )
 
     ack_obj = found.get("ack") if isinstance(found.get("ack"), dict) else None
@@ -459,7 +455,7 @@ def _empty_vv_scorecard_surface(*, note: str | None = None) -> dict[str, Any]:
         "event_id": None,
         "go_q_met": False,
         "go_q": "partial",
-        "field_ops_fusion": "OFF",
+        "field_ops_fusion": _fusion_rail(),
         "field_iou": None,
         "field_ros": None,
         "field_grade": None,
@@ -497,8 +493,8 @@ def load_vv_scorecard_surface(
     if work_dir is None:
         return _empty_vv_scorecard_surface()
 
-    allow_base = Path(base) if base is not None else (
-        Path(repo_root) if repo_root is not None else None
+    allow_base = (
+        Path(base) if base is not None else (Path(repo_root) if repo_root is not None else None)
     )
 
     try:
@@ -710,8 +706,7 @@ def load_weakness_board_surface(
     if not is_under(path_real, allow_real):
         return _empty_weakness_board_surface(
             note=(
-                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · "
-                "fusion ON · GO_Q partial"
+                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · fusion ON · GO_Q partial"
             ),
         )
     if not exists_file(path_real):
@@ -724,8 +719,7 @@ def load_weakness_board_surface(
     except PathNotAllowedError:
         return _empty_weakness_board_surface(
             note=(
-                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · "
-                "fusion ON · GO_Q partial"
+                "WEAKNESS_BOARD fuera de allowlist · no inventa conteos · fusion ON · GO_Q partial"
             ),
         )
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError, TypeError):

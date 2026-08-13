@@ -78,6 +78,9 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert 'data-marker="sr-ladder"' in html or 'id="sr-ladder"' in html
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
+    assert "fusion ON ≠ GO_Q" in html or "fusion ON" in html
+    assert "addTop('Fusion OFF'" not in html
+    assert "orientación de card" in html
 
 
 def test_write_and_reopen_html_intact(tmp_path: Path):
@@ -127,7 +130,14 @@ def test_html_helpers_split_markers():
     assert "no es acta H1" in shell
     assert "btn-h1-copy-cmd" in shell
     assert "sr-ladder" in shell
+    assert "hero-orientation" in shell
+    assert "hero-kind" in shell
+    assert "fusion ON ≠ GO_Q complete ≠ despacho" in shell
     assert "function toast" in js or "toast(" in js
+    assert "fusionRailOn" in js
+    assert "fusionRailLabel" in js
+    assert "decision-honest" in js
+    assert "addTop('Fusion OFF'" not in js
     assert "unc-fill" in js or "uncertainty" in js
     assert "uncertaintyBar" in js or "uncertainty_bar" in js
     assert "Conf. predicción (no es ROS)" in js
@@ -185,6 +195,9 @@ def test_js_live_unavailable_surfaces_cli_fallback():
     assert "app --serve" in js
     assert "CLI copiado" in js
     assert "Sin Live Ops (HTTP" in js
-    # still no fusion ON control / shell injection helpers
-    assert "fusion ON" not in js.lower() or "fusion off" in js.lower()
-
+    # Fusion chip follows catalog rails — no hardcoded Fusion OFF
+    assert "addTop('Fusion OFF'" not in js
+    assert "fusionRailOn" in js
+    assert "fusionRailLabel" in js
+    assert "hero-kind" in mod._shell() or "hero-orientation" in mod._shell()
+    assert "decision-honest" in js

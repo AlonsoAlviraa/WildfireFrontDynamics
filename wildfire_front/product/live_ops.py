@@ -2,7 +2,8 @@
 
 Loopback-only product surface: Estado · Decidir · Acta invoke real Python APIs
 (no free-form shell from the browser). Path allowlist under ``base_dir``
-(default: repo root). Honesty rails always present; fusion never ON.
+(default: repo root). Honesty rails always present; fusion follows the
+field_ops catalog (same source as ``app --list-fires``). Never invent GO_Q.
 
 Endpoints (served only when live ops enabled on the SPA HTTP server):
   GET  /live/v1/health
@@ -45,9 +46,10 @@ LIVE_PATH_ACK_DECISION = "/live/v1/ack-decision"
 LIVE_PATH_HEALTH = "/live/v1/health"
 
 HONESTY_RAILS: dict[str, Any] = {
-    "field_ops_ml_live_fusion": "ON",
+    "field_ops_ml_live_fusion": "OFF",  # fail-closed template; honesty_rails() overwrites
     "not_tactical_dispatch": True,
     "go_q_invent_forbidden": True,
+    "go_q_met": False,
     "iou_is_not_ros": True,
     "nrt_not_official_perimeter": True,
     "hotspots_not_burned_area": True,
@@ -56,16 +58,22 @@ HONESTY_RAILS: dict[str, Any] = {
 
 
 def honesty_rails() -> dict[str, Any]:
-    """Honesty snapshot (fusion follows field_ops catalog; never invent GO_Q)."""
+    """Honesty snapshot — fusion from field_ops catalog (same as ``app --list-fires``).
+
+    Never invents GO_Q. Fail-closed OFF if catalog unreadable.
+    """
     from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
 
     rails = dict(HONESTY_RAILS)
     rails["field_ops_ml_live_fusion"] = field_ops_ml_live_fusion_rail()
+    rails["go_q_met"] = False
     return rails
 
 
 def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
     """Embed in SPA payload so the browser knows same-origin live acts exist."""
+    rails = honesty_rails()
+    fusion = rails.get("field_ops_ml_live_fusion") or "OFF"
     return {
         "enabled": bool(enabled),
         "schema": LIVE_OPS_SCHEMA,
@@ -81,10 +89,10 @@ def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
         "channel": "live_ops_loopback",
         "note": (
             "Activo solo con app --serve (loopback). POST same-origin; sin shell "
-            "desde el browser. Fusion OFF; no inventa GO_Q; no despacho táctico. "
+            f"desde el browser. Fusion {fusion}; no inventa GO_Q; no despacho táctico. "
             "file:// o sin serve: fallback a copiar CLI."
         ),
-        "honesty_rails": honesty_rails(),
+        "honesty_rails": rails,
     }
 
 
@@ -510,7 +518,7 @@ def handle_ack_decision(
 ) -> dict[str, Any]:
     """ACK a decision_id via shipped #31 ``ack_decision`` (loopback Live Ops only).
 
-    Fail closed on unknown id / missing work_dir. Never invents GO_Q or fusion ON.
+    Fail closed on unknown id / missing work_dir. Never invents GO_Q.
     """
     from wildfire_front.product.decision_log import (
         DecisionLogError,
@@ -563,9 +571,7 @@ def handle_ack_decision(
         }
 
     # Reload to prove sidecar rewrite (shipped get_decision path)
-    reloaded = get_decision(
-        work, decision_id, base=root, include_repo_root=True
-    )
+    reloaded = get_decision(work, decision_id, base=root, include_repo_root=True)
     ack_obj = (reloaded or entry).get("ack") if (reloaded or entry) else None
     return {
         "ok": True,
@@ -579,10 +585,7 @@ def handle_ack_decision(
         "work_dir": str(work),
         "go_q_met": False,
         "honesty_rails": honesty_rails(),
-        "note": (
-            "ACK escrito en decision_log.jsonl · no es acta H1 · "
-            "fusion ON · no inventa GO_Q"
-        ),
+        "note": ("ACK escrito en decision_log.jsonl · no es acta H1 · fusion ON · no inventa GO_Q"),
     }
 
 
@@ -663,12 +666,17 @@ def dispatch_live(
             # unknown id / missing decision_id → 400 fail closed (not 200 ok:false only)
             if not payload.get("ok"):
                 err = str(payload.get("error") or "")
-                code = 400 if err in (
-                    "decision_id_required",
-                    "unknown_decision_id",
-                    "decision_log_error",
-                    "path_not_allowed",
-                ) else 400
+                code = (
+                    400
+                    if err
+                    in (
+                        "decision_id_required",
+                        "unknown_decision_id",
+                        "decision_log_error",
+                        "path_not_allowed",
+                    )
+                    else 400
+                )
                 return code, payload
             return 200, payload
     except PathNotAllowedError as exc:

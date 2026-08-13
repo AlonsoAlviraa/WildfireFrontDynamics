@@ -13,6 +13,7 @@ import pytest
 
 from wildfire_front.cli_app import _SafeSPARequestHandler, run_app
 from wildfire_front.product.app_spa import build_product_app_payload, write_product_app
+from wildfire_front.product.decide_service import REPO_ROOT, PathNotAllowedError
 from wildfire_front.product.live_ops import (
     LIVE_PATH_ACK_DECISION,
     LIVE_PATH_DECIDE,
@@ -26,7 +27,6 @@ from wildfire_front.product.live_ops import (
     honesty_rails,
     resolve_work_dir,
 )
-from wildfire_front.product.decide_service import PathNotAllowedError, REPO_ROOT
 
 
 def _post_json(port: int, path: str, body: dict) -> tuple[int, dict]:
@@ -64,9 +64,7 @@ def _get_json(port: int, path: str) -> tuple[int, dict]:
 
 
 def _start_live_server(tmp_path: Path, *, live: bool = True, base: Path | None = None):
-    payload = build_product_app_payload(
-        live=False, scan=False, live_ops_enabled=live
-    )
+    payload = build_product_app_payload(live=False, scan=False, live_ops_enabled=live)
     paths = write_product_app(payload, tmp_path / "spa")
     root = paths["html"].resolve().parent
     handler = _SafeSPARequestHandler.make(
@@ -96,9 +94,20 @@ def sla_work_dir() -> Path:
 
 def test_honesty_rails_fusion_on():
     r = honesty_rails()
+    from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+
+    stamp_path = REPO_ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+    stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
+    assert stamp.get("field_ops_allow_ml_live_in_fusion") is True
+    assert (stamp.get("rails") or {}).get("field_ops_fusion") == "ON"
+    assert stamp.get("GO_Q") == "partial"
+    # Same catalog source as ``app --list-fires``
+    assert r["field_ops_ml_live_fusion"] == field_ops_ml_live_fusion_rail()
     assert r["field_ops_ml_live_fusion"] == "ON"
     assert r["go_q_invent_forbidden"] is True
     assert r["not_tactical_dispatch"] is True
+    assert r["go_q_met"] is False
+    assert r["iou_is_not_ros"] is True
 
 
 def test_resolve_work_dir_rejects_traversal(tmp_path: Path):
@@ -118,6 +127,9 @@ def test_payload_live_ops_flag():
     off = build_product_app_payload(live=False, scan=False, live_ops_enabled=False)
     assert off["live_ops"]["enabled"] is False
     assert off["rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert off["live_ops"]["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert off["live_ops"]["honesty_rails"]["go_q_met"] is False
+    assert "Fusion OFF" not in (off["live_ops"].get("note") or "")
     on = build_product_app_payload(live=False, scan=False, live_ops_enabled=True)
     assert on["live_ops"]["enabled"] is True
     assert on["live_ops"]["endpoints"]["decide"] == LIVE_PATH_DECIDE
@@ -137,6 +149,7 @@ def test_dispatch_health_and_disabled_path():
     assert st == 200
     assert payload["ok"] is True
     assert payload["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert payload["honesty_rails"].get("go_q_met") is False
 
 
 def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
@@ -145,10 +158,10 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         st_h, health = _get_json(port, LIVE_PATH_HEALTH)
         assert st_h == 200
         assert health["ok"] is True
+        assert health["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+        assert health["honesty_rails"]["go_q_met"] is False
 
-        rel = str(sla_work_dir.resolve().relative_to(REPO_ROOT.resolve())).replace(
-            "\\", "/"
-        )
+        rel = str(sla_work_dir.resolve().relative_to(REPO_ROOT.resolve())).replace("\\", "/")
         st_s, status = _post_json(port, LIVE_PATH_STATUS, {"work_dir": rel})
         assert st_s == 200, status
         assert status["ok"] is True
@@ -164,12 +177,10 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         assert decided["ok"] is True
         assert decided["act"] == "decide"
         assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+        assert decided["honesty_rails"]["go_q_met"] is False
         summary = decided.get("summary") or {}
-        assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get(
-            "decision"
-        )
-        # fusion never ON in summary/rails
-        assert decided["honesty_rails"]["field_ops_ml_live_fusion"] != "ON"
+        assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get("decision")
+        assert decided["honesty_rails"]["go_q_invent_forbidden"] is True
     finally:
         httpd.shutdown()
         httpd.server_close()
@@ -178,9 +189,7 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
 def test_live_http_export_acta(tmp_path: Path, sla_work_dir: Path):
     httpd, port, _ = _start_live_server(tmp_path, live=True, base=REPO_ROOT)
     try:
-        rel = str(sla_work_dir.resolve().relative_to(REPO_ROOT.resolve())).replace(
-            "\\", "/"
-        )
+        rel = str(sla_work_dir.resolve().relative_to(REPO_ROOT.resolve())).replace("\\", "/")
         st, payload = _post_json(port, LIVE_PATH_EXPORT_ACTA, {"work_dir": rel})
         assert st == 200, payload
         assert payload["ok"] is True
@@ -196,9 +205,7 @@ def test_live_http_export_acta(tmp_path: Path, sla_work_dir: Path):
 def test_live_rejects_traversal_and_missing(tmp_path: Path):
     httpd, port, _ = _start_live_server(tmp_path, live=True, base=REPO_ROOT)
     try:
-        st, payload = _post_json(
-            port, LIVE_PATH_DECIDE, {"work_dir": "../../../etc/passwd"}
-        )
+        st, payload = _post_json(port, LIVE_PATH_DECIDE, {"work_dir": "../../../etc/passwd"})
         assert st == 400
         assert payload.get("error") == "path_not_allowed"
 
@@ -333,11 +340,11 @@ def test_replay_third_party_default_pack():
 
 def test_handle_ack_decision_round_trip_and_unknown(tmp_path: Path):
     """Shipped Live Ops ACK path: append → handle_ack_decision → acked true."""
+    from wildfire_front.product.decide_service import decide_from_request
     from wildfire_front.product.decision_log import (
         append_decision,
         get_decision,
     )
-    from wildfire_front.product.decide_service import decide_from_request
 
     work = tmp_path / "ack_live"
     work.mkdir()
@@ -398,8 +405,8 @@ def test_handle_ack_decision_round_trip_and_unknown(tmp_path: Path):
 
 def test_live_http_ack_decision(tmp_path: Path):
     """HTTP POST /live/v1/ack-decision on loopback server rewrites sidecar."""
-    from wildfire_front.product.decision_log import append_decision, get_decision
     from wildfire_front.product.decide_service import decide_from_request
+    from wildfire_front.product.decision_log import append_decision, get_decision
 
     # Nested under tmp base so resolve_work_dir allowlist passes
     base = tmp_path / "repo_like"

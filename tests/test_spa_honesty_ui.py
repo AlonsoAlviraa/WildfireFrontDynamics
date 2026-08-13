@@ -58,7 +58,7 @@ def test_uncertainty_bar_conf_only_no_invented_scores():
     assert bad["band"] == "sin conf"
 
 
-def test_sr_ladder_non_claims_and_fusion_off():
+def test_sr_ladder_non_claims_and_fusion_on():
     ladder = build_sr_ladder(decision="ABSTAIN")
     assert ladder["marker"] == "sr-ladder"
     assert ladder["active_id"] == "S0"
@@ -68,14 +68,19 @@ def test_sr_ladder_non_claims_and_fusion_off():
     assert ids == {"S0", "S1", "S2", "S3"}
     for claim in SR_NON_CLAIMS:
         assert claim in ladder["non_claims"]
-    assert "field GO" in ladder["claims_guardian"] or "field GO" in " ".join(ladder["non_claims"])
+    guardian = ladder["claims_guardian"]
+    assert "fusion ON ≠ GO_Q complete ≠ despacho" in guardian
+    assert "go_q_met=false" in guardian
+    assert "ABSTAIN/HOLD" in guardian
+    assert "no fusion ON" not in guardian
+    assert "field GO" in guardian or "field GO" in " ".join(ladder["non_claims"])
 
     hold = build_sr_ladder(decision="HOLD")
     assert hold["active_id"] == "S1"
-    # Card GO still must not sell field GO (clamped)
+    # Card GO still must not sell field GO / GO_Q
     go = build_sr_ladder(decision="GO")
     assert go["active_id"] == "S2"
-    assert "field GO" in go["note"] or "fusion ON" in go["note"]
+    assert "GO_Q" in go["note"] or "fusion ON" in go["note"]
 
 
 def test_h1_eng_rehearsal_never_sets_go_q_met():
@@ -92,6 +97,11 @@ def test_h1_eng_rehearsal_never_sets_go_q_met():
     assert any(
         "GO_Q" in s.get("detail", "") or "Rails" in s.get("title", "") for s in block["steps"]
     )
+    nc = " ".join(block["non_claims"])
+    assert "go_q_met=false" in nc
+    assert "fusion ON ≠ GO_Q complete ≠ despacho" in nc
+    assert "ABSTAIN/HOLD" in nc
+    assert "No fusion ON" not in nc
 
 
 def test_split_conf_ml_neq_ros_no_invent():
@@ -237,9 +247,7 @@ def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
     work = tmp_path / "inc_vv"
     work.mkdir()
     write_vv_scorecard(work, base=tmp_path, include_repo_root=False, event_id="IF_VV")
-    side = load_vv_scorecard_surface(
-        work_dir=work, base=tmp_path, include_repo_root=False
-    )
+    side = load_vv_scorecard_surface(work_dir=work, base=tmp_path, include_repo_root=False)
     assert side["mode"] == "sidecar_read"
     assert side["path_rel"] == "vv_scorecard.json"
     assert side["eng_stub"] is True
@@ -254,9 +262,7 @@ def test_vv_scorecard_reads_real_sidecar(tmp_path: Path):
 
     empty_wd = tmp_path / "inc_no_vv"
     empty_wd.mkdir()
-    missing = load_vv_scorecard_surface(
-        work_dir=empty_wd, base=tmp_path, include_repo_root=False
-    )
+    missing = load_vv_scorecard_surface(work_dir=empty_wd, base=tmp_path, include_repo_root=False)
     assert missing["mode"] == "sin_sidecar"
     assert missing["field_iou"] is None
 
@@ -293,6 +299,9 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert vv["invents_field_scores"] is False
     assert str(payload["rails"]["field_ops_ml_live_fusion"]).upper() == "ON"
     assert payload["rails"]["go_q_invent_forbidden"] is True
+    assert payload["live_ops"]["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+    assert payload["live_ops"]["honesty_rails"]["go_q_met"] is False
+    assert "Fusion OFF" not in (payload["live_ops"].get("note") or "")
 
     html = render_product_app_html(payload)
     assert 'id="uncertainty-bar"' in html or 'data-marker="uncertainty-bar"' in html
@@ -322,6 +331,12 @@ def test_payload_embeds_uncertainty_bar_and_a6_a7_a8_html_markers():
     assert "go_q_met" in html
     assert "Claims Guardian" in html or "sr-claims" in html
     assert "fusion ON" in html
+    assert "fusion ON ≠ GO_Q" in html
+    assert "addTop('Fusion OFF'" not in html
+    assert "fusionRailOn" in html
+    assert "orientación de card" in html
+    assert "no es GO_Q" in html
+    assert "decision-honest" in html
     assert '"field_ops_ml_live_fusion": "ON"' in html
     assert "go_q_invent_forbidden" in html
     assert "liveUnavailableFallback" in html
@@ -352,9 +367,7 @@ def test_payload_reads_real_sidecar_and_html_marker(tmp_path: Path):
         }
     )
     entry = append_decision(work, card, base=tmp_path, include_repo_root=False)
-    surface = load_decision_log_surface(
-        work_dir=work, base=tmp_path, include_repo_root=False
-    )
+    surface = load_decision_log_surface(work_dir=work, base=tmp_path, include_repo_root=False)
     payload = build_product_app_payload(live=False, scan=False)
     payload = {**payload, "decision_log": surface}
     html = render_product_app_html(payload)
