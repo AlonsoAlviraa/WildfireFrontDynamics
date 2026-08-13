@@ -21,6 +21,86 @@ CALDOR_KML_RE = re.compile(
     re.IGNORECASE,
 )
 
+HONESTY_CLASS_VALUES = ("ml_strong", "ml_weak", "proxy")
+
+# Best-fires E2E honesty_class (report SSOT). Distinct from pack catalog
+# ``class`` (ml_weak / context_only). GOFER/CFSDS/NIROPS stay proxy even if
+# catalog class is ml_weak. No pack here is ml_strong / grade-A promote.
+BEST_FIRES_HONESTY: dict[str, dict[str, Any]] = {
+    "latam_au": {
+        "honesty_class": "ml_weak",
+        "grade_a_promote": False,
+        "reason": (
+            "CEMS-derived aligned EO + product decide without clm_ensemble_v34. "
+            "Not official ES cadastre. Not ml_strong."
+        ),
+    },
+    "pt_firesprd": {
+        "honesty_class": "ml_weak",
+        "grade_a_promote": False,
+        "reason": (
+            "PT-FireSprd L1 aligned GeoTIFF + decide; missing ml_clm_ensemble. "
+            "Author L2/L3 ros_* not product ROS. Not official cadastre."
+        ),
+    },
+    "gofer": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "Hourly WGS84 polygons / catalog counts; no native aligned GeoTIFF scenes.",
+    },
+    "cfsds": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "OSF catalogs + 2023 group counts; yearly DOY rasters are not incident GeoTIFF R1.",
+    },
+    "nirops": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "Not downloaded (no unauthenticated file list). Proxy skip, not a product path.",
+    },
+    "firebench_caldor": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "Dated KML inventory only; not aligned GeoTIFF under GEOTIFF_INPUT_CONTRACT.",
+    },
+    "ndws_kaggle_proxy": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "Inventory-only; no clm_ensemble_v34 retrain. Not product ROS.",
+    },
+    "tobarra_inventory": {
+        "honesty_class": "proxy",
+        "grade_a_promote": False,
+        "reason": "Pablo/GEACAM inventory path only. KEEP closed. Not grade-A promote.",
+    },
+    "tobarra_aligned_decide": {
+        "honesty_class": "ml_weak",
+        "grade_a_promote": False,
+        "reason": (
+            "Already-aligned LWIR ingest + decide; no KEEP reopen, no retrain. "
+            "Not grade-A promote."
+        ),
+    },
+}
+
+
+def honesty_row(pack_id: str) -> dict[str, Any]:
+    row = BEST_FIRES_HONESTY[pack_id]
+    klass = row["honesty_class"]
+    if klass not in HONESTY_CLASS_VALUES:
+        raise ValueError(f"invalid honesty_class for {pack_id}: {klass}")
+    return {
+        "pack_id": pack_id,
+        "honesty_class": klass,
+        "grade_a_promote": bool(row["grade_a_promote"]),
+        "reason": row["reason"],
+    }
+
+
+def honesty_table() -> list[dict[str, Any]]:
+    return [honesty_row(pack_id) for pack_id in BEST_FIRES_HONESTY]
+
+
 PACK_CATALOG: dict[str, dict[str, Any]] = {
     "pt_firesprd": {
         "pack_id": "pt_firesprd",

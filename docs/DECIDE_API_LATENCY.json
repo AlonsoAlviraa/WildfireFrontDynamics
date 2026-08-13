@@ -1,24 +1,24 @@
 {
   "schema": "decide_api_latency_v1",
-  "measured_at_utc": "2026-07-17T19:03:01.572232+00:00",
+  "measured_at_utc": "2026-08-13T11:35:22.156906+00:00",
   "n": 40,
   "scenario": "metrics_only_ml_v34_optional_open",
   "budget_p95_ms": 500.0,
   "direct_service": {
-    "p50_ms": 1.09,
-    "p95_ms": 2.021,
-    "max_ms": 2.281,
-    "mean_ms": 1.211
+    "p50_ms": 3.821,
+    "p95_ms": 6.167,
+    "max_ms": 6.937,
+    "mean_ms": 4.062
   },
   "http_api": {
-    "p50_ms": 14.48,
-    "p95_ms": 25.687,
-    "max_ms": 28.328,
-    "mean_ms": 14.334
+    "p50_ms": 8.658,
+    "p95_ms": 22.699,
+    "max_ms": 31.979,
+    "mean_ms": 11.766
   },
   "last_decision": "HOLD",
   "sla_pass": true,
   "dream_field_p95_s": 15.0,
   "note": "Budget is for metrics-only Decision Card path (no GeoTIFF ingest). Field dream <15s inbox\u2192card remains a separate measurement (incident SLA).",
-  "port_used": 58849
+  "port_used": 63024
 }

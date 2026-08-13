@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -10,9 +11,13 @@ import rasterio
 from shapely.geometry import Polygon
 
 from wildfire_front.open_if.external_ros import (
+    BEST_FIRES_HONESTY,
+    HONESTY_CLASS_VALUES,
     INVENTORY_SCHEMA,
     PACK_CATALOG,
     build_zip_inventory,
+    honesty_row,
+    honesty_table,
     inventory_caldor_kml,
     inventory_cfsds_pack,
     inventory_ndws_kaggle_proxy,
@@ -360,6 +365,56 @@ def test_nirops_skip_is_honest() -> None:
     assert rec["ok"] is False
     assert rec["status"] == "not_run"
     assert "401" in rec["reason"]
+
+
+def test_best_fires_honesty_class_per_pack() -> None:
+    rows = honesty_table()
+    by_id = {row["pack_id"]: row for row in rows}
+    assert set(by_id) == set(BEST_FIRES_HONESTY)
+    assert HONESTY_CLASS_VALUES == ("ml_strong", "ml_weak", "proxy")
+    for pack_id in ("latam_au", "pt_firesprd"):
+        assert by_id[pack_id]["honesty_class"] in {"ml_weak", "proxy"}
+        assert by_id[pack_id]["grade_a_promote"] is False
+    for pack_id in ("gofer", "cfsds", "nirops"):
+        assert by_id[pack_id]["honesty_class"] == "proxy"
+        assert by_id[pack_id]["grade_a_promote"] is False
+    tobarra = honesty_row("tobarra_inventory")
+    assert tobarra["honesty_class"] in HONESTY_CLASS_VALUES
+    assert tobarra["honesty_class"] != "ml_strong"
+    assert tobarra["grade_a_promote"] is False
+    aligned = honesty_row("tobarra_aligned_decide")
+    assert aligned["honesty_class"] == "ml_weak"
+    assert aligned["grade_a_promote"] is False
+    assert not any(row["honesty_class"] == "ml_strong" for row in rows)
+    assert not any(row["grade_a_promote"] for row in rows)
+
+
+def test_attach_honesty_writes_per_pack_fields() -> None:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import run_best_fires_e2e as bfe  # noqa: PLC0415
+
+    report = {
+        "latam_au": {"packs": [{"event_id": "AU_EMSR500_PERTH"}]},
+        "pt_firesprd": {},
+        "gofer": {},
+        "cfsds": {},
+        "nirops": {},
+        "firebench_caldor": {},
+        "ndws_kaggle_proxy": {},
+        "tobarra": {"used_as": "inventory_only"},
+        "tobarra_aligned_decide": {"status": "ok"},
+    }
+    bfe._attach_honesty(report)
+    assert report["latam_au"]["honesty_class"] == "ml_weak"
+    assert report["latam_au"]["packs"][0]["honesty_class"] == "ml_weak"
+    assert report["pt_firesprd"]["honesty_class"] == "ml_weak"
+    assert report["gofer"]["honesty_class"] == "proxy"
+    assert report["cfsds"]["honesty_class"] == "proxy"
+    assert report["nirops"]["honesty_class"] == "proxy"
+    assert report["tobarra"]["honesty_class"] == "proxy"
+    assert report["tobarra"]["grade_a_promote"] is False
+    assert report["tobarra_aligned_decide"]["honesty_class"] == "ml_weak"
+    assert {row["honesty_class"] for row in report["honesty_classes"]} <= set(HONESTY_CLASS_VALUES)
 
 
 def test_live_flags_untouched() -> None:

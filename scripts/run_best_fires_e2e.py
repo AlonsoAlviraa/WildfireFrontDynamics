@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from check_release_flags import evaluate as evaluate_flags  # noqa: E402
 
 from wildfire_front.open_if.external_ros import (  # noqa: E402
+    honesty_table,
     inventory_caldor_kml,
     inventory_cfsds_pack,
     inventory_ndws_kaggle_proxy,
@@ -101,6 +102,39 @@ def _rails_from_stamp() -> dict:
     }
 
 
+def _attach_honesty(report: dict) -> dict:
+    rows = honesty_table()
+    report["honesty_classes"] = rows
+    by_id = {row["pack_id"]: row for row in rows}
+
+    def _apply(section: dict | None, pack_id: str) -> None:
+        if not isinstance(section, dict):
+            return
+        rec = by_id[pack_id]
+        section["honesty_class"] = rec["honesty_class"]
+        section["grade_a_promote"] = rec["grade_a_promote"]
+
+    _apply(report.get("latam_au"), "latam_au")
+    latam = report.get("latam_au") or {}
+    for pack in latam.get("packs") or []:
+        if isinstance(pack, dict):
+            pack["honesty_class"] = by_id["latam_au"]["honesty_class"]
+            pack["grade_a_promote"] = False
+    for pack in (latam.get("product_e2e") or {}).get("packs") or []:
+        if isinstance(pack, dict):
+            pack["honesty_class"] = by_id["latam_au"]["honesty_class"]
+            pack["grade_a_promote"] = False
+    _apply(report.get("pt_firesprd"), "pt_firesprd")
+    _apply(report.get("gofer"), "gofer")
+    _apply(report.get("cfsds"), "cfsds")
+    _apply(report.get("nirops"), "nirops")
+    _apply(report.get("firebench_caldor"), "firebench_caldor")
+    _apply(report.get("ndws_kaggle_proxy"), "ndws_kaggle_proxy")
+    _apply(report.get("tobarra"), "tobarra_inventory")
+    _apply(report.get("tobarra_aligned_decide"), "tobarra_aligned_decide")
+    return report
+
+
 def _write_report_md(report: dict, dest: Path) -> None:
     flags = report.get("check_release_flags") or {}
     latam = report.get("latam_au") or {}
@@ -132,6 +166,21 @@ def _write_report_md(report: dict, dest: Path) -> None:
         f"- product_id: `{rails.get('product_id')}` (not retrained)",
         "- Hellín: not promoted",
         "",
+        "## honesty_class (ml_strong | ml_weak | proxy)",
+        "",
+        "No pack in this E2E is `ml_strong`. Tobarra inventory is **not** grade-A promote.",
+        "",
+        "| pack | honesty_class | grade_A_promote | reason |",
+        "|---|---|---|---|",
+    ]
+    for row in report.get("honesty_classes") or honesty_table():
+        reason = str(row.get("reason") or "").replace("|", "/")
+        lines.append(
+            f"| `{row.get('pack_id')}` | `{row.get('honesty_class')}` | "
+            f"{row.get('grade_a_promote')} | {reason} |"
+        )
+    lines += [
+        "",
         "## Commands",
         "",
     ]
@@ -142,6 +191,7 @@ def _write_report_md(report: dict, dest: Path) -> None:
         "",
         "## LATAM/AU packs already on disk (used)",
         "",
+        f"- honesty_class: `{latam.get('honesty_class')}` grade_A_promote={latam.get('grade_a_promote')}",
         f"- packs_ready: **{latam.get('packs_ready')}**",
         f"- product_e2e ok: **{latam_e2e.get('ok')}** n_ok={latam_e2e.get('n_ok')}/{latam_e2e.get('n_packs')}",
     ]
@@ -165,6 +215,7 @@ def _write_report_md(report: dict, dest: Path) -> None:
         "",
         "## PT-FireSprd (downloaded + used)",
         "",
+        f"- honesty_class: `{pt.get('honesty_class')}` grade_A_promote={pt.get('grade_a_promote')}",
         f"- zip_md5_ok: **{pt.get('zip_md5_ok')}** bytes={pt.get('zip_bytes')}",
         f"- sha256: `{pt.get('zip_sha256')}`",
         f"- L1 shapefiles: {pt.get('n_shapefiles')} · R1-capable fires: {pt.get('n_fires_r1')}",
@@ -177,6 +228,7 @@ def _write_report_md(report: dict, dest: Path) -> None:
         "",
         "## GOFER (downloaded + inventoried)",
         "",
+        f"- honesty_class: `{gofer.get('honesty_class')}` grade_A_promote={gofer.get('grade_a_promote')}",
         f"- zip_md5_ok: **{gofer.get('zip_md5_ok')}** bytes={gofer.get('zip_bytes')}",
         f"- sha256: `{gofer.get('zip_sha256')}`",
         f"- catalog fires: {gofer.get('n_catalog_fires')}",
@@ -186,6 +238,7 @@ def _write_report_md(report: dict, dest: Path) -> None:
         "",
         "## CFSDS (OSF catalogs downloaded + used as row counts)",
         "",
+        f"- honesty_class: `{cfsds.get('honesty_class')}` grade_A_promote={cfsds.get('grade_a_promote')}",
         f"- status: **{cfsds.get('status')}** files={cfsds.get('n_downloaded_files')} "
         f"bytes={cfsds.get('downloaded_bytes')}",
         f"- OSF DOI: `{cfsds.get('osf_doi')}` paper: `{cfsds.get('paper_doi')}`",
@@ -198,23 +251,41 @@ def _write_report_md(report: dict, dest: Path) -> None:
         "",
         "## NIROPS Mendeley 95rj5d379g",
         "",
+        f"- honesty_class: `{nirops.get('honesty_class')}` grade_A_promote={nirops.get('grade_a_promote')}",
         f"- status: **{nirops.get('status')}**",
         f"- reason: {nirops.get('reason')}",
         "",
         "## FireBench Caldor 2021 (already on disk; used as KML inventory)",
         "",
+        f"- honesty_class: `{caldor.get('honesty_class')}` grade_A_promote={caldor.get('grade_a_promote')}",
         f"- n_kml={caldor.get('n_kml')} n_dated={caldor.get('n_dated')} "
         f"r1_vector={caldor.get('r1_ge3_dated_kml')} native_geotiff={caldor.get('native_geotiff')}",
         "",
         "## Tobarra on disk (inventory only; KEEP not reopened)",
         "",
+        f"- honesty_class: `{tobarra.get('honesty_class')}` grade_A_promote={tobarra.get('grade_a_promote')}",
         f"- records_written: **{tobarra.get('n_records')}** exit={tobarra.get('exit_code')}",
         f"- source: `{tobarra.get('source')}`",
         f"- output: `{tobarra.get('output')}`",
         "- no retrain, no KEEP reopen, no raw_dropbox in git",
         "",
+    ]
+    aligned = report.get("tobarra_aligned_decide") or {}
+    lines += [
+        "## Tobarra aligned LWIR decide (no KEEP / no retrain)",
+        "",
+        f"- honesty_class: `{aligned.get('honesty_class')}` grade_A_promote={aligned.get('grade_a_promote')}",
+        f"- status: **{aligned.get('status')}**",
+        f"- ingest ok={((aligned.get('geotiff_ingest') or {}).get('ok'))} "
+        f"n_accepted={((aligned.get('geotiff_ingest') or {}).get('n_accepted'))}",
+        f"- decide decision={((aligned.get('decide') or {}).get('decision'))} "
+        f"latency_ms={((aligned.get('decide') or {}).get('latency_ms'))}",
+        f"- keep_reopened: {aligned.get('keep_reopened')} retrained: {aligned.get('retrained')}",
+        f"- report: `{aligned.get('report_path')}`",
+        "",
         "## WildfireSpreadTS / NDWS proxy (on disk; inventory only)",
         "",
+        f"- honesty_class: `{ndws.get('honesty_class')}` grade_A_promote={ndws.get('grade_a_promote')}",
         f"- full_zip_staged: **{ndws.get('full_zip_staged')}** "
         f"({ndws.get('reason_full_zip_not_staged')})",
         f"- documentation_pdf_bytes: {ndws.get('documentation_pdf_bytes')}",
@@ -242,9 +313,47 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-download", action="store_true")
     ap.add_argument("--skip-latam-e2e", action="store_true")
+    ap.add_argument(
+        "--refresh-report",
+        action="store_true",
+        help="Rewrite JSON/MD honesty from existing report + optional tobarra decide",
+    )
+    ap.add_argument(
+        "--skip-tobarra-aligned",
+        action="store_true",
+        help="Do not invoke scripts/decide_tobarra_aligned.py",
+    )
     args = ap.parse_args(argv)
 
     OUT.mkdir(parents=True, exist_ok=True)
+    json_path = OUT / "product_e2e_report.json"
+    md_path = OUT / "REPORT.md"
+
+    if args.refresh_report:
+        if not json_path.is_file():
+            print("error: missing product_e2e_report.json for --refresh-report", file=sys.stderr)
+            return 2
+        report = json.loads(json_path.read_text(encoding="utf-8"))
+        aligned_path = OUT / "tobarra_aligned_decide" / "decide_report.json"
+        if aligned_path.is_file():
+            try:
+                report["tobarra_aligned_decide"] = json.loads(
+                    aligned_path.read_text(encoding="utf-8")
+                )
+            except (OSError, json.JSONDecodeError) as exc:
+                report["tobarra_aligned_decide"] = {
+                    "status": "unreadable",
+                    "error": str(exc),
+                    "report_path": _rel(aligned_path),
+                }
+        _attach_honesty(report)
+        report["as_of_utc"] = utc_now()
+        json_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        _write_report_md(report, md_path)
+        print(f"wrote {json_path}")
+        print(f"wrote {md_path}")
+        return 0 if report.get("ok") else 1
+
     commands: list[dict] = []
 
     flags_path = OUT / "check_release_flags.json"
@@ -320,6 +429,23 @@ def main(argv: list[str] | None = None) -> int:
     if tobarra_out.is_file():
         tobarra_n = max(0, len(tobarra_out.read_text(encoding="utf-8").splitlines()) - 1)
 
+    aligned_path = OUT / "tobarra_aligned_decide" / "decide_report.json"
+    if not args.skip_tobarra_aligned:
+        commands.append(_run([sys.executable, "scripts/decide_tobarra_aligned.py"]))
+    aligned: dict = {}
+    if aligned_path.is_file():
+        try:
+            aligned = json.loads(aligned_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            aligned = {"status": "unreadable", "error": str(exc), "report_path": _rel(aligned_path)}
+    elif args.skip_tobarra_aligned:
+        aligned = {
+            "status": "skipped",
+            "report_path": _rel(aligned_path),
+            "keep_reopened": False,
+            "retrained": False,
+        }
+
     hourly = gofer_inv.get("hourly") or {}
     zip_pt = pt_inv.get("zip") or {}
     zip_go = gofer_inv.get("zip") or {}
@@ -379,6 +505,7 @@ def main(argv: list[str] | None = None) -> int:
             "retrained": False,
             "used_as": "inventory_only",
         },
+        "tobarra_aligned_decide": aligned,
         "on_disk_used": [
             "data/open_if/latam_au/au/AU_EMSR500_PERTH",
             "data/open_if/latam_au/cl/CL_EMSR647_NACIMIENTO",
@@ -411,11 +538,11 @@ def main(argv: list[str] | None = None) -> int:
             "not invented Vp/ha/IoU/ROS",
             "not product ROS from PT-FireSprd L2/L3, GOFER farea, or CFSDS sprdistm",
             "not Hellín confirmed",
+            "not grade-A promote from Tobarra inventory or aligned-LWIR decide",
         ],
     }
+    _attach_honesty(report)
 
-    json_path = OUT / "product_e2e_report.json"
-    md_path = OUT / "REPORT.md"
     json_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     _write_report_md(report, md_path)
     print(f"wrote {json_path}")
