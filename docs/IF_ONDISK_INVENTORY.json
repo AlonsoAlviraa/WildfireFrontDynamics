@@ -1,6 +1,6 @@
 {
   "schema": "wfd_if_ondisk_inventory_v1",
-  "as_of_utc": "2026-08-13T12:44:19.922415Z",
+  "as_of_utc": "2026-08-13T12:55:48.374759Z",
   "hash_mode": "tree_fingerprint_path_size_plus_small_manifests",
   "note": "Does not hash raw GeoTIFF payloads (too large; not committed). Counts are measured.",
   "fires": [

@@ -7,6 +7,7 @@ scenes cannot become ml_strong. Never writes data/infocam_anchors.json.
 
 python scripts/score_if_weakness_board.py
 python scripts/score_if_weakness_board.py --fire-id tobarra_20240802
+# subset query prints JSON to stdout; does not overwrite docs/WEAKNESS_BOARD.*
 """
 
 from __future__ import annotations
@@ -39,10 +40,6 @@ GEOM_SUFFIXES = {".tif", ".tiff", ".kmz", ".kml", ".geojson", ".shp", ".gpkg"}
 INVENTORY_SUFFIXES = GEOM_SUFFIXES | {".json", ".csv", ".md"}
 CITE_RE = re.compile(
     r"infocam|observatorio|parte operativo|bolet[ií]n|geacam",
-    re.IGNORECASE,
-)
-LICENSE_RE = re.compile(
-    r"license|licence|cc-by|copernicus|cession|cesi[oó]n|rights",
     re.IGNORECASE,
 )
 
@@ -348,30 +345,31 @@ def _has_crs_bbox_dates(docs: list[dict[str, Any]], dated_scene_count: int) -> b
 
 
 def _has_documented_rights(root: Path, fire_id: str, trees: list[Path], docs: list[dict[str, Any]]) -> bool:
-    for doc in docs:
+    """R4=1 only from pack-local license fields or a rights sheet that names fire_id."""
+    local_docs = list(docs)
+    for tree in trees:
+        if not tree.is_dir():
+            continue
+        for name in ("meta.json", "inventory.json"):
+            cand = tree / name
+            if cand.is_file():
+                local_docs.append(_read_json(cand))
+    for doc in local_docs:
         for key in ("license_id", "license", "licence", "rights_doc"):
             val = doc.get(key)
             if isinstance(val, str) and val.strip():
                 return True
-        if doc.get("lab_ok_provisional") is True and doc.get("license_id"):
-            return True
     rights_docs = (
         root / "docs" / "data_campaigns" / "LATAM_AU_RIGHTS.md",
         root / "docs" / "data_campaigns" / "LATAM_AU_LICENSE_MATRIX.md",
     )
-    if fire_id in OPEN_PROXY_IDS:
-        for path in rights_docs:
-            if path.is_file() and fire_id.lower() in path.read_text(encoding="utf-8", errors="ignore").lower():
-                return True
-            if path.is_file() and LICENSE_RE.search(path.read_text(encoding="utf-8", errors="ignore")[:4000] or ""):
-                # Open-pack rights sheet exists; still require the event to be an open pack.
-                return True
-    for tree in trees:
-        readme = tree / "README.md" if tree.is_dir() else None
-        if readme and readme.is_file():
-            text = readme.read_text(encoding="utf-8", errors="ignore")
-            if LICENSE_RE.search(text):
-                return True
+    needle = fire_id.lower()
+    for path in rights_docs:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore").lower()
+        if needle and needle in text:
+            return True
     return False
 
 
@@ -876,9 +874,11 @@ def render_markdown(board: dict[str, Any]) -> str:
             "```powershell",
             "python scripts/score_if_weakness_board.py",
             "python scripts/score_if_weakness_board.py --fire-id hellin_2024",
+            "# --fire-id alone prints JSON to stdout; it does not overwrite docs/WEAKNESS_BOARD.*",
             "```",
             "",
             "Missing anchors or unknown `--fire-id` exit **1**. Does not write `data/infocam_anchors.json`.",
+            "A `--fire-id` subset without `--out-json` / `--out-md` / `--inventory-*` does not rewrite the SSOT docs.",
             "",
             "Human leftovers (cite / 2nd grade A / H1 acta) stay in `docs/HANDOFF_HUMAN_P0_2026-08-13.md`.",
             "",
@@ -961,10 +961,12 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = args.root.resolve()
     anchors_path = (args.anchors or (root / "data" / "infocam_anchors.json")).resolve()
-    out_json = args.out_json or (root / "docs" / "WEAKNESS_BOARD.json")
-    out_md = args.out_md or (root / "docs" / "WEAKNESS_BOARD.md")
-    inv_json = args.inventory_json or (root / "docs" / "IF_ONDISK_INVENTORY.json")
-    inv_csv = args.inventory_csv or (root / "docs" / "IF_ONDISK_INVENTORY.csv")
+    explicit_out = any(
+        path is not None
+        for path in (args.out_json, args.out_md, args.inventory_json, args.inventory_csv)
+    )
+    subset_query = bool(args.fire_ids)
+    write_ssot = (not subset_query) or explicit_out
 
     if not anchors_path.is_file():
         print(f"error: missing anchors file: {anchors_path}", file=sys.stderr)
@@ -996,11 +998,37 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    out_json.parent.mkdir(parents=True, exist_ok=True)
-    out_md.parent.mkdir(parents=True, exist_ok=True)
-    out_json.write_text(json.dumps(board, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    out_md.write_text(render_markdown(board), encoding="utf-8")
-    write_inventory_sidecar(board, inv_json, inv_csv)
+    if not write_ssot:
+        print(json.dumps(board, indent=2, ensure_ascii=False))
+        return 0
+
+    if subset_query:
+        out_json = args.out_json
+        out_md = args.out_md
+        inv_json = args.inventory_json
+        inv_csv = args.inventory_csv
+    else:
+        out_json = args.out_json or (root / "docs" / "WEAKNESS_BOARD.json")
+        out_md = args.out_md or (root / "docs" / "WEAKNESS_BOARD.md")
+        inv_json = args.inventory_json or (root / "docs" / "IF_ONDISK_INVENTORY.json")
+        inv_csv = args.inventory_csv or (root / "docs" / "IF_ONDISK_INVENTORY.csv")
+
+    written: dict[str, str] = {}
+    if out_json is not None:
+        out_json.parent.mkdir(parents=True, exist_ok=True)
+        out_json.write_text(json.dumps(board, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        written["out_json"] = str(out_json)
+    if out_md is not None:
+        out_md.parent.mkdir(parents=True, exist_ok=True)
+        out_md.write_text(render_markdown(board), encoding="utf-8")
+        written["out_md"] = str(out_md)
+    if inv_json is not None or inv_csv is not None:
+        write_json = inv_json if inv_json is not None else inv_csv.with_suffix(".json")
+        write_csv = inv_csv if inv_csv is not None else inv_json.with_suffix(".csv")
+        write_inventory_sidecar(board, write_json, write_csv)
+        written["inventory_json"] = str(write_json)
+        written["inventory_csv"] = str(write_csv)
+
     print(
         json.dumps(
             {
@@ -1009,8 +1037,7 @@ def main(argv: list[str] | None = None) -> int:
                 "n_fires": board["summary"]["n_fires"],
                 "n_confirmed": board["summary"]["n_confirmed"],
                 "n_ml_strong": board["summary"]["n_ml_strong"],
-                "out_json": str(out_json),
-                "out_md": str(out_md),
+                **written,
                 "anchors_written": False,
                 "retrained": False,
             },

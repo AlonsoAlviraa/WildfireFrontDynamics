@@ -544,3 +544,80 @@ def test_open_proxy_without_tifs_is_proxy_not_discard(tmp_path: Path) -> None:
     assert row["status"] == "inventory_only"
     assert row["honesty_class"] != "ml_strong"
     assert row["status"] != "confirmed"
+
+
+def test_generic_rights_sheet_does_not_grant_r4_without_fire_id(tmp_path: Path) -> None:
+    root = _mini_root(tmp_path)
+    rights = root / "docs" / "data_campaigns" / "LATAM_AU_RIGHTS.md"
+    rights.parent.mkdir(parents=True, exist_ok=True)
+    rights.write_text(
+        "# Rights\nOpen license / Copernicus T&C for LATAM+AU packs. CC-BY cession notes.\n",
+        encoding="utf-8",
+    )
+    pack = root / "data" / "open_if" / "extremadura_rai_2025"
+    pack.mkdir(parents=True)
+    (pack / "sample.shp").write_bytes(b"shp")
+    payload = board.build_board(
+        root=root,
+        anchors_path=root / "data" / "infocam_anchors.json",
+        fire_ids=["extremadura_rai_2025"],
+    )
+    row = payload["fires"][0]
+    _assert_row_rails(row)
+    assert row["fire_id"] == "extremadura_rai_2025"
+    assert row["R4"] == 0
+    assert row["honesty_class"] == "proxy"
+    assert row["status"] != "confirmed"
+
+
+def test_rights_sheet_naming_fire_id_grants_r4(tmp_path: Path) -> None:
+    root = _mini_root(tmp_path)
+    rights = root / "docs" / "data_campaigns" / "LATAM_AU_RIGHTS.md"
+    rights.parent.mkdir(parents=True, exist_ok=True)
+    rights.write_text("| `AU_EMSR500_PERTH` | Copernicus EMS | open |\n", encoding="utf-8")
+    pack = root / "data" / "open_if" / "latam_au" / "au" / "AU_EMSR500_PERTH"
+    pack.mkdir(parents=True)
+    (pack / "meta.json").write_text(
+        json.dumps({"event_id": "AU_EMSR500_PERTH", "crs": "EPSG:32750"}),
+        encoding="utf-8",
+    )
+    payload = board.build_board(
+        root=root,
+        anchors_path=root / "data" / "infocam_anchors.json",
+        fire_ids=["AU_EMSR500_PERTH"],
+    )
+    row = payload["fires"][0]
+    assert row["R4"] == 1
+    assert row["H1"] == 0
+    assert row["honesty_class"] != "ml_strong"
+
+
+def test_fire_id_subset_does_not_overwrite_ssot_docs(tmp_path: Path) -> None:
+    root = _mini_root(tmp_path)
+    ssot_json = root / "docs" / "WEAKNESS_BOARD.json"
+    ssot_md = root / "docs" / "WEAKNESS_BOARD.md"
+    inv_json = root / "docs" / "IF_ONDISK_INVENTORY.json"
+    inv_csv = root / "docs" / "IF_ONDISK_INVENTORY.csv"
+    ssot_json.write_text('{"marker": "full-board"}\n', encoding="utf-8")
+    ssot_md.write_text("FULL_BOARD\n", encoding="utf-8")
+    inv_json.write_text('{"marker": "inventory"}\n', encoding="utf-8")
+    inv_csv.write_text("fire_id\nkeep\n", encoding="utf-8")
+    p = _run(
+        [
+            "--root",
+            str(root),
+            "--anchors",
+            str(root / "data" / "infocam_anchors.json"),
+            "--fire-id",
+            "hellin_2024",
+        ]
+    )
+    assert p.returncode == 0, p.stderr
+    assert ssot_json.read_text(encoding="utf-8") == '{"marker": "full-board"}\n'
+    assert ssot_md.read_text(encoding="utf-8") == "FULL_BOARD\n"
+    assert inv_json.read_text(encoding="utf-8") == '{"marker": "inventory"}\n'
+    assert inv_csv.read_text(encoding="utf-8") == "fire_id\nkeep\n"
+    payload = json.loads(p.stdout)
+    assert payload["schema"] == "wfd_if_weakness_board_v1"
+    assert [row["fire_id"] for row in payload["fires"]] == ["hellin_2024"]
+    assert payload["fires"][0]["status"] == "pending_external"

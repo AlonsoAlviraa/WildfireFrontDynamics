@@ -3,7 +3,7 @@
 > Fail-closed inventory. **Does not** invent Vp/ha, flip `infocam_anchors.json`,
 > retrain `clm_ensemble_v34`, reopen Tobarra KEEP, or close GO_Q.
 > Fusion SSOT stays **ON** (human 2026-08-13) ≠ despacho. IoU ≠ ROS.
-> Schema `wfd_if_weakness_board_v1` · `2026-08-13T12:44:19.922415Z`.
+> Schema `wfd_if_weakness_board_v1` · `2026-08-13T12:55:48.374759Z`.
 
 ## Rails
 
@@ -35,7 +35,7 @@
 | `CL_EMSR647_NACIMIENTO` | `inventory_only` | `ml_weak` | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 20 | 6 | cite | human |
 | `CL_EMSR715_VALPARAISO` | `inventory_only` | `ml_weak` | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 6 | 6 | cite | human |
 | `pt_firesprd` | `inventory_only` | `proxy` | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | cite | human |
-| `extremadura_rai_2025` | `inventory_only` | `proxy` | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | cite | human |
+| `extremadura_rai_2025` | `inventory_only` | `proxy` | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | cite | human |
 
 - n_fires: **16** · confirmed: **1** · ml_strong: **0** · NO_USE: **2**
 - Unknown R/H bits are **0**. Missing cite ⇒ not `confirmed`. Missing ≥3 dated scenes ⇒ not `ml_strong`.
@@ -58,9 +58,11 @@
 ```powershell
 python scripts/score_if_weakness_board.py
 python scripts/score_if_weakness_board.py --fire-id hellin_2024
+# --fire-id alone prints JSON to stdout; it does not overwrite docs/WEAKNESS_BOARD.*
 ```
 
 Missing anchors or unknown `--fire-id` exit **1**. Does not write `data/infocam_anchors.json`.
+A `--fire-id` subset without `--out-json` / `--out-md` / `--inventory-*` does not rewrite the SSOT docs.
 
 Human leftovers (cite / 2nd grade A / H1 acta) stay in `docs/HANDOFF_HUMAN_P0_2026-08-13.md`.
 

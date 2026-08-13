@@ -1,6 +1,6 @@
 {
   "schema": "wfd_if_weakness_board_v1",
-  "as_of_utc": "2026-08-13T12:44:19.922415Z",
+  "as_of_utc": "2026-08-13T12:55:48.374759Z",
   "rails": {
     "freeze_ml": true,
     "tobarra_keep_reopen": false,
@@ -686,7 +686,7 @@
       "R1": 0,
       "R2": 1,
       "R3": 0,
-      "R4": 1,
+      "R4": 0,
       "R5": 1,
       "R6": 1,
       "H1": 0,
