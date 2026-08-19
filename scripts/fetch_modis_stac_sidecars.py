@@ -242,7 +242,7 @@ def fetch_one(event_id: str, data_root: Path) -> dict[str, Any]:
         "ok": bool(rows),
         "source": "planetary_computer_stac",
         "collection": COLL_LST,
-        "ee_unregistered": "project-89d8567f-49f2-48bc-a00",
+        "earth_engine_project_unregistered": True,
         "lon": lon,
         "lat": lat,
         "n_scenes_listed": len(lst_items),
