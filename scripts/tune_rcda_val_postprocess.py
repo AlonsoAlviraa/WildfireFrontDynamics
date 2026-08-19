@@ -13,7 +13,6 @@ from typing import Any
 
 import numpy as np
 import torch
-from scipy.ndimage import binary_dilation, label
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -27,46 +26,18 @@ from wildfire_front.ml.rcda_sealed import (  # noqa: E402
     load_protocol,
     make_loader,
     metrics_from_confusion,
+    postprocess_growth,
 )
 
 THRESHOLDS = tuple(float(value) for value in np.arange(0.05, 1.0, 0.05))
 DILATION_RADII = (0, 1, 2)
 CONNECTIVITY_OPTIONS = (False, True)
-STRUCTURE = np.ones((3, 3), dtype=bool)
-
-
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def postprocess_growth(
-    prediction: np.ndarray,
-    previous: np.ndarray,
-    *,
-    dilation_radius: int,
-    require_t0_connection: bool,
-) -> np.ndarray:
-    """Expand a growth front and optionally retain only components touching t0."""
-
-    growth = np.asarray(prediction, dtype=bool) & ~np.asarray(previous, dtype=bool)
-    previous_bool = np.asarray(previous, dtype=bool)
-    if dilation_radius > 0:
-        growth = binary_dilation(
-            growth,
-            structure=STRUCTURE,
-            iterations=int(dilation_radius),
-        )
-        growth &= ~previous_bool
-    if require_t0_connection and previous_bool.any() and growth.any():
-        components, _count = label(previous_bool | growth, structure=STRUCTURE)
-        touching = np.unique(components[previous_bool])
-        touching = touching[touching != 0]
-        growth = np.isin(components, touching) & ~previous_bool
-    return growth
 
 
 def evaluate_postprocess_grid(
@@ -279,6 +250,7 @@ def main() -> int:
         "checkpoint": str(args.checkpoint),
         "checkpoint_sha256": sha256_file(args.checkpoint),
         "checkpoint_epoch": int(checkpoint["epoch"]),
+        "run_name": checkpoint.get("run_name"),
         "model_name": checkpoint["model_name"],
         "target_mode": checkpoint.get("target_mode", "growth"),
         "grid": {

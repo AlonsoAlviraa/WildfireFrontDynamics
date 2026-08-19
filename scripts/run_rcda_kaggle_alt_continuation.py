@@ -42,6 +42,7 @@ RUNS: tuple[tuple[str, str, str], ...] = (
     ("resunet_hybrid_precision_v3", "wfd-rcda-precision-gpu-v1", "validation_only_stage2_precision_kaggle"),
     ("resunet_hybrid_low_lr_v2", "wfd-rcda-low-lr-gpu-v1", "validation_only_stage2_low_lr_kaggle"),
     ("resunet_growth_v1", "wfd-rcda-growth-gpu-v1", "validation_only_stage2_growth_kaggle"),
+    ("resunet_growth_low_lr_v1", "wfd-rcda-growth-low-lr-gpu-v1", "validation_only_stage2_growth_low_lr_kaggle"),
     ("resunet_hybrid_event_balanced_v1", "wfd-rcda-event-balanced-gpu-v1", "validation_only_stage2_event_balanced_kaggle"),
     ("resunet_hybrid_uniform_events_v1", "wfd-rcda-uniform-events-gpu-v1", "validation_only_stage2_uniform_events_kaggle"),
     ("film_growth_v1", "wfd-rcda-film-gpu-v1", "validation_only_stage2_film_kaggle"),
@@ -205,6 +206,18 @@ def download_summary(
     return summary_path
 
 
+def refresh_interim_validation(
+    tuning_paths: list[Path], work_root: Path
+) -> None:
+    """Refresh VAL-only ranking after each completed candidate."""
+
+    combined_path = work_root / "COMBINED_TUNING_SUMMARY_INTERIM.json"
+    merge_tuning_summaries(tuning_paths, combined_path)
+    build_validation_scorecard(
+        [combined_path], work_root / "VALIDATION_SCORECARD.json"
+    )
+
+
 def single_run_source(run_name: str) -> str:
     source = self_contained_stage2_kernel()
     old = 'os.environ.get("RCDA_STAGE2_RUNS", "")'
@@ -264,6 +277,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--resume-run",
+        action="append",
+        default=[],
+        help=(
+            "Attach to an already queued/running/complete Kaggle run without "
+            "pushing a new kernel; may be passed more than once."
+        ),
+    )
+    parser.add_argument(
         "--work-root",
         type=Path,
         default=ROOT / "outputs/ml_eval/rcda_paper_nightwatch_20260819",
@@ -286,6 +308,11 @@ def main() -> int:
     runtime_rows: list[dict[str, Any]] = []
     tuning_paths = [args.phase1_summary, args.long_summary]
     recovered_by_run: dict[str, Path] = {}
+    known_runs = {run_name for run_name, _slug, _phase in RUNS}
+    resume_runs = set(args.resume_run)
+    unknown_resume_runs = resume_runs - known_runs
+    if unknown_resume_runs:
+        raise ValueError(f"unknown resumed runs: {sorted(unknown_resume_runs)}")
     for recovered_path in args.recovered_summary:
         recovered = json.loads(recovered_path.read_text(encoding="utf-8"))
         ranking = recovered.get("ranking") or []
@@ -348,9 +375,29 @@ def main() -> int:
                     ),
                     error=None,
                 )
+                refresh_interim_validation(tuning_paths, args.work_root)
                 continue
             kernel = f"{ALT_OWNER}/{slug}"
-            if index == 0:
+            resumed_existing = run_name in resume_runs
+            if resumed_existing:
+                staged_runner = (
+                    ROOT
+                    / "kaggle_job"
+                    / f"_alt_{slug.replace('-', '_')}"
+                    / "run_rcda_paper_stage2.py"
+                )
+                if not staged_runner.is_file():
+                    raise FileNotFoundError(
+                        f"resumed run is missing its exact staged runner: {staged_runner}"
+                    )
+                kernel = f"{ALT_OWNER}/{slug}"
+                remote_status = kernel_status(kernel, env=env)
+                if remote_status not in {"queued", "running", "complete"}:
+                    raise RuntimeError(
+                        f"cannot resume {kernel} from status {remote_status}"
+                    )
+                runner_sha256 = sha256_file(staged_runner)
+            elif index == 0:
                 staged_runner = (
                     ROOT
                     / "kaggle_job"
@@ -367,6 +414,7 @@ def main() -> int:
                     "runner_sha256": runner_sha256,
                     "selection_split": "val",
                     "test_evaluated": False,
+                    "resumed_existing_kernel": resumed_existing,
                 }
             )
             write_json(
@@ -390,6 +438,23 @@ def main() -> int:
             output = ROOT / "outputs/ml_eval" / f"rcda_kaggle_{run_name}_20260819"
             summary_path = download_summary(kernel, output, run_name, env=env)
             tuning_paths.append(summary_path)
+            runtime_rows[-1].update(
+                {
+                    "summary_sha256": sha256_file(summary_path),
+                    "training_status": "completed",
+                }
+            )
+            write_json(
+                manifest_path,
+                {
+                    "schema": "wfd_rcda_kaggle_runtime_manifest_v1",
+                    "account": ALT_OWNER,
+                    "dataset_sources": DATASET_SOURCES,
+                    "test_evaluated": False,
+                    "runs": runtime_rows,
+                },
+            )
+            refresh_interim_validation(tuning_paths, args.work_root)
             best = best_validation_score(tuning_paths)
             update_state(
                 state_path,

@@ -69,6 +69,7 @@ def merge_tuning_summaries(paths: list[Path], output_path: Path) -> dict[str, An
         "selection_split": "val",
         "selection_metric": "event_macro_iou",
         "test_evaluated": False,
+        "test_used_for_selection": False,
         "source_summaries": [str(path) for path in paths],
         "source_summary_sha256": [_sha256(Path(path)) for path in paths],
         "reports": reports,
@@ -139,6 +140,37 @@ def freeze_recipe(summary_path: Path, output_path: Path) -> dict[str, Any]:
         winner_config.get("event_balance_power", 0.5)
     )
     winner_score = float(winner["val"]["selected"]["event_macro_iou"])
+    decoder_path = summary_path.parent / "LOW_LR_POSTPROCESS_VAL.json"
+    secondary_decoder = None
+    if decoder_path.is_file():
+        decoder_report = json.loads(decoder_path.read_text(encoding="utf-8"))
+        decoder_best = decoder_report.get("best") or {}
+        if not (
+            decoder_report.get("schema") == "wfd_rcda_val_postprocess_tune_v1"
+            and decoder_report.get("selection_split") == "val"
+            and decoder_report.get("test_evaluated") is False
+            and decoder_report.get("test_used_for_selection") is False
+        ):
+            raise ValueError("spatial decoder artifact is not validation-only")
+        if (
+            decoder_report.get("run_name") == allowed_config.get("run_name")
+            and decoder_report.get("model_name") == allowed_config.get("model_name")
+            and decoder_report.get("target_mode") == allowed_config.get("target_mode")
+        ):
+            secondary_decoder = {
+                "role": "preregistered_secondary_spatial_decoder",
+                "applied_to": "mean_seed_probability",
+                "source_run_name": decoder_report.get("run_name"),
+                "source_artifact_sha256": _sha256(decoder_path),
+                "threshold": float(decoder_best["threshold"]),
+                "dilation_radius_px": int(decoder_best["dilation_radius_px"]),
+                "require_t0_connection": bool(
+                    decoder_best["require_t0_connection"]
+                ),
+                "threshold_and_geometry_selected_on": "val",
+                "test_evaluated_once_after_recipe_freeze": True,
+                "changes_primary_endpoint_or_gate": False,
+            }
     protocol_root = ROOT / "data/external/rcda_net_full/protocol"
     protocol_hashes = {
         name: _sha256(protocol_root / name)
@@ -151,6 +183,10 @@ def freeze_recipe(summary_path: Path, output_path: Path) -> dict[str, Any]:
         if (protocol_root / name).is_file()
     }
     pretest_decision_path = Path(summary_path).parent / "PRETEST_DECISION_LOG.json"
+    if not pretest_decision_path.is_file():
+        raise FileNotFoundError(
+            f"cannot freeze without pre-TEST decision log: {pretest_decision_path}"
+        )
     frozen = {
         "schema": "wfd_rcda_paper_frozen_recipe_v1",
         "frozen_at_utc": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
@@ -166,8 +202,6 @@ def freeze_recipe(summary_path: Path, output_path: Path) -> dict[str, Any]:
             "protocol_sha256": protocol_hashes,
             "pretest_decision_log_sha256": (
                 _sha256(pretest_decision_path)
-                if pretest_decision_path.is_file()
-                else None
             ),
         },
         "winner": {
@@ -194,6 +228,7 @@ def freeze_recipe(summary_path: Path, output_path: Path) -> dict[str, Any]:
                 "test_evaluated_once_after_threshold_freeze": True,
                 "changes_primary_endpoint_or_gate": False,
             },
+            "secondary_spatial_decoder": secondary_decoder,
             "secondary_metrics": [
                 "pooled_iou",
                 "growth_average_precision_macro",

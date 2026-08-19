@@ -124,6 +124,58 @@ def summarize_confusions(
     return sorted(rows, key=lambda row: float(row["event_macro_iou"]), reverse=True)
 
 
+def selected_event_ious(
+    by_event: dict[str, np.ndarray],
+    thresholds: tuple[float, ...],
+    selected_threshold: float,
+) -> dict[str, float]:
+    threshold_index = min(
+        range(len(thresholds)),
+        key=lambda index: abs(float(thresholds[index]) - float(selected_threshold)),
+    )
+    if not np.isclose(float(thresholds[threshold_index]), float(selected_threshold)):
+        raise ValueError(f"selected threshold {selected_threshold} is not in the fixed grid")
+    return {
+        event_id: float(metrics_from_confusion(values[threshold_index])["iou"])
+        for event_id, values in sorted(by_event.items())
+    }
+
+
+def paired_event_bootstrap(
+    baseline: dict[str, float],
+    candidate: dict[str, float],
+    *,
+    n_resamples: int = 10_000,
+    seed: int = 20260819,
+) -> dict[str, Any]:
+    if set(baseline) != set(candidate):
+        raise ValueError("paired ensemble comparison requires identical event ids")
+    event_ids = sorted(baseline)
+    deltas = np.asarray(
+        [float(candidate[event_id]) - float(baseline[event_id]) for event_id in event_ids],
+        dtype=np.float64,
+    )
+    if deltas.size == 0:
+        raise ValueError("paired ensemble comparison requires at least one event")
+    rng = np.random.default_rng(seed)
+    sampled = rng.choice(deltas, size=(int(n_resamples), deltas.size), replace=True)
+    bootstrap_means = sampled.mean(axis=1)
+    return {
+        "events": int(deltas.size),
+        "mean_delta_iou": float(deltas.mean()),
+        "median_delta_iou": float(np.median(deltas)),
+        "event_bootstrap_95_ci": [
+            float(np.quantile(bootstrap_means, 0.025)),
+            float(np.quantile(bootstrap_means, 0.975)),
+        ],
+        "wins_event_fraction": float(np.mean(deltas > 0.0)),
+        "ties_event_fraction": float(np.mean(np.isclose(deltas, 0.0))),
+        "bootstrap_resamples": int(n_resamples),
+        "bootstrap_seed": int(seed),
+        "interpretation": "Descriptive paired uncertainty after selection on VAL; not confirmatory TEST evidence.",
+    }
+
+
 @torch.no_grad()
 def tune_validation_ensembles(
     checkpoint_paths: dict[str, Path],
@@ -215,6 +267,12 @@ def tune_validation_ensembles(
         complete_grids[name] = grid
         ranking.append({"name": name, "members": list(members), **grid[0]})
     ranking.sort(key=lambda row: float(row["event_macro_iou"]), reverse=True)
+    selected_by_event = {
+        row["name"]: selected_event_ious(
+            by_event[row["name"]], thresholds, float(row["threshold"])
+        )
+        for row in ranking
+    }
     best_individual = max(
         (row for row in ranking if len(row["members"]) == 1),
         key=lambda row: float(row["event_macro_iou"]),
@@ -230,9 +288,17 @@ def tune_validation_ensembles(
         if best_multi_model
         else None
     )
+    paired_validation = (
+        paired_event_bootstrap(
+            selected_by_event[best_individual["name"]],
+            selected_by_event[best_multi_model["name"]],
+        )
+        if best_multi_model
+        else None
+    )
 
     return {
-        "schema": "wfd_rcda_val_probability_ensemble_tune_v1",
+        "schema": "wfd_rcda_val_probability_ensemble_tune_v2",
         "selection_split": "val",
         "selection_metric": "event_macro_iou",
         "test_evaluated": False,
@@ -255,6 +321,7 @@ def tune_validation_ensembles(
             "best_individual": best_individual["name"],
             "best_multi_model": best_multi_model["name"] if best_multi_model else None,
             "best_multi_minus_individual": multi_delta,
+            "paired_validation": paired_validation,
             "preregister_multi_model_ensemble": bool(
                 multi_delta is not None and multi_delta > 0.0
             ),
@@ -265,6 +332,7 @@ def tune_validation_ensembles(
             ),
         },
         "ranking": ranking,
+        "selected_per_event_iou": selected_by_event,
         "grids": complete_grids,
     }
 

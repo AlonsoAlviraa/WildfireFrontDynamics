@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from scripts.tune_rcda_val_ensembles import (
+    paired_event_bootstrap,
     parse_combinations,
     parse_named_paths,
+    selected_event_ious,
     summarize_confusions,
 )
 
@@ -46,3 +49,23 @@ def test_explicit_ensemble_cli_values_are_parsed() -> None:
 
     assert checkpoints["low"].name == "low.pt"
     assert combinations["low_phase1"] == ("low", "phase1")
+
+
+def test_selected_event_ious_and_paired_bootstrap_are_event_level() -> None:
+    by_event = {
+        "fire-a": np.asarray([[4, 4, 0, 1], [3, 4, 1, 2]]),
+        "fire-b": np.asarray([[1, 2, 1, 3], [2, 2, 0, 2]]),
+    }
+    selected = selected_event_ious(by_event, (0.4, 0.6), 0.4)
+    assert set(selected) == {"fire-a", "fire-b"}
+
+    paired = paired_event_bootstrap(
+        {"fire-a": 0.5, "fire-b": 0.2},
+        {"fire-a": 0.7, "fire-b": 0.1},
+        n_resamples=2_000,
+        seed=7,
+    )
+    assert paired["events"] == 2
+    assert paired["mean_delta_iou"] == pytest.approx(0.05)
+    assert paired["wins_event_fraction"] == pytest.approx(0.5)
+    assert paired["ties_event_fraction"] == pytest.approx(0.0)

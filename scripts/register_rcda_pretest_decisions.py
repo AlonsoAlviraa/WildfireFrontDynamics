@@ -57,8 +57,12 @@ def register_pretest_decisions(
     if not ensemble_path.is_file():
         ensemble_path = work_root / "PHASE1_VAL_ENSEMBLES.json"
     postprocess_path = work_root / "LOW_LR_POSTPROCESS_VAL.json"
+    paired_ensemble_path = work_root / "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json"
     sampler_path = work_root / "TRAIN_SAMPLER_AUDIT.json"
     ensemble = read_json(ensemble_path)
+    paired_ensemble = (
+        read_json(paired_ensemble_path) if paired_ensemble_path.is_file() else None
+    )
     postprocess = read_json(postprocess_path) if postprocess_path.is_file() else None
     sampler = read_json(sampler_path)
     if phase1.get("test_evaluated") is not False:
@@ -75,6 +79,12 @@ def register_pretest_decisions(
         and postprocess.get("test_used_for_selection") is False
     ):
         raise ValueError("postprocess decision is not VAL-only")
+    if paired_ensemble and not (
+        paired_ensemble.get("selection_split") == "val"
+        and paired_ensemble.get("test_evaluated") is False
+        and paired_ensemble.get("test_used_for_selection") is False
+    ):
+        raise ValueError("paired ensemble uncertainty is not VAL-only")
     if not (
         sampler.get("analysis_split") == "train"
         and sampler.get("validation_evaluated") is False
@@ -93,7 +103,10 @@ def register_pretest_decisions(
         "scripts/tune_rcda_val_ensembles.py",
         "scripts/tune_rcda_val_postprocess.py",
         "scripts/summarize_rcda_postprocess.py",
+        "scripts/summarize_rcda_reproducibility.py",
         "scripts/push_rcda_paper_final_kaggle.py",
+        "scripts/evaluate_rcda_paper_metrics.py",
+        "scripts/summarize_rcda_paper_final.py",
         "wildfire_front/ml/wfigs_domain_adapt.py",
         "wildfire_front/ml/wfigs_external_eval.py",
     )
@@ -152,12 +165,20 @@ def register_pretest_decisions(
         "evidence": {
             "phase1_summary_sha256": sha256_file(phase1_matches[0]),
             "val_ensemble_sha256": sha256_file(ensemble_path),
+            "val_ensemble_paired_sha256": (
+                sha256_file(paired_ensemble_path) if paired_ensemble else None
+            ),
             "val_postprocess_sha256": (
                 sha256_file(postprocess_path) if postprocess else None
             ),
             "train_sampler_audit_sha256": sha256_file(sampler_path),
             "phase1_val_leader": (phase1.get("ranking") or [{}])[0],
             "ensemble_decision": decision,
+            "ensemble_paired_validation": (
+                (paired_ensemble or {}).get("decision", {}).get(
+                    "paired_validation"
+                )
+            ),
             "postprocess_decision": (postprocess or {}).get("best"),
             "default_event_mass_cv": (
                 strategies.get("default_size_event_half") or {}
@@ -176,6 +197,7 @@ def register_pretest_decisions(
             "resunet_hybrid_precision_v3",
             "resunet_hybrid_low_lr_v2 if best VAL < 0.20",
             "resunet_growth_v1 if best VAL < 0.20",
+            "resunet_growth_low_lr_v1 if best VAL < 0.20",
             "resunet_hybrid_event_balanced_v1 if best VAL < 0.20",
             "resunet_hybrid_uniform_events_v1 if best VAL < 0.20",
             "film_growth_v1 if best VAL < 0.20",
