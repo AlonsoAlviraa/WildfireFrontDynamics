@@ -240,6 +240,13 @@ def test_train_sealed_selects_on_val_and_tests_once(tmp_path: Path) -> None:
     assert report["test_used_for_selection"] is False
     assert report["normalization_fit_split"] == "train"
     assert report["config"]["max_grad_norm"] == 5.0
+    assert {"python", "torch", "numpy", "scipy", "cuda_runtime", "cudnn"} <= set(
+        report["software_versions"]
+    )
+    assert report["determinism"] == {
+        "cudnn_deterministic": True,
+        "cudnn_benchmark": False,
+    }
     assert "test_once" in report
     assert "far_gt_10_5px_recall" in report["test_once"]
     assert Path(report["checkpoint"]).is_file()

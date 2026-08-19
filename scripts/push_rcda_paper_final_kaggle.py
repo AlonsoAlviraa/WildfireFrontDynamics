@@ -35,6 +35,7 @@ def _validated_frozen(path: Path) -> dict[str, Any]:
         or data_contract.get("event_split_seed") != "wfd_rcda_event_split_v1"
         or data_contract.get("normalization_fit_split") != "train"
         or len(data_contract.get("protocol_sha256") or {}) != 4
+        or len(str(data_contract.get("pretest_decision_log_sha256") or "")) != 64
     ):
         raise ValueError("frozen recipe does not identify the sealed RCDA data contract")
     final = document.get("final_evaluation") or {}
@@ -50,6 +51,16 @@ def _validated_frozen(path: Path) -> dict[str, Any]:
         or ensemble.get("changes_primary_endpoint_or_gate") is not False
     ):
         raise ValueError("frozen recipe does not preregister the probability ensemble")
+    decoder = final.get("secondary_spatial_decoder")
+    if decoder is not None and (
+        decoder.get("role") != "preregistered_secondary_spatial_decoder"
+        or decoder.get("applied_to") != "mean_seed_probability"
+        or decoder.get("threshold_and_geometry_selected_on") != "val"
+        or decoder.get("changes_primary_endpoint_or_gate") is not False
+        or int(decoder.get("dilation_radius_px", -1)) < 0
+        or len(str(decoder.get("source_artifact_sha256") or "")) != 64
+    ):
+        raise ValueError("frozen recipe contains an invalid spatial decoder")
     return document
 
 
@@ -175,6 +186,30 @@ def main() -> int:
         prediction_mode=str(recipe["target_mode"]),
         paper_metrics=False,
     )
+    decoder_recipe = FROZEN_RECIPE["final_evaluation"].get("secondary_spatial_decoder")
+    decoder_report = None
+    if decoder_recipe is not None:
+        decoder_test = evaluate_split_postprocessed(
+            ensemble_model,
+            test_loader,
+            device,
+            float(decoder_recipe["threshold"]),
+            prediction_mode=str(recipe["target_mode"]),
+            dilation_radius=int(decoder_recipe["dilation_radius_px"]),
+            require_t0_connection=bool(decoder_recipe["require_t0_connection"]),
+        )
+        decoder_report = {{
+            "role": decoder_recipe["role"],
+            "applied_to": decoder_recipe["applied_to"],
+            "source_artifact_sha256": decoder_recipe["source_artifact_sha256"],
+            "threshold_and_geometry_selected_on": "val",
+            "threshold": float(decoder_recipe["threshold"]),
+            "dilation_radius_px": int(decoder_recipe["dilation_radius_px"]),
+            "require_t0_connection": bool(decoder_recipe["require_t0_connection"]),
+            "test_used_for_selection": False,
+            "test_evaluated": True,
+            "test_once": decoder_test,
+        }}
     test_event_macro = np.asarray(
         [row["test_once"]["event_macro_iou"] for row in reports], dtype=np.float64
     )
@@ -208,6 +243,7 @@ def main() -> int:
             "test_evaluated": True,
             "test_once": ensemble_test,
         }},
+        "decoder": decoder_report,
         "reports": reports,
     }}
     (output / "FINAL_SUMMARY.json").write_text(
@@ -217,6 +253,11 @@ def main() -> int:
         "primary": summary["primary"],
         "pooled": summary["pooled_iou"],
         "ensemble_event_macro_iou": summary["ensemble"]["test_once"]["event_macro_iou"],
+        "decoder_event_macro_iou": (
+            summary["decoder"]["test_once"]["event_macro_iou"]
+            if summary["decoder"] is not None
+            else None
+        ),
     }}, indent=2))
     return 0
 

@@ -79,6 +79,24 @@ def test_scorecard_uses_preregistered_seeds_and_paired_events(tmp_path) -> None:
                         },
                     },
                 },
+                "decoder": {
+                    "role": "preregistered_secondary_spatial_decoder",
+                    "applied_to": "mean_seed_probability",
+                    "threshold_and_geometry_selected_on": "val",
+                    "threshold": 0.8,
+                    "dilation_radius_px": 1,
+                    "require_t0_connection": True,
+                    "test_used_for_selection": False,
+                    "test_evaluated": True,
+                    "test_once": {
+                        "event_macro_iou": 0.53,
+                        "iou": 0.48,
+                        "per_event": {
+                            "fire-a": {"iou": 0.48},
+                            "fire-b": {"iou": 0.58},
+                        },
+                    },
+                },
                 "reports": reports,
             }
         ),
@@ -128,4 +146,7 @@ def test_scorecard_uses_preregistered_seeds_and_paired_events(tmp_path) -> None:
     assert scorecard["ensemble"]["event_macro_iou"] == pytest.approx(0.5)
     assert scorecard["ensemble"]["threshold_selected_on"] == "val"
     assert scorecard["ensemble"]["vs_strongest_baseline"]["paired_delta"] > 0.0
+    assert scorecard["decoder"]["event_macro_iou"] == pytest.approx(0.53)
+    assert scorecard["decoder"]["threshold_and_geometry_selected_on"] == "val"
+    assert scorecard["decoder"]["vs_strongest_baseline"]["paired_delta"] > 0.0
     assert scorecard["claims"]["wfigs_external_validation_pending"] is True

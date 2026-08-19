@@ -20,7 +20,10 @@ CODE_PATHS = (
     "scripts/tune_rcda_val_ensembles.py",
     "scripts/tune_rcda_val_postprocess.py",
     "scripts/summarize_rcda_postprocess.py",
+    "scripts/summarize_rcda_reproducibility.py",
     "scripts/push_rcda_paper_final_kaggle.py",
+    "scripts/evaluate_rcda_paper_metrics.py",
+    "scripts/summarize_rcda_paper_final.py",
     "wildfire_front/ml/wfigs_domain_adapt.py",
     "wildfire_front/ml/wfigs_external_eval.py",
 )

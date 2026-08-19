@@ -21,6 +21,7 @@ from wildfire_front.ml.rcda_sealed import (  # noqa: E402
     SealedRCDADataset,
     build_model,
     evaluate_split,
+    evaluate_split_postprocessed,
     load_protocol,
     make_loader,
     prepare_model_for_device,
@@ -113,6 +114,31 @@ def evaluate_final_checkpoints(
             raise ValueError("local ensemble TEST IoU does not reproduce remote result")
         ensemble_report["test_once"] = ensemble_metrics
         ensemble_report["paper_metrics_recomputed_from_frozen_checkpoints"] = True
+    decoder_report = summary.get("decoder")
+    if decoder_report:
+        if len(seed_models) < 2:
+            raise ValueError("decoder report requires the seed probability ensemble")
+        decoder_model = ProbabilityAveragingEnsemble(seed_models).to(device)
+        config = summary["reports"][0]["config"]
+        decoder_metrics = evaluate_split_postprocessed(
+            decoder_model,
+            test_loader,
+            device,
+            float(decoder_report["threshold"]),
+            prediction_mode=str(config["target_mode"]),
+            dilation_radius=int(decoder_report["dilation_radius_px"]),
+            require_t0_connection=bool(
+                decoder_report["require_t0_connection"]
+            ),
+        )
+        remote = decoder_report.get("test_once") or {}
+        if (
+            abs(float(decoder_metrics["iou"]) - float(remote.get("iou", decoder_metrics["iou"])))
+            > 1e-10
+        ):
+            raise ValueError("local spatial decoder TEST IoU does not reproduce remote result")
+        decoder_report["test_once"] = decoder_metrics
+        decoder_report["recomputed_from_frozen_checkpoints"] = True
     summary["schema"] = "wfd_rcda_paper_final_metrics_v1"
     summary["paper_metrics_recomputed_locally"] = True
     summary["paper_metrics_device"] = str(device)

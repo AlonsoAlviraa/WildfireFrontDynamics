@@ -56,6 +56,25 @@ def test_freeze_selects_only_highest_validation_recipe(tmp_path) -> None:
     (tmp_path / "PRETEST_DECISION_LOG.json").write_text(
         json.dumps({"new_candidate_test_evaluated": False}), encoding="utf-8"
     )
+    (tmp_path / "LOW_LR_POSTPROCESS_VAL.json").write_text(
+        json.dumps(
+            {
+                "schema": "wfd_rcda_val_postprocess_tune_v1",
+                "selection_split": "val",
+                "test_evaluated": False,
+                "test_used_for_selection": False,
+                "run_name": "b",
+                "model_name": "unet",
+                "target_mode": "growth",
+                "best": {
+                    "threshold": 0.8,
+                    "dilation_radius_px": 1,
+                    "require_t0_connection": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     frozen = freeze_recipe(source, tmp_path / "frozen.json")
     assert frozen["winner"]["config"]["run_name"] == "b"
     assert frozen["final_evaluation"]["seeds"] == [11, 29, 47]
@@ -65,6 +84,20 @@ def test_freeze_selects_only_highest_validation_recipe(tmp_path) -> None:
         ]
         == "val"
     )
+    decoder = frozen["final_evaluation"]["secondary_spatial_decoder"]
+    assert decoder["role"] == "preregistered_secondary_spatial_decoder"
+    assert decoder["applied_to"] == "mean_seed_probability"
+    assert decoder["source_run_name"] == "b"
+    assert decoder["threshold"] == 0.8
+    assert decoder["dilation_radius_px"] == 1
+    assert decoder["require_t0_connection"] is True
+    assert decoder["threshold_and_geometry_selected_on"] == "val"
+    assert decoder["changes_primary_endpoint_or_gate"] is False
+    assert len(
+        frozen["final_evaluation"]["secondary_spatial_decoder"][
+            "source_artifact_sha256"
+        ]
+    ) == 64
     assert frozen["test_observed_during_tuning"] is False
     assert frozen["winner"]["config"]["event_balance_power"] == 0.5
     assert frozen["winner"]["config"]["sampling_strategy"] == "size_event_power"
@@ -109,5 +142,6 @@ def test_merge_stages_ranks_all_validation_reports_without_test(tmp_path) -> Non
         paths.append(path)
     merged = merge_tuning_summaries(paths, tmp_path / "combined.json")
     assert merged["test_evaluated"] is False
+    assert merged["test_used_for_selection"] is False
     assert merged["ranking"][0]["run_name"] == "stage2"
     assert len(merged["reports"]) == 2

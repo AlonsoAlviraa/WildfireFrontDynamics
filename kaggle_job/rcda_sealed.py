@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from scipy.ndimage import distance_transform_edt
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
@@ -220,7 +221,7 @@ class SealedRCDADataset(Dataset):
             ordered = sorted(items, key=lambda item: item[0])
             gaps = [
                 max((later[0] - earlier[0]).total_seconds() / 3600.0, 1.0)
-                for earlier, later in zip(ordered, ordered[1:], strict=False)
+                for earlier, later in zip(ordered, ordered[1:])
             ]
             typical = float(np.median(gaps)) if gaps else HORIZON_REF_HOURS
             for _date, name in ordered:

@@ -28,3 +28,25 @@ def test_stage2_preregisters_film_sampling_and_loss_ablations() -> None:
         0.8,
     }
     assert len({str(row["run_name"]) for row in STAGE2_RECIPES}) == len(STAGE2_RECIPES)
+
+
+def test_sampling_ablations_match_low_lr_leader_except_sampler() -> None:
+    recipes = {str(row["run_name"]): row for row in STAGE2_RECIPES}
+    leader = recipes["resunet_hybrid_low_lr_v2"]
+    for run_name in (
+        "resunet_hybrid_event_balanced_v1",
+        "resunet_hybrid_uniform_events_v1",
+    ):
+        candidate = recipes[run_name]
+        for key in ("model_name", "target_mode", "lr", "epochs", "patience"):
+            assert candidate[key] == leader[key]
+
+
+def test_growth_low_lr_ablation_matches_leader_except_target() -> None:
+    recipes = {str(row["run_name"]): row for row in STAGE2_RECIPES}
+    leader = recipes["resunet_hybrid_low_lr_v2"]
+    candidate = recipes["resunet_growth_low_lr_v1"]
+    for key in ("model_name", "lr", "epochs", "patience"):
+        assert candidate[key] == leader[key]
+    assert leader["target_mode"] == "hybrid"
+    assert candidate["target_mode"] == "growth"

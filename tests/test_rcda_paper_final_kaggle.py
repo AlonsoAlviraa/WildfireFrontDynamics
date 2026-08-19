@@ -19,6 +19,7 @@ def test_final_kernel_embeds_frozen_recipe_and_preregistered_seeds() -> None:
                 "test.json": "c" * 64,
                 "normalization_train_only.json": "d" * 64,
             },
+            "pretest_decision_log_sha256": "f" * 64,
         },
         "winner": {
             "config": {
@@ -51,6 +52,16 @@ def test_final_kernel_embeds_frozen_recipe_and_preregistered_seeds() -> None:
                 "test_evaluated_once_after_threshold_freeze": True,
                 "changes_primary_endpoint_or_gate": False,
             },
+            "secondary_spatial_decoder": {
+                "role": "preregistered_secondary_spatial_decoder",
+                "applied_to": "mean_seed_probability",
+                "source_artifact_sha256": "e" * 64,
+                "threshold": 0.8,
+                "dilation_radius_px": 1,
+                "require_t0_connection": True,
+                "threshold_and_geometry_selected_on": "val",
+                "changes_primary_endpoint_or_gate": False,
+            },
         },
     }
     source = self_contained_final_kernel(frozen)
@@ -66,6 +77,8 @@ def test_final_kernel_embeds_frozen_recipe_and_preregistered_seeds() -> None:
     assert '"threshold_selected_on": "val"' in source
     assert '"ensemble": {' in source
     assert "ensemble_test = evaluate_split" in source
+    assert "decoder_test = evaluate_split_postprocessed" in source
+    assert '"decoder": decoder_report' in source
     assert "event_balance_power" in source
     assert "sampling_strategy" in source
     assert "checkpoint_sha256" in source
@@ -82,6 +95,7 @@ def test_frozen_recipe_validator_requires_data_and_ensemble_contracts(tmp_path) 
             "protocol_sha256": dict.fromkeys(
                 ("train", "val", "test", "norm"), "a" * 64
             ),
+            "pretest_decision_log_sha256": "f" * 64,
         },
         "final_evaluation": {
             "seeds": [11, 29, 47],

@@ -185,6 +185,61 @@ def build_scorecard(
         if paper_metrics:
             ensemble_score["paper_metrics"] = paper_metrics
 
+    decoder_score = None
+    decoder_report = final_summary.get("decoder")
+    if decoder_report:
+        if decoder_report.get("role") != "preregistered_secondary_spatial_decoder":
+            raise ValueError("unexpected spatial decoder role")
+        if decoder_report.get("threshold_and_geometry_selected_on") != "val":
+            raise ValueError("spatial decoder was not selected on VAL")
+        if decoder_report.get("test_used_for_selection") is not False:
+            raise ValueError("spatial decoder used TEST for selection")
+        if decoder_report.get("test_evaluated") is not True:
+            raise ValueError("spatial decoder TEST evaluation is not sealed")
+        decoder_test = decoder_report.get("test_once") or {}
+        decoder_events = decoder_test.get("per_event") or {}
+        if set(decoder_events) != set(common_events):
+            raise ValueError("spatial decoder and final model event sets differ")
+        decoder_iou = np.asarray(
+            [float(decoder_events[event]["iou"]) for event in common_events],
+            dtype=np.float64,
+        )
+
+        def decoder_delta(reference: np.ndarray) -> dict[str, Any]:
+            delta = decoder_iou - reference
+            if np.allclose(delta, 0.0):
+                local_statistic, local_p = 0.0, 1.0
+            else:
+                local_statistic, local_p = wilcoxon(
+                    delta, alternative="greater", zero_method="zsplit"
+                )
+            return {
+                "paired_delta": float(delta.mean()),
+                "paired_delta_event_bootstrap_95_ci": list(_bootstrap_ci(delta)),
+                "events_improved_fraction": float((delta > 0).mean()),
+                "one_sided_wilcoxon_statistic": float(local_statistic),
+                "one_sided_wilcoxon_p": float(local_p),
+            }
+
+        decoder_score = {
+            "role": decoder_report.get("role"),
+            "applied_to": decoder_report.get("applied_to"),
+            "threshold": float(decoder_report["threshold"]),
+            "dilation_radius_px": int(decoder_report["dilation_radius_px"]),
+            "require_t0_connection": bool(
+                decoder_report["require_t0_connection"]
+            ),
+            "threshold_and_geometry_selected_on": "val",
+            "event_macro_iou": float(decoder_iou.mean()),
+            "event_bootstrap_95_ci": list(_bootstrap_ci(decoder_iou)),
+            "pooled_iou": float(decoder_test["iou"]),
+            "vs_primary_seed_mean": decoder_delta(model_iou),
+            "vs_dilated_copy": decoder_delta(baseline_iou),
+            "vs_strongest_baseline": decoder_delta(
+                comparator_arrays[strongest_key]
+            ),
+        }
+
     seed_metrics = [
         {
             "seed": int(row["config"]["seed"]),
@@ -275,6 +330,7 @@ def build_scorecard(
             "test_used_for_selection": False,
         },
         "ensemble": ensemble_score,
+        "decoder": decoder_score,
         "secondary": {
             key: mean_std(key)
             for key in (

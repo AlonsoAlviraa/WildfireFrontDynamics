@@ -14,9 +14,10 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import scipy
 import torch
 import torch.nn as nn
-from scipy.ndimage import distance_transform_edt
+from scipy.ndimage import binary_dilation, distance_transform_edt, label
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 PROTOCOL_SEED = "wfd_rcda_event_split_v1"
@@ -675,6 +676,98 @@ def prepare_inputs_for_device(inputs: torch.Tensor, device: torch.device) -> tor
     return moved
 
 
+def postprocess_growth(
+    prediction: np.ndarray,
+    previous: np.ndarray,
+    *,
+    dilation_radius: int,
+    require_t0_connection: bool,
+) -> np.ndarray:
+    """Apply the preregistrable spatial decoder to a binary growth mask."""
+
+    if dilation_radius < 0:
+        raise ValueError("dilation_radius must be non-negative")
+    growth = np.asarray(prediction, dtype=bool) & ~np.asarray(previous, dtype=bool)
+    previous_bool = np.asarray(previous, dtype=bool)
+    structure = np.ones((3, 3), dtype=bool)
+    if dilation_radius > 0:
+        growth = binary_dilation(
+            growth,
+            structure=structure,
+            iterations=int(dilation_radius),
+        )
+        growth &= ~previous_bool
+    if require_t0_connection and previous_bool.any() and growth.any():
+        components, _count = label(previous_bool | growth, structure=structure)
+        touching = np.unique(components[previous_bool])
+        touching = touching[touching != 0]
+        growth = np.isin(components, touching) & ~previous_bool
+    return growth
+
+
+@torch.no_grad()
+def evaluate_split_postprocessed(
+    model: nn.Module,
+    loader: DataLoader,
+    device: torch.device,
+    threshold: float,
+    *,
+    prediction_mode: str = "growth",
+    dilation_radius: int,
+    require_t0_connection: bool,
+) -> dict[str, Any]:
+    """Evaluate a fixed VAL-selected spatial decoder without retuning it."""
+
+    model.eval()
+    total = np.zeros(4, dtype=np.int64)
+    far = np.zeros(4, dtype=np.int64)
+    event_rows: dict[str, np.ndarray] = defaultdict(lambda: np.zeros(4, dtype=np.int64))
+    n_samples = 0
+    for batch in loader:
+        inputs = batch["input"]
+        probs = torch.sigmoid(model(prepare_inputs_for_device(inputs, device))).cpu().numpy()
+        targets = batch["target"].numpy()
+        previous = inputs[:, 0:1].numpy() > 0.5
+        distance = inputs[:, 13].numpy() * DISTANCE_CAP_PX
+        thresholded = probs >= threshold
+        if prediction_mode in {"extent", "hybrid"}:
+            thresholded = np.logical_and(thresholded, ~previous)
+        n_samples += len(batch["uid"])
+        for index, uid in enumerate(batch["uid"]):
+            prediction = postprocess_growth(
+                thresholded[index, 0],
+                previous[index, 0],
+                dilation_radius=dilation_radius,
+                require_t0_connection=require_t0_connection,
+            )
+            truth = targets[index, 0]
+            row = confusion(prediction, truth)
+            total += row
+            event_rows[uid] += row
+            far_mask = distance[index] > 10.5
+            far += confusion(prediction[far_mask], truth[far_mask])
+    per_event = {
+        uid: metrics_from_confusion(row) for uid, row in sorted(event_rows.items())
+    }
+    event_ious = [float(row["iou"]) for row in per_event.values()]
+    result = metrics_from_confusion(total)
+    far_metrics = metrics_from_confusion(far)
+    result.update(
+        {
+            "event_macro_iou": float(np.mean(event_ious)) if event_ious else 0.0,
+            "n_events": len(event_ious),
+            "n_samples": n_samples,
+            "threshold": threshold,
+            "dilation_radius_px": int(dilation_radius),
+            "require_t0_connection": bool(require_t0_connection),
+            "far_gt_10_5px_recall": far_metrics["recall"],
+            "far_gt_10_5px_iou": far_metrics["iou"],
+            "per_event": per_event,
+        }
+    )
+    return result
+
+
 @torch.no_grad()
 def evaluate_split(
     model: nn.Module,
@@ -1147,6 +1240,13 @@ def train_sealed(config: SealedTrainConfig) -> dict[str, Any]:
             "python": sys.version.split()[0],
             "torch": torch.__version__,
             "numpy": np.__version__,
+            "scipy": scipy.__version__,
+            "cuda_runtime": torch.version.cuda,
+            "cudnn": torch.backends.cudnn.version(),
+        },
+        "determinism": {
+            "cudnn_deterministic": bool(torch.backends.cudnn.deterministic),
+            "cudnn_benchmark": bool(torch.backends.cudnn.benchmark),
         },
         "torch_num_threads": torch.get_num_threads(),
         "cpu_channels_last": device.type == "cpu",
