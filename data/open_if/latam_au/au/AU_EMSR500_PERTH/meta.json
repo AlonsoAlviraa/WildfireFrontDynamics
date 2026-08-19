@@ -1,0 +1,341 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "AU_EMSR500_PERTH",
+  "region": "au",
+  "country": "AU",
+  "activation": "EMSR500",
+  "aoi": "AOI01",
+  "aoi_name": "Perth",
+  "year": 2021,
+  "class": "ml_weak",
+  "label_level": "L2_proxy",
+  "license_id": "copernicus_ems_reg_2021_696_open",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://mapping.emergency.copernicus.eu/activations/EMSR500/",
+  "crs": "EPSG:32750",
+  "gsd_m": 30.0,
+  "sensor": "CEMS Rapid Mapping observedEvent (rasterized vector)",
+  "geotiff_origin": "rasterized_cems_vector+stac_s2_nbr",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2021-02-05T20:32:25Z",
+    "2021-02-11T17:03:24Z",
+    "2021-02-13T02:23:04Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210205_203225.tif",
+      "file": "AU_EMSR500_PERTH_20210205_203225.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_PRODUCT",
+      "kind": "delineation",
+      "delivery_utc": "2021-02-05T20:32:25Z",
+      "source_url": "https://cems-mapping-website.s3.eu-west-1.amazonaws.com/static/activations/EMSR500/EMSR500_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
+      "source_zip": "EMSR500_AOI01_DEL_PRODUCT_r1_RTP01_v1_vector.zip",
+      "source_member": "EMSR500_AOI01_DEL_PRODUCT_observedEventA_r1_v1.json",
+      "area_ha": 10565.960281211275,
+      "sha256": "08fe9d0fc90323d63463d708fe26ee3acd3a64da823975433d41a512892d0a85",
+      "bytes": 7564,
+      "crs": "EPSG:32750",
+      "gsd_m": 30.0,
+      "width": 1012,
+      "height": 378,
+      "positive_pixels": 119954
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210211_170324.tif",
+      "file": "AU_EMSR500_PERTH_20210211_170324.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_MONIT01",
+      "kind": "delineation_monitoring",
+      "delivery_utc": "2021-02-11T17:03:24Z",
+      "source_url": "https://cems-mapping-website.s3.eu-west-1.amazonaws.com/static/activations/EMSR500/EMSR500_AOI01_DEL_MONIT01_r1_RTP01_v1_vector.zip",
+      "source_zip": "EMSR500_AOI01_DEL_MONIT01_r1_RTP01_v1_vector.zip",
+      "source_member": "EMSR500_AOI01_DEL_MONIT01_observedEventA_r1_v1.json",
+      "area_ha": 10678.61432716903,
+      "sha256": "46474f5ca872a2732fbc651d7f5d0088b866bdd5151ff5a84d251182510e871f",
+      "bytes": 7582,
+      "crs": "EPSG:32750",
+      "gsd_m": 30.0,
+      "width": 1012,
+      "height": 378,
+      "positive_pixels": 121180
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210213_022304.tif",
+      "file": "AU_EMSR500_PERTH_20210213_022304.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "GRA_PRODUCT",
+      "kind": "grading",
+      "delivery_utc": "2021-02-13T02:23:04Z",
+      "source_url": "https://cems-mapping-website.s3.eu-west-1.amazonaws.com/static/activations/EMSR500/EMSR500_AOI01_GRA_PRODUCT_r1_RTP01_v1_vector.zip",
+      "source_zip": "EMSR500_AOI01_GRA_PRODUCT_r1_RTP01_v1_vector.zip",
+      "source_member": "EMSR500_AOI01_GRA_PRODUCT_observedEventA_r1_v1.json",
+      "area_ha": 10678.61432716903,
+      "sha256": "46474f5ca872a2732fbc651d7f5d0088b866bdd5151ff5a84d251182510e871f",
+      "bytes": 7582,
+      "crs": "EPSG:32750",
+      "gsd_m": 30.0,
+      "width": 1012,
+      "height": 378,
+      "positive_pixels": 121180
+    },
+    {
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2021-01-21T02:26:36.730000Z",
+      "sha256": "621b47fd97611db969faf43dccc74c115652eb21f4dc53742b8a83227366346a",
+      "bytes": 241149,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2021-02-20T02:26:20.269000Z",
+      "sha256": "47e6eaea9db755f51cb06b1e3f41ccf87cd55f4a0d729ca5cbe554a07e0ca3f4",
+      "bytes": 55187,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+      "role": "eo_s2_nbr_same_day_tile",
+      "delivery_utc": "2021-02-20T02:26:34.587000Z",
+      "sha256": "9423e1cdc92e52830fedc3e38875e717f1be5241ef89d01dc1497606521ccbfa",
+      "bytes": 241976,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime",
+      "s2_same_civil_day": true
+    },
+    {
+      "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210121_022636_to_cems.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210121_022636_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32750",
+      "warp": {
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210220_022620_to_cems.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022620_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32750",
+      "warp": {
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210220_022634_to_cems.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022634_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32750",
+      "warp": {
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210205_203225.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR500_AOI01_DEL_PRODUCT_observedEventA_r1_v1.json"
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210205_203225.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210211_170324.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR500_AOI01_DEL_MONIT01_observedEventA_r1_v1.json"
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210211_170324.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210213_022304.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR500_AOI01_GRA_PRODUCT_observedEventA_r1_v1.json"
+    },
+    {
+      "rel": "labels/AU_EMSR500_PERTH_20210213_022304.geojson",
+      "kind": "cems_observed_event_geojson"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-13T09:54:56.032282Z",
+  "bbox_wgs84": [
+    116.02565208400006,
+    -31.793026743999974,
+    116.33302809300005,
+    -31.700408055999958
+  ],
+  "n_geotiff": 6,
+  "stac_eo": [
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_pre",
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+      "sha256": "621b47fd97611db969faf43dccc74c115652eb21f4dc53742b8a83227366346a",
+      "bytes": 241149,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_50HMK_20210121_1_L2A",
+      "datetime": "2021-01-21T02:26:36.730000Z",
+      "cloud_cover": 4.2e-05,
+      "stac": {
+        "id": "S2B_50HMK_20210121_1_L2A",
+        "datetime": "2021-01-21T02:26:36.730000Z",
+        "eo:cloud_cover": 4.2e-05,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/1/S2B_50HMK_20210121_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/1/S2B_50HMK_20210121_1_L2A/B12.tif",
+        "bbox": [
+          115.93366141492751,
+          -32.62555445507728,
+          117.10329962881399,
+          -31.630657005038636
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_50HMK_20210121_1_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/1/S2B_50HMK_20210121_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/1/S2B_50HMK_20210121_1_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_post",
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+      "sha256": "47e6eaea9db755f51cb06b1e3f41ccf87cd55f4a0d729ca5cbe554a07e0ca3f4",
+      "bytes": 55187,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_50JML_20210220_1_L2A",
+      "datetime": "2021-02-20T02:26:20.269000Z",
+      "cloud_cover": 0.002074,
+      "stac": {
+        "id": "S2B_50JML_20210220_1_L2A",
+        "datetime": "2021-02-20T02:26:20.269000Z",
+        "eo:cloud_cover": 0.002074,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/J/ML/2021/2/S2B_50JML_20210220_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/J/ML/2021/2/S2B_50JML_20210220_1_L2A/B12.tif",
+        "bbox": [
+          115.94412186136461,
+          -31.723192929099923,
+          117.1030103686562,
+          -30.728331296988824
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_50JML_20210220_1_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/J/ML/2021/2/S2B_50JML_20210220_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/J/ML/2021/2/S2B_50JML_20210220_1_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_same_day_tile",
+      "rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+      "file": "AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+      "sha256": "9423e1cdc92e52830fedc3e38875e717f1be5241ef89d01dc1497606521ccbfa",
+      "bytes": 241976,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_50HMK_20210220_1_L2A",
+      "datetime": "2021-02-20T02:26:34.587000Z",
+      "cloud_cover": 3e-06,
+      "stac": {
+        "id": "S2B_50HMK_20210220_1_L2A",
+        "datetime": "2021-02-20T02:26:34.587000Z",
+        "eo:cloud_cover": 3e-06,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/2/S2B_50HMK_20210220_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/2/S2B_50HMK_20210220_1_L2A/B12.tif",
+        "bbox": [
+          115.93367210864342,
+          -32.62447062211704,
+          117.10328781607348,
+          -31.630657005038636
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_50HMK_20210220_1_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/2/S2B_50HMK_20210220_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/50/H/MK/2021/2/S2B_50HMK_20210220_1_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime",
+      "s2_same_civil_day": true
+    }
+  ],
+  "warp_s2_to_cems": {
+    "as_of_utc": "2026-08-16T12:05:25Z",
+    "schema": "wfd_latam_au_s2_warp_v1",
+    "reference_label": "labels/AU_EMSR500_PERTH_20210205_203225.tif",
+    "n_warped": 3,
+    "n_s2_sources": 3,
+    "aligned_dir": "eo_aligned",
+    "tool": "rasterio.warp.reproject",
+    "resampling": "bilinear",
+    "files": [
+      {
+        "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210121_022636_to_cems.tif",
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210121_022636.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32750"
+      },
+      {
+        "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210220_022620_to_cems.tif",
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022620.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32750"
+      },
+      {
+        "rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210220_022634_to_cems.tif",
+        "source_rel": "eo/AU_EMSR500_PERTH_S2NBR_20210220_022634.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32750"
+      }
+    ],
+    "proxy": {
+      "metric": "nbr_vs_cems_iou",
+      "nbr_vs_cems_iou": 0.5952753850169669,
+      "status": "measured",
+      "threshold": -0.1,
+      "threshold_source": "held_out_label_sweep_frozen",
+      "low_iou_reason": null,
+      "s2_pair_rule": "datetime_after_last_label"
+    }
+  },
+  "ndws_covariates": {
+    "schema": "wfd_latam_au_ndws_covariates_v1",
+    "as_of_utc": "2026-08-18T18:05:43Z",
+    "ready_for_real_proxy_ndws": true,
+    "rel": "covariates/PROVENANCE.json"
+  }
+}

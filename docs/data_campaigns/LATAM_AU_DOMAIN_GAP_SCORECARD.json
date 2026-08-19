@@ -1,0 +1,441 @@
+{
+  "schema": "wfd_ml_domain_gap_v1",
+  "as_of_utc": "2026-08-16T12:05:34.331399Z",
+  "product_id": "clm_ensemble_v34",
+  "protocol": "latam_au_domain_gap_v1",
+  "campaign": "LATAM_AU",
+  "rails": {
+    "freeze_intact": true,
+    "go_q": "partial",
+    "field_ops_fusion": "ON",
+    "tobarra_keep_reopen": false,
+    "iou_is_not_ros": true,
+    "no_retrain": true
+  },
+  "clm_test": {
+    "region": "CLM",
+    "eval_status": "sealed",
+    "iou": 0.8568865373678947,
+    "n": 200,
+    "selective_iou_80": 0.903428533834858,
+    "ece_patch_conf": 0.15280955026564416,
+    "source": "docs/ML_PRODUCT_SCORECARD.json",
+    "split": "test",
+    "protocol": "clm_holdout_test_seed42_v1",
+    "note": "Sealed U1 TEST mean IoU. Not catalog 0.8963. Not ROS."
+  },
+  "au": {
+    "event_id": "AU_EMSR500_PERTH",
+    "region": "au",
+    "eval_status": "blocked_incompatible_schema",
+    "model_iou": null,
+    "n": 0,
+    "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is CEMS rasterized burned-area GeoTIFF (\u00b1 optional S2 NBR). Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+    "pack_metrics": {
+      "n_geotiff_meta": 9,
+      "n_label_tif_on_disk": 3,
+      "area_ha_by_product": [
+        10565.960281211275,
+        10678.61432716903,
+        10678.61432716903
+      ],
+      "area_ha_max": 10678.61432716903,
+      "area_ha_min": 10565.960281211275,
+      "successive_cems_mask_iou": [
+        {
+          "from_idx": 0,
+          "to_idx": 1,
+          "mask_iou": 0.989882818947021
+        },
+        {
+          "from_idx": 1,
+          "to_idx": 2,
+          "mask_iou": 1.0
+        }
+      ],
+      "mean_successive_mask_iou": 0.9949414094735105,
+      "note": "successive_cems_mask_iou is label-vs-label (same CEMS stack), NOT model IoU and NOT transfer performance."
+    },
+    "class": "ml_weak",
+    "label_level": "L2_proxy",
+    "source_kind": "cems",
+    "n_geotiff": 9,
+    "n_label_tif": 3,
+    "pack_dir": "data/open_if/latam_au/au/AU_EMSR500_PERTH",
+    "stac_proxy": {
+      "status": "measured",
+      "metric": "nbr_vs_cems_iou",
+      "value": 0.5952753850169669,
+      "threshold": -0.1,
+      "reason": "Audited S2\u2192CEMS warp present (WARP_PROVENANCE.json + eo_aligned). Reporting stored proxy IoU \u2014 not model/transfer IoU.",
+      "n_aligned": 3,
+      "provenance": "eo_aligned/WARP_PROVENANCE.json",
+      "honesty": [
+        "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+        "not transfer IoU",
+        "not O2 / CONAF official",
+        "threshold is lab default, not agency-calibrated"
+      ]
+    }
+  },
+  "latam": {
+    "event_id": "CL_EMSR647_NACIMIENTO",
+    "region": "cl",
+    "eval_status": "blocked_incompatible_schema",
+    "model_iou": null,
+    "n": 0,
+    "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is CEMS rasterized burned-area GeoTIFF (\u00b1 optional S2 NBR). Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+    "pack_metrics": {
+      "n_geotiff_meta": 9,
+      "n_label_tif_on_disk": 3,
+      "area_ha_by_product": [
+        80902.07010329801,
+        94568.5775717084,
+        99976.67025107979
+      ],
+      "area_ha_max": 99976.67025107979,
+      "area_ha_min": 80902.07010329801,
+      "successive_cems_mask_iou": [
+        {
+          "from_idx": 0,
+          "to_idx": 1,
+          "mask_iou": 0.8591920444164995
+        },
+        {
+          "from_idx": 1,
+          "to_idx": 2,
+          "mask_iou": 0.9478757857568567
+        }
+      ],
+      "mean_successive_mask_iou": 0.9035339150866781,
+      "note": "successive_cems_mask_iou is label-vs-label (same CEMS stack), NOT model IoU and NOT transfer performance."
+    },
+    "class": "ml_weak",
+    "label_level": "L2_proxy",
+    "source_kind": "cems",
+    "n_geotiff": 9,
+    "n_label_tif": 3,
+    "pack_dir": "data/open_if/latam_au/cl/CL_EMSR647_NACIMIENTO",
+    "stac_proxy": {
+      "status": "measured",
+      "metric": "nbr_vs_cems_iou",
+      "value": 0.12371438960982573,
+      "threshold": 0.0,
+      "reason": "Audited S2\u2192CEMS warp present (WARP_PROVENANCE.json + eo_aligned). Reporting stored proxy IoU \u2014 not model/transfer IoU.",
+      "n_aligned": 3,
+      "provenance": "eo_aligned/WARP_PROVENANCE.json",
+      "honesty": [
+        "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+        "not transfer IoU",
+        "not O2 / CONAF official",
+        "threshold is lab default, not agency-calibrated"
+      ]
+    }
+  },
+  "extra_packs": [
+    {
+      "event_id": "AU_EMSR408_NSW",
+      "region": "au",
+      "eval_status": "blocked_incompatible_schema",
+      "model_iou": null,
+      "n": 0,
+      "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is CEMS rasterized burned-area GeoTIFF (\u00b1 optional S2 NBR). Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+      "pack_metrics": {
+        "n_geotiff_meta": 10,
+        "n_label_tif_on_disk": 4,
+        "area_ha_by_product": [
+          5724.343830044718,
+          6219.52808993525,
+          5306.193068594579,
+          5989.018691715748
+        ],
+        "area_ha_max": 6219.52808993525,
+        "area_ha_min": 5306.193068594579,
+        "successive_cems_mask_iou": [
+          {
+            "from_idx": 0,
+            "to_idx": 1,
+            "mask_iou": 0.9199249029285014
+          },
+          {
+            "from_idx": 1,
+            "to_idx": 2,
+            "mask_iou": 0.8592498826608258
+          },
+          {
+            "from_idx": 2,
+            "to_idx": 3,
+            "mask_iou": 0.8854797331965111
+          }
+        ],
+        "mean_successive_mask_iou": 0.8882181729286128,
+        "note": "successive_cems_mask_iou is label-vs-label (same CEMS stack), NOT model IoU and NOT transfer performance."
+      },
+      "class": "ml_weak",
+      "label_level": "L2_proxy",
+      "source_kind": "cems_s3_vector_zip",
+      "n_geotiff": 10,
+      "n_label_tif": 4,
+      "pack_dir": "data/open_if/latam_au/au/AU_EMSR408_NSW",
+      "stac_proxy": {
+        "status": "measured",
+        "metric": "nbr_vs_cems_iou",
+        "value": 0.32806970866036983,
+        "threshold": 0.0,
+        "reason": "Audited S2\u2192CEMS warp present (WARP_PROVENANCE.json + eo_aligned). Reporting stored proxy IoU \u2014 not model/transfer IoU.",
+        "n_aligned": 3,
+        "provenance": "eo_aligned/WARP_PROVENANCE.json",
+        "honesty": [
+          "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+          "not transfer IoU",
+          "not O2 / CONAF official",
+          "threshold is lab default, not agency-calibrated"
+        ]
+      }
+    },
+    {
+      "event_id": "CL_EMSR715_VALPARAISO",
+      "region": "cl",
+      "eval_status": "blocked_incompatible_schema",
+      "model_iou": null,
+      "n": 0,
+      "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is CEMS rasterized burned-area GeoTIFF (\u00b1 optional S2 NBR). Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+      "pack_metrics": {
+        "n_geotiff_meta": 9,
+        "n_label_tif_on_disk": 3,
+        "area_ha_by_product": [
+          13061.092369218517,
+          8713.740566268949,
+          8778.135100050315
+        ],
+        "area_ha_max": 13061.092369218517,
+        "area_ha_min": 8713.740566268949,
+        "successive_cems_mask_iou": [
+          {
+            "from_idx": 0,
+            "to_idx": 1,
+            "mask_iou": 0.5642428935111862
+          },
+          {
+            "from_idx": 1,
+            "to_idx": 2,
+            "mask_iou": 0.9924231070256948
+          }
+        ],
+        "mean_successive_mask_iou": 0.7783330002684405,
+        "note": "successive_cems_mask_iou is label-vs-label (same CEMS stack), NOT model IoU and NOT transfer performance."
+      },
+      "class": "ml_weak",
+      "label_level": "L2_proxy",
+      "source_kind": "cems_rapid_json",
+      "n_geotiff": 9,
+      "n_label_tif": 3,
+      "pack_dir": "data/open_if/latam_au/cl/CL_EMSR715_VALPARAISO",
+      "stac_proxy": {
+        "status": "measured",
+        "metric": "nbr_vs_cems_iou",
+        "value": 0.5521680032621993,
+        "threshold": -0.15,
+        "reason": "Audited S2\u2192CEMS warp present (WARP_PROVENANCE.json + eo_aligned). Reporting stored proxy IoU \u2014 not model/transfer IoU.",
+        "n_aligned": 3,
+        "provenance": "eo_aligned/WARP_PROVENANCE.json",
+        "honesty": [
+          "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+          "not transfer IoU",
+          "not O2 / CONAF official",
+          "threshold is lab default, not agency-calibrated"
+        ]
+      }
+    },
+    {
+      "event_id": "BR_PANTANAL_2020_MAPBIOMAS",
+      "region": "br",
+      "eval_status": "blocked_incompatible_schema",
+      "model_iou": null,
+      "n": 0,
+      "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is L1 annual/seasonal burned GeoTIFF (MapBiomas/NAFI window) \u00b1 optional S2 NBR. Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+      "pack_metrics": {
+        "n_geotiff_meta": 6,
+        "n_label_tif_on_disk": 3,
+        "area_ha_by_product": [],
+        "area_ha_max": null,
+        "area_ha_min": null,
+        "successive_cems_mask_iou": [
+          {
+            "from_idx": 0,
+            "to_idx": 1,
+            "mask_iou": 0.057118758901041164
+          },
+          {
+            "from_idx": 1,
+            "to_idx": 2,
+            "mask_iou": 0.08433606570987363
+          }
+        ],
+        "mean_successive_mask_iou": 0.0707274123054574,
+        "note": "successive_mask_iou is label-vs-label on annual/seasonal windows (MapBiomas/NAFI), NOT model IoU and NOT transfer performance."
+      },
+      "class": "ml_weak",
+      "label_level": "L1_annual",
+      "source_kind": "mapbiomas_annual",
+      "n_geotiff": 6,
+      "n_label_tif": 3,
+      "pack_dir": "data/open_if/latam_au/br/BR_PANTANAL_2020_MAPBIOMAS",
+      "stac_proxy": {
+        "status": "blocked_no_audited_threshold",
+        "reason": "S2 NBR and L1 annual burned windows may share a geographic CRS, but there is no audited NBR threshold / resample / date-match. Refusing proxy IoU rather than invent one.",
+        "metric": "nbr_vs_annual_burned_iou",
+        "value": null,
+        "n_s2_windows": 3
+      }
+    },
+    {
+      "event_id": "AU_NAFI_NT_SEASON_2023",
+      "region": "au",
+      "eval_status": "blocked_incompatible_schema",
+      "model_iou": null,
+      "n": 0,
+      "reason": "clm_ensemble_v34 expects NDWS 17-channel sequences (legacy17 / holdout_v1 NPZ). This pack is L1 annual/seasonal burned GeoTIFF (MapBiomas/NAFI window) \u00b1 optional S2 NBR. Running the UNet on these rasters would invent IoU. Geometry metrics only.",
+      "pack_metrics": {
+        "n_geotiff_meta": 6,
+        "n_label_tif_on_disk": 3,
+        "area_ha_by_product": [],
+        "area_ha_max": null,
+        "area_ha_min": null,
+        "successive_cems_mask_iou": [
+          {
+            "from_idx": 0,
+            "to_idx": 1,
+            "mask_iou": 0.5831826683291771
+          },
+          {
+            "from_idx": 1,
+            "to_idx": 2,
+            "mask_iou": 0.5490502793296089
+          }
+        ],
+        "mean_successive_mask_iou": 0.566116473829393,
+        "note": "successive_mask_iou is label-vs-label on annual/seasonal windows (MapBiomas/NAFI), NOT model IoU and NOT transfer performance."
+      },
+      "class": "ml_weak",
+      "label_level": "L1_annual",
+      "source_kind": "nafi_annual",
+      "n_geotiff": 6,
+      "n_label_tif": 3,
+      "pack_dir": "data/open_if/latam_au/au/AU_NAFI_NT_SEASON_2023",
+      "stac_proxy": {
+        "status": "blocked_no_audited_threshold",
+        "reason": "S2 NBR and L1 annual burned windows may share a geographic CRS, but there is no audited NBR threshold / resample / date-match. Refusing proxy IoU rather than invent one.",
+        "metric": "nbr_vs_annual_burned_iou",
+        "value": null,
+        "n_s2_windows": 3
+      }
+    }
+  ],
+  "zero_shot": {
+    "status": "not_run",
+    "model": "clm_ensemble_v34",
+    "model_iou": null,
+    "attempted": false,
+    "reason": "Input contract mismatch (NDWS 17-ch vs CEMS 1-band burned mask). Honesty: do not zero-shot the UNet on incompatible tensors."
+  },
+  "gap_table": {
+    "iou_clm_test": 0.8568865373678947,
+    "iou_au": null,
+    "iou_latam": null,
+    "note": "AU/LATAM/P1 extra model IoU are null by design in this F4 pass. Do not fill with successive CEMS/weak mask IoU or dNBR.",
+    "extra_event_ids": [
+      "AU_EMSR408_NSW",
+      "CL_EMSR715_VALPARAISO",
+      "BR_PANTANAL_2020_MAPBIOMAS",
+      "AU_NAFI_NT_SEASON_2023"
+    ]
+  },
+  "not_claims": [
+    "not model IoU on AU/LATAM",
+    "not ROS / Vp",
+    "not FREEZE lift",
+    "not GO_Q complete",
+    "not fusion change",
+    "not O2 / grade A / CONAF official",
+    "not ml_strong",
+    "successive CEMS mask IoU is not transfer IoU"
+  ],
+  "product_e2e": {
+    "schema": "wfd_latam_au_product_e2e_v1",
+    "as_of_utc": "2026-08-13T09:22:41.610706Z",
+    "ok": true,
+    "n_ok": 2,
+    "n_packs": 2,
+    "rails": {
+      "go_q": "partial",
+      "freeze_intact": true,
+      "field_ops_fusion": "ON",
+      "tobarra_keep_reopen": false,
+      "no_invent_transfer_iou": true,
+      "not_field_dispatch_from_cems": true,
+      "stamp_freeze_ml": true,
+      "stamp_path": "docs/ML_PRODUCT_GO_STATUS.json"
+    },
+    "decisions": [
+      {
+        "event_id": "AU_EMSR500_PERTH",
+        "decision": "HOLD",
+        "latency_ms": 10.728,
+        "open_pack": "outputs/open_if/emsr500_perth",
+        "open_source_available": true,
+        "max_area_ha": 10678.61432716903,
+        "sidecars": {
+          "decision_log": "outputs/open_if/latam_au_e2e/work/au_emsr500_perth/decision_log.jsonl",
+          "vv_scorecard": "outputs/open_if/latam_au_e2e/work/au_emsr500_perth/vv_scorecard.json",
+          "decision_log_exists": true,
+          "vv_scorecard_exists": true
+        }
+      },
+      {
+        "event_id": "CL_EMSR647_NACIMIENTO",
+        "decision": "HOLD",
+        "latency_ms": 3.534,
+        "open_pack": "outputs/open_if/emsr647_nacimiento",
+        "open_source_available": true,
+        "max_area_ha": 99976.67025107979,
+        "sidecars": {
+          "decision_log": "outputs/open_if/latam_au_e2e/work/cl_emsr647_nacimiento/decision_log.jsonl",
+          "vv_scorecard": "outputs/open_if/latam_au_e2e/work/cl_emsr647_nacimiento/vv_scorecard.json",
+          "decision_log_exists": true,
+          "vv_scorecard_exists": true
+        }
+      }
+    ],
+    "note": "Measured product decide path on bridged open_if packs. HOLD/ABSTAIN without ops is valid. Not field validation."
+  },
+  "ml_export": {
+    "status": "exported_intermediate",
+    "as_of_utc": "2026-08-13T00:23:05.539560Z",
+    "compatible_with_clm_ensemble_v34": false,
+    "contract": "cems_label_mask_patches_v1",
+    "schema": "wfd_latam_au_ml_export_v1",
+    "packs": [
+      {
+        "event_id": "AU_EMSR500_PERTH",
+        "ok": true,
+        "n_patches": 135,
+        "n_label_tif": 3,
+        "manifest": "artifacts/latam_au_ml_export/AU_EMSR500_PERTH/ml/manifest.json",
+        "compatible_with_clm_ensemble_v34": false,
+        "train_ready_status": "inventory_only"
+      },
+      {
+        "event_id": "CL_EMSR647_NACIMIENTO",
+        "ok": true,
+        "n_patches": 144,
+        "n_label_tif": 3,
+        "manifest": "artifacts/latam_au_ml_export/CL_EMSR647_NACIMIENTO/ml/manifest.json",
+        "compatible_with_clm_ensemble_v34": false,
+        "train_ready_status": "inventory_only"
+      }
+    ],
+    "train_inventory": "artifacts/latam_au_ml_export/train_inventory.json",
+    "note": "Intermediate CEMS mask patches only. model_iou remains null. No retrain (FREEZE)."
+  }
+}

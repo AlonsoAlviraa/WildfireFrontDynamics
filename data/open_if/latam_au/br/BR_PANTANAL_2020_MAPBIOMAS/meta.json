@@ -1,0 +1,240 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "BR_PANTANAL_2020_MAPBIOMAS",
+  "region": "br",
+  "country": "BR",
+  "activation": "MAPBIOMAS_FOGO_COL5",
+  "aoi": "PANTANAL_WINDOW",
+  "aoi_name": "Pantanal (windowed annual burned)",
+  "year": 2020,
+  "class": "ml_weak",
+  "label_level": "L1_annual",
+  "license_id": "mapbiomas_cc_by",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://brasil.mapbiomas.org/en/mapbiomas-fogo/",
+  "crs": "EPSG:4326",
+  "gsd_m": 30.0,
+  "sensor": "MapBiomas Fogo Collection 5 annual burned (windowed)",
+  "geotiff_origin": "mapbiomas_fogo_col5_windowed",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2018-12-31T00:00:00Z",
+    "2019-12-31T00:00:00Z",
+    "2020-12-31T00:00:00Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20180101_000000.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_20180101_000000.tif",
+      "role": "label_burned_mapbiomas_annual",
+      "product_id": "ANNUAL_2018",
+      "kind": "annual_burned",
+      "delivery_utc": "2018-12-31T00:00:00Z",
+      "source_url": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection_10/fire-col5/mapbiomas_fire_collection5_annual_burned_v1/burned_area_2018.tif",
+      "sha256": "463b3ad123680f3b6758080ca4fa1958c6aa58177832e50f1ae8354bdee3e50f",
+      "bytes": 23151,
+      "crs": "EPSG:4326",
+      "width": 2048,
+      "height": 1706,
+      "positive_pixels": 34735,
+      "note": "National annual burned raster windowed to Pantanal bbox. L1 weak."
+    },
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20190101_000000.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_20190101_000000.tif",
+      "role": "label_burned_mapbiomas_annual",
+      "product_id": "ANNUAL_2019",
+      "kind": "annual_burned",
+      "delivery_utc": "2019-12-31T00:00:00Z",
+      "source_url": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection_10/fire-col5/mapbiomas_fire_collection5_annual_burned_v1/burned_area_2019.tif",
+      "sha256": "65a3e22f1d434c42b318360b6144b62fb85d24c8ab5b3e4552641e11c86d5df1",
+      "bytes": 50350,
+      "crs": "EPSG:4326",
+      "width": 2048,
+      "height": 1706,
+      "positive_pixels": 118173,
+      "note": "National annual burned raster windowed to Pantanal bbox. L1 weak."
+    },
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20200101_000000.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_20200101_000000.tif",
+      "role": "label_burned_mapbiomas_annual",
+      "product_id": "ANNUAL_2020",
+      "kind": "annual_burned",
+      "delivery_utc": "2020-12-31T00:00:00Z",
+      "source_url": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection_10/fire-col5/mapbiomas_fire_collection5_annual_burned_v1/burned_area_2020.tif",
+      "sha256": "da817e2b382369c7f5594db46d2d5f61ac85616989069cb3032911c43166bbb9",
+      "bytes": 142432,
+      "crs": "EPSG:4326",
+      "width": 2048,
+      "height": 1706,
+      "positive_pixels": 665468,
+      "note": "National annual burned raster windowed to Pantanal bbox. L1 weak."
+    },
+    {
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200715_140738.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200715_140738.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2020-07-15T14:07:38.252000Z",
+      "sha256": "ab19da5ff120241bf2a4d8c2fe0849d23279a74891625be008f0e88467eb2c77",
+      "bytes": 5882,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200807_141708.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200807_141708.tif",
+      "role": "eo_s2_nbr_mid",
+      "delivery_utc": "2020-08-07T14:17:08.999000Z",
+      "sha256": "344f0c5718c641507543b96f27a59c484d0c370ea216047dd87fb1e60484313e",
+      "bytes": 2673,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200831_135741.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200831_135741.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2020-08-31T13:57:41.413000Z",
+      "sha256": "5e46b48787102527300896e933d87d6484293961bd96d9ba708e1a12631bd4e8",
+      "bytes": 2376,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20180101_000000.tif",
+      "kind": "mapbiomas_annual_burned_window"
+    },
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20190101_000000.tif",
+      "kind": "mapbiomas_annual_burned_window"
+    },
+    {
+      "rel": "labels/BR_PANTANAL_2020_MAPBIOMAS_20200101_000000.tif",
+      "kind": "mapbiomas_annual_burned_window"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-13T10:07:53.054237Z",
+  "bbox_wgs84": [
+    -58.5,
+    -18.5,
+    -55.5,
+    -16.0
+  ],
+  "n_geotiff": 6,
+  "stac_eo": [
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_pre",
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200715_140738.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200715_140738.tif",
+      "sha256": "ab19da5ff120241bf2a4d8c2fe0849d23279a74891625be008f0e88467eb2c77",
+      "bytes": 5882,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_21KXV_20200715_1_L2A",
+      "datetime": "2020-07-15T14:07:38.252000Z",
+      "calendar_date": "2020-07-15",
+      "cloud_cover": 0.000279,
+      "stac": {
+        "id": "S2B_21KXV_20200715_1_L2A",
+        "datetime": "2020-07-15T14:07:38.252000Z",
+        "eo:cloud_cover": 0.000279,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/XV/2020/7/S2B_21KXV_20200715_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/XV/2020/7/S2B_21KXV_20200715_1_L2A/B12.tif",
+        "bbox": [
+          -56.054944520203875,
+          -19.077546334244886,
+          -55.74241647506381,
+          -18.08443912603089
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_21KXV_20200715_1_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/XV/2020/7/S2B_21KXV_20200715_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/XV/2020/7/S2B_21KXV_20200715_1_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_mid",
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200807_141708.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200807_141708.tif",
+      "sha256": "344f0c5718c641507543b96f27a59c484d0c370ea216047dd87fb1e60484313e",
+      "bytes": 2673,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_21KVB_20200807_0_L2A",
+      "datetime": "2020-08-07T14:17:08.999000Z",
+      "calendar_date": "2020-08-07",
+      "cloud_cover": 0.000209,
+      "stac": {
+        "id": "S2B_21KVB_20200807_0_L2A",
+        "datetime": "2020-08-07T14:17:08.999000Z",
+        "eo:cloud_cover": 0.000209,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/VB/2020/8/S2B_21KVB_20200807_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/VB/2020/8/S2B_21KVB_20200807_0_L2A/B12.tif",
+        "bbox": [
+          -57.93705604904803,
+          -16.652095768562734,
+          -57.85285580037626,
+          -16.27877506027229
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_21KVB_20200807_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/VB/2020/8/S2B_21KVB_20200807_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/VB/2020/8/S2B_21KVB_20200807_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_post",
+      "rel": "eo/BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200831_135741.tif",
+      "file": "BR_PANTANAL_2020_MAPBIOMAS_S2NBR_20200831_135741.tif",
+      "sha256": "5e46b48787102527300896e933d87d6484293961bd96d9ba708e1a12631bd4e8",
+      "bytes": 2376,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_21KWV_20200831_1_L2A",
+      "datetime": "2020-08-31T13:57:41.413000Z",
+      "calendar_date": "2020-08-31",
+      "cloud_cover": 0,
+      "stac": {
+        "id": "S2B_21KWV_20200831_1_L2A",
+        "datetime": "2020-08-31T13:57:41.413000Z",
+        "eo:cloud_cover": 0,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/WV/2020/8/S2B_21KWV_20200831_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/WV/2020/8/S2B_21KWV_20200831_1_L2A/B12.tif",
+        "bbox": [
+          -56.110378992453505,
+          -18.1905869517852,
+          -55.96193035957915,
+          -18.085748232976425
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_21KWV_20200831_1_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/WV/2020/8/S2B_21KWV_20200831_1_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/21/K/WV/2020/8/S2B_21KWV_20200831_1_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    }
+  ]
+}

@@ -1,0 +1,339 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "CL_EMSR715_VALPARAISO",
+  "region": "cl",
+  "country": "CL",
+  "activation": "EMSR715",
+  "aoi": "AOI01",
+  "aoi_name": "Valparaiso",
+  "year": 2024,
+  "class": "ml_weak",
+  "label_level": "L2_proxy",
+  "license_id": "copernicus_ems_reg_2021_696_open",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://mapping.emergency.copernicus.eu/activations/EMSR715/",
+  "crs": "EPSG:32719",
+  "gsd_m": 30.0,
+  "sensor": "CEMS Rapid Mapping observedEvent (rasterized vector)",
+  "geotiff_origin": "rasterized_cems_vector+stac_s2_nbr",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2024-02-04T20:02:40Z",
+    "2024-02-06T16:52:36Z",
+    "2024-02-09T14:01:39Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240204_200240.tif",
+      "file": "CL_EMSR715_VALPARAISO_20240204_200240.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "FEP_PRODUCT",
+      "kind": "first_estimate",
+      "delivery_utc": "2024-02-04T20:02:40Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR715/AOI01/FEP_PRODUCT/EMSR715_AOI01_FEP_PRODUCT_observedEventA_v1.json",
+      "source_zip": "EMSR715_AOI01_FEP_PRODUCT_observedEventA_v1.json",
+      "source_member": "EMSR715_AOI01_FEP_PRODUCT_observedEventA_v1.json",
+      "area_ha": 13061.092369218517,
+      "sha256": "d96e0ccd8ff9fae0b595b55ac244be07dac93137a6e66d07150008bcaaa65270",
+      "bytes": 11416,
+      "crs": "EPSG:32719",
+      "gsd_m": 30.0,
+      "width": 852,
+      "height": 950,
+      "positive_pixels": 147477
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240206_165236.tif",
+      "file": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_PRODUCT",
+      "kind": "delineation",
+      "delivery_utc": "2024-02-06T16:52:36Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR715/AOI01/DEL_PRODUCT/EMSR715_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "source_zip": "EMSR715_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "source_member": "EMSR715_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "area_ha": 8713.740566268949,
+      "sha256": "f9cefa0e63cef45b2bc62a6991df0f5ff0cf25b724e56c001a9a975831ac23b6",
+      "bytes": 19214,
+      "crs": "EPSG:32719",
+      "gsd_m": 30.0,
+      "width": 852,
+      "height": 950,
+      "positive_pixels": 119192
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240209_140139.tif",
+      "file": "CL_EMSR715_VALPARAISO_20240209_140139.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "GRA_PRODUCT",
+      "kind": "grading",
+      "delivery_utc": "2024-02-09T14:01:39Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR715/AOI01/GRA_PRODUCT/EMSR715_AOI01_GRA_PRODUCT_observedEventA_v3.json",
+      "source_zip": "EMSR715_AOI01_GRA_PRODUCT_observedEventA_v3.json",
+      "source_member": "EMSR715_AOI01_GRA_PRODUCT_observedEventA_v3.json",
+      "area_ha": 8778.135100050315,
+      "sha256": "ae31c30bea743eb4b16bf6f38e3d34fee2289b9d9ff3ab0cb511e0d306f3f8cf",
+      "bytes": 19446,
+      "crs": "EPSG:32719",
+      "gsd_m": 30.0,
+      "width": 852,
+      "height": 950,
+      "positive_pixels": 120102
+    },
+    {
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2024-01-08T14:52:06.661000Z",
+      "sha256": "c34c37484bd93f63d339fe8c828fa1f807cdc544e7268e8c5afc9978286c1048",
+      "bytes": 243837,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+      "role": "eo_s2_nbr_mid",
+      "delivery_utc": "2024-02-12T14:52:04.975000Z",
+      "sha256": "504a2e6aaf461ed5cf22490ccfe761c05cf8e1fae069ca0f09f972ee0cfe0096",
+      "bytes": 244166,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2024-02-17T14:52:08.889000Z",
+      "sha256": "659124b9c38fbb61314798a150bf933cacb472e0717d84af7f4ced2b7feed46e",
+      "bytes": 243886,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206_to_cems.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240108_145206_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32719",
+      "warp": {
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204_to_cems.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240212_145204_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32719",
+      "warp": {
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208_to_cems.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240217_145208_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32719",
+      "warp": {
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240204_200240.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR715_AOI01_FEP_PRODUCT_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240204_200240.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240206_165236.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR715_AOI01_DEL_PRODUCT_observedEventA_v2.json"
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240206_165236.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240209_140139.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR715_AOI01_GRA_PRODUCT_observedEventA_v3.json"
+    },
+    {
+      "rel": "labels/CL_EMSR715_VALPARAISO_20240209_140139.geojson",
+      "kind": "cems_observed_event_geojson"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-13T09:56:42.483359Z",
+  "bbox_wgs84": [
+    -71.53290025399997,
+    -33.20308257299995,
+    -71.27002760399995,
+    -32.96162193399993
+  ],
+  "n_geotiff": 6,
+  "stac_eo": [
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_pre",
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+      "sha256": "c34c37484bd93f63d339fe8c828fa1f807cdc544e7268e8c5afc9978286c1048",
+      "bytes": 243837,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_19HBD_20240108_0_L2A",
+      "datetime": "2024-01-08T14:52:06.661000Z",
+      "cloud_cover": 0.020378,
+      "stac": {
+        "id": "S2B_19HBD_20240108_0_L2A",
+        "datetime": "2024-01-08T14:52:06.661000Z",
+        "eo:cloud_cover": 0.020378,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/1/S2B_19HBD_20240108_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/1/S2B_19HBD_20240108_0_L2A/B12.tif",
+        "bbox": [
+          -72.22878658425692,
+          -33.51084491084293,
+          -71.02523076791229,
+          -32.49682280902955
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_19HBD_20240108_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/1/S2B_19HBD_20240108_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/1/S2B_19HBD_20240108_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_mid",
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+      "sha256": "504a2e6aaf461ed5cf22490ccfe761c05cf8e1fae069ca0f09f972ee0cfe0096",
+      "bytes": 244166,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2A_19HBD_20240212_0_L2A",
+      "datetime": "2024-02-12T14:52:04.975000Z",
+      "cloud_cover": 0.059714,
+      "stac": {
+        "id": "S2A_19HBD_20240212_0_L2A",
+        "datetime": "2024-02-12T14:52:04.975000Z",
+        "eo:cloud_cover": 0.059714,
+        "platform": "sentinel-2a",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2A_19HBD_20240212_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2A_19HBD_20240212_0_L2A/B12.tif",
+        "bbox": [
+          -72.22878658425692,
+          -33.51084491084293,
+          -71.02523076791229,
+          -32.49682280902955
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2A_19HBD_20240212_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2A_19HBD_20240212_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2A_19HBD_20240212_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_post",
+      "rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+      "file": "CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+      "sha256": "659124b9c38fbb61314798a150bf933cacb472e0717d84af7f4ced2b7feed46e",
+      "bytes": 243886,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_19HBD_20240217_0_L2A",
+      "datetime": "2024-02-17T14:52:08.889000Z",
+      "cloud_cover": 31.247988,
+      "stac": {
+        "id": "S2B_19HBD_20240217_0_L2A",
+        "datetime": "2024-02-17T14:52:08.889000Z",
+        "eo:cloud_cover": 31.247988,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2B_19HBD_20240217_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2B_19HBD_20240217_0_L2A/B12.tif",
+        "bbox": [
+          -72.22878658425692,
+          -33.51084491084293,
+          -71.02523076791229,
+          -32.49682280902955
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_19HBD_20240217_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2B_19HBD_20240217_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/19/H/BD/2024/2/S2B_19HBD_20240217_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    }
+  ],
+  "ndws_covariates": {
+    "schema": "wfd_latam_au_ndws_covariates_v1",
+    "as_of_utc": "2026-08-18T18:05:42Z",
+    "ready_for_real_proxy_ndws": true,
+    "rel": "covariates/PROVENANCE.json"
+  },
+  "warp_s2_to_cems": {
+    "as_of_utc": "2026-08-16T12:05:26Z",
+    "schema": "wfd_latam_au_s2_warp_v1",
+    "reference_label": "labels/CL_EMSR715_VALPARAISO_20240204_200240.tif",
+    "n_warped": 3,
+    "n_s2_sources": 3,
+    "aligned_dir": "eo_aligned",
+    "tool": "rasterio.warp.reproject",
+    "resampling": "bilinear",
+    "files": [
+      {
+        "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206_to_cems.tif",
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32719"
+      },
+      {
+        "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204_to_cems.tif",
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240212_145204.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32719"
+      },
+      {
+        "rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208_to_cems.tif",
+        "source_rel": "eo/CL_EMSR715_VALPARAISO_S2NBR_20240217_145208.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32719"
+      }
+    ],
+    "proxy": {
+      "metric": "nbr_vs_cems_iou",
+      "nbr_vs_cems_iou": 0.5521680032621993,
+      "status": "measured",
+      "threshold": -0.15,
+      "threshold_source": "held_out_label_sweep_frozen",
+      "low_iou_reason": null,
+      "s2_pair_rule": "datetime_after_last_label"
+    }
+  }
+}
