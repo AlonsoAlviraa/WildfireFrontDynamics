@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in __import__("sys").path:
     __import__("sys").path.insert(0, str(ROOT))
 
-from wildfire_front.open_if.caldor_temporal import (  # noqa: E402
+from wildfire_front.open_if.caldor_temporal import (
     erc_available_at_t0,
     hrrr_window_report,
 )

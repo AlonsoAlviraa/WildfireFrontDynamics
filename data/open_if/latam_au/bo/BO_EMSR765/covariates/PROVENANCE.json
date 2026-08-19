@@ -1,0 +1,99 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:08:23Z",
+  "event_id": "BO_EMSR765",
+  "label_ref": "labels/BO_EMSR765_20240926_171213.tif",
+  "shape": [
+    2048,
+    1301
+  ],
+  "crs": "EPSG:32720",
+  "meteo": {
+    "status": "ok",
+    "source": "weather/open_meteo_era5_archive.json",
+    "elevation_m_point": 311.0,
+    "temperature_c_mean": 33.6,
+    "humidity_pct_mean": 37.0,
+    "wind_speed_ms_mean": 1.0555555555555556,
+    "wind_speed_kmh_mean": 3.8,
+    "wind_dir_deg_mean": 183.0,
+    "precip_mm_mean": 0.0,
+    "n_hourly": 216,
+    "not_cds_era5_land_native": true,
+    "meteo_spatial": "constant_point",
+    "spatial": "constant_point",
+    "sample": "label_timestamp_nearest_hour",
+    "sample_at": "2024-10-04T20:00",
+    "gridded": false
+  },
+  "meteo_spatial": "constant_point",
+  "meteo_by_label": [
+    {
+      "label": "BO_EMSR765_20240926_171213.tif",
+      "delivery_utc": "2024-09-26T17:12:13Z",
+      "sample_at": "2024-09-26T17:00",
+      "temperature_c": 34.3,
+      "humidity_pct": 44.0,
+      "wind_speed_ms": 2.25,
+      "wind_dir_deg": 258.0,
+      "precip_mm": 0.3
+    },
+    {
+      "label": "BO_EMSR765_20240930_094734.tif",
+      "delivery_utc": "2024-09-30T09:47:34Z",
+      "sample_at": "2024-09-30T10:00",
+      "temperature_c": 25.5,
+      "humidity_pct": 78.0,
+      "wind_speed_ms": 2.388888888888889,
+      "wind_dir_deg": 327.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "BO_EMSR765_20241004_194544.tif",
+      "delivery_utc": "2024-10-04T19:45:44Z",
+      "sample_at": "2024-10-04T20:00",
+      "temperature_c": 33.6,
+      "humidity_pct": 37.0,
+      "wind_speed_ms": 1.0555555555555556,
+      "wind_dir_deg": 183.0,
+      "precip_mm": 0.0
+    }
+  ],
+  "dem": {
+    "status": "reused",
+    "rel": "covariates/elevation_m.tif"
+  },
+  "vegetation": {
+    "status": "ok",
+    "rel": "covariates/vegetation_proxy.tif",
+    "nbr_rel": "covariates/s2_nbr_aligned.tif",
+    "mapping": "veg = clip((nbr+1)/2, 0, 1) from pre-fire NBR",
+    "veg_mean": 0.5275024175643921,
+    "nbr_pick_rule": "datetime_before_first_label",
+    "nbr_source_rel": "eo_aligned/BO_EMSR765_S2NBR_20240921_143647_to_cems.tif",
+    "source": "s2_nbr"
+  },
+  "meteo_fields": [
+    "covariates/temperature_c.tif",
+    "covariates/humidity_pct.tif",
+    "covariates/wind_speed_ms.tif",
+    "covariates/wind_dir_deg.tif",
+    "covariates/precip_mm.tif"
+  ],
+  "channels_ready": {
+    "meteo": true,
+    "dem": true,
+    "veg": true,
+    "lst": true,
+    "harmonic_ndvi": true
+  },
+  "not_claims": [
+    "not NDWS-native multi-band stack",
+    "not CDS ERA5-Land native",
+    "not transfer IoU",
+    "meteo_spatial=constant_point (Open-Meteo archive is a point, not a grid)",
+    "veg is S2 NBR proxy not NDVI training covariate",
+    "LST sidecar is not Open-Meteo t2m / not written to temperature_c.tif"
+  ],
+  "ready_for_real_proxy_ndws": true
+}

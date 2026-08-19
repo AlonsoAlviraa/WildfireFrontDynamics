@@ -1,0 +1,49 @@
+{
+  "schema": "wfd_latam_au_era5_align_v1",
+  "as_of_utc": "2026-08-18T13:42:42.274764Z",
+  "event_id": "MX_EMSR717",
+  "pack_dir": "data/open_if/latam_au/mx/MX_EMSR717",
+  "request": {
+    "schema": "wfd_latam_au_era5_align_v1",
+    "dataset": "reanalysis-era5-land",
+    "event_id": "MX_EMSR717",
+    "source_id": "mx_emsr717",
+    "date_start": "2024-04-09",
+    "date_end": "2024-04-18",
+    "bbox_wgs84": [
+      -94.19343752299994,
+      16.664465278000023,
+      -93.99189953799998,
+      16.86321616500004
+    ],
+    "centroid_lonlat": [
+      -94.09266853049996,
+      16.76384072150003
+    ],
+    "variables": [
+      "2m_temperature",
+      "2m_dewpoint_temperature",
+      "10m_u_component_of_wind",
+      "10m_v_component_of_wind",
+      "total_precipitation"
+    ],
+    "not_ros": true,
+    "not_tactical": true,
+    "note": "Optional meteo align only. Open-Meteo archive may be used as a no-key proxy; that is not CDS ERA5-Land native. Never sell as ROS."
+  },
+  "fetch": {
+    "status": "ok",
+    "source": "open_meteo_era5_archive",
+    "not_cds_era5_land_native": true,
+    "error": "",
+    "n_hourly": 240,
+    "rel": "weather/open_meteo_era5_archive.json"
+  },
+  "not_ros": true,
+  "not_tactical": true,
+  "not_claims": [
+    "not ROS / Vp",
+    "not CDS ERA5-Land native unless nc present",
+    "not transfer IoU"
+  ]
+}

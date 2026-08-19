@@ -141,6 +141,22 @@ data/open_if/latam_au/**/raw_nafi/
 data/open_if/external_bridge/**/*.tif
 data/open_if/external_bridge/**/*.tiff
 data/open_if/external_bridge/**/*.geojson
+data/open_if/external_bridge/**/*.grib2
+data/open_if/external_bridge/**/*.idx
+data/open_if/external_bridge/**/*.nc
+
+# WFIGS historical harvest payloads are reproducible but too large for Git.
+# Keep the harvesting code, compact audits, and protocol documents versioned.
+data/open_if/wfigs_history_*/observations.geojson
+data/open_if/wfigs_history_*/partitions/**/raw/
+data/open_if/wfigs_history_*/partitions/**/normalized.geojson
+data/open_if/wfigs_history_*/enrichment/PAIR_ENRICHMENT.json
+data/open_if/wfigs_history_*/enrichment/event_cache/
+data/open_if/wfigs_history_*/enrichment/HRRR_PROBES.json
+data/open_if/wfigs_history_*/ml/
+data/open_if/wfigs_history_*/temporal_pairs/PAIRS.json
+data/open_if/wfigs_history_*/temporal_pairs/REJECTED.json
+data/external/firebench/
 
 data/open_if/**/wfs_cache/
 tests/fixtures/ext_rai_tmp/
@@ -208,4 +224,9 @@ docs/entrega_cma/correo_solicitud_datos.md
 docs/open_if_intake/OUTREACH_AND_GAL_EXT_*.md
 docs/_gmail_*.json
 docs/_outreach_send_log_*.json
+docs/data_campaigns/conaf_send/OUTBOX/
+docs/data_campaigns/conaf_send/send_status.json
+docs/data_campaigns/GMAIL_SENT_AUDIT_*
+docs/data_campaigns/*CONTACT*.csv
+docs/ESTUDIO_DATOS_CONTACTOS_*
 **/*RELLENADA*

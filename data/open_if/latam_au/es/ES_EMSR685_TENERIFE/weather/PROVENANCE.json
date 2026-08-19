@@ -1,0 +1,49 @@
+{
+  "schema": "wfd_latam_au_era5_align_v1",
+  "as_of_utc": "2026-08-18T13:42:41.666913Z",
+  "event_id": "ES_EMSR685_TENERIFE",
+  "pack_dir": "data/open_if/latam_au/es/ES_EMSR685_TENERIFE",
+  "request": {
+    "schema": "wfd_latam_au_era5_align_v1",
+    "dataset": "reanalysis-era5-land",
+    "event_id": "ES_EMSR685_TENERIFE",
+    "source_id": "es_emsr685_tenerife",
+    "date_start": "2023-08-19",
+    "date_end": "2023-08-26",
+    "bbox_wgs84": [
+      -16.596375643999977,
+      28.286241895000046,
+      -16.375074595999934,
+      28.454624005000028
+    ],
+    "centroid_lonlat": [
+      -16.485725119999955,
+      28.370432950000037
+    ],
+    "variables": [
+      "2m_temperature",
+      "2m_dewpoint_temperature",
+      "10m_u_component_of_wind",
+      "10m_v_component_of_wind",
+      "total_precipitation"
+    ],
+    "not_ros": true,
+    "not_tactical": true,
+    "note": "Optional meteo align only. Open-Meteo archive may be used as a no-key proxy; that is not CDS ERA5-Land native. Never sell as ROS."
+  },
+  "fetch": {
+    "status": "ok",
+    "source": "open_meteo_era5_archive",
+    "not_cds_era5_land_native": true,
+    "error": "",
+    "n_hourly": 192,
+    "rel": "weather/open_meteo_era5_archive.json"
+  },
+  "not_ros": true,
+  "not_tactical": true,
+  "not_claims": [
+    "not ROS / Vp",
+    "not CDS ERA5-Land native unless nc present",
+    "not transfer IoU"
+  ]
+}

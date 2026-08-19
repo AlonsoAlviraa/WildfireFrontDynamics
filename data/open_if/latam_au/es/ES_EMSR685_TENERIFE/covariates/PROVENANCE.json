@@ -1,0 +1,109 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:05:41Z",
+  "event_id": "ES_EMSR685_TENERIFE",
+  "label_ref": "labels/ES_EMSR685_TENERIFE_20230819_045000.tif",
+  "shape": [
+    659,
+    766
+  ],
+  "crs": "EPSG:32628",
+  "meteo": {
+    "status": "ok",
+    "source": "weather/open_meteo_era5_archive.json",
+    "elevation_m_point": 1096.0,
+    "temperature_c_mean": 21.0,
+    "humidity_pct_mean": 62.0,
+    "wind_speed_ms_mean": 3.3611111111111107,
+    "wind_speed_kmh_mean": 12.1,
+    "wind_dir_deg_mean": 12.0,
+    "precip_mm_mean": 0.0,
+    "n_hourly": 192,
+    "not_cds_era5_land_native": true,
+    "meteo_spatial": "constant_point",
+    "spatial": "constant_point",
+    "sample": "label_timestamp_nearest_hour",
+    "sample_at": "2023-08-26T23:00",
+    "gridded": false
+  },
+  "meteo_spatial": "constant_point",
+  "meteo_by_label": [
+    {
+      "label": "ES_EMSR685_TENERIFE_20230819_045000.tif",
+      "delivery_utc": "2023-08-19T04:50:00Z",
+      "sample_at": "2023-08-19T05:00",
+      "temperature_c": 20.0,
+      "humidity_pct": 53.0,
+      "wind_speed_ms": 3.138888888888889,
+      "wind_dir_deg": 27.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "ES_EMSR685_TENERIFE_20230822_003000.tif",
+      "delivery_utc": "2023-08-22T00:30:00Z",
+      "sample_at": "2023-08-22T00:00",
+      "temperature_c": 22.2,
+      "humidity_pct": 51.0,
+      "wind_speed_ms": 1.8333333333333333,
+      "wind_dir_deg": 22.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "ES_EMSR685_TENERIFE_20230825_010000.tif",
+      "delivery_utc": "2023-08-25T01:00:00Z",
+      "sample_at": "2023-08-25T01:00",
+      "temperature_c": 21.0,
+      "humidity_pct": 54.0,
+      "wind_speed_ms": 0.8055555555555555,
+      "wind_dir_deg": 60.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "ES_EMSR685_TENERIFE_20230826_233000.tif",
+      "delivery_utc": "2023-08-26T23:30:00Z",
+      "sample_at": "2023-08-26T23:00",
+      "temperature_c": 21.0,
+      "humidity_pct": 62.0,
+      "wind_speed_ms": 3.3611111111111107,
+      "wind_dir_deg": 12.0,
+      "precip_mm": 0.0
+    }
+  ],
+  "dem": {
+    "status": "reused",
+    "rel": "covariates/elevation_m.tif"
+  },
+  "vegetation": {
+    "status": "ok",
+    "rel": "covariates/vegetation_proxy.tif",
+    "nbr_rel": "covariates/s2_nbr_aligned.tif",
+    "mapping": "veg = clip((nbr+1)/2, 0, 1) from pre-fire NBR",
+    "veg_mean": 0.5808194875717163,
+    "nbr_pick_rule": "datetime_before_first_label",
+    "nbr_source_rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+    "source": "s2_nbr"
+  },
+  "meteo_fields": [
+    "covariates/temperature_c.tif",
+    "covariates/humidity_pct.tif",
+    "covariates/wind_speed_ms.tif",
+    "covariates/wind_dir_deg.tif",
+    "covariates/precip_mm.tif"
+  ],
+  "channels_ready": {
+    "meteo": true,
+    "dem": true,
+    "veg": true,
+    "lst": true,
+    "harmonic_ndvi": true
+  },
+  "not_claims": [
+    "not NDWS-native multi-band stack",
+    "not CDS ERA5-Land native",
+    "not transfer IoU",
+    "meteo_spatial=constant_point (Open-Meteo archive is a point, not a grid)",
+    "veg is S2 NBR proxy not NDVI training covariate",
+    "LST sidecar is not Open-Meteo t2m / not written to temperature_c.tif"
+  ],
+  "ready_for_real_proxy_ndws": true
+}

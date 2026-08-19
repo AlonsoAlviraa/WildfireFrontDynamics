@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts import run_latam_au_complete_model_iou as complete  # noqa: E402
 
+
 DEFAULT_OUT = ROOT / "artifacts" / "mega_goal_model" / "lab_scratch_dataset"
 DEFAULT_CLM = ROOT / "artifacts" / "clm_ndws_patches" / "holdout_v1"
 EVENT_IDS = (

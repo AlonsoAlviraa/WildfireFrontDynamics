@@ -1,0 +1,28 @@
+{
+  "schema": "wfd_latam_au_era5_align_v1",
+  "as_of_utc": "2026-08-18T13:42:42.277751Z",
+  "n": 3,
+  "n_ok": 3,
+  "packs": [
+    {
+      "event_id": "ES_EMSR685_TENERIFE",
+      "status": "ok",
+      "n_hourly": 192,
+      "error": ""
+    },
+    {
+      "event_id": "BO_EMSR765",
+      "status": "ok",
+      "n_hourly": 216,
+      "error": ""
+    },
+    {
+      "event_id": "MX_EMSR717",
+      "status": "ok",
+      "n_hourly": 240,
+      "error": ""
+    }
+  ],
+  "not_ros": true,
+  "note": "Optional meteo only. Open-Meteo ERA5 archive is not CDS ERA5-Land native."
+}

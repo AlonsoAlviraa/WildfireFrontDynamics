@@ -1,0 +1,28 @@
+{
+  "schema": "wfd_latam_au_era5_align_v1",
+  "dataset": "reanalysis-era5-land",
+  "event_id": "ES_EMSR685_TENERIFE",
+  "source_id": "es_emsr685_tenerife",
+  "date_start": "2023-08-19",
+  "date_end": "2023-08-26",
+  "bbox_wgs84": [
+    -16.596375643999977,
+    28.286241895000046,
+    -16.375074595999934,
+    28.454624005000028
+  ],
+  "centroid_lonlat": [
+    -16.485725119999955,
+    28.370432950000037
+  ],
+  "variables": [
+    "2m_temperature",
+    "2m_dewpoint_temperature",
+    "10m_u_component_of_wind",
+    "10m_v_component_of_wind",
+    "total_precipitation"
+  ],
+  "not_ros": true,
+  "not_tactical": true,
+  "note": "Optional meteo align only. Open-Meteo archive may be used as a no-key proxy; that is not CDS ERA5-Land native. Never sell as ROS."
+}

@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.open_if.caldor_temporal import (  # noqa: E402
+from wildfire_front.open_if.caldor_temporal import (
     choose_hrrr_leads,
     last_available_gridmet_day,
 )

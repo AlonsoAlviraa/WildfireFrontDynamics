@@ -559,7 +559,7 @@ def eval_cems_fire(
             path=rel_to_root(pack),
         )
     pairs: list[dict[str, Any]] = []
-    for prev, nxt in zip(recs, recs[1:], strict=False):
+    for prev, nxt in zip(recs, recs[1:]):
         pairs.append(pair_row(prev, nxt, copy_iou=vector_copy_iou(prev.get("geom"), nxt.get("geom"))))
     used = [p for p in pairs if p.get("pair_class") == "usable"]
     row = {
@@ -730,10 +730,7 @@ def eval_caldor_vectors(
             }
         )
     recs.sort(key=lambda r: r["dt"] or datetime.min.replace(tzinfo=UTC))
-    pairs = [
-        pair_row(a, b, copy_iou=None)
-        for a, b in zip(recs, recs[1:], strict=False)
-    ]
+    pairs = [pair_row(a, b, copy_iou=None) for a, b in zip(recs, recs[1:])]
     tensors_manifest = caldor_root / "tensors" / "clean17_physical_v1" / "manifest.json"
     tensor_legacy_ok = False
     if tensors_manifest.is_file():

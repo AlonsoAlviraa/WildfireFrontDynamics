@@ -1,0 +1,323 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "ES_EMSR685_TENERIFE",
+  "region": "es",
+  "country": "ES",
+  "activation": "EMSR685",
+  "aoi": "AOI01",
+  "aoi_name": "Candelaria",
+  "year": 2023,
+  "class": "ml_weak",
+  "label_level": "L2_proxy",
+  "license_id": "copernicus_ems_reg_2021_696_open",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://mapping.emergency.copernicus.eu/activations/EMSR685/",
+  "crs": "EPSG:32628",
+  "gsd_m": 30.0,
+  "sensor": "CEMS Rapid Mapping observedEvent (rasterized vector)",
+  "geotiff_origin": "rasterized_cems_vector+stac_s2_nbr",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2023-08-19T04:50:00Z",
+    "2023-08-22T00:30:00Z",
+    "2023-08-25T01:00:00Z",
+    "2023-08-26T23:30:00Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230819_045000.tif",
+      "file": "ES_EMSR685_TENERIFE_20230819_045000.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_PRODUCT",
+      "kind": "delineation",
+      "delivery_utc": "2023-08-19T04:50:00Z",
+      "source_url": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR685/AOI01/DEL_PRODUCT/EMSR685_AOI01_DEL_PRODUCT_v1.zip",
+      "source_zip": "EMSR685_AOI01_DEL_PRODUCT_v1.zip",
+      "source_member": "EMSR685_AOI01_DEL_PRODUCT_observedEventA_v1.json",
+      "area_ha": 5875.863510686098,
+      "sha256": "35332a019806df57e9a8d578fcf119188a246ee30895a52a10c075723b473462",
+      "bytes": 7146,
+      "crs": "EPSG:32628",
+      "gsd_m": 30.0,
+      "width": 766,
+      "height": 659,
+      "positive_pixels": 66848
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230822_003000.tif",
+      "file": "ES_EMSR685_TENERIFE_20230822_003000.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_MONIT01",
+      "kind": "delineation_monitoring",
+      "delivery_utc": "2023-08-22T00:30:00Z",
+      "source_url": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR685/AOI01/DEL_MONIT01/EMSR685_AOI01_DEL_MONIT01_v2.zip",
+      "source_zip": "EMSR685_AOI01_DEL_MONIT01_v2.zip",
+      "source_member": "EMSR685_AOI01_DEL_MONIT01_observedEventA_v1.json",
+      "area_ha": 9575.020457222301,
+      "sha256": "ea65e80a7c6ea1d912f5e474d77f49f2cd111605e7522e86cc0447eeb657cd1b",
+      "bytes": 11924,
+      "crs": "EPSG:32628",
+      "gsd_m": 30.0,
+      "width": 766,
+      "height": 659,
+      "positive_pixels": 111676
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230825_010000.tif",
+      "file": "ES_EMSR685_TENERIFE_20230825_010000.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_MONIT02",
+      "kind": "delineation_monitoring",
+      "delivery_utc": "2023-08-25T01:00:00Z",
+      "source_url": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR685/AOI01/DEL_MONIT02/EMSR685_AOI01_DEL_MONIT02_v1.zip",
+      "source_zip": "EMSR685_AOI01_DEL_MONIT02_v1.zip",
+      "source_member": "EMSR685_AOI01_DEL_MONIT02_observedEventA_v1.json",
+      "area_ha": 10960.243899111838,
+      "sha256": "48ca1d4268a2401a3406fb428bd7cd564b36816036f2622d5e4a36333060a9c8",
+      "bytes": 14492,
+      "crs": "EPSG:32628",
+      "gsd_m": 30.0,
+      "width": 766,
+      "height": 659,
+      "positive_pixels": 130146
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230826_233000.tif",
+      "file": "ES_EMSR685_TENERIFE_20230826_233000.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "GRA_PRODUCT",
+      "kind": "grading",
+      "delivery_utc": "2023-08-26T23:30:00Z",
+      "source_url": "https://rapidmapping.emergency.copernicus.eu/backend/EMSR685/AOI01/GRA_PRODUCT/EMSR685_AOI01_GRA_PRODUCT_v1.zip",
+      "source_zip": "EMSR685_AOI01_GRA_PRODUCT_v1.zip",
+      "source_member": "EMSR685_AOI01_GRA_PRODUCT_observedEventA_v1.json",
+      "area_ha": 12277.424875926235,
+      "sha256": "1b504ad9510cdd6183d65b149a105776545e78d99b3237b5a604a2316166151c",
+      "bytes": 12586,
+      "crs": "EPSG:32628",
+      "gsd_m": 30.0,
+      "width": 766,
+      "height": 659,
+      "positive_pixels": 142657
+    },
+    {
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2023-08-08T11:53:46.023000Z",
+      "sha256": "120c4ca0f80d024ffdebe37e42eb15885e5a60ae14167510ccd40854d49e512a",
+      "bytes": 225168,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+      "role": "eo_s2_nbr_mid",
+      "delivery_utc": "2023-08-13T11:53:47.238000Z",
+      "sha256": "3a94f3fc740ae4208644475a9f4057fe106b6420fa0bb36704e0bf6fee6c93e5",
+      "bytes": 226139,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2023-09-07T11:53:46.911000Z",
+      "sha256": "e9de6af06ae92dd47e8c231e0c783cbbf05df96d10dbfe2c7038dca1868befcf",
+      "bytes": 226128,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230808_115346_to_cems.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230808_115346_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32628",
+      "warp": {
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32628",
+      "warp": {
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32628",
+      "warp": {
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230819_045000.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR685_AOI01_DEL_PRODUCT_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230819_045000.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230822_003000.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR685_AOI01_DEL_MONIT01_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230822_003000.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230825_010000.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR685_AOI01_DEL_MONIT02_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230825_010000.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230826_233000.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR685_AOI01_GRA_PRODUCT_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/ES_EMSR685_TENERIFE_20230826_233000.geojson",
+      "kind": "cems_observed_event_geojson"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-18T13:41:05.791775Z",
+  "bbox_wgs84": [
+    -16.596375643999977,
+    28.286241895000046,
+    -16.375074595999934,
+    28.454624005000028
+  ],
+  "n_geotiff": 7,
+  "stac_eo": [
+    {
+      "role": "eo_s2_nbr_pre",
+      "range": "2023-07-26T00:00:00Z/2023-08-09T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+      "datetime": "2023-08-08T11:53:46.023000Z",
+      "item_id": "S2A_28RCS_20230808_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 225168,
+      "sha256": "120c4ca0f80d024ffdebe37e42eb15885e5a60ae14167510ccd40854d49e512a",
+      "cloud_cover": 5.708594,
+      "nbr_meta": {
+        "item_id": "S2A_28RCS_20230808_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "role": "eo_s2_nbr_mid",
+      "range": "2023-08-10T00:00:00Z/2023-08-24T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+      "datetime": "2023-08-13T11:53:47.238000Z",
+      "item_id": "S2B_28RCS_20230813_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 226139,
+      "sha256": "3a94f3fc740ae4208644475a9f4057fe106b6420fa0bb36704e0bf6fee6c93e5",
+      "cloud_cover": 2.487188,
+      "nbr_meta": {
+        "item_id": "S2B_28RCS_20230813_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "role": "eo_s2_nbr_post",
+      "range": "2023-08-25T00:00:00Z/2023-09-08T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+      "file": "ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+      "datetime": "2023-09-07T11:53:46.911000Z",
+      "item_id": "S2A_28RCS_20230907_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 226128,
+      "sha256": "e9de6af06ae92dd47e8c231e0c783cbbf05df96d10dbfe2c7038dca1868befcf",
+      "cloud_cover": 0.111469,
+      "nbr_meta": {
+        "item_id": "S2A_28RCS_20230907_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    }
+  ],
+  "warp_s2_to_cems": {
+    "as_of_utc": "2026-08-18T13:41:28Z",
+    "schema": "wfd_latam_au_s2_warp_v1",
+    "reference_label": "labels/ES_EMSR685_TENERIFE_20230819_045000.tif",
+    "n_warped": 3,
+    "n_s2_sources": 3,
+    "aligned_dir": "eo_aligned",
+    "tool": "rasterio.warp.reproject",
+    "resampling": "bilinear",
+    "files": [
+      {
+        "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230808_115346_to_cems.tif",
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32628"
+      },
+      {
+        "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32628"
+      },
+      {
+        "rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+        "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32628"
+      }
+    ],
+    "proxy": {
+      "metric": "nbr_vs_cems_iou",
+      "nbr_vs_cems_iou": 0.3625466811227563,
+      "status": "measured",
+      "threshold": -0.05,
+      "threshold_source": "held_out_label_sweep_frozen",
+      "low_iou_reason": null,
+      "s2_pair_rule": "datetime_after_last_label"
+    }
+  },
+  "ndws_covariates": {
+    "schema": "wfd_latam_au_ndws_covariates_v1",
+    "as_of_utc": "2026-08-18T18:05:41Z",
+    "ready_for_real_proxy_ndws": true,
+    "rel": "covariates/PROVENANCE.json"
+  }
+}

@@ -32,11 +32,13 @@ sys.path.insert(0, str(ROOT))
 from wildfire_front.open_if.latam_au import (  # noqa: E402
     EMSR_PACK_SPECS,
     NBR_THRESHOLD_SWEEP,
+    aligned_s2_paths,
     binary_iou,
     gc_nested_to_cems,
     is_nested_to_cems_name,
     label_records_from_meta,
     pack_dir_for,
+    parse_iso_utc,
     pick_post_s2_path,
     remap_pack_s2_roles,
     s2_source_paths,
@@ -54,7 +56,7 @@ def utc_now() -> str:
 def _require_rasterio() -> Any:
     try:
         import rasterio
-        from rasterio.warp import Resampling, reproject
+        from rasterio.warp import reproject, Resampling
     except ImportError as exc:
         raise RuntimeError(
             "rasterio_unavailable: install rasterio/gdal to warp S2→CEMS. "

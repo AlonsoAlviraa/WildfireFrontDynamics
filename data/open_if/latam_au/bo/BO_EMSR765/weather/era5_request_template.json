@@ -1,0 +1,28 @@
+{
+  "schema": "wfd_latam_au_era5_align_v1",
+  "dataset": "reanalysis-era5-land",
+  "event_id": "BO_EMSR765",
+  "source_id": "bo_emsr765",
+  "date_start": "2024-09-26",
+  "date_end": "2024-10-04",
+  "bbox_wgs84": [
+    -63.08462980099995,
+    -16.238409822999927,
+    -62.15383982199995,
+    -14.810698182999943
+  ],
+  "centroid_lonlat": [
+    -62.61923481149995,
+    -15.524554002999935
+  ],
+  "variables": [
+    "2m_temperature",
+    "2m_dewpoint_temperature",
+    "10m_u_component_of_wind",
+    "10m_v_component_of_wind",
+    "total_precipitation"
+  ],
+  "not_ros": true,
+  "not_tactical": true,
+  "note": "Optional meteo align only. Open-Meteo archive may be used as a no-key proxy; that is not CDS ERA5-Land native. Never sell as ROS."
+}

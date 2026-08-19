@@ -128,7 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    print(json.dumps(snapshot, indent=2))
+    if args.json or True:
+        print(json.dumps(snapshot, indent=2))
     return 0
 
 

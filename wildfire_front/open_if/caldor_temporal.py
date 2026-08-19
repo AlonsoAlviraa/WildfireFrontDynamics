@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 
+
 GRIDMET_DAY_END_HOUR_UTC = 7
 HRRR_MAX_LEAD_HOURS = 48
 
@@ -113,5 +114,8 @@ def hrrr_window_report(
 
 
 def erc_available_at_t0(gridmet_day: str | date, t0: str | datetime) -> bool:
-    day = date.fromisoformat(gridmet_day) if isinstance(gridmet_day, str) else gridmet_day
+    if isinstance(gridmet_day, str):
+        day = date.fromisoformat(gridmet_day)
+    else:
+        day = gridmet_day
     return gridmet_day_end_utc(day) <= parse_utc(t0)

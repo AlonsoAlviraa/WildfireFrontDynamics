@@ -34,14 +34,12 @@ from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
     GROWTH_RING_MIN_NEIGHBORS,
     N_CH,
     OOD_GROWTH_THRESHOLD,
+    WEIGHTS as PRODUCT_WEIGHTS,
     binary_iou,
     decode_complete_proxy_pred,
     eval_pack,
-    fire_growth_ring,  # noqa: F401 - exported for frozen-contract checks
+    fire_growth_ring,
     load_mask,
-)
-from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
-    WEIGHTS as PRODUCT_WEIGHTS,
 )
 from wildfire_front.open_if.latam_au import (  # noqa: E402
     ANNUAL_EVAL_STATUS,

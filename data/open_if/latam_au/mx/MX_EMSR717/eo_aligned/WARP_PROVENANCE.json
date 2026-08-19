@@ -1,0 +1,104 @@
+{
+  "schema": "wfd_latam_au_s2_warp_v1",
+  "as_of_utc": "2026-08-18T13:42:41Z",
+  "event_id": "MX_EMSR717",
+  "tool": "rasterio.warp.reproject",
+  "resampling": "bilinear",
+  "reference_label": "labels/MX_EMSR717_20240409_063059.tif",
+  "reference_crs": "EPSG:32615",
+  "warped": [
+    {
+      "dest": "eo_aligned/MX_EMSR717_S2NBR_20240330_165903_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32615",
+      "width": 755,
+      "height": 775,
+      "finite_pixels": 524945,
+      "nan_frac": 0.10284981841486862,
+      "source_rel": "eo/MX_EMSR717_S2NBR_20240330_165903.tif",
+      "role": "eo_s2_nbr_pre",
+      "aligned_rel": "eo_aligned/MX_EMSR717_S2NBR_20240330_165903_to_cems.tif",
+      "skipped": false
+    },
+    {
+      "dest": "eo_aligned/MX_EMSR717_S2NBR_20240409_165903_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32615",
+      "width": 755,
+      "height": 775,
+      "finite_pixels": 524945,
+      "nan_frac": 0.10284981841486862,
+      "source_rel": "eo/MX_EMSR717_S2NBR_20240409_165903.tif",
+      "role": "eo_s2_nbr_mid",
+      "aligned_rel": "eo_aligned/MX_EMSR717_S2NBR_20240409_165903_to_cems.tif",
+      "skipped": false
+    },
+    {
+      "dest": "eo_aligned/MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32615",
+      "width": 755,
+      "height": 775,
+      "finite_pixels": 524945,
+      "nan_frac": 0.10284981841486862,
+      "source_rel": "eo/MX_EMSR717_S2NBR_20240419_165905.tif",
+      "role": "eo_s2_nbr_post",
+      "aligned_rel": "eo_aligned/MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+      "skipped": false,
+      "pair_rule": "datetime_after_last_label"
+    }
+  ],
+  "warp_errors": [],
+  "n_s2_sources": 3,
+  "n_warped": 3,
+  "n_skipped_existing": 0,
+  "gc_removed": [],
+  "proxy_metric": {
+    "status": "measured",
+    "metric": "nbr_vs_cems_iou",
+    "nbr_vs_cems_iou": 0.3447539232602087,
+    "threshold": 0.0,
+    "threshold_rule": "nbr < thr (default thr=-0.1) on warped grid",
+    "pred_pos_frac": 0.13533347575304422,
+    "label_pos_frac": 0.3401871395001068,
+    "honesty": [
+      "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+      "not transfer IoU",
+      "not O2 / CONAF official",
+      "threshold is lab default, not agency-calibrated"
+    ],
+    "threshold_source": "held_out_label_sweep_frozen",
+    "threshold_sweep": [
+      {
+        "threshold": -0.2,
+        "holdout_iou": 0.07078383203039748,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.15,
+        "holdout_iou": 0.13072841832199344,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.1,
+        "holdout_iou": 0.20677933989757993,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.05,
+        "holdout_iou": 0.290687813205573,
+        "status": "measured"
+      },
+      {
+        "threshold": 0.0,
+        "holdout_iou": 0.37028138919303916,
+        "status": "measured"
+      }
+    ],
+    "s2_pair_rule": "datetime_after_last_label",
+    "low_iou_reason": null
+  },
+  "label_for_metric": "labels/MX_EMSR717_20240418_221508.tif",
+  "nbr_source_aligned": "eo_aligned/MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+  "s2_pair_rule": "datetime_after_last_label"
+}

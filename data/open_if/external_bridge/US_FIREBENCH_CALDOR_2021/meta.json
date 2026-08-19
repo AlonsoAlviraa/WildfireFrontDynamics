@@ -1,0 +1,585 @@
+{
+  "schema": "wfd_firebench_caldor_label_pack_v1",
+  "event_id": "US_FIREBENCH_CALDOR_2021",
+  "source": "FireBench: 2021 Caldor Benchmarks for Fire Models v2026.1",
+  "source_root": "data/external/firebench/caldor_2021/v2026.1",
+  "crs": "EPSG:32610",
+  "grid": {
+    "bounds_m": [
+      702510.0,
+      4270350.0,
+      768480.0,
+      4309410.0
+    ],
+    "gsd_m": 30.0,
+    "width": 2199,
+    "height": 1302
+  },
+  "n_observations": 21,
+  "n_pairs": 20,
+  "n_pairs_12_to_36h": 15,
+  "n_pairs_with_material_raw_revision": 0,
+  "class": "ml_weak",
+  "role": "observational_progression_evaluation_labels",
+  "raw_masks_are_observations": true,
+  "cumulative_masks_are_derived": true,
+  "not_imagery": true,
+  "not_product_ros": true,
+  "not_tactical_dispatch": true,
+  "rights": {
+    "dataset_license_present": true,
+    "data_terms_present": true,
+    "data_license_files": [
+      "LANDFIRE.txt",
+      "NIFC.txt",
+      "calfire.txt",
+      "mtbs.txt",
+      "ravg.txt"
+    ],
+    "synoptic_notice_present": false,
+    "training_allowed": false,
+    "redistribution_allowed": false,
+    "evaluation_allowed_in_place": true,
+    "reason": "Synoptic station data are present in Caldor.h5 but no Synoptic notice is staged; this bridge therefore remains evaluation-only and is not redistributable."
+  },
+  "observations": [
+    {
+      "index": 0,
+      "timestamp_local": "2021-08-17T20:20:00-07:00",
+      "timestamp_utc": "2021-08-18T03:20:00Z",
+      "source_kml": "Caldor_2021_08_17T20_20_07_00.kml",
+      "n_polygon_elements": 33,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 21645.118560156836,
+      "cumulative_area_ha": 21645.118560156723,
+      "raw_mask": "raw_masks/caldor_20210818T032000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210818T032000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210818T032000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210818T032000Z_raw.tif",
+        "positive_pixels": 242978,
+        "bytes": 27476,
+        "sha256": "bab7d214f065f0fb95cc1210135d4901b9b0ff668f0e15623c25918ee0048433"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210818T032000Z_cumulative.tif",
+        "positive_pixels": 242978,
+        "bytes": 27492,
+        "sha256": "2d2a90047da5cac0891497a5652ed0e6f658487f1f8275be530ca24b523238de"
+      }
+    },
+    {
+      "index": 1,
+      "timestamp_local": "2021-08-18T20:30:00-07:00",
+      "timestamp_utc": "2021-08-19T03:30:00Z",
+      "source_kml": "Caldor_2021_08_18T20_30_07_00.kml",
+      "n_polygon_elements": 42,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 26448.92060392268,
+      "cumulative_area_ha": 26480.4935472475,
+      "raw_mask": "raw_masks/caldor_20210819T033000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210819T033000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210819T033000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210819T033000Z_raw.tif",
+        "positive_pixels": 297546,
+        "bytes": 29244,
+        "sha256": "d429a868d292e5fb59fd7f54b23e378cea5c5159dfc3e0958fb4ad8198a0433c"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210819T033000Z_cumulative.tif",
+        "positive_pixels": 297947,
+        "bytes": 29370,
+        "sha256": "4c5b59481f21b332ba4aa5d897fc3ed0e8dd7d0affddc45c7353a2369b21c9b9"
+      }
+    },
+    {
+      "index": 2,
+      "timestamp_local": "2021-08-19T20:45:00-07:00",
+      "timestamp_utc": "2021-08-20T03:45:00Z",
+      "source_kml": "Caldor_2021_08_19T20_45_07_00.kml",
+      "n_polygon_elements": 39,
+      "n_invalid_repaired": 1,
+      "raw_area_ha": 29638.451976399905,
+      "cumulative_area_ha": 29675.94934449194,
+      "raw_mask": "raw_masks/caldor_20210820T034500Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210820T034500Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210820T034500Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210820T034500Z_raw.tif",
+        "positive_pixels": 333175,
+        "bytes": 29298,
+        "sha256": "871876b8f6761d724068d40d88d9c7ed1a8469a7248fcf0ee983cf9097f236c7"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210820T034500Z_cumulative.tif",
+        "positive_pixels": 333637,
+        "bytes": 29428,
+        "sha256": "94617c12464e6a8713960929222ac8106bee53e8fc99dd6a288a0e107e1d2f86"
+      }
+    },
+    {
+      "index": 3,
+      "timestamp_local": "2021-08-20T20:20:00-07:00",
+      "timestamp_utc": "2021-08-21T03:20:00Z",
+      "source_kml": "Caldor_2021_08_20T20_20_07_00.kml",
+      "n_polygon_elements": 13,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 33592.068438418915,
+      "cumulative_area_ha": 33636.22849135654,
+      "raw_mask": "raw_masks/caldor_20210821T032000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210821T032000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210821T032000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210821T032000Z_raw.tif",
+        "positive_pixels": 376786,
+        "bytes": 28732,
+        "sha256": "3a9c88a7c521c0f742a0bd1f38d97283e0f734eaa7aa9e3275f8b26efebcbc22"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210821T032000Z_cumulative.tif",
+        "positive_pixels": 377303,
+        "bytes": 28858,
+        "sha256": "0b1842937546655810743049659c41c22a155ed1e8b5769b1ea8e304abf1257e"
+      }
+    },
+    {
+      "index": 4,
+      "timestamp_local": "2021-08-21T21:15:00-07:00",
+      "timestamp_utc": "2021-08-22T04:15:00Z",
+      "source_kml": "Caldor_2021_08_21T21_15_07_00.kml",
+      "n_polygon_elements": 19,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 39736.665665626475,
+      "cumulative_area_ha": 39777.1023210253,
+      "raw_mask": "raw_masks/caldor_20210822T041500Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210822T041500Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210822T041500Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210822T041500Z_raw.tif",
+        "positive_pixels": 445246,
+        "bytes": 29962,
+        "sha256": "2dc64e7fc1ee1baaab11e6e2dee40eb743f35321cd6af58e4b6b10967de0f179"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210822T041500Z_cumulative.tif",
+        "positive_pixels": 445754,
+        "bytes": 30074,
+        "sha256": "6e2844026d948de48181ff2eebd9de8265bdd7f2b315acecdb99c6d0301c3ef9"
+      }
+    },
+    {
+      "index": 5,
+      "timestamp_local": "2021-08-24T22:07:00-07:00",
+      "timestamp_utc": "2021-08-25T05:07:00Z",
+      "source_kml": "Caldor_2021_08_24T22_07_07_00.kml",
+      "n_polygon_elements": 30,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 47654.35197524582,
+      "cumulative_area_ha": 47690.51996141761,
+      "raw_mask": "raw_masks/caldor_20210825T050700Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210825T050700Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210825T050700Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210825T050700Z_raw.tif",
+        "positive_pixels": 534191,
+        "bytes": 30742,
+        "sha256": "3f2963b9ccc89a118bbd8853437c2bfff9ffb7cb2188e6813db30871a0093ff7"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210825T050700Z_cumulative.tif",
+        "positive_pixels": 534679,
+        "bytes": 30870,
+        "sha256": "9cdc7f986d1cd9f2f0b5ebf79d719691f2e66e398bf46d9ea436f81392828901"
+      }
+    },
+    {
+      "index": 6,
+      "timestamp_local": "2021-08-26T03:30:00-06:00",
+      "timestamp_utc": "2021-08-26T09:30:00Z",
+      "source_kml": "Caldor_2021_08_26T03_30_06_00.kml",
+      "n_polygon_elements": 19,
+      "n_invalid_repaired": 1,
+      "raw_area_ha": 55322.78526416469,
+      "cumulative_area_ha": 55356.59922449638,
+      "raw_mask": "raw_masks/caldor_20210826T093000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210826T093000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210826T093000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210826T093000Z_raw.tif",
+        "positive_pixels": 618987,
+        "bytes": 30528,
+        "sha256": "bdfd12e288be988f69f5e6c8fec5df0c3d2fffdcf0593fd418fed178c75652b3"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210826T093000Z_cumulative.tif",
+        "positive_pixels": 619415,
+        "bytes": 30614,
+        "sha256": "09083d43f0ab6844fea419ab002e60edb519353584a680e1ef26410ad3bf804d"
+      }
+    },
+    {
+      "index": 7,
+      "timestamp_local": "2021-08-26T22:15:00-06:00",
+      "timestamp_utc": "2021-08-27T04:15:00Z",
+      "source_kml": "Caldor_2021_08_26T22_15_06_00.kml",
+      "n_polygon_elements": 56,
+      "n_invalid_repaired": 2,
+      "raw_area_ha": 58279.84832881881,
+      "cumulative_area_ha": 58358.90089597734,
+      "raw_mask": "raw_masks/caldor_20210827T041500Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210827T041500Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210827T041500Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210827T041500Z_raw.tif",
+        "positive_pixels": 652503,
+        "bytes": 31328,
+        "sha256": "40db4e21f118ff1bea58b13de7a6011f3ac4fe83e734252fa52ab39d4f262c71"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210827T041500Z_cumulative.tif",
+        "positive_pixels": 653403,
+        "bytes": 31374,
+        "sha256": "4503ff87a17b73a235519d82f8b44f0ef76544256056463bcfdc7653ac9484e4"
+      }
+    },
+    {
+      "index": 8,
+      "timestamp_local": "2021-08-27T00:22:00-06:00",
+      "timestamp_utc": "2021-08-27T06:22:00Z",
+      "source_kml": "Caldor_2021_08_27T00_22_06_00.kml",
+      "n_polygon_elements": 32,
+      "n_invalid_repaired": 1,
+      "raw_area_ha": 60603.42718646588,
+      "cumulative_area_ha": 60711.3056634909,
+      "raw_mask": "raw_masks/caldor_20210827T062200Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210827T062200Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210827T062200Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210827T062200Z_raw.tif",
+        "positive_pixels": 678396,
+        "bytes": 31666,
+        "sha256": "bef2c7453bc8c7f93d448ae861dc1d5f1e2e24c4fc50b51e3acbcef4597eff13"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210827T062200Z_cumulative.tif",
+        "positive_pixels": 679602,
+        "bytes": 31612,
+        "sha256": "f9100c887f97f63777634925f7e3181876746cbdfd40f83220eea2cf902e7491"
+      }
+    },
+    {
+      "index": 9,
+      "timestamp_local": "2021-08-28T21:30:00-06:00",
+      "timestamp_utc": "2021-08-29T03:30:00Z",
+      "source_kml": "Caldor_2021_08_28T21_30_06_00.kml",
+      "n_polygon_elements": 29,
+      "n_invalid_repaired": 1,
+      "raw_area_ha": 63415.45078999721,
+      "cumulative_area_ha": 63530.37112558986,
+      "raw_mask": "raw_masks/caldor_20210829T033000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210829T033000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210829T033000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210829T033000Z_raw.tif",
+        "positive_pixels": 710117,
+        "bytes": 32342,
+        "sha256": "3c74ead550593ec2dc4021c4da9819f9d994c889d187f59df42e2b83f205db0c"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210829T033000Z_cumulative.tif",
+        "positive_pixels": 711386,
+        "bytes": 32248,
+        "sha256": "e220821a828955a26953c42af990e68053f302789e0ae1aa128ea0057cefbe3a"
+      }
+    },
+    {
+      "index": 10,
+      "timestamp_local": "2021-08-29T22:32:00-07:00",
+      "timestamp_utc": "2021-08-30T05:32:00Z",
+      "source_kml": "Caldor_2021_08_29T22_32_07_00.kml",
+      "n_polygon_elements": 50,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 71842.09167940945,
+      "cumulative_area_ha": 71984.09516755819,
+      "raw_mask": "raw_masks/caldor_20210830T053200Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210830T053200Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210830T053200Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210830T053200Z_raw.tif",
+        "positive_pixels": 804577,
+        "bytes": 34004,
+        "sha256": "e0c5bd5e37ca6a0f270668e28057299c26d41465b7e02efa3ae686898a113139"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210830T053200Z_cumulative.tif",
+        "positive_pixels": 806158,
+        "bytes": 33934,
+        "sha256": "18b828ac74a3bbf8dbd146b3af6654aaf4dff7d40a5ad7f4b26753778b1eba40"
+      }
+    },
+    {
+      "index": 11,
+      "timestamp_local": "2021-08-30T21:09:00-07:00",
+      "timestamp_utc": "2021-08-31T04:09:00Z",
+      "source_kml": "Caldor_2021_08_30T21_09_07_00.kml",
+      "n_polygon_elements": 61,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 77308.25482520062,
+      "cumulative_area_ha": 77483.55104553411,
+      "raw_mask": "raw_masks/caldor_20210831T040900Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210831T040900Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210831T040900Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210831T040900Z_raw.tif",
+        "positive_pixels": 865886,
+        "bytes": 35084,
+        "sha256": "fb0e54edc6f0cc28329931380704394f6e089cd39985d9b69ea2cb9aeeeb43b2"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210831T040900Z_cumulative.tif",
+        "positive_pixels": 867800,
+        "bytes": 35028,
+        "sha256": "13c7d85dea84fd40dc9548c825c98b8bc9c2bbfb72f253a0c2ff1be66841db37"
+      }
+    },
+    {
+      "index": 12,
+      "timestamp_local": "2021-08-31T21:08:00-07:00",
+      "timestamp_utc": "2021-09-01T04:08:00Z",
+      "source_kml": "Caldor_2021_08_31T21_08_07_00.kml",
+      "n_polygon_elements": 73,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 82757.22061098229,
+      "cumulative_area_ha": 82945.76713408215,
+      "raw_mask": "raw_masks/caldor_20210901T040800Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210901T040800Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210901T040800Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210901T040800Z_raw.tif",
+        "positive_pixels": 926330,
+        "bytes": 35848,
+        "sha256": "9c968f44a0cdc9e04a0343f78ec050fa8c09d2b5618def87c88e749fe39b22f2"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210901T040800Z_cumulative.tif",
+        "positive_pixels": 928406,
+        "bytes": 35794,
+        "sha256": "2a9cd26293a8f94c16368f53ae2ec00cda885a3da8e56f314b19692b62eb1552"
+      }
+    },
+    {
+      "index": 13,
+      "timestamp_local": "2021-09-01T21:12:00-07:00",
+      "timestamp_utc": "2021-09-02T04:12:00Z",
+      "source_kml": "Caldor_2021_09_01T21_12_07_00.kml",
+      "n_polygon_elements": 68,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 85134.50965801584,
+      "cumulative_area_ha": 85395.11356685254,
+      "raw_mask": "raw_masks/caldor_20210902T041200Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210902T041200Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210902T041200Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210902T041200Z_raw.tif",
+        "positive_pixels": 952995,
+        "bytes": 36300,
+        "sha256": "445b0f3d87471d24b419b6f6c62704ca404463132fa3300e6339c9c5f2968449"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210902T041200Z_cumulative.tif",
+        "positive_pixels": 955818,
+        "bytes": 36224,
+        "sha256": "da8f5ef5c38e4733c799d3fb6d0e7c02eaa3c91cf47825d3dc8205d5de45d0e3"
+      }
+    },
+    {
+      "index": 14,
+      "timestamp_local": "2021-09-03T00:40:00-07:00",
+      "timestamp_utc": "2021-09-03T07:40:00Z",
+      "source_kml": "Caldor_2021_09_03T00_40_07_00.kml",
+      "n_polygon_elements": 54,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 86206.72669788564,
+      "cumulative_area_ha": 86502.3027653518,
+      "raw_mask": "raw_masks/caldor_20210903T074000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210903T074000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210903T074000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210903T074000Z_raw.tif",
+        "positive_pixels": 965224,
+        "bytes": 36820,
+        "sha256": "1f00184ccca4f4a09a196e2078104624f26056596dd9f13b16d4464e200a2fb9"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210903T074000Z_cumulative.tif",
+        "positive_pixels": 968496,
+        "bytes": 36820,
+        "sha256": "2679e850e73e2a044f276af033ee2b3b57da9151beed3fe2641c5c0c8b625360"
+      }
+    },
+    {
+      "index": 15,
+      "timestamp_local": "2021-09-04T23:29:00-07:00",
+      "timestamp_utc": "2021-09-05T06:29:00Z",
+      "source_kml": "Caldor_2021_09_04T23_29_07_00.kml",
+      "n_polygon_elements": 7,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 86692.91910816621,
+      "cumulative_area_ha": 87080.08250491496,
+      "raw_mask": "raw_masks/caldor_20210905T062900Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210905T062900Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210905T062900Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210905T062900Z_raw.tif",
+        "positive_pixels": 970374,
+        "bytes": 36474,
+        "sha256": "8e1953841633c321443368c89859cce186886660f4e4478afadf74ff28fb4879"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210905T062900Z_cumulative.tif",
+        "positive_pixels": 974848,
+        "bytes": 36810,
+        "sha256": "6989644385973f7799c66ff38abd1a7ed8e4eead7e0a2b513d04f88815b2e845"
+      }
+    },
+    {
+      "index": 16,
+      "timestamp_local": "2021-09-05T23:41:00-07:00",
+      "timestamp_utc": "2021-09-06T06:41:00Z",
+      "source_kml": "Caldor_2021_09_05T23_41_07_00.kml",
+      "n_polygon_elements": 33,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 87216.37342353447,
+      "cumulative_area_ha": 87606.93361478669,
+      "raw_mask": "raw_masks/caldor_20210906T064100Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210906T064100Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210906T064100Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210906T064100Z_raw.tif",
+        "positive_pixels": 976305,
+        "bytes": 36606,
+        "sha256": "bde5946c010f6da99ef4e228750b3c50143a30d89ccca341c87d5c2729b6b64e"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210906T064100Z_cumulative.tif",
+        "positive_pixels": 980740,
+        "bytes": 36800,
+        "sha256": "4062f29e0791209d6170fc77b0427d2da1108ff5a67f68d7081ad8c6c3a5d0f8"
+      }
+    },
+    {
+      "index": 17,
+      "timestamp_local": "2021-09-06T23:09:00-07:00",
+      "timestamp_utc": "2021-09-07T06:09:00Z",
+      "source_kml": "Caldor_2021_09_06T23_09_07_00.kml",
+      "n_polygon_elements": 38,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 87860.11879292657,
+      "cumulative_area_ha": 88257.35032706814,
+      "raw_mask": "raw_masks/caldor_20210907T060900Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210907T060900Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210907T060900Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210907T060900Z_raw.tif",
+        "positive_pixels": 983549,
+        "bytes": 36742,
+        "sha256": "97e3e9de28e5a3e3e849b64ae6faf7db46b32e8f7c11b831cac300fdf6603e66"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210907T060900Z_cumulative.tif",
+        "positive_pixels": 988045,
+        "bytes": 36864,
+        "sha256": "22a46bd7076181f515bb7a7201107379309ed229f5837b8c0a0fedca60018162"
+      }
+    },
+    {
+      "index": 18,
+      "timestamp_local": "2021-09-07T22:40:00-07:00",
+      "timestamp_utc": "2021-09-08T05:40:00Z",
+      "source_kml": "Caldor_2021_09_07T22_40_07_00.kml",
+      "n_polygon_elements": 49,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 88609.55749354423,
+      "cumulative_area_ha": 89027.50220177429,
+      "raw_mask": "raw_masks/caldor_20210908T054000Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210908T054000Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210908T054000Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210908T054000Z_raw.tif",
+        "positive_pixels": 991928,
+        "bytes": 36828,
+        "sha256": "a7bad30953838c42959d6e1a111704e0f1d7c9881bb44a1b9fe1a5fe7bec18b6"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210908T054000Z_cumulative.tif",
+        "positive_pixels": 996640,
+        "bytes": 36892,
+        "sha256": "e37b0af65367126d03e5919b58272483bdfbd5447d6548f835698e765151fbb6"
+      }
+    },
+    {
+      "index": 19,
+      "timestamp_local": "2021-09-08T22:33:00-07:00",
+      "timestamp_utc": "2021-09-09T05:33:00Z",
+      "source_kml": "Caldor_2021_09_08T22_33_07_00.kml",
+      "n_polygon_elements": 48,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 88834.6437190273,
+      "cumulative_area_ha": 89290.32105464181,
+      "raw_mask": "raw_masks/caldor_20210909T053300Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210909T053300Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210909T053300Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210909T053300Z_raw.tif",
+        "positive_pixels": 994469,
+        "bytes": 36740,
+        "sha256": "cec13ffe34712bbc8eae5c69869d7771a306f39ecbbc54ef2839bc8a4cd65cf4"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210909T053300Z_cumulative.tif",
+        "positive_pixels": 999567,
+        "bytes": 36820,
+        "sha256": "a589708c47b2390c57eebb7c0311e64fbbc214861bb740efc2612b251086e135"
+      }
+    },
+    {
+      "index": 20,
+      "timestamp_local": "2021-09-10T23:34:00-07:00",
+      "timestamp_utc": "2021-09-11T06:34:00Z",
+      "source_kml": "Caldor_2021_09_10T23_34_07_00.kml",
+      "n_polygon_elements": 51,
+      "n_invalid_repaired": 0,
+      "raw_area_ha": 88966.79004379454,
+      "cumulative_area_ha": 89433.12499986016,
+      "raw_mask": "raw_masks/caldor_20210911T063400Z_raw.tif",
+      "cumulative_mask": "cumulative_masks/caldor_20210911T063400Z_cumulative.tif",
+      "raw_label": "raw_labels/caldor_20210911T063400Z_raw.geojson",
+      "raw_raster": {
+        "file": "caldor_20210911T063400Z_raw.tif",
+        "positive_pixels": 995863,
+        "bytes": 36672,
+        "sha256": "e8ca0128bd4182c1672d6bdee13af4c8b0b0cae7dfab167cad431e4abe15a64d"
+      },
+      "cumulative_raster": {
+        "file": "caldor_20210911T063400Z_cumulative.tif",
+        "positive_pixels": 1001085,
+        "bytes": 36746,
+        "sha256": "5d723a4295efb5158d099f957f846b7f95a1e1d3aa59446770a780c6ba02b034"
+      }
+    }
+  ],
+  "mtbs_final_reference": {
+    "mask": "references/caldor_mtbs_final_reference.tif",
+    "label": "references/caldor_mtbs_final_reference.geojson",
+    "area_ha": 91758.31867064843,
+    "raster": {
+      "file": "caldor_mtbs_final_reference.tif",
+      "positive_pixels": 1025265,
+      "bytes": 34561,
+      "sha256": "fef2072448824b1b774f9f6a24a7839237fe5ba0f05a2dd89b548727b38e168c"
+    },
+    "excluded_from_temporal_pairs": true
+  },
+  "built_at_utc": "2026-08-16T17:16:56.883745Z"
+}

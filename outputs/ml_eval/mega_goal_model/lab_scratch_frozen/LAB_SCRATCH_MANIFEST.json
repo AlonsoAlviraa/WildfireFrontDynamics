@@ -1,0 +1,117 @@
+{
+  "schema": "wfd_latam_au_lab_scratch_run_v1",
+  "as_of_utc": "2026-08-17T15:31:54Z",
+  "label": "lab_scratch_frozen_decode",
+  "seed": 42,
+  "one_seed_one_config": true,
+  "data_manifest": "artifacts/mega_goal_model/lab_scratch_dataset/MANIFEST.json",
+  "init_weights": "models/clm_ensemble/weights_multi_if.pt",
+  "output_weights": "weights_pretrained_best.pt",
+  "config": {
+    "epochs": 12,
+    "batch_size": 8,
+    "lr": 0.0001,
+    "loss": "true_ring_hinge_plus_false_ring_residual_leak",
+    "fp_weight": 4.0,
+    "head_only": false,
+    "architecture": "residual",
+    "target_mode": "delta",
+    "early_stop_metric": "frozen_decode_delta_vs_copy",
+    "growth_threshold": 0.9,
+    "ring": "8-connected k=1 frozen",
+    "train_tiles": "complete_proxy_usable_eval_tiles"
+  },
+  "training_summary": {
+    "best_epoch": 12,
+    "best_val_delta_vs_copy": 0.00028974346135623996,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 28.510888695716858,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 2,
+        "train_loss": 13.083745121955872,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 3,
+        "train_loss": 12.463515538722277,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 4,
+        "train_loss": 11.843038976192474,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 5,
+        "train_loss": 12.295384407043457,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 6,
+        "train_loss": 10.860065126791596,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 7,
+        "train_loss": 11.648767709732056,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 8,
+        "train_loss": 11.001418113708496,
+        "val_delta_vs_copy": 0.0,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 9,
+        "train_loss": 10.339642941951752,
+        "val_delta_vs_copy": 2.2954229211807897e-05,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 10,
+        "train_loss": 9.846203096210957,
+        "val_delta_vs_copy": 6.11793706157826e-05,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 11,
+        "train_loss": 9.323059567715973,
+        "val_delta_vs_copy": 0.00015738965036476982,
+        "n_tiles": 128
+      },
+      {
+        "epoch": 12,
+        "train_loss": 9.118368268013,
+        "val_delta_vs_copy": 0.00028974346135623996,
+        "n_tiles": 128
+      }
+    ],
+    "architecture": "residual",
+    "target_mode": "delta",
+    "decode": "frozen_complete_proxy",
+    "loss": "true_ring_hinge_plus_false_ring_residual_leak",
+    "fp_weight": 4.0,
+    "head_only": false,
+    "n_train_tiles": 128,
+    "growth_threshold": 0.9,
+    "output_weights": "outputs/ml_eval/mega_goal_model/lab_scratch_frozen/weights_pretrained_best.pt"
+  },
+  "not_claims": [
+    "not clm_ensemble_v34",
+    "not sealed transfer IoU",
+    "not FREEZE lift",
+    "not GO_Q complete"
+  ]
+}

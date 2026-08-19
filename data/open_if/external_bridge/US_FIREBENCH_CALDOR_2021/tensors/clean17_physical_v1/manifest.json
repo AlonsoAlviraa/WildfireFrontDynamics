@@ -1,0 +1,166 @@
+{
+  "schema": "wfd_caldor_clean17_tensors_v1",
+  "n_tensors": 15,
+  "channel_order": [
+    "slope_rad",
+    "aspect_sin",
+    "aspect_cos",
+    "max_temperature_c",
+    "min_temperature_c",
+    "wind_speed_ms",
+    "wind_sin",
+    "wind_cos",
+    "precipitation_mm_24h",
+    "surface_pressure_hpa",
+    "relative_humidity_pct",
+    "total_cloud_cover_pct",
+    "visibility_km",
+    "dew_point_c",
+    "canopy_height_m",
+    "canopy_base_height_m",
+    "canopy_bulk_density_kg_m3",
+    "canopy_presence",
+    "canopy_missing",
+    "erc_g",
+    "horizon_hours"
+  ],
+  "holdout_only": true,
+  "legacy17_checkpoint_compatible": false,
+  "files": [
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-18T032000Z_2021-08-19T033000Z.npz",
+      "t0_utc": "2021-08-18T03:20:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-19T033000Z_2021-08-20T034500Z.npz",
+      "t0_utc": "2021-08-19T03:30:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-20T034500Z_2021-08-21T032000Z.npz",
+      "t0_utc": "2021-08-20T03:45:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-21T032000Z_2021-08-22T041500Z.npz",
+      "t0_utc": "2021-08-21T03:20:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-25T050700Z_2021-08-26T093000Z.npz",
+      "t0_utc": "2021-08-25T05:07:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-26T093000Z_2021-08-27T041500Z.npz",
+      "t0_utc": "2021-08-26T09:30:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-29T033000Z_2021-08-30T053200Z.npz",
+      "t0_utc": "2021-08-29T03:30:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-30T053200Z_2021-08-31T040900Z.npz",
+      "t0_utc": "2021-08-30T05:32:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-08-31T040900Z_2021-09-01T040800Z.npz",
+      "t0_utc": "2021-08-31T04:09:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-01T040800Z_2021-09-02T041200Z.npz",
+      "t0_utc": "2021-09-01T04:08:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-02T041200Z_2021-09-03T074000Z.npz",
+      "t0_utc": "2021-09-02T04:12:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-05T062900Z_2021-09-06T064100Z.npz",
+      "t0_utc": "2021-09-05T06:29:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-06T064100Z_2021-09-07T060900Z.npz",
+      "t0_utc": "2021-09-06T06:41:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-07T060900Z_2021-09-08T054000Z.npz",
+      "t0_utc": "2021-09-07T06:09:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    },
+    {
+      "path": "tensors/clean17_physical_v1/2021-09-08T054000Z_2021-09-09T053300Z.npz",
+      "t0_utc": "2021-09-08T05:40:00Z",
+      "shape": [
+        21,
+        1302,
+        2199
+      ]
+    }
+  ]
+}

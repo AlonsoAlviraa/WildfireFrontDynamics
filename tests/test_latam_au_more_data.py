@@ -320,10 +320,11 @@ def test_more_data_rcda_and_caldor_not_sold_as_product(tmp_path: Path) -> None:
     scorecard = (out / "SCORECARD.md").read_text(encoding="utf-8")
     assert "not catalog 0.8963" in scorecard
     assert "not** `clm_ensemble_v34`" in scorecard or "not `clm_ensemble_v34`" in scorecard
-    official_path = ROOT / "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json"
-    if not official_path.is_file():
-        pytest.skip("local official evaluation artifact is not distributed")
-    official = json.loads(official_path.read_text(encoding="utf-8"))
+    official = json.loads(
+        (ROOT / "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert official["n_pairs_used"] == 4
     assert official["schema"] == "wfd_latam_au_complete_proxy_model_iou_v1"
 
@@ -332,10 +333,8 @@ def test_more_data_does_not_write_official_json(tmp_path: Path) -> None:
     more = _load_script("run_latam_au_more_data_iou.py")
     assert more.DEFAULT_OUT.name == "more_data"
     assert more.OFFICIAL_JSON.name == "complete_proxy_model_iou.json"
-    assert more.OFFICIAL_JSON.parent != more.DEFAULT_OUT or more.DEFAULT_OUT.name == "more_data"
+    assert more.DEFAULT_OUT != more.OFFICIAL_JSON.parent or more.DEFAULT_OUT.name == "more_data"
     official = ROOT / "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json"
-    if not official.is_file():
-        pytest.skip("local official evaluation artifact is not distributed")
     before = official.read_bytes()
     rcda = tmp_path / "rcda"
     _write_rcda_sample(rcda)

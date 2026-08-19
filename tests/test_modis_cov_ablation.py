@@ -149,11 +149,7 @@ def _mini_cems_pack(tmp_path: Path) -> Path:
     import rasterio
     from shapely.geometry import Polygon
 
-    from wildfire_front.open_if.latam_au import (
-        EMSR_PACK_SPECS,
-        pack_dir_for,
-        rasterize_geom_to_geotiff,
-    )
+    from wildfire_front.open_if.latam_au import EMSR_PACK_SPECS, pack_dir_for, rasterize_geom_to_geotiff
 
     spec = EMSR_PACK_SPECS["ES_EMSR685_TENERIFE"]
     pack = pack_dir_for(tmp_path / "latam_au", spec)

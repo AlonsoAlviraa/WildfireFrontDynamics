@@ -1,4 +1,5 @@
 """LATAM + AU open-IF packs (F1 rights, F2 CEMS GeoTIFF, F4 domain-gap schema).
+
 No network in this module except helpers that callers invoke explicitly.
 Does not invent model IoU, ROS, or release-flag flips.
 """

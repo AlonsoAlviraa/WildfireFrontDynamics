@@ -14,7 +14,7 @@ import json
 import sys
 import urllib.parse
 import urllib.request
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +27,8 @@ from scripts.fetch_modis_ee_covariates import (  # noqa: E402
     EXIT_MISSING_PACK,
     EXIT_OK,
     EXIT_USAGE_OR_EE,
+    _dest_inside_pack,
+    first_growth_dt,
     merge_provenance,
     pack_allowed,
     sanitize_event_id,
@@ -40,9 +42,9 @@ from wildfire_front.open_if.modis_ee import (  # noqa: E402
     LST_POINT_REL,
     LST_RASTER_NAME,
     NDVI_RASTER_NAME,
+    qc_day_ok,
     fit_annual_sine,
     fit_harmonic_ndvi,
-    qc_day_ok,
     sine_anomaly_c,
     years_since_1970,
 )
@@ -115,7 +117,7 @@ def item_ms(item: dict[str, Any]) -> float | None:
     day = item_date(item)
     if not day:
         return None
-    dt = datetime.strptime(day, "%Y-%m-%d").replace(tzinfo=UTC)
+    dt = datetime.strptime(day, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     return dt.timestamp() * 1000.0
 
 
@@ -191,6 +193,7 @@ def fetch_one(event_id: str, data_root: Path) -> dict[str, Any]:
     end_lst = win["end_lst"].date().isoformat()
     start_ndvi = win["start_ndvi"].date().isoformat()
     lon, lat = float(win["lon"]), float(win["lat"])
+    bbox = list(win["bbox"])
     # Point search uses a tiny bbox so we stay on one MODIS tile.
     point_bbox = [lon - 0.05, lat - 0.05, lon + 0.05, lat + 0.05]
 
@@ -242,7 +245,7 @@ def fetch_one(event_id: str, data_root: Path) -> dict[str, Any]:
         "ok": bool(rows),
         "source": "planetary_computer_stac",
         "collection": COLL_LST,
-        "earth_engine_project_unregistered": True,
+        "ee_unregistered": "project-89d8567f-49f2-48bc-a00",
         "lon": lon,
         "lat": lat,
         "n_scenes_listed": len(lst_items),

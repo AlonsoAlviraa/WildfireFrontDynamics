@@ -73,7 +73,7 @@ python scripts/eval_latam_au_domain_gap.py
 
 | # | Item | Eng status | Artefacto | Humano residual |
 |---|------|------------|-----------|-----------------|
-| **1** | Solicitud formal CONAF (P2-A) | Plantilla pública preparada; correspondencia externa excluida del repositorio | [`CONAF_DATA_REQUEST_TEMPLATE.md`](CONAF_DATA_REQUEST_TEMPLATE.md) | Esperar autorización escrita antes de usar o redistribuir datos |
+| **1** | Enviar plantilla CONAF (P2-A envío) | **sent_gmail** → `consulta.oirs@conaf.cl` | [`conaf_send/`](conaf_send/) · `scripts/dispatch_conaf_oirs.py` | Esperar folio OIRS / pegar portal si hace falta `--confirm-oirs-paste` |
 | **1b** | Cesión escrita CONAF → `lab_ok_conaf` | **tooling shipped**; `lab_ok_conaf=false` | `scripts/record_conaf_cession.py` | CONAF debe emitir cesión escrita; no se inventa |
 | **2** | OK comercial CEMS si rehost producto | ver gate firmado / checklist | [`CEMS_COMMERCIAL_REHOST_CHECKLIST.md`](CEMS_COMMERCIAL_REHOST_CHECKLIST.md) · `scripts/check_cems_commercial_rehost.py` | Legal si se rehostea en producto |
 | **3** | Canales NDWS reales (meteo/DEM/veg) + IoU completo | **real_proxy_fill** · **n_ready=4**. Usable-pair mean **~0.737** (Nac 0.673 + NSW 0.802). FEP/GRA ≠ growth (EMSR715 `n_pairs_used=0`; old 0.088 not in mean). Pre-fire NBR veg. Model Δ vs copy is **negative**. **Not** transfer | `scripts/fill_latam_au_ndws_covariates.py --all` · `inventories/ndws_covariates_report.json` · `scripts/run_latam_au_complete_model_iou.py` | No es transfer IoU sellado ni GO_Q complete; `--all` refuses silent DEM fallback unless `--allow-dem-fallback` |

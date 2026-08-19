@@ -173,6 +173,7 @@ def label_reference(pack: Path) -> tuple[Path, Any, Any, int, int] | None:
 
 def pack_bbox_wgs84(pack: Path, transform, crs, h: int, w: int) -> list[float]:
     """Return [west, south, east, north] in WGS84."""
+    import rasterio
     from rasterio.warp import transform_bounds
 
     west = transform.c
@@ -256,7 +257,7 @@ def write_elevation_tif(
     """Resample latlon elev grid to reference label grid."""
     import rasterio
     from rasterio.transform import from_bounds
-    from rasterio.warp import Resampling, reproject
+    from rasterio.warp import reproject, Resampling
 
     path.parent.mkdir(parents=True, exist_ok=True)
     ny, nx = elev_ll.shape
@@ -299,7 +300,7 @@ def load_or_align_nbr(
 ) -> tuple[np.ndarray | None, dict[str, Any]]:
     """Load pre-fire NBR when possible (not last/post scene as vegetation)."""
     import rasterio
-    from rasterio.warp import Resampling, reproject
+    from rasterio.warp import reproject, Resampling
 
     meta_path = pack / "meta.json"
     meta: dict[str, Any] = {}

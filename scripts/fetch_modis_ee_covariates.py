@@ -23,7 +23,7 @@ import argparse
 import json
 import re
 import sys
-from datetime import UTC, timedelta
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +85,9 @@ def pack_allowed(pack: Path) -> bool:
         under_repo = pack.resolve().is_relative_to(ROOT.resolve())
     except (OSError, ValueError):
         under_repo = False
-    return not (under_repo and not is_allowed_pack_path(pack, repo_root=ROOT))
+    if under_repo and not is_allowed_pack_path(pack, repo_root=ROOT):
+        return False
+    return True
 
 
 def label_reference(pack: Path) -> tuple[Path, Any, Any, int, int] | None:
@@ -138,9 +140,9 @@ def window_for_spec(spec: dict[str, Any], pack: Path) -> dict[str, Any]:
     year = int(spec.get("year") or 2023)
     at = first_growth_dt(pack)
     if at is None:
-        from datetime import datetime
+        from datetime import datetime, timezone
 
-        at = datetime(year, 8, 1, tzinfo=UTC)
+        at = datetime(year, 8, 1, tzinfo=timezone.utc)
     start_lst = at - timedelta(days=365)
     end_lst = at + timedelta(days=1)
     start_ndvi = at - timedelta(days=365 * 3)
