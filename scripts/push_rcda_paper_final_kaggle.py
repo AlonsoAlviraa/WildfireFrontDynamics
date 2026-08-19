@@ -67,7 +67,7 @@ def _validated_frozen(path: Path) -> dict[str, Any]:
 def self_contained_final_kernel(frozen: dict[str, Any]) -> str:
     library = (ROOT / "wildfire_front/ml/rcda_sealed.py").read_text(encoding="utf-8")
     blobs = json.dumps(_protocol_blobs(), indent=2)
-    embedded = json.dumps(frozen, indent=2)
+    embedded = repr(json.dumps(frozen, sort_keys=True))
     return f'''{library.rstrip()}
 
 import hashlib
@@ -79,7 +79,7 @@ import zipfile
 
 {_helpers_source()}
 PROTOCOL_BLOBS = {blobs}
-FROZEN_RECIPE = {embedded}
+FROZEN_RECIPE = json.loads({embedded})
 
 def main() -> int:
     output = Path("/kaggle/working/rcda_paper_final")

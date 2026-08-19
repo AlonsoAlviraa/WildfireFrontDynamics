@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+import json
+
 from scripts.push_rcda_paper_final_kaggle import _validated_frozen, self_contained_final_kernel
 
 
@@ -66,6 +69,18 @@ def test_final_kernel_embeds_frozen_recipe_and_preregistered_seeds() -> None:
     }
     source = self_contained_final_kernel(frozen)
     compile(source, "run_rcda_paper_final.py", "exec")
+    module = ast.parse(source)
+    assignment = next(
+        node
+        for node in module.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "FROZEN_RECIPE" for target in node.targets)
+    )
+    embedded_frozen = eval(  # noqa: S307 - expression is generated locally and AST-scoped
+        compile(ast.Expression(assignment.value), "<embedded-frozen>", "eval"),
+        {"json": json},
+    )
+    assert embedded_frozen == frozen
     assert "evaluate_test=True" in source
     assert '"seeds": [' in source
     assert "11," in source and "29," in source and "47" in source
