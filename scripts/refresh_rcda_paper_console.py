@@ -12,9 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.product.research_status import build_research_status  # noqa: E402
-
 from wildfire_front.product.app_spa import write_product_app  # noqa: E402
+from wildfire_front.product.research_status import build_research_status  # noqa: E402
 
 
 def refresh_console(output: Path, repo_root: Path = ROOT) -> dict:

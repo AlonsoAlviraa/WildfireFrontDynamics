@@ -1,0 +1,38 @@
+{
+  "schema": "wfd_rcda_val_postprocess_scorecard_v1",
+  "selection_split": "val",
+  "test_evaluated": false,
+  "test_used_for_selection": false,
+  "run_name": "resunet_hybrid_low_lr_v2",
+  "events": 106,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 20260819,
+  "raw_event_macro_iou": 0.1941101935350271,
+  "raw_event_bootstrap_95_ci": [
+    0.1721817253377574,
+    0.21712257651493713
+  ],
+  "decoded_event_macro_iou": 0.1983860074540607,
+  "decoded_event_bootstrap_95_ci": [
+    0.17729468451205577,
+    0.220919523483579
+  ],
+  "paired_delta": 0.0042758139190335765,
+  "paired_delta_event_bootstrap_95_ci": [
+    -0.0012646116039199623,
+    0.0099128091349723
+  ],
+  "decoded_wins_event_fraction": 0.5754716981132075,
+  "decoded_ties_event_fraction": 0.03773584905660377,
+  "decoder": {
+    "threshold": 0.8,
+    "dilation_radius_px": 1,
+    "require_t0_connection": true
+  },
+  "checkpoint_sha256": "2bd3729438de2aa17d56f280bcaf607bc255b195a2ac026f9df579b30bc6a7e0",
+  "sources": [
+    "outputs\\ml_eval\\rcda_kaggle_resunet_hybrid_low_lr_v2_first_complete_20260819\\rcda_paper_stage2\\TUNING_SUMMARY.json",
+    "outputs\\ml_eval\\rcda_paper_nightwatch_20260819\\LOW_LR_POSTPROCESS_VAL.json"
+  ],
+  "interpretation": "Descriptive paired uncertainty after decoder selection on VAL; not confirmatory TEST evidence."
+}

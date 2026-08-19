@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "$$" > "$HOME/stage2.pid"
+echo "$$" > /home/Mariano/stage2.pid
 sudo shutdown -h +3600 >/dev/null 2>&1 || true
 
 sudo apt-get update -qq

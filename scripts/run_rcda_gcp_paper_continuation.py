@@ -130,8 +130,7 @@ def validate_final_summary(summary_path: Path, frozen: dict[str, Any]) -> dict[s
 
 
 def _gcloud_base(args: argparse.Namespace) -> list[str]:
-    base = ["--zone", args.zone, "--quiet"]
-    return ["--project", args.project, *base] if args.project else base
+    return ["--project", args.project, "--zone", args.zone, "--quiet"]
 
 
 def _ssh(
@@ -256,7 +255,7 @@ def _run_additional_stage(
             "scp",
             str(runner),
             str(bootstrap),
-            f"{args.instance}:~/",
+            f"{args.instance}:/home/Mariano/",
             *_gcloud_base(args),
         ]
     )
@@ -264,11 +263,11 @@ def _run_additional_stage(
         args,
         (
             f"rm -rf {remote_output} && mkdir -p {remote_output} && "
-            "chmod +x ~/gcp_run_rcda_stage2.sh && "
+            "chmod +x /home/Mariano/gcp_run_rcda_stage2.sh && "
             f"RCDA_STAGE2_RUNS={run_name} "
             f"RCDA_STAGE2_OUTPUT={remote_output} "
-            "setsid -f bash ~/gcp_run_rcda_stage2.sh "
-            f"> ~/{log_name} 2>&1 < /dev/null"
+            "setsid -f bash /home/Mariano/gcp_run_rcda_stage2.sh "
+            f"> /home/Mariano/{log_name} 2>&1 < /dev/null"
         ),
     )
     _write_state(
@@ -291,9 +290,9 @@ def _run_additional_stage(
             args,
             (
                 f"if test -f {remote_output}/TUNING_SUMMARY.json; then echo complete; "
-                "elif test -f ~/stage2.pid && "
-                "kill -0 $(cat ~/stage2.pid) 2>/dev/null; "
-                f"then grep -E '^\\[' ~/{log_name} | tail -1 || true; "
+                "elif test -f /home/Mariano/stage2.pid && "
+                "kill -0 $(cat /home/Mariano/stage2.pid) 2>/dev/null; "
+                f"then grep -E '^\\[' /home/Mariano/{log_name} | tail -1 || true; "
                 "echo running; else echo error; fi"
             ),
             check=False,
@@ -349,8 +348,8 @@ def _run_additional_stage(
                 (
                     f"RCDA_STAGE2_RUNS={run_name} "
                     f"RCDA_STAGE2_OUTPUT={remote_output} "
-                    "setsid -f bash ~/gcp_run_rcda_stage2.sh "
-                    f"> ~/{log_name} 2>&1 < /dev/null"
+                    "setsid -f bash /home/Mariano/gcp_run_rcda_stage2.sh "
+                    f"> /home/Mariano/{log_name} 2>&1 < /dev/null"
                 ),
             )
             spot_restarts += 1
@@ -363,7 +362,7 @@ def _run_additional_stage(
             time.sleep(10)
             continue
         if status == "error":
-            log = _ssh(args, f"tail -100 ~/{log_name}", check=False)
+            log = _ssh(args, f"tail -100 /home/Mariano/{log_name}", check=False)
             raise RuntimeError(
                 f"GCP continuation {run_name} ended without a summary: "
                 + (log.stdout or log.stderr)
@@ -411,11 +410,7 @@ def main() -> int:
         "--gcloud",
         default=shutil.which("gcloud.cmd") or shutil.which("gcloud") or "gcloud",
     )
-    parser.add_argument(
-        "--project",
-        default=None,
-        help="GCP project id; defaults to the active gcloud configuration.",
-    )
+    parser.add_argument("--project", default="project-89d8567f-49f2-48bc-a00")
     parser.add_argument("--zone", default="europe-west4-a")
     parser.add_argument("--instance", default="wfd-rcda-nightwatch-20260819")
     parser.add_argument("--poll-seconds", type=int, default=120)
@@ -610,7 +605,7 @@ def main() -> int:
                 "scp",
                 str(final_runner),
                 str(bootstrap),
-                f"{args.instance}:~/",
+                f"{args.instance}:/home/Mariano/",
                 *_gcloud_base(args),
             ]
         )
@@ -618,9 +613,9 @@ def main() -> int:
             args,
             (
                 f"rm -rf {final_remote} && mkdir -p {final_remote} && "
-                "chmod +x ~/gcp_run_rcda_final.sh && "
-                "setsid -f bash ~/gcp_run_rcda_final.sh "
-                "> ~/final.log 2>&1 < /dev/null"
+                "chmod +x /home/Mariano/gcp_run_rcda_final.sh && "
+                "setsid -f bash /home/Mariano/gcp_run_rcda_final.sh "
+                "> /home/Mariano/final.log 2>&1 < /dev/null"
             ),
         )
         if launch.returncode != 0:
@@ -645,9 +640,9 @@ def main() -> int:
                 args,
                 (
                     f"if test -f {final_remote}/FINAL_SUMMARY.json; then echo complete; "
-                    "elif test -f ~/final.pid && "
-                    "kill -0 $(cat ~/final.pid) 2>/dev/null; "
-                    "then grep -E '^\\[' ~/final.log | tail -1 || true; "
+                    "elif test -f /home/Mariano/final.pid && "
+                    "kill -0 $(cat /home/Mariano/final.pid) 2>/dev/null; "
+                    "then grep -E '^\\[' /home/Mariano/final.log | tail -1 || true; "
                     "echo running; else echo error; fi"
                 ),
                 check=False,
@@ -696,8 +691,8 @@ def main() -> int:
                 _ssh(
                     args,
                     (
-                        "setsid -f bash ~/gcp_run_rcda_final.sh "
-                        "> ~/final.log 2>&1 < /dev/null"
+                        "setsid -f bash /home/Mariano/gcp_run_rcda_final.sh "
+                        "> /home/Mariano/final.log 2>&1 < /dev/null"
                     ),
                 )
                 spot_restarts += 1
@@ -711,7 +706,7 @@ def main() -> int:
                 time.sleep(10)
                 continue
             if status == "error":
-                log = _ssh(args, "tail -100 ~/final.log", check=False)
+                log = _ssh(args, "tail -100 /home/Mariano/final.log", check=False)
                 raise RuntimeError(
                     "GCP final ended without a summary: " + (log.stdout or log.stderr)
                 )

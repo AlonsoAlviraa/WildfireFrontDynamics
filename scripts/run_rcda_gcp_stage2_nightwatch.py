@@ -76,11 +76,7 @@ def main() -> int:
         default=shutil.which("gcloud.cmd") or shutil.which("gcloud") or "gcloud",
         help="Path to the gcloud executable (useful for detached Windows processes).",
     )
-    parser.add_argument(
-        "--project",
-        default=None,
-        help="GCP project id; defaults to the active gcloud configuration.",
-    )
+    parser.add_argument("--project", default="project-89d8567f-49f2-48bc-a00")
     parser.add_argument("--zone", default="europe-west4-a")
     parser.add_argument("--instance", default="wfd-rcda-nightwatch-20260819")
     parser.add_argument(
@@ -93,9 +89,7 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     state_path = args.output / "STATE.json"
     deadline = time.monotonic() + args.max_hours * 3600
-    base = ["--zone", args.zone, "--quiet"]
-    if args.project:
-        base = ["--project", args.project, *base]
+    base = ["--project", args.project, "--zone", args.zone, "--quiet"]
     remote_summary = "/kaggle/working/rcda_paper_stage2/TUNING_SUMMARY.json"
     spot_restarts = 0
     try:
@@ -110,9 +104,9 @@ def main() -> int:
                     "--command",
                     (
                         f"if test -f {remote_summary}; then echo complete; "
-                        "elif test -f ~/stage2.pid && "
-                        "kill -0 $(cat ~/stage2.pid) 2>/dev/null; "
-                        "then latest=$(ls -t ~/stage2*.log 2>/dev/null | "
+                        "elif test -f /home/Mariano/stage2.pid && "
+                        "kill -0 $(cat /home/Mariano/stage2.pid) 2>/dev/null; "
+                        "then latest=$(ls -t /home/Mariano/stage2*.log 2>/dev/null | "
                         "head -1); test -n \"$latest\" && grep -E '^\\[' \"$latest\" | "
                         "tail -1 || true; checkpoint=$(ls -t "
                         "/kaggle/working/rcda_paper_stage2/*_best.pt 2>/dev/null | "
@@ -238,8 +232,8 @@ def main() -> int:
                             *base,
                             "--command",
                             (
-                                "setsid -f bash ~/gcp_run_rcda_stage2.sh "
-                                "> ~/stage2.restart.log 2>&1 < /dev/null"
+                                "setsid -f bash /home/Mariano/gcp_run_rcda_stage2.sh "
+                                "> /home/Mariano/stage2.restart.log 2>&1 < /dev/null"
                             ),
                         ]
                     )

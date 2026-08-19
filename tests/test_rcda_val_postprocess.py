@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from scripts.tune_rcda_val_postprocess import (
+    evaluate_postprocess_candidate,
     evaluate_postprocess_grid,
     postprocess_growth,
 )
@@ -59,3 +60,23 @@ def test_grid_selects_validation_configuration_by_event_macro_iou() -> None:
     )
     assert ranking[0]["dilation_radius_px"] == 0
     assert ranking[0]["event_macro_iou"] == 1.0
+
+
+def test_postprocess_candidate_retains_paired_event_metrics() -> None:
+    probabilities = np.asarray([[[0.9, 0.1], [0.8, 0.2]]], dtype=np.float32)
+    targets = np.asarray([[[True, False], [False, False]]])
+    previous = np.zeros_like(targets)
+
+    result = evaluate_postprocess_candidate(
+        probabilities,
+        targets,
+        previous,
+        ["fire-a"],
+        threshold=0.5,
+        dilation_radius=0,
+        require_t0_connection=False,
+    )
+
+    assert set(result) == {"fire-a"}
+    assert result["fire-a"]["tp"] == 1
+    assert result["fire-a"]["fp"] == 1

@@ -52,6 +52,34 @@ def portable_path(path: Path) -> str:
         return str(path)
 
 
+def parse_named_paths(values: list[str]) -> dict[str, Path]:
+    parsed: dict[str, Path] = {}
+    for value in values:
+        alias, separator, raw_path = value.partition("=")
+        alias = alias.strip()
+        raw_path = raw_path.strip()
+        if not separator or not alias or not raw_path:
+            raise ValueError("--checkpoint requires ALIAS=PATH")
+        if alias in parsed:
+            raise ValueError(f"duplicate checkpoint alias: {alias}")
+        parsed[alias] = Path(raw_path)
+    return parsed
+
+
+def parse_combinations(values: list[str]) -> dict[str, tuple[str, ...]]:
+    parsed: dict[str, tuple[str, ...]] = {}
+    for value in values:
+        name, separator, raw_members = value.partition("=")
+        name = name.strip()
+        members = tuple(member.strip() for member in raw_members.split(",") if member.strip())
+        if not separator or not name or not members:
+            raise ValueError("--combination requires NAME=ALIAS[,ALIAS...]")
+        if name in parsed:
+            raise ValueError(f"duplicate combination name: {name}")
+        parsed[name] = members
+    return parsed
+
+
 def load_val_checkpoint(path: Path, device: torch.device) -> tuple[torch.nn.Module, dict[str, Any]]:
     checkpoint = torch.load(path, map_location=device, weights_only=False)
     if checkpoint.get("selection_split") != "val":
@@ -261,24 +289,46 @@ def main() -> int:
     )
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument(
+        "--checkpoint",
+        action="append",
+        default=[],
+        metavar="ALIAS=PATH",
+        help="Explicit VAL-only checkpoint; repeatable. Overrides --checkpoint-dir defaults.",
+    )
+    parser.add_argument(
+        "--combination",
+        action="append",
+        default=[],
+        metavar="NAME=ALIAS[,ALIAS...]",
+        help="Explicit ensemble member set; repeatable. Requires --checkpoint.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=ROOT
         / "outputs/ml_eval/rcda_paper_nightwatch_20260819/PHASE1_VAL_ENSEMBLES.json",
     )
     args = parser.parse_args()
-    checkpoints = {
-        "resunet_hybrid_v1": args.checkpoint_dir / "resunet_hybrid_v1_seed0_best.pt",
-        "unet_growth_v2": args.checkpoint_dir / "unet_growth_v2_seed0_best.pt",
-        "aspp_growth_v1": args.checkpoint_dir / "aspp_growth_v1_seed0_best.pt",
-    }
-    combinations = {
-        "res_only": ("resunet_hybrid_v1",),
-        "res_unet": ("resunet_hybrid_v1", "unet_growth_v2"),
-        "res_aspp": ("resunet_hybrid_v1", "aspp_growth_v1"),
-        "triple": ("resunet_hybrid_v1", "unet_growth_v2", "aspp_growth_v1"),
-        "unet_aspp": ("unet_growth_v2", "aspp_growth_v1"),
-    }
+    if args.checkpoint:
+        checkpoints = parse_named_paths(args.checkpoint)
+        if not args.combination:
+            raise ValueError("explicit --checkpoint entries require --combination")
+        combinations = parse_combinations(args.combination)
+    else:
+        if args.combination:
+            raise ValueError("--combination requires explicit --checkpoint entries")
+        checkpoints = {
+            "resunet_hybrid_v1": args.checkpoint_dir / "resunet_hybrid_v1_seed0_best.pt",
+            "unet_growth_v2": args.checkpoint_dir / "unet_growth_v2_seed0_best.pt",
+            "aspp_growth_v1": args.checkpoint_dir / "aspp_growth_v1_seed0_best.pt",
+        }
+        combinations = {
+            "res_only": ("resunet_hybrid_v1",),
+            "res_unet": ("resunet_hybrid_v1", "unet_growth_v2"),
+            "res_aspp": ("resunet_hybrid_v1", "aspp_growth_v1"),
+            "triple": ("resunet_hybrid_v1", "unet_growth_v2", "aspp_growth_v1"),
+            "unet_aspp": ("unet_growth_v2", "aspp_growth_v1"),
+        }
     report = tune_validation_ensembles(
         checkpoints,
         combinations,

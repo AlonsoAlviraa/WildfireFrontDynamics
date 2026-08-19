@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import numpy as np
 
-from scripts.tune_rcda_val_ensembles import summarize_confusions
+from scripts.tune_rcda_val_ensembles import (
+    parse_combinations,
+    parse_named_paths,
+    summarize_confusions,
+)
 
 
 def test_summarize_confusions_selects_event_macro_not_pooled_iou() -> None:
@@ -33,3 +37,12 @@ def test_summarize_confusions_selects_event_macro_not_pooled_iou() -> None:
     assert ranking[0]["event_macro_iou"] > ranking[1]["event_macro_iou"]
     assert ranking[0]["pooled_iou"] < ranking[1]["pooled_iou"]
 
+
+def test_explicit_ensemble_cli_values_are_parsed() -> None:
+    checkpoints = parse_named_paths(["low=low.pt", "phase1=phase1.pt"])
+    combinations = parse_combinations(
+        ["low_only=low", "low_phase1=low,phase1"]
+    )
+
+    assert checkpoints["low"].name == "low.pt"
+    assert combinations["low_phase1"] == ("low", "phase1")

@@ -1,0 +1,83 @@
+{
+  "schema": "wfd_rcda_val_strata_audit_v1",
+  "selection_split": "val",
+  "test_evaluated": false,
+  "test_used_for_selection": false,
+  "run_name": "resunet_hybrid_v1",
+  "events": 106,
+  "selected_threshold": 0.6,
+  "duration_spearman": {
+    "rho": 0.153371618533866,
+    "p_value": 0.11649965701814104
+  },
+  "growth_support_spearman": {
+    "rho": 0.01733137179845055,
+    "p_value": 0.8600308405567856
+  },
+  "duration_strata": [
+    {
+      "label": "1-2d",
+      "events": 36,
+      "event_macro_iou": 0.16585431258872763,
+      "event_median_iou": 0.1379584616123038,
+      "mean_growth_pixels": 1874.6666666666667
+    },
+    {
+      "label": "3-5d",
+      "events": 21,
+      "event_macro_iou": 0.17602389895704626,
+      "event_median_iou": 0.18973020017406442,
+      "mean_growth_pixels": 4135.047619047619
+    },
+    {
+      "label": "6-13d",
+      "events": 28,
+      "event_macro_iou": 0.20524429306862427,
+      "event_median_iou": 0.19436552047990835,
+      "mean_growth_pixels": 6188.928571428572
+    },
+    {
+      "label": "14+d",
+      "events": 21,
+      "event_macro_iou": 0.17562047262186423,
+      "event_median_iou": 0.16208454947745032,
+      "mean_growth_pixels": 7573.0952380952385
+    }
+  ],
+  "growth_pixel_quartile_edges": [
+    721.5,
+    2333.5,
+    6609.0
+  ],
+  "growth_strata": [
+    {
+      "label": "Q1",
+      "events": 27,
+      "event_macro_iou": 0.19349849360432786,
+      "event_median_iou": 0.16810344827586207,
+      "mean_growth_pixels": 269.25925925925924
+    },
+    {
+      "label": "Q2",
+      "events": 26,
+      "event_macro_iou": 0.17913201396256845,
+      "event_median_iou": 0.20110218268203633,
+      "mean_growth_pixels": 1387.923076923077
+    },
+    {
+      "label": "Q3",
+      "events": 26,
+      "event_macro_iou": 0.15791198114532784,
+      "event_median_iou": 0.13452985148646252,
+      "mean_growth_pixels": 4217.384615384615
+    },
+    {
+      "label": "Q4",
+      "events": 27,
+      "event_macro_iou": 0.18942681711669032,
+      "event_median_iou": 0.16716303199154578,
+      "mean_growth_pixels": 12357.074074074075
+    }
+  ],
+  "interpretation": "Descriptive VAL-only subgroup audit. It does not establish subgroup causality and cannot replace final event-level TEST uncertainty."
+}
