@@ -51,9 +51,15 @@ def register_pretest_decisions(
     if len(phase1_matches) != 1:
         raise FileNotFoundError(f"expected one phase-1 summary, found {phase1_matches}")
     phase1 = read_json(phase1_matches[0])
-    ensemble_path = work_root / "PHASE1_VAL_ENSEMBLES.json"
+    ensemble_path = work_root / "LOW_LR_WEIGHTED_VAL_ENSEMBLES.json"
+    if not ensemble_path.is_file():
+        ensemble_path = work_root / "LOW_LR_VAL_ENSEMBLES.json"
+    if not ensemble_path.is_file():
+        ensemble_path = work_root / "PHASE1_VAL_ENSEMBLES.json"
+    postprocess_path = work_root / "LOW_LR_POSTPROCESS_VAL.json"
     sampler_path = work_root / "TRAIN_SAMPLER_AUDIT.json"
     ensemble = read_json(ensemble_path)
+    postprocess = read_json(postprocess_path) if postprocess_path.is_file() else None
     sampler = read_json(sampler_path)
     if phase1.get("test_evaluated") is not False:
         raise ValueError("phase-1 summary is not TEST-isolated")
@@ -63,6 +69,12 @@ def register_pretest_decisions(
         and ensemble.get("test_used_for_selection") is False
     ):
         raise ValueError("ensemble decision is not VAL-only")
+    if postprocess and not (
+        postprocess.get("selection_split") == "val"
+        and postprocess.get("test_evaluated") is False
+        and postprocess.get("test_used_for_selection") is False
+    ):
+        raise ValueError("postprocess decision is not VAL-only")
     if not (
         sampler.get("analysis_split") == "train"
         and sampler.get("validation_evaluated") is False
@@ -78,6 +90,9 @@ def register_pretest_decisions(
         "scripts/push_rcda_paper_stage2_kaggle.py",
         "scripts/run_rcda_gcp_paper_continuation.py",
         "scripts/analyze_rcda_paper_tuning.py",
+        "scripts/tune_rcda_val_ensembles.py",
+        "scripts/tune_rcda_val_postprocess.py",
+        "scripts/summarize_rcda_postprocess.py",
         "scripts/push_rcda_paper_final_kaggle.py",
         "wildfire_front/ml/wfigs_domain_adapt.py",
         "wildfire_front/ml/wfigs_external_eval.py",
@@ -137,9 +152,13 @@ def register_pretest_decisions(
         "evidence": {
             "phase1_summary_sha256": sha256_file(phase1_matches[0]),
             "val_ensemble_sha256": sha256_file(ensemble_path),
+            "val_postprocess_sha256": (
+                sha256_file(postprocess_path) if postprocess else None
+            ),
             "train_sampler_audit_sha256": sha256_file(sampler_path),
             "phase1_val_leader": (phase1.get("ranking") or [{}])[0],
             "ensemble_decision": decision,
+            "postprocess_decision": (postprocess or {}).get("best"),
             "default_event_mass_cv": (
                 strategies.get("default_size_event_half") or {}
             ).get("event_probability_mass_cv"),
@@ -163,6 +182,20 @@ def register_pretest_decisions(
         ],
         "decisions": {
             "cross_architecture_ensemble": "rejected_on_validation",
+            "late_validation_ensemble": (
+                "preregistered_as_secondary"
+                if decision.get("preregister_multi_model_ensemble") is True
+                else "rejected_on_validation"
+            ),
+            "spatial_decoder": (
+                {
+                    "role": "secondary_pretest_analysis",
+                    **((postprocess or {}).get("best") or {}),
+                    "test_evaluated": False,
+                }
+                if postprocess
+                else None
+            ),
             "uniform_event_sampler": "registered_as_conditional_validation_ablation",
             "adapted_wfigs_seed_ensemble": "secondary_analysis_only",
             "numeric_stability_hotfix": {

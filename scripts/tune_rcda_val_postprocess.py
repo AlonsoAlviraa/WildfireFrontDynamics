@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections import defaultdict
@@ -32,6 +33,14 @@ THRESHOLDS = tuple(float(value) for value in np.arange(0.05, 1.0, 0.05))
 DILATION_RADII = (0, 1, 2)
 CONNECTIVITY_OPTIONS = (False, True)
 STRUCTURE = np.ones((3, 3), dtype=bool)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def postprocess_growth(
@@ -111,6 +120,31 @@ def evaluate_postprocess_grid(
     return sorted(rows, key=lambda row: float(row["event_macro_iou"]), reverse=True)
 
 
+def evaluate_postprocess_candidate(
+    probabilities: np.ndarray,
+    targets: np.ndarray,
+    previous: np.ndarray,
+    event_ids: list[str],
+    *,
+    threshold: float,
+    dilation_radius: int,
+    require_t0_connection: bool,
+) -> dict[str, dict[str, float | int]]:
+    by_event: dict[str, np.ndarray] = defaultdict(lambda: np.zeros(4, dtype=np.int64))
+    for index, event_id in enumerate(event_ids):
+        prediction = postprocess_growth(
+            probabilities[index] >= float(threshold),
+            previous[index],
+            dilation_radius=int(dilation_radius),
+            require_t0_connection=bool(require_t0_connection),
+        )
+        by_event[event_id] += confusion(prediction, targets[index])
+    return {
+        event_id: metrics_from_confusion(result)
+        for event_id, result in sorted(by_event.items())
+    }
+
+
 @torch.no_grad()
 def collect_validation_predictions(
     checkpoint_path: Path,
@@ -181,6 +215,14 @@ def main() -> int:
         default=ROOT / "data/external/rcda_net_full/protocol",
     )
     parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument(
+        "--fixed-config-json",
+        type=Path,
+        help=(
+            "Reuse a previously selected VAL grid and recompute only its paired "
+            "per-event metrics from the exact checkpoint."
+        ),
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     probabilities, targets, previous, event_ids, checkpoint = (
@@ -191,17 +233,51 @@ def main() -> int:
             batch_size=args.batch_size,
         )
     )
-    ranking = evaluate_postprocess_grid(
+    if args.fixed_config_json:
+        prior = json.loads(args.fixed_config_json.read_text(encoding="utf-8"))
+        if not (
+            prior.get("selection_split") == "val"
+            and prior.get("test_evaluated") is False
+            and prior.get("test_used_for_selection") is False
+        ):
+            raise ValueError("fixed postprocess configuration is not VAL-only")
+        expected_sha256 = prior.get("checkpoint_sha256")
+        if expected_sha256 and expected_sha256 != sha256_file(args.checkpoint):
+            raise ValueError("fixed postprocess checkpoint SHA-256 mismatch")
+        ranking = list(prior.get("ranking") or [])
+        if not ranking:
+            raise ValueError("fixed postprocess configuration has no ranking")
+        best = dict(prior.get("best") or ranking[0])
+        best.pop("per_event", None)
+    else:
+        ranking = evaluate_postprocess_grid(
+            probabilities,
+            targets,
+            previous,
+            event_ids,
+        )
+        best = ranking[0]
+    best["per_event"] = evaluate_postprocess_candidate(
         probabilities,
         targets,
         previous,
         event_ids,
+        threshold=float(best["threshold"]),
+        dilation_radius=int(best["dilation_radius_px"]),
+        require_t0_connection=bool(best["require_t0_connection"]),
     )
+    reproduced_macro = float(
+        np.mean([float(row["iou"]) for row in best["per_event"].values()])
+    )
+    if not np.isclose(reproduced_macro, float(best["event_macro_iou"]), atol=1e-12):
+        raise ValueError("best postprocess event metrics do not reproduce the grid score")
     report = {
         "schema": "wfd_rcda_val_postprocess_tune_v1",
         "selection_split": "val",
         "test_evaluated": False,
+        "test_used_for_selection": False,
         "checkpoint": str(args.checkpoint),
+        "checkpoint_sha256": sha256_file(args.checkpoint),
         "checkpoint_epoch": int(checkpoint["epoch"]),
         "model_name": checkpoint["model_name"],
         "target_mode": checkpoint.get("target_mode", "growth"),
@@ -210,12 +286,17 @@ def main() -> int:
             "dilation_radii_px": list(DILATION_RADII),
             "require_t0_connection": list(CONNECTIVITY_OPTIONS),
         },
-        "best": ranking[0],
+        "best": best,
         "ranking": ranking,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(report["best"], indent=2))
+    print(
+        json.dumps(
+            {key: value for key, value in report["best"].items() if key != "per_event"},
+            indent=2,
+        )
+    )
     return 0
 
 

@@ -1,0 +1,19 @@
+{
+  "schema": "wfd_rcda_immutable_validation_archive_v1",
+  "run_name": "resunet_hybrid_low_lr_v2",
+  "reason": "Preserve the first completed VAL-only result before a same-recipe Kaggle reproducibility rerun overwrites the mutable download path.",
+  "selection_split": "val",
+  "test_evaluated": false,
+  "test_used_for_selection": false,
+  "files": {
+    "rcda_paper_stage2/TUNING_SUMMARY.json": {
+      "sha256": "ad1be6680db1af84d423636d2d42c684740ec1347dce0091b9e931b1c3e8da36"
+    },
+    "rcda_paper_stage2/resunet_hybrid_low_lr_v2_seed0_report.json": {
+      "sha256": "a12548a4f6353e8944410e445d2315c645316919501d3049ca5094ac71c90165"
+    },
+    "rcda_paper_stage2/resunet_hybrid_low_lr_v2_seed0_best.pt": {
+      "sha256": "2bd3729438de2aa17d56f280bcaf607bc255b195a2ac026f9df579b30bc6a7e0"
+    }
+  }
+}

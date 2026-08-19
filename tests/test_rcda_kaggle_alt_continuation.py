@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.run_rcda_kaggle_alt_continuation import kaggle_env, single_run_source
+from scripts.run_rcda_kaggle_alt_continuation import (
+    kaggle_env,
+    single_run_source,
+    validate_single_run_val_summary,
+)
 
 
 def test_alt_kaggle_env_overrides_global_account(
@@ -10,10 +14,31 @@ def test_alt_kaggle_env_overrides_global_account(
 ) -> None:
     monkeypatch.setenv("KAGGLE_API_TOKEN", "main-token")
     monkeypatch.setenv("KAGGLE_USERNAME", "main-user")
+    monkeypatch.setenv("KAGGLE_KEY", "main-key")
     env = kaggle_env(tmp_path)
     assert "KAGGLE_API_TOKEN" not in env
     assert "KAGGLE_USERNAME" not in env
+    assert "KAGGLE_KEY" not in env
     assert env["KAGGLE_CONFIG_DIR"] == str(tmp_path)
+
+
+def test_legacy_val_summary_is_normalized_only_from_embedded_evidence() -> None:
+    summary = {
+        "selection_split": "val",
+        "test_evaluated": False,
+        "ranking": [{"run_name": "low_lr"}],
+        "reports": [
+            {
+                "config": {"run_name": "low_lr"},
+                "test_evaluated": False,
+                "test_used_for_selection": False,
+            }
+        ],
+    }
+
+    assert validate_single_run_val_summary(summary, "low_lr") is True
+    assert summary["test_used_for_selection"] is False
+    assert validate_single_run_val_summary(summary, "low_lr") is False
 
 
 def test_single_run_source_is_val_only_and_numerically_guarded() -> None:

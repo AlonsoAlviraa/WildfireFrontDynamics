@@ -1,0 +1,182 @@
+{
+  "schema": "wfd_rcda_validation_scorecard_v1",
+  "selection_split": "val",
+  "test_evaluated": false,
+  "test_used_for_selection": false,
+  "uncertainty_unit": "fire_event",
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 20260819,
+  "events": 106,
+  "leader": "resunet_hybrid_low_lr_v2",
+  "ranking": [
+    {
+      "run_name": "resunet_hybrid_low_lr_v2",
+      "event_macro_iou": 0.1941101935350271,
+      "event_median_iou": 0.193500701703482,
+      "event_bootstrap_95_ci": [
+        0.17244114162843036,
+        0.217230268792287
+      ],
+      "leader_minus_candidate_paired_delta": 0.0,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.0,
+        0.0
+      ],
+      "leader_wins_event_fraction": 0.0,
+      "selected_threshold": 0.05,
+      "best_epoch": 27,
+      "rank": 1
+    },
+    {
+      "run_name": "resunet_hybrid_v1",
+      "event_macro_iou": 0.1802087477572905,
+      "event_median_iou": 0.16671182481252406,
+      "event_bootstrap_95_ci": [
+        0.15783262154792188,
+        0.20412680273535308
+      ],
+      "leader_minus_candidate_paired_delta": 0.013901445777736615,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        -0.00012768702296038996,
+        0.02870097187282712
+      ],
+      "leader_wins_event_fraction": 0.6226415094339622,
+      "selected_threshold": 0.6,
+      "best_epoch": 24,
+      "rank": 2
+    },
+    {
+      "run_name": "resunet_hybrid_precision_v3",
+      "event_macro_iou": 0.17055967507596023,
+      "event_median_iou": 0.1581655980520378,
+      "event_bootstrap_95_ci": [
+        0.1491133356563584,
+        0.19355938182412574
+      ],
+      "leader_minus_candidate_paired_delta": 0.0235505184590669,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.00891149779716467,
+        0.03765572131726966
+      ],
+      "leader_wins_event_fraction": 0.6415094339622641,
+      "selected_threshold": 0.05,
+      "best_epoch": 13,
+      "rank": 3
+    },
+    {
+      "run_name": "resunet_hybrid_long_v2",
+      "event_macro_iou": 0.16765685138564385,
+      "event_median_iou": 0.15794718324966747,
+      "event_bootstrap_95_ci": [
+        0.148719382295606,
+        0.1868817531836099
+      ],
+      "leader_minus_candidate_paired_delta": 0.026453342149383254,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.013146931711637132,
+        0.04128468143652698
+      ],
+      "leader_wins_event_fraction": 0.6415094339622641,
+      "selected_threshold": 0.2,
+      "best_epoch": 13,
+      "rank": 4
+    },
+    {
+      "run_name": "unet_growth_v2",
+      "event_macro_iou": 0.16032207967280016,
+      "event_median_iou": 0.1568712814933307,
+      "event_bootstrap_95_ci": [
+        0.14481214601597972,
+        0.17610437706959567
+      ],
+      "leader_minus_candidate_paired_delta": 0.03378811386222695,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.01859197493980712,
+        0.04969243640305696
+      ],
+      "leader_wins_event_fraction": 0.6415094339622641,
+      "selected_threshold": 0.2,
+      "best_epoch": 24,
+      "rank": 5
+    },
+    {
+      "run_name": "aspp_growth_v1",
+      "event_macro_iou": 0.1562290482219343,
+      "event_median_iou": 0.14934800435726003,
+      "event_bootstrap_95_ci": [
+        0.13959721121490384,
+        0.17407608800850838
+      ],
+      "leader_minus_candidate_paired_delta": 0.037881145313092814,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.02371975897910748,
+        0.0532234544521491
+      ],
+      "leader_wins_event_fraction": 0.660377358490566,
+      "selected_threshold": 0.2,
+      "best_epoch": 22,
+      "rank": 6
+    },
+    {
+      "run_name": "aspp_hybrid_v1",
+      "event_macro_iou": 0.14453713508909527,
+      "event_median_iou": 0.13314366064077668,
+      "event_bootstrap_95_ci": [
+        0.12899984176061904,
+        0.1602039449325346
+      ],
+      "leader_minus_candidate_paired_delta": 0.04957305844593187,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.031650827734129944,
+        0.06813009098878249
+      ],
+      "leader_wins_event_fraction": 0.6792452830188679,
+      "selected_threshold": 0.2,
+      "best_epoch": 23,
+      "rank": 7
+    },
+    {
+      "run_name": "unet_hybrid_v1",
+      "event_macro_iou": 0.1429457518269756,
+      "event_median_iou": 0.13094001103446024,
+      "event_bootstrap_95_ci": [
+        0.12904818472362783,
+        0.15749957259927205
+      ],
+      "leader_minus_candidate_paired_delta": 0.05116444170805154,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.03491833949392137,
+        0.06778835186699196
+      ],
+      "leader_wins_event_fraction": 0.6886792452830188,
+      "selected_threshold": 0.2,
+      "best_epoch": 23,
+      "rank": 8
+    },
+    {
+      "run_name": "unet_extent_v1",
+      "event_macro_iou": 0.0840739362611763,
+      "event_median_iou": 0.07380383439790977,
+      "event_bootstrap_95_ci": [
+        0.0703376452808995,
+        0.09825541178948907
+      ],
+      "leader_minus_candidate_paired_delta": 0.11003625727385084,
+      "leader_minus_candidate_bootstrap_95_ci": [
+        0.08640949046717018,
+        0.13515838624451965
+      ],
+      "leader_wins_event_fraction": 0.8207547169811321,
+      "selected_threshold": 0.2,
+      "best_epoch": 10,
+      "rank": 9
+    }
+  ],
+  "sources": [
+    "outputs\\ml_eval\\rcda_paper_nightwatch_20260819\\tuning_output\\rcda_paper_tune\\TUNING_SUMMARY.json",
+    "outputs\\ml_eval\\rcda_gcp_stage2_20260819\\rcda_paper_stage2\\TUNING_SUMMARY.json",
+    "outputs\\ml_eval\\rcda_kaggle_precision_alt_error_v3\\rcda_paper_stage2\\TUNING_SUMMARY.json",
+    "outputs\\ml_eval\\rcda_kaggle_resunet_hybrid_low_lr_v2_20260819\\rcda_paper_stage2\\TUNING_SUMMARY.json"
+  ],
+  "interpretation": "Selection evidence only. Confidence intervals are descriptive after comparing multiple VAL candidates and are not final TEST uncertainty."
+}

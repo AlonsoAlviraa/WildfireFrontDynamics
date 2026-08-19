@@ -95,6 +95,40 @@ not exceed the phase-1 leader, the conditional lower-learning-rate recipe was
 launched next. The runner now emits a completed, explicitly truncated report
 from a late finite checkpoint instead of losing the whole kernel artifact.
 
+The lower-learning-rate ResUNet completed its validation-only schedule with a
+best checkpoint at epoch 27 and threshold 0.05. Its event-macro IoU was 0.19411
+over the same 106 VALIDATION fires (event-bootstrap 95% interval
+0.17244–0.21723), compared with 0.18021 for the phase-1 ResUNet leader. The
+paired mean improvement was 0.01390 and its descriptive bootstrap interval
+crossed zero narrowly (−0.00013 to 0.02870); the new checkpoint won on 62.3% of
+events. It improved all four duration strata and all four growth-size quartiles
+(stratum deltas 0.0122–0.0169), with no significant monotonic association
+between IoU and duration (Spearman ρ=0.10, p=0.30) or growth support
+(ρ≈0, p=0.96). Pooled precision increased from 0.18274 to 0.19723 while recall
+changed from 0.37674 to 0.37064; recall beyond 10.5 pixels from the observed
+front increased from 0.13805 to 0.14436. These are interim model-selection results, not confirmatory TEST
+evidence. The conditional growth-only, event-balanced, uniform-event and FiLM
+candidates remain eligible while the completed VALIDATION leader is below
+0.20; TEST remains unobserved. A small validation-only decoder grid subsequently
+improved the same checkpoint to 0.19839 event-macro IoU (pooled IoU 0.14885)
+using a one-pixel dilation and retention of components connected to t0. This
+corresponded to a paired event-level delta of +0.00428 (10,000-resample 95%
+bootstrap CI -0.00126 to +0.00991; wins on 57.55% of events). Because the
+interval includes zero and the decoder was selected on VALIDATION, this is
+descriptive rather than confirmatory evidence. The decoder remains provisional
+until the remaining preregistered candidates complete.
+
+Equal-weight late ensembles did not improve the individual checkpoint:
+`low_lr + phase1` reached 0.19333 (Δ −0.00078 versus `low_lr`) and the
+three-model `low_lr + phase1 + growth` ensemble reached 0.19195. They were
+rejected on VALIDATION. The preregistered bounded leader-weight grid then found
+one improvement: `low3_phase1_growth`, equivalent to weights 3:1:1, reached
+0.19736 event-macro IoU (Δ +0.00325 versus `low_lr`) at threshold 0.40. It is
+retained as the sole multi-model candidate; the weight search is closed and no
+further ensemble tuning is permitted before TEST. The separately selected
+single-checkpoint spatial decoder remains numerically higher on VALIDATION at
+0.19839, with the uncertainty caveat above.
+
 ## Final primary evaluation
 
 The frozen recipe is trained with seeds 11, 29 and 47. Each seed selects its

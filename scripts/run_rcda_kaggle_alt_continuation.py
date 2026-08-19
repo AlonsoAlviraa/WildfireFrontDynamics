@@ -64,6 +64,7 @@ def kaggle_env(config_dir: Path) -> dict[str, str]:
     env = dict(os.environ)
     env.pop("KAGGLE_API_TOKEN", None)
     env.pop("KAGGLE_USERNAME", None)
+    env.pop("KAGGLE_KEY", None)
     env["KAGGLE_CONFIG_DIR"] = str(config_dir)
     return env
 
@@ -153,6 +154,40 @@ def one_json(root: Path, name: str) -> Path:
     return matches[0]
 
 
+def validate_single_run_val_summary(
+    summary: dict[str, Any], expected_run: str
+) -> bool:
+    """Validate a single-run VAL artifact and normalize a legacy root flag.
+
+    Early stage-2 runners recorded ``test_used_for_selection=False`` in the
+    embedded report but omitted the same redundant flag at the summary root.
+    Accept that legacy shape only when the sole embedded report independently
+    proves that neither TEST evaluation nor TEST-based selection occurred.
+
+    Returns ``True`` when the legacy root flag was added in memory.
+    """
+    ranking = summary.get("ranking") or []
+    reports = summary.get("reports") or []
+    if not (
+        summary.get("selection_split") == "val"
+        and summary.get("test_evaluated") is False
+        and len(ranking) == 1
+        and ranking[0].get("run_name") == expected_run
+        and len(reports) == 1
+        and reports[0].get("test_evaluated") is False
+        and reports[0].get("test_used_for_selection") is False
+        and reports[0].get("config", {}).get("run_name") == expected_run
+    ):
+        raise ValueError(f"invalid single-run VAL summary for {expected_run}")
+    root_flag = summary.get("test_used_for_selection")
+    if root_flag is False:
+        return False
+    if "test_used_for_selection" in summary:
+        raise ValueError(f"TEST selection flag is not false for {expected_run}")
+    summary["test_used_for_selection"] = False
+    return True
+
+
 def download_summary(
     kernel: str,
     output: Path,
@@ -164,15 +199,9 @@ def download_summary(
     run(["kaggle", "kernels", "output", kernel, "-p", str(output), "--force"], env=env)
     summary_path = one_json(output, "TUNING_SUMMARY.json")
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    if not (
-        summary.get("selection_split") == "val"
-        and summary.get("test_evaluated") is False
-        and summary.get("test_used_for_selection") is False
-    ):
-        raise ValueError(f"non-isolated tuning summary from {kernel}")
-    ranking = summary.get("ranking") or []
-    if len(ranking) != 1 or ranking[0].get("run_name") != expected_run:
-        raise ValueError(f"unexpected run set from {kernel}: {ranking}")
+    normalized = validate_single_run_val_summary(summary, expected_run)
+    if normalized:
+        write_json(summary_path, summary)
     return summary_path
 
 
@@ -260,14 +289,13 @@ def main() -> int:
     for recovered_path in args.recovered_summary:
         recovered = json.loads(recovered_path.read_text(encoding="utf-8"))
         ranking = recovered.get("ranking") or []
-        if not (
-            recovered.get("selection_split") == "val"
-            and recovered.get("test_evaluated") is False
-            and recovered.get("test_used_for_selection") is False
-            and len(ranking) == 1
-        ):
+        if len(ranking) != 1:
             raise ValueError(f"invalid recovered VAL-only summary: {recovered_path}")
-        recovered_by_run[str(ranking[0]["run_name"])] = recovered_path
+        recovered_run = str(ranking[0].get("run_name"))
+        normalized = validate_single_run_val_summary(recovered, recovered_run)
+        if normalized:
+            write_json(recovered_path, recovered)
+        recovered_by_run[recovered_run] = recovered_path
 
     try:
         for index, (run_name, slug, phase) in enumerate(RUNS):
@@ -275,11 +303,22 @@ def main() -> int:
                 break
             if run_name in recovered_by_run:
                 recovered_path = recovered_by_run[run_name]
+                staged_runner = (
+                    ROOT
+                    / "kaggle_job"
+                    / f"_alt_{slug.replace('-', '_')}"
+                    / "run_rcda_paper_stage2.py"
+                )
+                if not staged_runner.is_file():
+                    raise FileNotFoundError(
+                        f"recovered run is missing its exact staged runner: {staged_runner}"
+                    )
                 tuning_paths.append(recovered_path)
                 runtime_rows.append(
                     {
                         "run_name": run_name,
                         "kernel": f"{ALT_OWNER}/{slug}",
+                        "runner_sha256": sha256_file(staged_runner),
                         "summary_sha256": sha256_file(recovered_path),
                         "selection_split": "val",
                         "test_evaluated": False,

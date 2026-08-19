@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "$$" > "$HOME/final.pid"
+echo "$$" > /home/Mariano/final.pid
 sudo shutdown -h +3600 >/dev/null 2>&1 || true
 
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-32}"
@@ -12,7 +12,7 @@ export PYTHONUNBUFFERED=1
 
 dataset=/kaggle/input/wfd-rcda-archive/dataset
 protocol=/kaggle/input/wfd-rcda-sealed/protocol
-runner="$HOME/run_rcda_paper_final.py"
+runner=/home/Mariano/run_rcda_paper_final.py
 
 if [[ ! -d "$dataset" ]] || [[ ! -d "$protocol" ]]; then
   echo "RCDA dataset or sealed protocol is missing" >&2
