@@ -127,7 +127,7 @@ def print_hub(*, as_json: bool = False) -> int:
     checklist = build_checklist()
     rails = checklist["rails"]
     if as_json:
-        print(json.dumps({"command": "operator", **checklist}, indent=2, ensure_ascii=False))
+        print(json.dumps({"command": "operator", **checklist}, indent=2, ensure_ascii=True))
         return 0
     print()
     print("  WildfireFrontDynamics · operator (H1 / demo 12 min)")
@@ -157,7 +157,7 @@ def print_hub(*, as_json: bool = False) -> int:
 def print_checklist(*, as_json: bool = False) -> int:
     data = build_checklist()
     if as_json:
-        print(json.dumps(data, indent=2, ensure_ascii=False))
+        print(json.dumps(data, indent=2, ensure_ascii=True))
         return 0
     print()
     print("  WildfireFrontDynamics · operator checklist")
@@ -382,7 +382,7 @@ def print_teach(*, act: int | None = None, as_json: bool = False, run: bool = Fa
         ],
     }
     if as_json:
-        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        print(json.dumps(payload, indent=2, ensure_ascii=True))
         if run and act is not None:
             return run_act(act)
         return 0
@@ -428,7 +428,7 @@ def print_show(*, as_json: bool = False, open_artifacts: bool = False) -> int:
         "artifacts": present,
     }
     if as_json:
-        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        print(json.dumps(payload, indent=2, ensure_ascii=True))
     else:
         print()
         print("  WildfireFrontDynamics · show (gates board)")

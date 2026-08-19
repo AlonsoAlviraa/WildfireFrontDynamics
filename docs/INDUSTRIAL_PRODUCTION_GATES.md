@@ -37,4 +37,8 @@ measured quality, abstention when uncertain, and dual-track separation**.
 
 ## Current verdict (update as we go)
 
-See `docs/LOOP_1M_SCORECARD_SNAPSHOT.json` and `docs/INDUSTRIAL_READINESS_STATUS.json`.
+See `docs/INDUSTRIAL_READINESS_STATUS.json` (refreshed 2026-08-17 to match the
+stamp: GO_MES true, GO_Q partial, fusion ON, RCDA/Caldor not product) and
+`docs/PLAN_INDUSTRIAL_GARANTIAS_2026-08-17.md`.
+
+`docs/LOOP_1M_SCORECARD_SNAPSHOT.json` remains a historical month-1 snapshot.

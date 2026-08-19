@@ -30,6 +30,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from wildfire_front.console import configure_console_output  # noqa: E402
 from wildfire_front.evaluation import front_distance_metrics  # noqa: E402
 from wildfire_front.ops_perimeter import (  # noqa: E402
     METRIC_CRS,
@@ -506,7 +507,7 @@ def build_report(
         "fire_id": "tobarra_20240802",
         "incident_code": "2024020124",
         "source_drop": repo_relative_path(drop_dir),
-        "source_contact": "pablo.arroyobretano@geacam.com / GEACAM-CMA",
+        "source_contact": "GEACAM-CMA (private transfer contact omitted)",
         "received_date": "2026-07-30",
         "product_class": "operational_active_perimeter",
         "clock_model": _clock_model_doc(),
@@ -544,6 +545,7 @@ def build_report(
 
 
 def main() -> int:
+    configure_console_output()
     ap = argparse.ArgumentParser(description="Tobarra Pablo ops perimeter eval")
     ap.add_argument("--drop-dir", type=Path, default=DEFAULT_DROP)
     ap.add_argument(

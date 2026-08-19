@@ -12,6 +12,7 @@
 - **99.9999% de acierto del fuego** (eso sería mentira)
 - **“Cinco nueves” / residual silent-GO ≤ 1×10⁻⁶** como claim contractual (retirado 2026-08-12 — sin scorecard/stamp)
 - GO_Q complete / field sell-ready sin demo tercero + acta firmada
+- RCDA IoU 0.308 como score de producto, o Caldor (1 fuego / 15 pares) como train set
 
 ## Sí vendemos
 

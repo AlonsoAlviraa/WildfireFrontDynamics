@@ -469,6 +469,35 @@ def test_this_run_reliability_gate_ros_zero_fails(tmp_path: Path) -> None:
     assert checks.get("R2_gates") is not True
 
 
+def test_field_ops_outbox_without_sidecar_cannot_go(tmp_path: Path) -> None:
+    """T1.5: no this-run sidecar and no override → field_ops cannot GO."""
+    from wildfire_front.incident.pipeline import publish_decision_card
+
+    outbox = tmp_path / "outbox"
+    outbox.mkdir()
+    artifacts = publish_decision_card(
+        outbox,
+        "no_sidecar",
+        {
+            "quality_grade": "A",
+            "speed_median_m_min": 6.0,
+            "n_frames_staged": 20,
+            "area_ha_max": 50,
+            "speed_vs_ref_ratio": 0.9,
+        },
+        n_frames=20,
+        include_ml_metrics=False,
+        open_metrics={"max_area_ha": 2000, "n_timeline_steps": 5},
+        decision_policy="field_ops",
+        write_this_run_gate=False,
+    )
+    assert artifacts["decision"] != "GO"
+    assert artifacts["decision"] == "ABSTAIN"
+    assert not (outbox / "reliability_gate_report.json").is_file()
+    card = json.loads((outbox / "fire_decision_card.json").read_text(encoding="utf-8"))
+    assert card.get("system_reliability_pass") is False
+
+
 def test_suite_only_outbox_gate_does_not_unlock(tmp_path: Path) -> None:
     """Neutralized suite sample in outbox must not unlock field_ops."""
     from wildfire_front.incident.pipeline import publish_decision_card

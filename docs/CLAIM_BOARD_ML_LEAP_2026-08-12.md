@@ -14,5 +14,6 @@
 | L6 | WFD meets peer FNR≤α or ROS-class ±35% via ML | — | **inventable-only-with-scorecard** | NO until scorecard |
 | L7 | Multi-CCAA / all-year generalization from current LOFO | — | **inventable-only-with-scorecard** | NO until scorecard |
 | L8 | field_ops fusion ON / GO_MES+ from U1 lab | — | **inventable-only-with-scorecard** | NO |
+| L9 | RCDA published IoU 0.308 / Caldor 15-pair train is a product path | anti-claim | **contradicted** | **NO** (holdout_only; sealed dilated-copy 0.1108 is the honest RCDA baseline) |
 
-**NO-sell duro:** L4, L5 (+ L6–L8 until scorecard + Alonso).
+**NO-sell duro:** L4, L5, L9 (+ L6–L8 until scorecard + Alonso).

@@ -24,7 +24,7 @@ import warnings
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from .decide_service import (
     API_VERSION,
@@ -113,6 +113,55 @@ OPENAPI: dict[str, Any] = {
                 "responses": {"200": {"description": "policy catalog"}},
             }
         },
+        "/v1/flags": {
+            "get": {
+                "summary": "Read-only release flags (does not flip stamps)",
+                "responses": {"200": {"description": "GO_Q / fusion / not_claims"}},
+            }
+        },
+        "/v1/catalog": {
+            "get": {
+                "summary": "ML products + holdout_only (RCDA/Caldor not ready)",
+                "responses": {"200": {"description": "catalog"}},
+            }
+        },
+        "/v1/card": {
+            "get": {
+                "summary": "Last Decision Card for work_dir",
+                "parameters": [{"name": "work_dir", "in": "query", "schema": {"type": "string"}}],
+                "responses": {"200": {"description": "card"}, "400": {"description": "missing"}},
+            }
+        },
+        "/v1/status": {
+            "get": {
+                "summary": "Lightweight incident outbox status",
+                "parameters": [{"name": "work_dir", "in": "query", "schema": {"type": "string"}}],
+                "responses": {"200": {"description": "status"}},
+            }
+        },
+        "/v1/snapshot": {
+            "get": {
+                "summary": "Shareable read-only incident snapshot (card + source board + rails)",
+                "parameters": [{"name": "work_dir", "in": "query", "schema": {"type": "string"}}],
+                "responses": {"200": {"description": "snapshot"}},
+            },
+            "post": {
+                "summary": "Shareable read-only incident snapshot",
+                "responses": {"200": {"description": "snapshot"}},
+            },
+        },
+        "/v1/compare": {
+            "post": {
+                "summary": "Compare two cards/snapshots (local flip alert; not SMS)",
+                "responses": {"200": {"description": "compare"}},
+            }
+        },
+        "/v1/export-acta": {
+            "post": {
+                "summary": "Write forensic acta + radio + replay sources",
+                "responses": {"200": {"description": "bundle paths"}},
+            }
+        },
         "/v1/replay": {
             "post": {
                 "summary": "Replay decision from stored sources (forensic)",
@@ -124,8 +173,13 @@ OPENAPI: dict[str, Any] = {
 
 
 def _json_bytes(obj: Any, *, status: int = 200) -> tuple[int, bytes, str]:
-    raw = json.dumps(obj, indent=2, default=str).encode("utf-8")
-    return status, raw, "application/json; charset=utf-8"
+    from .surface_api import dumps_compact
+
+    return status, dumps_compact(obj), "application/json; charset=utf-8"
+
+
+def _query_map(path: str) -> dict[str, str]:
+    return {key: vals[-1] for key, vals in parse_qs(urlparse(path).query).items() if vals}
 
 
 class DecideHandler(BaseHTTPRequestHandler):
@@ -144,17 +198,31 @@ class DecideHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _work_dir_from_query(self) -> Path | None:
+        from .decide_service import _as_path
+
+        query = _query_map(self.path)
+        raw = query.get("work_dir")
+        if not raw:
+            return None
+        base = Path(getattr(self.server, "base_dir", REPO_ROOT))
+        return _as_path(raw, base=base)
+
     def do_GET(self) -> None:  # noqa: N802
+        from .surface_api import (
+            surface_card,
+            surface_catalog,
+            surface_flags,
+            surface_health,
+            surface_snapshot,
+            surface_status,
+        )
+
         path = urlparse(self.path).path.rstrip("/") or "/"
         if path in ("/health", "/v1/health"):
-            status, body, ctype = _json_bytes(
-                {
-                    "ok": True,
-                    "product": PRODUCT_ID,
-                    "api_version": API_VERSION,
-                    "repo_root": str(REPO_ROOT),
-                }
-            )
+            payload = surface_health()
+            payload["repo_root"] = str(REPO_ROOT)
+            status, body, ctype = _json_bytes(payload)
             self._send(status, body, ctype)
             return
         if path in ("/v1/openapi.json", "/openapi.json"):
@@ -170,6 +238,56 @@ class DecideHandler(BaseHTTPRequestHandler):
             )
             self._send(status, body, ctype)
             return
+        if path in ("/v1/flags", "/flags"):
+            status, body, ctype = _json_bytes(surface_flags())
+            self._send(status, body, ctype)
+            return
+        if path in ("/v1/catalog", "/catalog"):
+            status, body, ctype = _json_bytes(surface_catalog())
+            self._send(status, body, ctype)
+            return
+        if path in ("/v1/snapshot", "/snapshot"):
+            try:
+                work = self._work_dir_from_query()
+            except PathNotAllowedError as exc:
+                status, body, ctype = _json_bytes(
+                    {"error": "path_not_allowed", "detail": str(exc)}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            if work is None:
+                status, body, ctype = _json_bytes(
+                    {"error": "work_dir_required", "detail": "pass ?work_dir="},
+                    status=400,
+                )
+                self._send(status, body, ctype)
+                return
+            payload = surface_snapshot(work)
+            code = 200 if payload.get("ok", True) else 400
+            status, body, ctype = _json_bytes(payload, status=code)
+            self._send(status, body, ctype)
+            return
+        if path in ("/v1/card", "/card", "/v1/status", "/status"):
+            try:
+                work = self._work_dir_from_query()
+            except PathNotAllowedError as exc:
+                status, body, ctype = _json_bytes(
+                    {"error": "path_not_allowed", "detail": str(exc)}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            if work is None:
+                status, body, ctype = _json_bytes(
+                    {"error": "work_dir_required", "detail": "pass ?work_dir="},
+                    status=400,
+                )
+                self._send(status, body, ctype)
+                return
+            payload = surface_card(work) if "card" in path else surface_status(work)
+            code = 200 if payload.get("ok", True) else 400
+            status, body, ctype = _json_bytes(payload, status=code)
+            self._send(status, body, ctype)
+            return
         if path == "/":
             status, body, ctype = _json_bytes(
                 {
@@ -179,7 +297,15 @@ class DecideHandler(BaseHTTPRequestHandler):
                         "GET /health",
                         "GET /v1/openapi.json",
                         "GET /v1/policies",
+                        "GET /v1/flags",
+                        "GET /v1/catalog",
+                        "GET /v1/card?work_dir=",
+                        "GET /v1/status?work_dir=",
+                        "GET /v1/snapshot?work_dir=",
                         "POST /v1/decide",
+                        "POST /v1/snapshot",
+                        "POST /v1/compare",
+                        "POST /v1/export-acta",
                         "POST /v1/replay",
                     ],
                     "disclaimer": "Not tactical dispatch. Empty sources → ABSTAIN.",
@@ -229,6 +355,71 @@ class DecideHandler(BaseHTTPRequestHandler):
             return
 
         base = Path(getattr(self.server, "base_dir", REPO_ROOT))
+
+        if path in ("/v1/snapshot", "/snapshot"):
+            from .decide_service import _as_path
+            from .surface_api import surface_snapshot
+
+            work_raw = req.get("work_dir")
+            if not work_raw:
+                status, body, ctype = _json_bytes(
+                    {"error": "work_dir_required"}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            try:
+                work = _as_path(str(work_raw), base=base)
+            except PathNotAllowedError as exc:
+                status, body, ctype = _json_bytes(
+                    {"error": "path_not_allowed", "detail": str(exc)}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            persist = bool(req.get("save"))
+            payload = surface_snapshot(work, persist=persist)
+            code = 200 if payload.get("ok", True) else 400
+            status, body, ctype = _json_bytes(payload, status=code)
+            self._send(status, body, ctype)
+            return
+
+        if path in ("/v1/compare", "/compare"):
+            from .decide_service import _as_path
+            from .surface_api import compare_from_request
+
+            def _resolve(raw: str):
+                return _as_path(raw, base=base)
+
+            payload = compare_from_request(req, resolve_work_dir=_resolve)
+            code = 200 if payload.get("ok", True) else 400
+            status, body, ctype = _json_bytes(payload, status=code)
+            self._send(status, body, ctype)
+            return
+
+        if path in ("/v1/export-acta", "/export-acta"):
+            from .surface_api import surface_export_acta
+
+            work_raw = req.get("work_dir")
+            if not work_raw:
+                status, body, ctype = _json_bytes(
+                    {"error": "work_dir_required"}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            try:
+                from .decide_service import _as_path
+
+                work = _as_path(str(work_raw), base=base)
+            except PathNotAllowedError as exc:
+                status, body, ctype = _json_bytes(
+                    {"error": "path_not_allowed", "detail": str(exc)}, status=400
+                )
+                self._send(status, body, ctype)
+                return
+            payload = surface_export_acta(work, operator=req.get("operator"))
+            code = 200 if payload.get("ok", True) else 400
+            status, body, ctype = _json_bytes(payload, status=code)
+            self._send(status, body, ctype)
+            return
 
         if path == "/v1/replay":
             try:

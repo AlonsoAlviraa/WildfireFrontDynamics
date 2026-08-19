@@ -810,6 +810,25 @@ def build_decision_card(
         "schema": "fire_decision_card_v1",
         "policy_id": policy.id,
         "policy_label": policy.label,
+        "reliability_gate_snapshot": (
+            {
+                "event_id": loaded_gate.get("event_id") or event_id,
+                "suite_only": loaded_gate.get("suite_only"),
+                "field_unlock": loaded_gate.get("field_unlock"),
+                "provenance": (
+                    dict(loaded_gate["provenance"])
+                    if isinstance(loaded_gate.get("provenance"), dict)
+                    else {"kind": "this_run", "event_id": event_id}
+                ),
+                "system_reliability": {
+                    "checks": dict(
+                        (loaded_gate.get("system_reliability") or {}).get("checks") or {}
+                    )
+                },
+            }
+            if loaded_gate
+            else None
+        ),
         "policy_snapshot": {
             "require_ops_for_go": policy.require_ops_for_go,
             "abstain_below": policy.abstain_below,

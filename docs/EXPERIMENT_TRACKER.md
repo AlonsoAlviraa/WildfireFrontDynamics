@@ -17,6 +17,17 @@
 **Inference:** `wildfire_front/ml/spread_predictor.py`  
 **Audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
 
+### rcda_sealed_v1: event-disjoint U-Net/RCDA — KERNEL v4 RUNNING
+- **Hypothesis:** A VAL-selected U-Net/RCDA with train-only norm, sin/cos wind, distance-to-front, horizon and focal-Tversky beats dilated-copy on the sealed TEST without touching TEST during selection.
+- **Change:** new sealed trainer (`wildfire_front/ml/rcda_sealed.py`) + Caldor ERC/HRRR valid-time contract.
+- **Kernel:** `alonsoalvira/wfd-rcda-sealed-v1` version 4 (GPU T4, **no internet**).
+- **Inputs:** `alonsoalvira/wfd-rcda-archive` (26.2 GB extracted tree, 6501 train npy) + `alonsoalvira/wfd-rcda-sealed` + embedded protocol blobs.
+- **Protocol:** TRAIN 5552 / VAL 928 / TEST 1651, event-disjoint
+- **Honest sealed baseline:** dilated-copy TEST IoU **0.1108** (radius selected on VAL=3 px).
+- **Not results:** published RCDA IoU 0.308 (contaminated TEST protocol); local smoke IoU 0.059 (8/4 samples, 1 epoch).
+- **v1/v3:** ERROR before any TRAIN step (missing module; then missing protocol after Zenodo).
+- **Verdict:** pending kernel completion; do not promote until TEST-once vs 0.1108
+
 **Overnight mega v1:** ERROR — preprocess path mismatch (0 patches).  
 **Overnight mega v2:** COMPLETE but still 0 patches (root-cause: silent empty preprocess; fail-fast added in `kaggle_common`).
 
@@ -46,6 +57,46 @@
 ---
 
 ## Experiment Log
+
+### RCDA sealed paper campaign (2026-08-19) — RUNNING, TEST SEALED
+
+- **Protocol:** 886 fires / 8,131 samples; TRAIN 596/5,552, VAL 106/928,
+  TEST 184/1,651; event-disjoint and TRAIN-only normalization.
+- **Phase-1 VAL leader:** `resunet_hybrid_v1`, event-macro growth IoU 0.18021
+  at epoch 24; bootstrap 95% CI [0.15783, 0.20413]. This is not TEST.
+- **Corrected geometric TEST comparator:** dilation radius 6 selected on VAL
+  event-macro IoU, TEST 0.12724. Legacy pooled-selection radius 3 is retained
+  but superseded.
+- **VAL ensemble audit:** best multi-model combination 0.17440 versus best
+  individual 0.18066 (Δ −0.00626); cross-architecture ensemble rejected.
+- **TRAIN sampler audit:** 15/5,552 zero-growth samples; default event-mass
+  CV 0.647 versus approximately 0 for `uniform_events`; all 5,552 transitions
+  retain every t0-positive pixel. Conditional uniform-event ablation registered.
+- **GCP long run recovered:** `resunet_hybrid_long_v2` reached a finite best at
+  epoch 13, VAL event-macro IoU 0.16766 (threshold 0.20), then produced a
+  non-finite loss at epoch 16. A full scan found 0/13,002 non-finite TRAIN NPY
+  files. The finite checkpoint was re-evaluated on VAL only and the run is
+  explicitly marked truncated; TEST remained sealed.
+- **Kaggle T4 precision result:** `resunet_hybrid_precision_v3` reached its
+  finite best at epoch 13, VAL event-macro IoU 0.17056 (threshold 0.05), then
+  encountered a non-finite loss at epoch 21. Its finite checkpoint was
+  re-evaluated on all 928 VAL samples and is explicitly marked truncated; it
+  did not beat the phase-1 leader and never accessed TEST.
+- **Active Kaggle T4 run:** `resunet_hybrid_low_lr_v2` now runs privately under
+  the alternate account `alonsoalviraaaa`; the source datasets remain private
+  and shared read-only. The main account had reached its 30 h weekly GPU quota.
+  The partial GCP precision run was aborted solely for backend migration and is
+  ineligible. Subsequent runners stop optimization on a non-finite loss, retain
+  only a verified finite VAL checkpoint, reject non-AMP non-finite gradients,
+  delegate AMP scale overflows to `GradScaler`, and clip gradient norm at 5.0.
+  Later candidates remain conditional on best completed VAL staying below 0.20.
+- **Final contract:** freeze one recipe, train seeds 11/29/47, then evaluate
+  RCDA TEST once. WFIGS zero-shot and adaptation remain blocked until freeze.
+- **Pre-TEST registry:** `PRETEST_DECISION_LOG.json` records evidence, numerical
+  recovery, gradient-safety amendment and code/runtime hashes; the future
+  frozen recipe must carry its SHA-256.
+- **Artifacts:** `outputs/ml_eval/rcda_paper_nightwatch_20260819/` and
+  `docs/RCDA_PAPER_PROTOCOL_2026.md`.
 
 ### Feature methodology foundation (2026-07-15)
 - **Docs:** `ML_FEATURE_METHODOLOGY.md`, `ML_TRANSFER_PROTOCOL.md`, `ML_LOOP_RAILS.md`

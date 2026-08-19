@@ -28,14 +28,15 @@ from wildfire_front.product.fire_catalog import (
     scan_fire_catalog,
 )
 from wildfire_front.product.live_ops import live_ops_payload_block
+from wildfire_front.product.operator_intake import intake_guide, need_to_know
 from wildfire_front.product.operator_ux import (
     BRIEF_ROLES,
     ROLE_PLAYBOOKS,
     build_operator_brief,
 )
-from wildfire_front.product.teach_path import ssot_field_ops_fusion
 from wildfire_front.product.plain_language import build_plain_language_payload
 from wildfire_front.product.policy import field_ops_ml_live_fusion_rail
+from wildfire_front.product.research_status import build_research_status
 from wildfire_front.product.spa_honesty_ui import (
     build_h1_eng_rehearsal,
     build_split_conf_view,
@@ -45,10 +46,12 @@ from wildfire_front.product.spa_honesty_ui import (
     load_vv_scorecard_surface,
     load_weakness_board_surface,
 )
+from wildfire_front.product.surface_api import snapshot_from_card
+from wildfire_front.product.teach_path import ssot_field_ops_fusion
 
 SCHEMA = "wfd_product_app_v1"
 DEFAULT_OUTPUT = Path("outputs") / "app"
-DEFAULT_TITLE = "WFD OPS"
+DEFAULT_TITLE = "WFD MANDO"
 DEFAULT_UI_MODE = "simple"  # plain language; CLI hidden until advanced
 MAX_PACK_FIRES = 8
 # Soft cap on pack payload JSON characters (~2.5 MiB) to avoid OOM in browser
@@ -198,10 +201,10 @@ def _hero_from_decision(
         hero_conf = None
         hero_label = str(brief.get("overall_light") or "AMARILLO")
     hero_plain = {
-        "GO": "El sistema propone una orientación de card (no es GO_Q; no es despacho).",
-        "HOLD": "Hay datos, pero no bastan o chocan: espera / revisa antes de actuar.",
-        "ABSTAIN": "El sistema se calla a propósito — callarse es correcto si faltan fuentes.",
-        "BRIEF": "Vista de producto (semáforo / brief) sin Decision Card local del incendio.",
+        "GO": "El sistema propone seguir con esta lectura. No es una orden de despacho.",
+        "HOLD": "Espera: los datos no bastan o chocan. Revisa antes de actuar.",
+        "ABSTAIN": "El sistema se calla a propósito. Callarse no es un fallo.",
+        "BRIEF": "Sin tarjeta de este incendio. Pulsa Decidir o elige otro IF.",
     }.get(hero_decision, "Lectura de apoyo del incendio — no es despacho táctico.")
     return {
         "decision": hero_decision,
@@ -210,9 +213,7 @@ def _hero_from_decision(
         "overall_light": brief.get("overall_light"),
         "headline": brief.get("headline"),
         "plain": hero_plain,
-        "for_fire": (
-            "Primera lectura del incendio activo: si habla (GO/HOLD) o se calla (ABSTAIN)."
-        ),
+        "for_fire": ("Primera lectura: SEGUIR (GO), ESPERAR (HOLD) o SE CALLA (ABSTAIN)."),
     }
 
 
@@ -538,6 +539,19 @@ def build_product_app_payload(
     if bridge_url and not is_loopback_http_url(bridge_url):
         bridge_url = None
 
+    snap_now = (
+        snapshot_from_card(decision, work_dir=wd)
+        if isinstance(decision, dict) and decision.get("decision")
+        else None
+    )
+    guide = intake_guide(work_dir=wd, fire_id=selected_id)
+    know = need_to_know(
+        card=decision if isinstance(decision, dict) else None,
+        ops=ops if isinstance(ops, dict) else None,
+        snapshot=snap_now,
+        inbox_n=int(guide.get("n_photos") or 0),
+    )
+
     return {
         "schema": SCHEMA,
         "product": "WildfireFrontDynamics",
@@ -555,6 +569,7 @@ def build_product_app_payload(
         "brief": brief,
         "map": map_payload,
         "decision_card": decision,
+        "snapshot": snap_now,
         "ops_metrics": ops,
         "outbox_last_run": _outbox_last_run(wd),
         "last_act": {
@@ -562,8 +577,8 @@ def build_product_app_payload(
             "cmd": None,
             "ts": None,
             "hint": (
-                "Con --serve: pulse Estado / Decidir / Acta (live). "
-                "Sin serve: copiar CLI (sin shell en browser)."
+                "Con --serve: pulsa Decidir / Estado / Acta / Congelar (live). "
+                "Sin serve: se copia el comando a la consola."
             ),
         },
         "live_ops": live_ops_payload_block(enabled=bool(live_ops_enabled)),
@@ -598,6 +613,8 @@ def build_product_app_payload(
         "fire_count": len(catalog),
         "product_actions": bound_actions,
         "new_fire_intake": new_fire_intake_steps(),
+        "intake_guide": guide,
+        "need_to_know": know,
         "plain_language": plain_block,
         "glossary": plain_block.get("glossary") or [],
         "rebuild": {
@@ -660,6 +677,7 @@ def build_product_app_payload(
         "weakness_board": load_weakness_board_surface(
             repo_root=repo_root,
         ),
+        "research_status": build_research_status(repo_root),
         "disclaimer": (
             "Not validated tactical dispatch. Thermal mask ≠ official perimeter. "
             "15/30/60 envelopes are extrapolated guidance only. "

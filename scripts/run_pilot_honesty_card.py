@@ -27,11 +27,18 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from wildfire_front.console import configure_console_output  # noqa: E402
 from wildfire_front.product.policy import field_ops_ml_live_fusion_rail  # noqa: E402
 
 
 def _field_ops_fusion_on() -> bool:
     return field_ops_ml_live_fusion_rail() == "ON"
+
+
+def _fusion_word(*, fusion_on: bool | None = None) -> str:
+    if fusion_on is None:
+        fusion_on = _field_ops_fusion_on()
+    return "ON" if fusion_on else "OFF"
 
 DEFAULT_PRODUCT = "clm_ensemble_v34"
 DEFAULT_POLICY = "research_open"
@@ -351,6 +358,7 @@ def render_report(
     *,
     generated_at: str,
     pilot_manifest: dict[str, Any] | None = None,
+    fusion_on: bool | None = None,
 ) -> str:
     """MD determinista en español. Sin reloj. Cifras solo de facts/summaries/u1."""
     rows = list(facts.get("rows") or [])
@@ -358,6 +366,7 @@ def render_report(
     site_names_joined = " · ".join(n for n in site_names if n)
     policy = (pilot_manifest or {}).get("policy_id") or DEFAULT_POLICY
     product_id = (pilot_manifest or {}).get("product_id") or DEFAULT_PRODUCT
+    fusion = _fusion_word(fusion_on=fusion_on)
     u1_source = str(u1.get("u1_source") or "fallback")
     mean_iou = u1.get("mean_iou_eval")
     sel80 = u1.get("selective_iou_at_80")
@@ -382,7 +391,7 @@ def render_report(
         "",
         "## 0. Banner de honestidad (producto dual)",
         "- Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)",
-        "- Fusión solo en tarjeta de decisión; field_ops fusión live = OFF",
+        f"- Fusión solo en tarjeta de decisión; field_ops fusión live = {fusion} (cap 0.20 / abstain 0.45) ≠ despacho",
         "- No es orden táctica de despacho",
         (
             f"- U1 TEST honest ({u1_source}): IoU eval ≈ {_fmt(mean_iou)} · "
@@ -444,7 +453,7 @@ def render_report(
         lines.append(
             f"- Contraste field_ops: "
             f"{contrast.get('decision') or r.get('decision_field_ops')} "
-            "(sin R1–R4 inventados; fusión OFF)"
+            f"(sin R1–R4 inventados; fusión {fusion} ≠ GO_Q complete ≠ despacho)"
         )
         lines.append(
             f"- Honestidad: Vp inventada={_fmt_bool_es(honesty.get('vp_invented', False))}; "
@@ -462,25 +471,26 @@ def render_report(
                 "fusión live experimental"
             ),
             (
-                "- field_ops: require_ops_for_go; fusión live OFF; ABSTAIN fail-closed "
+                f"- field_ops: require_ops_for_go; fusión live {fusion} "
+                "(cap 0.20 / abstain 0.45); ABSTAIN fail-closed "
                 "(cierre seguro) si GO sin fiabilidad verificada "
                 "(reason field_ops_fail_closed_reliability_unverified) — "
-                "el piloto no inventa gates"
+                "el piloto no inventa gates; no es validado por emergencias"
             ),
             "",
             "## 4. Límites y no-claims",
             "- No es multi-CCAA «funciona en toda España»",
             "- Casco FIRMS ≠ área quemada oficial",
             "- Sin reentrenamiento en este piloto",
-            "- ml_product_go sigue en false hasta gates de producto",
+            "- `ml_product_go` es lab only — no es GO de campo ni GO_Q complete",
             "",
             "## 5. Modo presentación (1 página)",
             (
                 "- Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail"
             ),
             (
-                "- research_open puede ir a GO experimental; field_ops se calla "
-                "(ABSTAIN/HOLD) — fusión OFF"
+                f"- research_open puede ir a GO experimental; field_ops se calla "
+                f"(ABSTAIN/HOLD) — fusión {fusion} ≠ despacho"
             ),
             (
                 "- Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada"
@@ -555,12 +565,14 @@ def render_pilot_portal_html(
     generated_at: str,
     pilot_manifest: dict[str, Any] | None = None,
     pilot_summary: dict[str, Any] | None = None,
+    fusion_on: bool | None = None,
 ) -> str:
     """Portal HTML español, scannable, sin solapes; listo para presentación."""
     rows = list(facts.get("rows") or [])
     by_id = {s.get("site_id"): s for s in site_summaries if isinstance(s, dict)}
     policy = (pilot_manifest or {}).get("policy_id") or DEFAULT_POLICY
     product_id = (pilot_manifest or {}).get("product_id") or DEFAULT_PRODUCT
+    fusion = _fusion_word(fusion_on=fusion_on)
     u1_source = str(u1.get("u1_source") or "fallback")
     catalog_iou = u1.get("catalog_holdout_iou_provenance")
     mean_iou = u1.get("mean_iou_eval")
@@ -686,7 +698,7 @@ def render_pilot_portal_html(
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>WFD · Piloto de honestidad — Tobarra · Níjar · Caminomorisco</title>
-<meta name="description" content="Tarjetas de decisión multi-fuente con honestidad (producto dual). GO/HOLD/ABSTAIN. field_ops fusión OFF."/>
+<meta name="description" content="Tarjetas de decisión multi-fuente con honestidad (producto dual). GO/HOLD/ABSTAIN. field_ops fusión {fusion}."/>
 <style>
 :root {{
   --bg:#070b12; --card:#111925; --card-hi:#152032; --line:rgba(100,140,190,.22);
@@ -892,7 +904,7 @@ body{{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
         </ul>
       </div>
       <div class="policy field">
-        <h4>field_ops · fusión OFF</h4>
+        <h4>field_ops · fusión {fusion}</h4>
         <p>require_ops_for_go · ABSTAIN fail-closed (cierre seguro) sin fiabilidad verificada.</p>
         <ul>
           <li>No inventa R1–R4</li>
@@ -906,7 +918,7 @@ body{{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
     <h3>Modo presentación</h3>
     <ul class="present">
       <li><b>1.</b> Ops ≠ ML — fusión solo en tarjeta de decisión</li>
-      <li><b>2.</b> field_ops fusión live = OFF — se calla (ABSTAIN/HOLD)</li>
+      <li><b>2.</b> field_ops fusión live = {fusion} — se calla (ABSTAIN/HOLD); ≠ despacho</li>
       <li><b>3.</b> Cifras: ROS solo OPS; ha solo open; sin Vp táctica</li>
       <li><b>4.</b> Catalog holdout {_html_esc(_fmt_num(catalog_iou, 4))} = provenance only</li>
       <li><b>5.</b> U1 ({_html_esc(u1_source)}): IoU {_html_esc(_fmt_num(mean_iou))} · sel@80 {_html_esc(_fmt_num(sel80))} · ECE {_html_esc(_fmt_num(ece))}</li>
@@ -917,7 +929,7 @@ body{{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
   <div class="disclaimer-bar" role="note">
     <strong>Honestidad</strong>
     <span>No es orden táctica</span>
-    <span>· field_ops fusión OFF</span>
+    <span>· field_ops fusión {fusion}</span>
     <span>· provenance only (no certeza en vivo)</span>
     <span>· FIRMS ≠ quemado oficial</span>
   </div>
@@ -1386,7 +1398,7 @@ def run_pilot(
             "Ops ≠ ML; fusión solo en Decision Card; nunca entrenar con etiquetas fusionadas.",
             "Sin Vp/ROS táctico inventado desde packs open o máscaras ML.",
             "Catalog holdout IoU es provenance only — no es certeza del incendio en vivo.",
-            "research_open fusión live es superficie de lab experimental; field_ops fusión OFF.",
+            f"research_open fusión live es superficie de lab experimental; field_ops fusión {_fusion_word()}.",
             "Contraste field_ops no inventa R1–R4; esperar HOLD/ABSTAIN, no GO falso.",
         ],
         "failed": failed,
@@ -1453,6 +1465,7 @@ def run_pilot(
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_console_output()
     parser = argparse.ArgumentParser(
         description=(
             "Pilot honesty Decision Cards for multi-source packs "

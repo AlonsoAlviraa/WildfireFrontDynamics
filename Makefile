@@ -5,7 +5,7 @@ PYTHON := python
 PKG    := wildfire_front
 TESTS  := tests
 
-.PHONY: help install dev-install lint typecheck test test-cov test-spa verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial and-industrial-e2e demo-multi-ccaa pilot-honesty
+.PHONY: help install dev-install lint typecheck test test-cov test-spa verify clean format batch-fires smoke smoke-ops smoke-ml demo industrial industrial-gate and-industrial-e2e demo-multi-ccaa pilot-honesty
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -65,7 +65,11 @@ metrics-hub:  ## Build full metrics hub + decision card + dashboard
 reliability:  ## Reliability / abstention gate (system five-nines bound)
 	set PYTHONPATH=. && $(PYTHON) scripts/reliability_gate.py
 
-product-gate: reliability metrics-hub  ## Paid-value product gates
+industrial-gate:  ## T0 flags + silent-GO + no-cite + holdout catalog
+	set PYTHONPATH=. && $(PYTHON) scripts/industrial_product_gate.py
+	set PYTHONPATH=. && $(PYTHON) -m pytest tests/test_confidence_product.py::test_field_ops_fail_closed_without_gates tests/test_decision_policy.py::test_field_ops_gold_like_unverified_cannot_go tests/test_decision_policy.py::test_field_ops_fusion_contract_caps tests/test_product_catalog.py::test_holdout_only_not_ready_and_not_in_products tests/test_check_release_flags.py tests/test_refuse_promote_without_cite.py -q --tb=short
+
+product-gate: reliability metrics-hub industrial-gate  ## Paid-value product gates
 
 and-industrial-e2e:  ## Andalucía REDIAM industrial open E2E (fetch+inventory+pack+verify; no live WFS in verify by default)
 	set PYTHONPATH=. && $(PYTHON) scripts/fetch_rediam_perimeters.py --years 2022,2023,2024,2025

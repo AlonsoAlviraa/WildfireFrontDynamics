@@ -25,6 +25,18 @@ INVITE_MD = ROOT / "docs" / "H1_CALENDAR_INVITE.md"
 CHEATSHEET = ROOT / "docs" / "CHEATSHEET_DEMO_12MIN.md"
 RUNBOOK = ROOT / "docs" / "H1_GO_Q_RUNBOOK.md"
 DRAFT = ROOT / "docs" / "actas" / "ACTA_DEMO_PENDING_HUMAN.md"
+DEMO_PACK = ROOT / "outputs" / "demo_third_party"
+RELIABILITY = ROOT / "docs" / "RELIABILITY_GATE_REPORT_THIRD_PARTY.md"
+GO_TOTAL = ROOT / "docs" / "GO_TOTAL_STATUS.json"
+
+DEMO_PACK_REQUIRED = (
+    "README.md",
+    "fire_decision_card.json",
+    "fire_decision_card.md",
+    "forensic_manifest.json",
+    "replay_manifest.json",
+    "replay_sources.json",
+)
 
 
 def load_stamp_rails(root: Path | None = None) -> dict[str, Any]:
@@ -85,6 +97,111 @@ def _run(cmd: list[str]) -> tuple[int, str]:
     return proc.returncode, out
 
 
+def _pack_ok() -> tuple[bool, list[str]]:
+    """Check the compact third-party replay contract without rebuilding it."""
+    missing = [name for name in DEMO_PACK_REQUIRED if not (DEMO_PACK / name).is_file()]
+    return not missing, missing
+
+
+def write_go_total_status(
+    *,
+    now: datetime,
+    eng_ready: bool,
+    pack_step: dict,
+    rel_step: dict,
+    refuse_verified: bool,
+    h1_slot: str = "not_booked",
+) -> dict:
+    """Write an honest GO_TOTAL snapshot; only the signed-acta CLI may close it."""
+    human_blockers = [
+        {
+            "id": "agenda_tercero",
+            "owner": "human",
+            "status": "open",
+            "blocks": ["GO_Q", "GO_TOTAL"],
+            "detail": "Agendar una persona externa real; ingeniería no inventa identidad ni cita.",
+        },
+        {
+            "id": "run_demo_12min",
+            "owner": "human",
+            "status": "open",
+            "blocks": ["GO_Q", "GO_TOTAL"],
+            "detail": "Ejecutar la demo con el tercero y completar un acta real.",
+        },
+        {
+            "id": "signed_h1_acta",
+            "owner": "human",
+            "status": "open",
+            "blocks": ["GO_Q", "GO_TOTAL"],
+            "detail": "Registrar acta no-PENDING mediante record_h1_demo_complete.py.",
+        },
+    ]
+    stretch = {
+        "id": "go_mes_plus",
+        "owner": "human",
+        "status": "open",
+        "blocks": ["GO_MES+"],
+        "blocks_go_total": False,
+        "detail": "Segundo grade-A/O2 nacional; stretch separado de GO_TOTAL.",
+    }
+    payload = {
+        "schema": "wfd_go_total_status_v1",
+        "as_of_utc": now.astimezone(UTC).isoformat().replace("+00:00", "Z"),
+        "met": False,
+        "go_total": False,
+        "h1_slot": {
+            "status": h1_slot,
+            "owner": "human",
+            "detail": "Requiere tercero externo y acta real; no se infiere de un dry-run.",
+        },
+        "gates": {
+            "GO_MES": True,
+            "GO_Q": "partial",
+            "GO_MES_plus": False,
+            "ml_product_go": True,
+            "field_ops_fusion": "ON",
+        },
+        "go_q": {
+            "met": False,
+            "status": "partial",
+            "eng_session_ready": bool(eng_ready),
+            "h1_acta": None,
+        },
+        "inventory": {
+            "blockers": [
+                {
+                    "id": "prepare_h1_demo_session",
+                    "owner": "eng",
+                    "status": "closed" if eng_ready else "open",
+                    "blocks": [],
+                },
+                *human_blockers,
+                stretch,
+            ]
+        },
+        "eng_closable": {
+            "prepare_h1_demo_session": bool(eng_ready),
+            "demo_third_party_pack": bool(pack_step.get("ok")),
+            "reliability_third_party": bool(rel_step.get("ok")),
+            "record_h1_refuses_pending": bool(refuse_verified),
+            "check_release_flags_complete_only_with_h1_acta": True,
+        },
+        "remaining_human_steps": [
+            {"id": row["id"], "owner": "human", "detail": row["detail"]}
+            for row in human_blockers
+        ],
+        "human_commands": [
+            "# Agendar tercero externo y ejecutar la demo; no inventar nombres.",
+            "# Copiar el draft a docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md y rellenarlo.",
+            "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
+            "python scripts/check_release_flags.py",
+        ],
+    }
+    GO_TOTAL.parent.mkdir(parents=True, exist_ok=True)
+    GO_TOTAL.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return payload
+
+
 def build_invite_md(*, when_hint: str, fusion: str | None = None) -> str:
     rail = str(fusion or load_stamp_rails()["field_ops_fusion"] or "OFF").upper()
     kill_fusion = (
@@ -94,7 +211,7 @@ def build_invite_md(*, when_hint: str, fusion: str | None = None) -> str:
     )
     return f"""# Invitación calendario — Demo WFD 12 min (H1 / GO_Q)
 
-> **Copia/pega a Google Calendar / Outlook.**  
+> **Copia/pega a Google Calendar / Outlook.**
 > **Eng no cierra GO_Q** — al terminar, rellenar acta real y:
 
 ```powershell
@@ -125,7 +242,7 @@ WildfireFrontDynamics — demo decisión 12 min (HITL, fusion {rail})
 | 9–11 | Pack third-party + replay |
 | 11–12 | Límites + ask · acta |
 
-Detalle: `{_rel(CHEATSHEET)}`  
+Detalle: `{_rel(CHEATSHEET)}`
 Runbook: `{_rel(RUNBOOK)}`
 
 ## Setup 30 s (presentador)
@@ -137,14 +254,14 @@ python -m wildfire_front operator checklist
 ```
 
 ## Kill list verbal (obligatorio)
-- No ROS inventado  
-- {kill_fusion}  
-- No vender Tobarra LOFO ~0.48 como producto de campo  
+- No ROS inventado
+- {kill_fusion}
+- No vender Tobarra LOFO ~0.48 como producto de campo
 - No “apagamos incendios con IA”
 
 ## Después de la call
-1. Acta firmada: `docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md` (no PENDING)  
-2. `python scripts/record_h1_demo_complete.py --acta <acta>` → exit 0 cierra M3.2/GO_Q en status JSON  
+1. Acta firmada: `docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md` (no PENDING)
+2. `python scripts/record_h1_demo_complete.py --acta <acta>` → exit 0 cierra M3.2/GO_Q en status JSON
 3. Si exit 2: campos vacíos / placeholder — **no se muta status** (correcto)
 
 ## Estado eng pre-call

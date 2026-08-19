@@ -36,6 +36,8 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from wildfire_front.console import configure_console_output  # noqa: E402
+
 DEFAULT_PRODUCT = "clm_ensemble_v34"
 DEFAULT_POLICY = "research_open"
 DEFAULT_OUT = PROJECT_ROOT / "outputs" / "ml_live_card_demo"
@@ -710,6 +712,7 @@ def run_demo(
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_console_output()
     parser = argparse.ArgumentParser(
         description=(
             "Demo: ML live prediction → Decision Card (research_open). "

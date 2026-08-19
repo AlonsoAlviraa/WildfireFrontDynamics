@@ -26,6 +26,10 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert "#0B1220" in html
     assert "primary-acts" in html
     assert "btn-act-status" in html and "btn-act-decide" in html and "btn-act-acta" in html
+    assert "btn-act-snapshot" in html and "btn-act-compare" in html
+    assert 'data-marker="source-board"' in html
+    assert 'data-marker="snapshot-compare"' in html
+    assert 'data-marker="cited-instant"' in html or "citado:" in html
     assert "btn-mode-simple" in html and "btn-mode-advanced" in html
     assert "Fácil" in html and "mode-toggle" in html
     # touch targets (≥48px industry stress UX)
@@ -81,6 +85,48 @@ def test_layout_css_has_touch_targets_and_scroll_safety():
     assert "fusion ON ≠ GO_Q" in html or "fusion ON" in html
     assert "addTop('Fusion OFF'" not in html
     assert "orientación de card" in html
+
+
+def test_mando_simple_spanish_hero_and_acts_before_engineering():
+    """Command-post Fácil: Spanish meaning first, 3 acts before V&V/H1."""
+    from wildfire_front.product import app_spa_html as mod
+
+    shell = mod._shell()
+    js = mod._js()
+    css = mod._css()
+    assert shell.find("primary-acts") < shell.find('id="decision-log"')
+    assert shell.find("primary-acts") < shell.find('id="last-act"')
+    assert shell.find("btn-act-decide") < shell.find('id="h1-rehearsal"')
+    assert "SEGUIR" in js and "ESPERAR" in js and "SE CALLA" in js
+    assert "SIN TARJETA" in js
+    assert "Apoyo a la decisión" in shell
+    assert "Congelar" in shell and "Qué cambió" in shell
+    assert "Qué hacer ahora" in js or "Qué hacer ahora" in shell
+    assert 'data-tab="decision"' in shell
+    assert 'id="tab-eng"' in shell
+    assert "overflow-y:auto" in css
+    assert "share-acts" in css
+    assert "Meter fotos" in shell
+    assert "revealTabWork" in js
+    assert "tab-work" in css and "tab-work" in js
+    assert 'data-marker="need-to-know"' in shell
+    assert "btn-intake-open" in shell
+    assert "btn-intake-process" in shell
+    assert "dock-nav" in css and "dock-nav" in shell
+    assert "btn-copy-lectura" in shell
+    assert "btn-share-lectura" in shell
+    assert "flip-banner" in shell
+    assert "status-strip" in shell
+    assert "glossary-search" in shell
+    assert "env(safe-area-inset-bottom" in css
+    assert "@media print" in css
+    assert "view-mapa" in css
+    assert "lecturaText" in js
+    assert "setView" in js
+    assert "paintLayerToggles" in js
+    assert "keydown" in js
+    js = __import__("wildfire_front.product.app_spa_html", fromlist=["_js"])._js()
+    assert "tab=" in js or "URLSearchParams" in js
 
 
 def test_write_and_reopen_html_intact(tmp_path: Path):

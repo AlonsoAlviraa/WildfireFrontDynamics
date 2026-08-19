@@ -322,6 +322,42 @@ FEATURES: list[dict[str, Any]] = [
         "simple_cta": "Exportar el acta de la decisión",
     },
     {
+        "id": "snapshot",
+        "cli": "snapshot --work-dir …",
+        "group": "Decisión",
+        "title": "Congelar momento",
+        "plain": "Guarda la lectura actual (fuentes + cifras citadas) para compartir o comparar.",
+        "for_fire": "Congelas este instante del incendio. No es una orden de despacho.",
+        "simple_cta": "Congelar este momento del incendio",
+    },
+    {
+        "id": "compare",
+        "cli": "compare --work-dir …",
+        "group": "Decisión",
+        "title": "Qué cambió",
+        "plain": "Compara el momento congelado con la lectura de ahora (alerta en pantalla).",
+        "for_fire": "Ves si la tarjeta cambió (SEGUIR/ESPERAR/SE CALLA) y el Δ de ROS/ha citado.",
+        "simple_cta": "Ver qué cambió desde el momento congelado",
+    },
+    {
+        "id": "flags",
+        "cli": "flags",
+        "group": "Decisión",
+        "title": "Banderas de honestidad",
+        "plain": "Lee GO_Q, fusión y no-despacho. No cambia ningún gate.",
+        "for_fire": "Compruebas en voz alta que la tarjeta no es orden de extinción.",
+        "simple_cta": "Ver las banderas de honestidad",
+    },
+    {
+        "id": "catalog",
+        "cli": "catalog",
+        "group": "ML lab",
+        "title": "Catálogo de producto",
+        "plain": "Lista productos y holdout. No promociona scores de campo.",
+        "for_fire": "Ves qué modelos existen en lab — no es velocidad del frente.",
+        "simple_cta": "Listar el catálogo de producto (lab)",
+    },
+    {
         "id": "replay",
         "cli": "replay-decide …",
         "group": "Decisión",
@@ -548,28 +584,28 @@ def enrich_intake_step(step: dict[str, str]) -> dict[str, Any]:
     n = str(s.get("step") or "")
     mapping = {
         "1": (
-            "Creas la carpeta del incendio y el buzón de fotos.",
-            "Sin carpeta no hay sitio donde guardar el estado del fuego.",
+            "Se abre una carpeta de Windows. Ahí van las fotos del incendio.",
+            "Sin carpeta el operario no sabe dónde soltar las fotos.",
         ),
         "2": (
-            "El doctor revisa que las imágenes se puedan usar.",
-            "Evita procesar un IF con timestamps o CRS rotos.",
+            "Solo valen fotos térmicas con mapa (.tif) y fecha en el nombre.",
+            "Un JPG del móvil no sirve; el sistema no inventa un perímetro.",
         ),
         "3": (
-            "Se calculan frentes, velocidades y productos del outbox.",
-            "El incendio pasa de fotos sueltas a un estado usable en mapa.",
+            "Un botón lee las fotos y actualiza la palabra grande.",
+            "El incendio pasa de fotos sueltas a una lectura SEGUIR/ESPERAR/SE CALLA.",
         ),
         "4": (
-            "La política de campo decide GO, HOLD o ABSTAIN.",
-            "Sabes si el sistema se atreve a orientar sobre ese fuego.",
+            "La palabra grande dice si el sistema se atreve o se calla.",
+            "Callarse es correcto si faltan fotos. No es una orden de extinción.",
         ),
         "5": (
-            "La consola se regenera mirando ese work-dir.",
-            "Ves mapa + decisión del incendio en una sola pantalla.",
+            "Si no ves el incendio, se abre de nuevo la pantalla.",
+            "Con --serve no hace falta terminal.",
         ),
         "6": (
-            "Atajo si no tienes GeoTIFF reales.",
-            "Pruebas el flujo completo con un fuego sintético.",
+            "Atajo si no tienes fotos térmicas reales.",
+            "Pruebas la pantalla con un fuego de juguete.",
         ),
     }
     plain, for_fire = mapping.get(n, (s.get("detail") or "", ""))
@@ -606,7 +642,7 @@ def build_plain_language_payload() -> dict[str, Any]:
         "glossary": list(GLOSSARY),
         "features": list(FEATURES),
         "ui_hints": {
-            "hero": "Grande: GO = se atreve · HOLD = espera · ABSTAIN = se calla (bien).",
+            "hero": "Grande: SEGUIR (GO) = se atreve · ESPERAR (HOLD) = espera · SE CALLA (ABSTAIN) = se calla (bien).",
             "map_local": "Cian = frente / envelope local del incendio.",
             "map_firms": "Naranja = focos satélite (no son el perímetro oficial).",
             "rebuild": (

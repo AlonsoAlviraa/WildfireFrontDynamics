@@ -9,6 +9,7 @@ python scripts/copy_cite_to_real_if.py --cite PATH --fire-id hellin_2024
 from __future__ import annotations
 
 import argparse
+import contextlib
 import shutil
 import sys
 from pathlib import Path
@@ -22,6 +23,8 @@ if str(_SCRIPTS) not in sys.path:
 
 import score_if_weakness_board as board  # noqa: E402
 
+from wildfire_front.console import configure_console_output  # noqa: E402
+
 DEST_PARENT = ROOT / "data" / "real_if"
 
 
@@ -33,10 +36,8 @@ def known_fire_ids(root: Path) -> set[str]:
     ids.update(board.NO_USE_REASONS)
     anchors = root / "data" / "infocam_anchors.json"
     if anchors.is_file():
-        try:
+        with contextlib.suppress(OSError, ValueError):
             ids.update(board.load_anchors(anchors)["anchors"].keys())
-        except (OSError, ValueError):
-            pass
     return ids
 
 
@@ -62,6 +63,7 @@ def copy_cite(
 
 
 def main(argv: list[str] | None = None) -> int:
+    configure_console_output()
     parser = argparse.ArgumentParser(
         description="Copy cite bytes into gitignored data/real_if/<fire_id>/cite/ (no promote)."
     )

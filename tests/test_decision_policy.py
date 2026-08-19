@@ -74,6 +74,48 @@ def test_research_open_more_permissive_hold():
         assert research.decision in (Decision.HOLD, Decision.ABSTAIN)
 
 
+def test_field_ops_fusion_contract_caps():
+    """T1.6: field_ops ML live weight ≤ 0.20 and abstain_below 0.45."""
+    field = get_policy("field_ops")
+    assert field.ml_live_max_weight == pytest.approx(0.20)
+    assert field.ml_live_abstain_below == pytest.approx(0.45)
+    live = {
+        "schema": "ml_live_metrics_v1",
+        "available": True,
+        "confidence": 0.99,
+        "abstain": False,
+        "mean_entropy": 0.1,
+        "member_disagreement": 0.05,
+        "mean_margin": 0.4,
+    }
+    card = build_decision_card(
+        "fusion_cap",
+        ops_metrics=OPS_A,
+        ml_live_metrics=live,
+        policy_id="field_ops",
+    )
+    live_src = next(s for s in card.sources if "live" in str(s.get("id", "")).lower())
+    assert float(live_src.get("weight") or 0.0) <= 0.20 + 1e-9
+    assert "iou" not in str(card.metrics.get("ops") or {}).lower()
+
+
+def test_field_ops_gold_like_unverified_cannot_go():
+    """GOLD_IF-like ops+open+ml without R1–R4 sidecar must not GO under field_ops."""
+    gold = {
+        "ops_metrics": OPS_A,
+        "open_metrics": OPEN,
+        "ml_metrics": ML,
+    }
+    research = build_decision_card("gold_open", policy_id="research_open", **gold)
+    field = build_decision_card("gold_field", policy_id="field_ops", **gold)
+    assert field.system_reliability_pass is False
+    assert field.decision != Decision.GO
+    assert field.decision == Decision.ABSTAIN
+    assert any("fail_closed" in r for r in field.reasons)
+    if research.decision == Decision.GO:
+        assert research.system_reliability_pass is False
+
+
 def test_policy_in_audit_and_service():
     card = decide_from_request(
         {

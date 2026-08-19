@@ -24,7 +24,15 @@
 |--------|------|--------------|----------|
 | GET | `/health` | — | `{ok, product, version}` |
 | GET | `/v1/openapi.json` | — | Minimal OpenAPI 3 skeleton |
+| GET | `/v1/flags` | — | Release flags (GO_Q partial, fusion ON) |
+| GET | `/v1/catalog` | — | Products + holdout_only |
+| GET | `/v1/card` | `?work_dir=` | Last Decision Card |
+| GET | `/v1/status` | `?work_dir=` | Outbox status |
+| GET/POST | `/v1/snapshot` | `work_dir` (+ `save` on POST) | Shareable snapshot: GO/HOLD/ABSTAIN + source board + `drivers` + `cited` (ROS/ha/Δt/frames/grade with source keys; null if missing) + rails + hashes. POST `save:true` writes `outbox/incident_snapshot.json`. GET never persists. |
+| POST | `/v1/compare` | two cards or one `work_dir` | If only `work_dir`: last saved snapshot vs current card. Flip / source delta / `confidence_delta` / `cited_delta` + local alert (`delivered: false`). Same-input → identity. ROS/ha deltas are null if either side lacks ops. |
 | POST | `/v1/decide` | JSON sources or paths | Fire Decision Card + `latency_ms` |
+| POST | `/v1/export-acta` | `{work_dir}` | Forensic bundle |
+| POST | `/v1/replay` | sources / bundle | replay_ok + hashes |
 
 ### POST /v1/decide body
 

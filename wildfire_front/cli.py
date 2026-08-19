@@ -34,6 +34,7 @@ from .cli_report import (
     print_status_report,
     print_watch_line,
 )
+from .console import configure_console_output
 from .evaluation import front_distance_metrics
 from .geometry_speed import estimate_geometry_speeds, summarize_geometry_speeds
 from .ingestion.geotiff import ingest_geotiff_sequence, write_ingest_manifest
@@ -504,7 +505,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimal HTTP API for Fire Decision Card (POST /v1/decide)",
         description=(
             "Local Decision Card HTTP server (stdlib). "
-            "GET /health · GET /v1/openapi.json · POST /v1/decide. "
+            "GET /health · /v1/flags · /v1/catalog · /v1/card · /v1/status · "
+            "POST /v1/decide · /v1/export-acta · /v1/replay. "
             "Default bind 127.0.0.1 — not production multi-tenant hosting."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -600,6 +602,62 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_global_flags(replay)
 
+    card_cmd = commands.add_parser(
+        "card",
+        help="Show last Decision Card from an incident work-dir",
+        description="Read-only: outbox/fire_decision_card.json. Does not decide.",
+    )
+    card_cmd.add_argument("--work-dir", type=Path, required=True, help="Incident work-dir")
+    _add_global_flags(card_cmd)
+
+    flags_cmd = commands.add_parser(
+        "flags",
+        help="Print release flags (GO_Q / fusion / not_claims) — read-only",
+    )
+    _add_global_flags(flags_cmd)
+
+    catalog_cmd = commands.add_parser(
+        "catalog",
+        help="List ML products and holdout-only ids (RCDA/Caldor not ready)",
+    )
+    _add_global_flags(catalog_cmd)
+
+    snap_cmd = commands.add_parser(
+        "snapshot",
+        help="Shareable read-only incident snapshot (card + source board + rails)",
+        description="Not tactical dispatch. GO_Q remains partial.",
+    )
+    snap_cmd.add_argument("--work-dir", type=Path, required=True, help="Incident work-dir")
+    snap_cmd.add_argument(
+        "--save",
+        action="store_true",
+        default=True,
+        help="Write outbox/incident_snapshot.json (default)",
+    )
+    snap_cmd.add_argument(
+        "--no-save",
+        action="store_false",
+        dest="save",
+        help="Do not persist the snapshot",
+    )
+    _add_global_flags(snap_cmd)
+
+    cmp_cmd = commands.add_parser(
+        "compare",
+        help="Compare two cards/snapshots (local flip alert; not SMS)",
+        description="Same-input compare is identity. Not a dispatch order.",
+    )
+    cmp_cmd.add_argument("--work-dir", type=Path, default=None, help="Right / only work-dir")
+    cmp_cmd.add_argument(
+        "--other-work-dir",
+        type=Path,
+        default=None,
+        help="Left work-dir (omit: last saved snapshot vs current card)",
+    )
+    cmp_cmd.add_argument("--left-card", type=Path, default=None, help="Left card JSON")
+    cmp_cmd.add_argument("--right-card", type=Path, default=None, help="Right card JSON")
+    _add_global_flags(cmp_cmd)
+
     # ─ operator / teach / show / demo-third-party (H1 cheatsheet) ──
     register_operator_commands(commands, add_global_flags=_add_global_flags)
 
@@ -657,9 +715,28 @@ def build_commands_map() -> dict[str, Any]:
                 "title": "Decision Card",
                 "commands": [
                     {"cmd": "decide --policy field_ops", "why": "GO/HOLD/ABSTAIN"},
-                    {"cmd": "serve-decide --port 8765", "why": "HTTP local POST /v1/decide"},
+                    {"cmd": "serve-decide --port 8765", "why": "HTTP local /v1/decide + /v1/card + /v1/flags"},
+                    {"cmd": "card --work-dir …", "why": "última Decision Card (read-only)"},
+                    {"cmd": "snapshot --work-dir …", "why": "instantánea + tablero de fuentes"},
+                    {"cmd": "compare --work-dir … [--other-work-dir]", "why": "flip local (no SMS)"},
+                    {"cmd": "flags", "why": "GO_Q / fusion / not_claims (no flip)"},
+                    {"cmd": "catalog", "why": "productos ready + holdout_only"},
                     {"cmd": "export-acta --work-dir …", "why": "acta + radio + replay sources"},
                     {"cmd": "replay-decide --work-dir …", "why": "forensic replay"},
+                ],
+            },
+            {
+                "id": "data",
+                "title": "Datos regionales",
+                "commands": [
+                    {
+                        "cmd": "ingest-regional --provider wfigs|cwfis|inpe",
+                        "why": "snapshot bruto + normalización + índice auditable",
+                    },
+                    {
+                        "cmd": "ingest-geotiff --images DIR --sensor-id ID --estimated-error-m M",
+                        "why": "secuencia térmica georreferenciada",
+                    },
                 ],
             },
         ],
@@ -680,6 +757,10 @@ def format_commands_map_human(payload: dict[str, Any] | None = None) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> None:
+    # Windows redirected streams often use a legacy charmap that cannot encode
+    # box-drawing glyphs used by the human CLI.  Keep the locale encoding (so
+    # parent processes decode consistently) but fail soft on unsupported glyphs.
+    configure_console_output()
     raw_in = list(argv) if argv is not None else None
     if raw_in is None:
         import sys as _sys
@@ -833,6 +914,149 @@ def main(argv: Sequence[str] | None = None) -> None:
 
         if args.command == "app":
             raise SystemExit(run_app(args))
+
+        if args.command == "card":
+            from .product.surface_api import surface_card
+
+            payload = surface_card(Path(args.work_dir))
+            if as_json:
+                print_json(payload)
+            elif not payload.get("ok"):
+                print_error(
+                    str(payload.get("detail") or "card missing"),
+                    hint="wildfire-front decide --work-dir DIR --policy field_ops",
+                )
+                raise SystemExit(2)
+            else:
+                summary = payload.get("summary") or {}
+                print(f"decision: {summary.get('decision')}")
+                print(f"event_id: {summary.get('event_id')}")
+                print(f"confidence_pred: {summary.get('confidence_pred')}")
+                print(f"policy: {summary.get('policy_id')}")
+                print(f"system_reliability_pass: {summary.get('system_reliability_pass')}")
+                print(f"latency_ms: {payload.get('latency_ms')}")
+            return
+
+        if args.command == "flags":
+            from .product.surface_api import surface_flags
+
+            payload = surface_flags()
+            if as_json:
+                print_json(payload)
+            else:
+                print(f"GO_Q: {payload.get('GO_Q')}")
+                print(f"GO_MES: {payload.get('GO_MES')}")
+                print(f"GO_MES+: {payload.get('GO_MES_plus')}")
+                print(f"ml_product_go: {payload.get('ml_product_go')} (lab only)")
+                print(f"field_ops_fusion: {payload.get('field_ops_fusion')}")
+                print("not_claims:", "; ".join(payload.get("not_claims") or [])[:240])
+            return
+
+        if args.command == "catalog":
+            from .product.surface_api import surface_catalog
+
+            payload = surface_catalog()
+            if as_json:
+                print_json(payload)
+            else:
+                print("products:")
+                for row in payload.get("products") or []:
+                    mark = "ready" if row.get("ready") else "missing-weights"
+                    print(f"  {row.get('id'):<22} {mark}")
+                print("holdout_only (not product):")
+                for row in payload.get("holdout_only") or []:
+                    print(f"  {row.get('id'):<22} {row.get('status')}")
+            return
+
+        if args.command == "snapshot":
+            from .product.surface_api import surface_snapshot
+
+            payload = surface_snapshot(Path(args.work_dir), persist=bool(args.save))
+            if as_json:
+                print_json(payload)
+            elif not payload.get("ok"):
+                print_error(
+                    str(payload.get("detail") or "snapshot missing"),
+                    hint="wildfire-front decide --work-dir DIR --policy field_ops",
+                )
+                raise SystemExit(2)
+            else:
+                rails = payload.get("rails") or {}
+                print(f"decision: {payload.get('decision')}")
+                print(f"event_id: {payload.get('event_id')}")
+                print(f"confidence: {payload.get('confidence')}")
+                board = payload.get("source_board") or {}
+                for key in ("ops", "open", "ml_live", "reliability"):
+                    row = board.get(key) or {}
+                    extra = f" driver={row.get('driver')}" if row.get("driver") else ""
+                    print(f"source {key}: {row.get('status')}{extra}")
+                print(f"go_q: {rails.get('go_q')} (complete={rails.get('go_q_complete')})")
+                print("not_tactical_dispatch: true")
+                print("fusion_on_is_not_dispatch: true")
+                drivers = payload.get("drivers") or []
+                print(f"drivers: {drivers or '-'}")
+                cited = payload.get("cited") or {}
+                print(
+                    f"cited: ros={cited.get('ros_m_min')} "
+                    f"({cited.get('ros_source') or 'null'}) "
+                    f"area_ha={cited.get('area_ha')} "
+                    f"interval_s={cited.get('interval_s')} "
+                    f"n_frames={cited.get('n_frames')} "
+                    f"grade={cited.get('quality_grade')}"
+                )
+                print("cited_invented: false")
+                print(f"saved: {payload.get('saved')}")
+                if payload.get("saved_path"):
+                    print(f"saved_path: {payload.get('saved_path')}")
+                hashes = payload.get("hashes") or {}
+                print(f"input_hash: {hashes.get('input_hash')}")
+                print(f"output_hash: {hashes.get('output_hash')}")
+            return
+
+        if args.command == "compare":
+            from .product.surface_api import compare_from_request
+
+            req: dict[str, Any] = {}
+            if getattr(args, "left_card", None):
+                req["left_card"] = str(args.left_card)
+            if getattr(args, "right_card", None):
+                req["right_card"] = str(args.right_card)
+            if getattr(args, "other_work_dir", None):
+                req["other_work_dir"] = str(args.other_work_dir)
+            if getattr(args, "work_dir", None):
+                req["work_dir"] = str(args.work_dir)
+            payload = compare_from_request(req, resolve_work_dir=lambda raw: Path(raw))
+            if as_json:
+                print_json(payload)
+            elif not payload.get("ok"):
+                print_error(
+                    str(payload.get("detail") or "compare failed"),
+                    hint="wildfire-front compare --work-dir DIR --json",
+                )
+                raise SystemExit(2)
+            else:
+                alert = payload.get("alert") or {}
+                print(f"flipped: {payload.get('flipped')}")
+                print(f"from: {payload.get('from')} → to: {payload.get('to')}")
+                print(f"same_input: {payload.get('same_input')}")
+                print(f"against: {payload.get('against')}")
+                print(f"confidence_delta: {payload.get('confidence_delta')}")
+                print(f"output_hash_changed: {payload.get('output_hash_changed')}")
+                cdelta = payload.get("cited_delta") or {}
+                print(
+                    f"cited_delta: ros={cdelta.get('ros_m_min')} "
+                    f"area_ha={cdelta.get('area_ha')} "
+                    f"delta_t_s={cdelta.get('delta_t_s')} "
+                    f"n_frames={cdelta.get('n_frames')}"
+                )
+                print("cited_invented: false")
+                delta = payload.get("source_delta") or {}
+                print(f"appeared: {delta.get('appeared')}")
+                print(f"disappeared: {delta.get('disappeared')}")
+                print(f"alert: {alert.get('kind')} delivered={alert.get('delivered')}")
+                print("not_tactical_dispatch: true")
+                print(alert.get("message") or "")
+            return
 
         if args.command == "serve-decide":
             from .product.api_server import serve as serve_decide_api
