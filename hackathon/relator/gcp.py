@@ -1,15 +1,14 @@
-"""Google Cloud settings for Relator. No LLM / Vertex APIs."""
+"""Pinned Google Cloud project for Relator. No LLM / Vertex APIs."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
-PROJECT_ID = (os.environ.get("GOOGLE_CLOUD_PROJECT") or "").strip()
+# User-provided project (2026-08-18). Not a secret.
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT") or "project-89d8567f-49f2-48bc-a00"
 REGION = os.environ.get("GOOGLE_CLOUD_REGION") or "europe-west1"
-BUCKET = os.environ.get("RELATOR_BUCKET") or (
-    f"relator-sky-{PROJECT_ID}" if PROJECT_ID else ""
-)
+BUCKET = os.environ.get("RELATOR_BUCKET") or f"relator-sky-{PROJECT_ID}"
 TOPIC = os.environ.get("RELATOR_TOPIC") or "relator-source-arrived"
 SERVICE = os.environ.get("RELATOR_SERVICE") or "relator"
 
@@ -37,7 +36,6 @@ def settings() -> dict[str, Any]:
         "bucket": BUCKET,
         "topic": TOPIC,
         "service": SERVICE,
-        "configured": bool(PROJECT_ID and BUCKET),
         "llm": False,
         "not_tactical_dispatch": True,
         "apis": list(APIS),

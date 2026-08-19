@@ -39,13 +39,6 @@ def init_project() -> dict[str, Any]:
     """Bind Earth Engine to the Relator GCP project. No generative models."""
     from .gcp import PROJECT_ID
 
-    if not PROJECT_ID:
-        return {
-            "ok": False,
-            "error": "GOOGLE_CLOUD_PROJECT is not configured",
-            "project_id": None,
-            "llm": False,
-        }
     if not available():
         return {"ok": False, "error": "earthengine-api not installed", "project_id": PROJECT_ID, "llm": False}
     import ee  # type: ignore
