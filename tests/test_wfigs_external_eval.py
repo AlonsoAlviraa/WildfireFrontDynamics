@@ -14,10 +14,35 @@ from wildfire_front.ml.wfigs_external_eval import (
     RCDA_RAW_FROM_WFIGS,
     WFIGSExternalDataset,
     _geometry_baseline,
+    _wfigs_to_rcda_raw,
     evaluate_adapted_rcda_on_wfigs,
     evaluate_frozen_rcda_on_wfigs,
 )
 from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
+
+
+def test_wfigs_weather_units_are_converted_to_rcda_contract() -> None:
+    inputs = np.zeros((len(WFIGS_CHANNELS), 2, 2), dtype=np.float32)
+    inputs[WFIGS_CHANNELS.index("temperature_k")] = 293.15
+    inputs[WFIGS_CHANNELS.index("air_density")] = 1.204
+    inputs[WFIGS_CHANNELS.index("humidity_pct")] = 60.0
+    inputs[WFIGS_CHANNELS.index("precipitation_mm")] = 36.0
+    inputs[WFIGS_CHANNELS.index("wind_speed")] = -2.0
+
+    raw = _wfigs_to_rcda_raw(inputs, horizon_hours=24.0)
+
+    precipitation = raw[RCDA_RAW_FROM_WFIGS.index("precipitation_mm")]
+    humidity = raw[RCDA_RAW_FROM_WFIGS.index("humidity_pct")]
+    wind = raw[RCDA_RAW_FROM_WFIGS.index("wind_speed")]
+    assert np.allclose(precipitation, 36.0 / (24.0 * 3600.0))
+    assert np.allclose(humidity, 0.0087, rtol=0.05)
+    assert np.all(wind == 0.0)
+
+
+def test_wfigs_weather_conversion_requires_positive_horizon() -> None:
+    inputs = np.zeros((len(WFIGS_CHANNELS), 1, 1), dtype=np.float32)
+    with pytest.raises(ValueError, match="finite and positive"):
+        _wfigs_to_rcda_raw(inputs, horizon_hours=0.0)
 
 
 def test_external_dataset_maps_physical_channels_without_using_valid_mask_as_rcda_raw(
