@@ -136,6 +136,8 @@ data/open_if/latam_au/**/*.zip
 data/open_if/latam_au/**/raw_cems/
 data/open_if/latam_au/**/raw_mapbiomas/
 data/open_if/latam_au/**/raw_nafi/
+# Vector labels are source/derived data, not publication-safe repository assets.
+data/open_if/latam_au/**/labels/*.geojson
 
 # Reproducible external label bridges: keep compact manifests, ignore generated geometry/rasters.
 data/open_if/external_bridge/**/*.tif
@@ -156,6 +158,8 @@ data/open_if/wfigs_history_*/enrichment/HRRR_PROBES.json
 data/open_if/wfigs_history_*/ml/
 data/open_if/wfigs_history_*/temporal_pairs/PAIRS.json
 data/open_if/wfigs_history_*/temporal_pairs/REJECTED.json
+# Event assignments are a derived dataset and remain internal under the rights policy.
+data/open_if/wfigs_history_*/temporal_pairs/SPLITS.json
 data/external/firebench/
 
 data/open_if/**/wfs_cache/
@@ -226,7 +230,16 @@ docs/_gmail_*.json
 docs/_outreach_send_log_*.json
 docs/data_campaigns/conaf_send/OUTBOX/
 docs/data_campaigns/conaf_send/send_status.json
+docs/data_campaigns/conaf_send/ACUSEDERECIBO_*.pdf
+docs/data_campaigns/conaf_send/CARTA_FORMAL_ES.md
+docs/data_campaigns/conaf_send/EMAIL_DRAFT.md
 docs/data_campaigns/GMAIL_SENT_AUDIT_*
 docs/data_campaigns/*CONTACT*.csv
+docs/data_campaigns/X_OUTREACH_*.md
 docs/ESTUDIO_DATOS_CONTACTOS_*
 **/*RELLENADA*
+
+# Row-level data audits can contain local paths or source-level records.
+docs/audits/**/DATA_FILE_AUDIT.jsonl
+docs/audits/**/WFIGS_PAIR_AUDIT.jsonl
+docs/audits/**/MEGA_DATA_AUDIT.json
