@@ -593,9 +593,7 @@ def source_board(card: dict[str, Any]) -> dict[str, dict[str, Any]]:
         driver_label: str,
     ) -> dict[str, Any]:
         driver = None
-        if holdish and _reason_hits(reasons, *driver_needles) and (
-            key == "reliability" or not present
-        ):
+        if holdish and _reason_hits(reasons, *driver_needles) and (key == "reliability" or not present):
             driver = driver_label
         return {
             "key": key,

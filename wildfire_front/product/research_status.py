@@ -33,6 +33,15 @@ PHASE_LABELS = {
     "complete": "Evaluación final terminada",
 }
 
+VALIDATION_RUN_ORDER = (
+    "resunet_hybrid_precision_v3",
+    "resunet_hybrid_low_lr_v2",
+    "resunet_growth_v1",
+    "resunet_hybrid_event_balanced_v1",
+    "resunet_hybrid_uniform_events_v1",
+    "film_growth_v1",
+)
+
 
 def _read_json(path: Path) -> dict[str, Any] | None:
     if not path.is_file():
@@ -114,6 +123,63 @@ def _baseline_summary(root: Path) -> dict[str, Any] | None:
         "learned_reproduced": bool(learned_rows),
         "learned_path": _relative(learned_path, root) if learned_rows else None,
     }
+
+
+def _experiment_queue(
+    runtime_runs: list[dict[str, Any]],
+    state: dict[str, Any],
+    *,
+    status: str,
+    phase: str,
+) -> list[dict[str, Any]]:
+    by_name = {
+        str(row.get("run_name")): row
+        for row in runtime_runs
+        if isinstance(row, dict) and row.get("run_name")
+    }
+    active_name = next(
+        (
+            name
+            for name, row in by_name.items()
+            if row.get("kernel") == state.get("kernel")
+            and status in {"running", "queued"}
+        ),
+        None,
+    )
+    active_index = (
+        VALIDATION_RUN_ORDER.index(active_name)
+        if active_name in VALIDATION_RUN_ORDER
+        else None
+    )
+    validation_finished = phase in {
+        "recipe_frozen",
+        "preregistered_final_test",
+        "preregistered_final_test_gcp",
+        "preregistered_final_test_kaggle",
+        "complete",
+    }
+    queue = []
+    for index, run_name in enumerate(VALIDATION_RUN_ORDER):
+        row = by_name.get(run_name) or {}
+        if not row:
+            run_status = "planned"
+        elif row.get("recovered_finite_checkpoint"):
+            run_status = "recovered"
+        elif run_name == active_name:
+            run_status = "active"
+        elif validation_finished or (active_index is not None and index < active_index):
+            run_status = "completed"
+        else:
+            run_status = "submitted"
+        queue.append(
+            {
+                "run_name": run_name,
+                "kernel": row.get("kernel"),
+                "status": run_status,
+                "test_evaluated": False,
+            }
+        )
+    return queue
 
 
 def _wfigs_summary(root: Path) -> dict[str, Any]:
@@ -246,10 +312,22 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     validation_scorecard = (
         _read_json(validation_scorecard_path) if validation_scorecard_path else None
     )
+    if validation_scorecard and not (
+        validation_scorecard.get("selection_split") == "val"
+        and validation_scorecard.get("test_evaluated") is False
+        and validation_scorecard.get("test_used_for_selection") is False
+    ):
+        validation_scorecard = None
     validation_ranking = (validation_scorecard or {}).get("ranking") or []
     validation_leader = validation_ranking[0] if validation_ranking else {}
     validation_runner_up = validation_ranking[1] if len(validation_ranking) > 1 else {}
-    validation_ensemble_path = work / "PHASE1_VAL_ENSEMBLES.json" if work else None
+    validation_ensemble_path = (
+        work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES.json" if work else None
+    )
+    if validation_ensemble_path and not validation_ensemble_path.is_file():
+        validation_ensemble_path = work / "LOW_LR_VAL_ENSEMBLES.json"
+    if validation_ensemble_path and not validation_ensemble_path.is_file():
+        validation_ensemble_path = work / "PHASE1_VAL_ENSEMBLES.json"
     validation_ensemble_report = (
         _read_json(validation_ensemble_path) if validation_ensemble_path else None
     )
@@ -272,6 +350,25 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     )
     validation_ensemble_decision = (
         (validation_ensemble_report or {}).get("decision") or {}
+    )
+    validation_postprocess_path = work / "LOW_LR_POSTPROCESS_VAL.json" if work else None
+    validation_postprocess = (
+        _read_json(validation_postprocess_path) if validation_postprocess_path else None
+    )
+    if validation_postprocess and not (
+        validation_postprocess.get("selection_split") == "val"
+        and validation_postprocess.get("test_evaluated") is False
+    ):
+        validation_postprocess = None
+    validation_postprocess_best = (validation_postprocess or {}).get("best") or {}
+    postprocess_checkpoint = str((validation_postprocess or {}).get("checkpoint") or "")
+    postprocess_source = next(
+        (
+            row
+            for row in validation_ranking
+            if str(row.get("run_name") or "") in postprocess_checkpoint
+        ),
+        {},
     )
     train_sampler_path = work / "TRAIN_SAMPLER_AUDIT.json" if work else None
     train_sampler_report = _read_json(train_sampler_path) if train_sampler_path else None
@@ -324,7 +421,15 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
 
     phase = str(state.get("phase") or "not_started")
     winner = (frozen or {}).get("winner") or state.get("winner") or None
-    if winner is None and tuning:
+    if winner is None and validation_leader:
+        winner = {
+            "val_event_macro_iou": validation_leader.get("event_macro_iou"),
+            "val_pooled_iou": validation_leader.get("pooled_iou"),
+            "selected_threshold": validation_leader.get("selected_threshold"),
+            "best_epoch": validation_leader.get("best_epoch"),
+            "config": {"run_name": validation_leader.get("run_name")},
+        }
+    elif winner is None and tuning:
         leader = ((tuning.get("ranking") or [None])[0])
         if isinstance(leader, dict):
             winner = {
@@ -340,6 +445,15 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     status = str(state.get("status") or state.get("kernel_status") or "pending")
     if scorecard:
         status = str(scorecard.get("status") or "complete")
+    completed_val_scores = [
+        float(value)
+        for value in (
+            state.get("best_completed_val_event_macro_iou"),
+            validation_leader.get("event_macro_iou"),
+        )
+        if value is not None
+    ]
+    best_completed_val = max(completed_val_scores) if completed_val_scores else None
 
     wfigs = _wfigs_summary(root)
     progress_state = gcp_stage_state if phase == "validation_only_stage2_gcp" else state
@@ -395,7 +509,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "remote_status": state.get("kernel_status"),
                 "best_completed_val_event_macro_iou": state.get(
                     "best_completed_val_event_macro_iou"
-                ),
+                )
+                if best_completed_val is None
+                else best_completed_val,
                 "registered_runs": len(runtime_runs),
                 "recovered_runs": sum(
                     bool(row.get("recovered_finite_checkpoint"))
@@ -456,6 +572,47 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             if isinstance(winner, dict)
             else None
         ),
+        "validation_candidates": [
+            {
+                "rank": row.get("rank"),
+                "run_name": row.get("run_name"),
+                "event_macro_iou": row.get("event_macro_iou"),
+                "event_median_iou": row.get("event_median_iou"),
+                "event_bootstrap_95_ci": row.get("event_bootstrap_95_ci") or [],
+                "delta_from_leader": row.get(
+                    "leader_minus_candidate_paired_delta"
+                ),
+                "delta_from_leader_95_ci": row.get(
+                    "leader_minus_candidate_bootstrap_95_ci"
+                )
+                or [],
+                "leader_wins_event_fraction": row.get(
+                    "leader_wins_event_fraction"
+                ),
+                "threshold": row.get("selected_threshold"),
+                "best_epoch": row.get("best_epoch"),
+            }
+            for row in validation_ranking[:8]
+            if isinstance(row, dict)
+        ],
+        "validation_evidence": {
+            "events": (validation_scorecard or {}).get("events"),
+            "candidate_count": len(validation_ranking),
+            "bootstrap_resamples": (validation_scorecard or {}).get(
+                "bootstrap_resamples"
+            ),
+            "uncertainty_unit": (validation_scorecard or {}).get(
+                "uncertainty_unit"
+            ),
+            "selection_split": "val",
+            "test_evaluated": False,
+        },
+        "experiment_queue": _experiment_queue(
+            runtime_runs,
+            state,
+            status=status,
+            phase=phase,
+        ),
         "validation_ensemble": (
             {
                 "name": validation_ensemble_best.get("name"),
@@ -474,6 +631,33 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "test_evaluated": False,
             }
             if isinstance(validation_ensemble_best, dict)
+            else None
+        ),
+        "validation_postprocess": (
+            {
+                "event_macro_iou": validation_postprocess_best.get(
+                    "event_macro_iou"
+                ),
+                "pooled_iou": validation_postprocess_best.get("pooled_iou"),
+                "threshold": validation_postprocess_best.get("threshold"),
+                "dilation_radius_px": validation_postprocess_best.get(
+                    "dilation_radius_px"
+                ),
+                "require_t0_connection": validation_postprocess_best.get(
+                    "require_t0_connection"
+                ),
+                "delta_vs_raw": (
+                    float(validation_postprocess_best["event_macro_iou"])
+                    - float(postprocess_source["event_macro_iou"])
+                    if validation_postprocess_best.get("event_macro_iou") is not None
+                    and postprocess_source.get("event_macro_iou") is not None
+                    else None
+                ),
+                "selection_split": "val",
+                "test_evaluated": False,
+            }
+            if isinstance(validation_postprocess_best, dict)
+            and validation_postprocess_best
             else None
         ),
         "training_sampler_audit": (
@@ -555,6 +739,13 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             "validation_ensemble": _relative(
                 validation_ensemble_path
                 if validation_ensemble_path and validation_ensemble_path.is_file()
+                else None,
+                root,
+            ),
+            "validation_postprocess": _relative(
+                validation_postprocess_path
+                if validation_postprocess_path
+                and validation_postprocess_path.is_file()
                 else None,
                 root,
             ),
