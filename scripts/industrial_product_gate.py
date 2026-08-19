@@ -21,14 +21,8 @@ if _SCRIPTS not in sys.path:
 
 from check_release_flags import evaluate as evaluate_flags  # noqa: E402
 
-from wildfire_front.ml.product_catalog import (  # noqa: E402
-    list_holdout_only,
-    list_products,
-)
-from wildfire_front.product.confidence import (  # noqa: E402
-    Decision,
-    build_decision_card,
-)
+from wildfire_front.ml.product_catalog import list_holdout_only, list_products  # noqa: E402
+from wildfire_front.product.confidence import Decision, build_decision_card  # noqa: E402
 from wildfire_front.product.policy import get_policy  # noqa: E402
 
 

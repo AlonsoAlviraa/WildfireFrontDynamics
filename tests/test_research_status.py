@@ -102,6 +102,10 @@ def test_research_status_surfaces_kaggle_runtime_without_fake_epoch(
     assert progress["registered_runs"] == 2
     assert progress["recovered_runs"] == 1
     assert progress["test_evaluated"] is False
+    assert len(status["experiment_queue"]) == 6
+    assert status["experiment_queue"][0]["status"] == "recovered"
+    assert status["experiment_queue"][1]["status"] == "active"
+    assert status["experiment_queue"][2]["status"] == "planned"
 
 
 def test_research_status_surfaces_provisional_validation_leader(tmp_path: Path) -> None:
@@ -132,6 +136,97 @@ def test_research_status_surfaces_provisional_validation_leader(tmp_path: Path) 
     assert status["validation_winner"]["run_name"] == "resunet_hybrid_v1"
     assert status["validation_winner"]["frozen"] is False
     assert status["artifacts"]["tuning_summary"].endswith("TUNING_SUMMARY.json")
+
+
+def test_research_status_exposes_only_isolated_val_leaderboard(tmp_path: Path) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(work / "STATE.json", {"phase": "validation_only_stage2", "status": "running"})
+    _write(
+        work / "VALIDATION_SCORECARD.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "events": 106,
+            "bootstrap_resamples": 10_000,
+            "uncertainty_unit": "fire_event",
+            "ranking": [
+                {
+                    "rank": 1,
+                    "run_name": "low_lr",
+                    "event_macro_iou": 0.194,
+                    "event_bootstrap_95_ci": [0.17, 0.22],
+                    "leader_minus_candidate_paired_delta": 0.0,
+                    "selected_threshold": 0.05,
+                    "best_epoch": 27,
+                },
+                {
+                    "rank": 2,
+                    "run_name": "phase1",
+                    "event_macro_iou": 0.180,
+                    "leader_minus_candidate_paired_delta": 0.014,
+                    "selected_threshold": 0.6,
+                    "best_epoch": 24,
+                },
+            ],
+        },
+    )
+
+    status = build_research_status(tmp_path)
+
+    assert status["validation_winner"]["run_name"] == "low_lr"
+    assert status["validation_candidates"][0]["event_macro_iou"] == 0.194
+    assert status["validation_evidence"]["events"] == 106
+    assert status["validation_evidence"]["test_evaluated"] is False
+    assert status["training_progress"]["best_completed_val_event_macro_iou"] == 0.194
+
+    scorecard = json.loads((work / "VALIDATION_SCORECARD.json").read_text())
+    scorecard["test_evaluated"] = True
+    _write(work / "VALIDATION_SCORECARD.json", scorecard)
+    assert build_research_status(tmp_path)["validation_candidates"] == []
+
+
+def test_research_status_surfaces_val_only_postprocess_delta(tmp_path: Path) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(work / "STATE.json", {"phase": "validation_only_stage2", "status": "running"})
+    _write(
+        work / "VALIDATION_SCORECARD.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "ranking": [
+                {
+                    "rank": 1,
+                    "run_name": "low_lr",
+                    "event_macro_iou": 0.194,
+                    "selected_threshold": 0.05,
+                    "best_epoch": 27,
+                }
+            ],
+        },
+    )
+    _write(
+        work / "LOW_LR_POSTPROCESS_VAL.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "checkpoint": "low_lr_seed0_best.pt",
+            "best": {
+                "event_macro_iou": 0.201,
+                "pooled_iou": 0.15,
+                "threshold": 0.1,
+                "dilation_radius_px": 1,
+                "require_t0_connection": True,
+            },
+        },
+    )
+
+    status = build_research_status(tmp_path)
+
+    assert status["validation_postprocess"]["event_macro_iou"] == 0.201
+    assert round(status["validation_postprocess"]["delta_vs_raw"], 3) == 0.007
+    assert status["validation_postprocess"]["test_evaluated"] is False
 
 
 def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Path) -> None:
@@ -414,7 +509,13 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Telemetría de entrenamiento" in html
     assert "Delta vs 2º VAL" in html
     assert "Mejor ensemble VAL" in html
+    assert "Postproceso VAL" in html
     assert "Masa por incendio" in html
     assert "WFIGS zero-shot" in html
     assert "Ensemble WFIGS" in html
     assert "Ensemble adaptado" in html
+    assert "Clasificacion VAL" in html
+    assert "Cola nocturna de experimentos" in html
+    assert "TEST SELLADO" in html
+    assert "refreshResearchStatus" in html
+    assert "app_payload.json?research=" in html

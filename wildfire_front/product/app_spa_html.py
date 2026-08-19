@@ -568,9 +568,10 @@ body.tab-work .rail-stack{min-height:58vh}
 .research-state{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:5px 7px;
   border:1px solid var(--line2);border-radius:999px;color:var(--muted);font:9px/1 var(--mono);text-transform:uppercase}
 .research-state i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
-.research-state.live i{background:var(--cyan);box-shadow:0 0 0 4px #0ea5e922}
+.research-state.live i{background:var(--cyan);box-shadow:0 0 0 4px #0ea5e922;animation:research-pulse 1.8s ease-in-out infinite}
 .research-state.done i{background:var(--go)}
 .research-state.fail i{background:var(--abstain)}
+@keyframes research-pulse{0%,100%{box-shadow:0 0 0 3px #0ea5e91c}50%{box-shadow:0 0 0 7px #0ea5e900}}
 .research-progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 12px}
 .research-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#818cf8);width:0}
 .research-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
@@ -589,6 +590,26 @@ body.tab-work .rail-stack{min-height:58vh}
 .research-warning{margin-top:10px;padding:8px 9px;border-left:3px solid var(--hold);background:#f59e0b0b;
   color:var(--muted);font-size:10px;line-height:1.35}
 .research-path{margin-top:8px;color:var(--faint);font:9px/1.35 var(--mono);word-break:break-all}
+.research-board{display:grid;gap:6px}
+.research-rank{display:grid;grid-template-columns:24px minmax(0,1fr) 52px;gap:8px;align-items:center;
+  padding:8px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.research-rank.leader{border-color:#0ea5e955;background:linear-gradient(90deg,#0ea5e90d,transparent)}
+.research-rank .pos{font:700 11px/1 var(--mono);color:var(--faint);text-align:center}
+.research-rank.leader .pos,.research-rank.leader .score{color:var(--cyan)}
+.research-rank .run{min-width:0;font-size:10px;font-weight:650;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.research-rank .meta{margin-top:4px;color:var(--faint);font:8px/1.25 var(--mono);white-space:normal}
+.research-rank .track{height:3px;margin-top:6px;background:var(--line);border-radius:9px;overflow:hidden}
+.research-rank .track i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#818cf8);border-radius:9px}
+.research-rank .score{text-align:right;font:700 12px/1 var(--mono);color:var(--text)}
+.research-queue{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+.research-job{flex:0 0 auto;max-width:180px;padding:7px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.research-job b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--muted)}
+.research-job span{display:flex;align-items:center;gap:5px;margin-top:4px;color:var(--faint);font:8px/1 var(--mono);text-transform:uppercase}
+.research-job span i{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+.research-job.active{border-color:#0ea5e955}.research-job.active span{color:var(--cyan)}
+.research-job.active span i{background:var(--cyan);box-shadow:0 0 0 3px #0ea5e922}
+.research-job.recovered span i{background:var(--go)}
+.research-proof{margin-top:7px;display:flex;justify-content:space-between;gap:8px;color:var(--faint);font:8px/1.25 var(--mono)}
 
 @media (min-width:901px){
   #btn-map-expand{display:none}
@@ -620,7 +641,7 @@ body.tab-work .rail-stack{min-height:58vh}
   .decision .word{color:#111}
 }
 @media (prefers-reduced-motion:reduce){
-  *{transition:none!important}
+  *{transition:none!important;animation:none!important}
 }
 /* Cascade win: dock + unstick acts so they never cover Qué hay / Meter fotos */
 @media (max-width:900px){
@@ -937,7 +958,7 @@ const splitConf = P.split_conf || {};
 let decisionLog = P.decision_log || {};
 const vvScorecard = P.vv_scorecard || {};
 const weaknessBoard = P.weakness_board || {};
-const researchStatus = P.research_status || {};
+let researchStatus = P.research_status || {};
 let uncertaintyBar = P.uncertainty_bar || {};
 const fires = P.fires || [];
 const actions = P.product_actions || [];
@@ -2051,6 +2072,11 @@ function researchScore(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n.toFixed(3) : '—';
 }
+function researchClock(value) {
+  const time = new Date(value || '');
+  if (!Number.isFinite(time.getTime())) return '';
+  return time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
 function researchStat(parent, key, value, hint, accent) {
   const card = document.createElement('div');
   card.className = 'research-stat' + (accent ? ' accent' : '');
@@ -2066,6 +2092,52 @@ function researchCheck(parent, text, pass) {
   const label = document.createElement('span'); label.textContent = text;
   row.append(icon, label); parent.appendChild(row);
 }
+function researchRunName(value) {
+  return String(value || 'sin nombre').replaceAll('_', ' ');
+}
+function renderValidationBoard(parent, rows, evidence) {
+  if (!rows.length) return;
+  const section = document.createElement('div'); section.className = 'research-section';
+  const title = document.createElement('h3');
+  title.textContent = 'Clasificacion VAL · ' + String(evidence.events || '—') + ' incendios';
+  const board = document.createElement('div'); board.className = 'research-board';
+  const maxScore = Math.max(...rows.map(row => Number(row.event_macro_iou) || 0), 0.001);
+  rows.forEach((row, index) => {
+    const item = document.createElement('div');
+    item.className = 'research-rank' + (index === 0 ? ' leader' : '');
+    const pos = document.createElement('div'); pos.className = 'pos'; pos.textContent = '#' + String(row.rank || index + 1);
+    const body = document.createElement('div');
+    const run = document.createElement('div'); run.className = 'run'; run.textContent = researchRunName(row.run_name);
+    const ci = row.event_bootstrap_95_ci || [];
+    const delta = Number(row.delta_from_leader);
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.textContent = (ci.length === 2 ? ('IC95 ' + researchScore(ci[0]) + '–' + researchScore(ci[1])) : 'IC pendiente')
+      + (index ? (' · Δ lider −' + researchScore(delta)) : ' · lider provisional');
+    const track = document.createElement('div'); track.className = 'track';
+    const fill = document.createElement('i'); fill.style.width = String(Math.max(3, 100 * Number(row.event_macro_iou || 0) / maxScore)) + '%';
+    track.appendChild(fill); body.append(run, meta, track);
+    const score = document.createElement('div'); score.className = 'score'; score.textContent = researchScore(row.event_macro_iou);
+    item.append(pos, body, score); board.appendChild(item);
+  });
+  const proof = document.createElement('div'); proof.className = 'research-proof';
+  const proofLeft = document.createElement('span'); proofLeft.textContent = String(evidence.candidate_count || rows.length) + ' candidatos · bootstrap ' + String(evidence.bootstrap_resamples || '—');
+  const proofRight = document.createElement('span'); proofRight.textContent = evidence.test_evaluated === false ? 'TEST SELLADO' : 'TEST desconocido';
+  proof.append(proofLeft, proofRight); section.append(title, board, proof); parent.appendChild(section);
+}
+function renderExperimentQueue(parent, jobs) {
+  if (!jobs.length) return;
+  const section = document.createElement('div'); section.className = 'research-section';
+  const title = document.createElement('h3'); title.textContent = 'Cola nocturna de experimentos';
+  const queue = document.createElement('div'); queue.className = 'research-queue';
+  jobs.forEach(job => {
+    const item = document.createElement('div'); item.className = 'research-job ' + String(job.status || 'submitted');
+    const name = document.createElement('b'); name.textContent = researchRunName(job.run_name);
+    const state = document.createElement('span'); const dot = document.createElement('i');
+    const stateText = document.createElement('em'); stateText.textContent = String(job.status || 'submitted');
+    state.append(dot, stateText); item.append(name, state); queue.appendChild(item);
+  });
+  section.append(title, queue); parent.appendChild(section);
+}
 function renderResearchStatus() {
   const host = document.getElementById('research-status');
   if (!host) return;
@@ -2074,7 +2146,9 @@ function renderResearchStatus() {
   const head = document.createElement('div'); head.className = 'research-head';
   const copy = document.createElement('div');
   const title = document.createElement('div'); title.className = 'research-title'; title.textContent = 'RCDA · experimento sellado';
-  const sub = document.createElement('div'); sub.className = 'research-sub'; sub.textContent = rs.phase_label || 'Sin ejecución registrada';
+  const sub = document.createElement('div'); sub.className = 'research-sub';
+  const refreshedAt = researchClock(rs.updated_at);
+  sub.textContent = (rs.phase_label || 'Sin ejecución registrada') + (refreshedAt ? (' · ' + refreshedAt) : '');
   copy.append(title, sub);
   const state = document.createElement('div');
   const stateDone = rs.phase === 'complete';
@@ -2097,6 +2171,7 @@ function renderResearchStatus() {
   const wfigs = rs.wfigs || {};
   const winner = rs.validation_winner || {};
   const valEnsemble = rs.validation_ensemble || {};
+  const valPostprocess = rs.validation_postprocess || {};
   const samplerAudit = rs.training_sampler_audit || {};
   const numericStability = rs.numeric_stability || {};
   const final = rs.final || {};
@@ -2131,6 +2206,13 @@ function renderResearchStatus() {
         : 'promedio de probabilidades · sólo VAL';
       researchStat(grid, 'Mejor ensemble VAL', researchScore(valEnsemble.event_macro_iou), ensembleHint);
     }
+    if (valPostprocess.event_macro_iou != null) {
+      const postDelta = Number(valPostprocess.delta_vs_raw);
+      const postHint = (Number.isFinite(postDelta) ? ((postDelta >= 0 ? '+' : '') + researchScore(postDelta) + ' vs salida cruda · ') : '')
+        + 'radio ' + String(valPostprocess.dilation_radius_px ?? '—') + ' px'
+        + (valPostprocess.require_t0_connection ? ' · conectado a t0' : '');
+      researchStat(grid, 'Postproceso VAL', researchScore(valPostprocess.event_macro_iou), postHint);
+    }
   } else {
     researchStat(grid, 'Selección', 'VAL', 'TEST aún aislado', true);
     researchStat(grid, 'Semillas finales', String((protocol.final_seeds || []).length || 3), (protocol.final_seeds || [11,29,47]).join(' · '));
@@ -2143,6 +2225,16 @@ function renderResearchStatus() {
     researchStat(grid, 'Protección anti-NaN', 'grad ≤ ' + researchScore(numericStability.max_grad_norm), String(numericStability.train_files_scanned || 0) + ' NPY finitos');
   }
   host.appendChild(grid);
+
+  renderValidationBoard(
+    host,
+    Array.isArray(rs.validation_candidates) ? rs.validation_candidates : [],
+    rs.validation_evidence || {}
+  );
+  renderExperimentQueue(
+    host,
+    Array.isArray(rs.experiment_queue) ? rs.experiment_queue : []
+  );
 
   const live = rs.training_progress || {};
   if (rs.training_live && (live.run || live.epoch != null)) {
@@ -2570,6 +2662,24 @@ function metric(parent, k, v) {
 }
 renderOpsKv();
 renderResearchStatus();
+
+async function refreshResearchStatus() {
+  if (!/^https?:$/.test(window.location.protocol)) return;
+  try {
+    const response = await fetch('app_payload.json?research=' + Date.now(), {cache:'no-store'});
+    if (!response.ok) return;
+    const nextPayload = await response.json();
+    if (!nextPayload || !nextPayload.research_status) return;
+    researchStatus = nextPayload.research_status;
+    renderResearchStatus();
+  } catch (_) {
+    // The exported app remains fully usable offline with its embedded snapshot.
+  }
+}
+window.setInterval(refreshResearchStatus, 15000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshResearchStatus();
+});
 
 const railsEl = document.getElementById('rails');
 const fusionOn = fusionRailOn();
