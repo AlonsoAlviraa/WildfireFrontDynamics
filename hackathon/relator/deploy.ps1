@@ -4,10 +4,7 @@ $ErrorActionPreference = "Stop"
 $Root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Set-Location $Root
 
-if (-not $env:GOOGLE_CLOUD_PROJECT) {
-  throw "Set GOOGLE_CLOUD_PROJECT before deploying Relator."
-}
-$Project = $env:GOOGLE_CLOUD_PROJECT
+$Project = if ($env:GOOGLE_CLOUD_PROJECT) { $env:GOOGLE_CLOUD_PROJECT } else { "project-89d8567f-49f2-48bc-a00" }
 $Region = if ($env:GOOGLE_CLOUD_REGION) { $env:GOOGLE_CLOUD_REGION } else { "europe-west1" }
 $Bucket = if ($env:RELATOR_BUCKET) { $env:RELATOR_BUCKET } else { "relator-sky-$Project" }
 $Service = "relator"

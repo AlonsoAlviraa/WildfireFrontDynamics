@@ -45,12 +45,12 @@ def test_store_roundtrip(tmp_path, monkeypatch) -> None:
     assert "store_if" in list_incidents()
 
 
-def test_gcp_settings_are_environment_driven_and_no_llm() -> None:
+def test_gcp_project_pinned_no_llm() -> None:
     from relator.gcp import PROJECT_ID, settings
 
     s = settings()
+    assert PROJECT_ID == "project-89d8567f-49f2-48bc-a00"
     assert s["project_id"] == PROJECT_ID
-    assert s["configured"] is bool(PROJECT_ID and s["bucket"])
     assert s["llm"] is False
     assert "aiplatform.googleapis.com" in s["do_not_enable"]
     assert "run.googleapis.com" in s["apis"]

@@ -23,8 +23,12 @@ A sala needs someone who **pulls the sky, cites every pixel source, and shuts up
 
 If a briefing says “ROS 8 m/min” / “4000 ha” / “GO” without a matching cite, the **fiscal** strikes the span and force-ABSTAINS.
 
-Cloud Run expone `/health`, `/e2e`, `/ui/{incident_id}` y `POST /events`.
-La URL concreta y el proyecto se obtienen del despliegue; no se fijan en el repositorio.
+Live (project `project-89d8567f-49f2-48bc-a00`):
+
+- Health: https://relator-680645425654.europe-west1.run.app/health
+- In-process E2E: https://relator-680645425654.europe-west1.run.app/e2e
+- Board UI: https://relator-680645425654.europe-west1.run.app/ui/nijar_e2e
+- POST `/events` `{type, incident_id, ...}` — tablero persistido en GCS
 
 ## Run locally (no GCP, no LLM keys)
 
@@ -48,12 +52,10 @@ Clock:
 
 ## Google Cloud project
 
-Configura `GOOGLE_CLOUD_PROJECT`; la región por defecto es `europe-west1` y el
-bucket por defecto será `relator-sky-${GOOGLE_CLOUD_PROJECT}`.
+Pinned: **`project-89d8567f-49f2-48bc-a00`** · region `europe-west1` · bucket `relator-sky-project-89d8567f-49f2-48bc-a00`
 
 ```powershell
 $env:PYTHONPATH = ".;hackathon"
-$env:GOOGLE_CLOUD_PROJECT = "your-project-id"
 python -m relator --gcp
 # after: winget install Google.CloudSDK
 #        gcloud auth login
