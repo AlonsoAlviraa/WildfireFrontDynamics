@@ -1,0 +1,36 @@
+{
+  "schema": "wfd_wfigs_history_partition_v1",
+  "status": "complete",
+  "source_id": "us_wfigs_daily_perimeters",
+  "adapter_version": "1.0.0",
+  "partition": {
+    "year": 2020,
+    "region": "alaska",
+    "gacc": "AICC",
+    "start": "2020-01-01",
+    "end": "2020-12-31"
+  },
+  "retrieved_at": "2026-08-18T18:19:35.215446Z",
+  "where_sha256": "b99e084761adbce863ba4570e142ed313cbf916e2ebaaf2bcf791638add20afa",
+  "counts": {
+    "server_count": 0,
+    "raw_received": 0,
+    "normalized": 0,
+    "rejected": 0,
+    "events": 0,
+    "effective_page_size": 250
+  },
+  "raw": [],
+  "normalized": {
+    "file": "normalized.geojson",
+    "sha256": "b31197040d9b71f0fd7a801cd93463ae2f1208df5f32fa1cc1cec4c04a636fab"
+  },
+  "rejected": [],
+  "honesty": {
+    "daily_perimeters_are_candidate_progression_not_ground_truth": true,
+    "duplicate_same_event_timestamps_require_resolution": true,
+    "future_or_incident_year_mismatched_timestamps_rejected": true,
+    "same_event_temporal_pair_and_leakage_audit_required": true,
+    "not_validated_tactical_dispatch": true
+  }
+}

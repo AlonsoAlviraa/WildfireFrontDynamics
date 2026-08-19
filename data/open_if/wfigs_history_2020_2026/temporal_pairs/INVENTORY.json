@@ -1,0 +1,272 @@
+{
+  "schema": "wfd_wfigs_pair_inventory_v1",
+  "generated_at": "2026-08-18T22:50:28.295896Z",
+  "source": "WFIGS Daily Perimeters Public",
+  "source_item_id": "7fa2437e625d49f7af1017c8617b68c1",
+  "observations_file": "data\\open_if\\wfigs_history_2020_2026\\observations.geojson",
+  "n_eventos_descargados": 15661,
+  "n_observaciones_descargadas": 35562,
+  "n_observaciones_validas_deduplicadas": 15242,
+  "n_eventos_con_2_mas_perimetros": 1350,
+  "n_eventos_con_pares_aprobados": 842,
+  "n_pares_aprobados": 3439,
+  "n_pares_6_12h": 390,
+  "n_pares_12_24h": 1343,
+  "n_pares_24_48h": 1706,
+  "n_pares_rechazados": 2690,
+  "n_pares_rechazados_y_motivo": {
+    "area_shrink_gt_10pct": 301,
+    "centroid_shift_inconsistent": 14,
+    "delta_gt_48h": 1874,
+    "delta_lt_6h": 624,
+    "no_spatial_overlap": 52,
+    "t0_containment_lt_75pct": 335
+  },
+  "n_observaciones_rechazadas_y_motivo": {
+    "area_lt_1ha": 7382,
+    "duplicate_event_timestamp": 10166,
+    "invalid_or_non_polygon_geometry": 2462,
+    "not_progression_candidate": 310
+  },
+  "distribucion_geografica": {
+    "region": {
+      "AICC": {
+        "events": 224,
+        "approved_pairs": 665
+      },
+      "EACC": {
+        "events": 12,
+        "approved_pairs": 18
+      },
+      "GBCC": {
+        "events": 81,
+        "approved_pairs": 397
+      },
+      "NRCC": {
+        "events": 73,
+        "approved_pairs": 253
+      },
+      "NWCC": {
+        "events": 226,
+        "approved_pairs": 1311
+      },
+      "ONCC": {
+        "events": 36,
+        "approved_pairs": 133
+      },
+      "OSCC": {
+        "events": 29,
+        "approved_pairs": 78
+      },
+      "RMCC": {
+        "events": 70,
+        "approved_pairs": 280
+      },
+      "SACC": {
+        "events": 14,
+        "approved_pairs": 21
+      },
+      "SWCC": {
+        "events": 77,
+        "approved_pairs": 283
+      }
+    },
+    "state": {
+      "US-AK": {
+        "events": 224,
+        "approved_pairs": 665
+      },
+      "US-AZ": {
+        "events": 56,
+        "approved_pairs": 178
+      },
+      "US-CA": {
+        "events": 61,
+        "approved_pairs": 208
+      },
+      "US-CO": {
+        "events": 45,
+        "approved_pairs": 206
+      },
+      "US-FL": {
+        "events": 3,
+        "approved_pairs": 3
+      },
+      "US-HI": {
+        "events": 4,
+        "approved_pairs": 8
+      },
+      "US-ID": {
+        "events": 63,
+        "approved_pairs": 314
+      },
+      "US-LA": {
+        "events": 1,
+        "approved_pairs": 1
+      },
+      "US-MN": {
+        "events": 10,
+        "approved_pairs": 16
+      },
+      "US-MT": {
+        "events": 41,
+        "approved_pairs": 126
+      },
+      "US-NC": {
+        "events": 1,
+        "approved_pairs": 5
+      },
+      "US-NE": {
+        "events": 8,
+        "approved_pairs": 25
+      },
+      "US-NM": {
+        "events": 21,
+        "approved_pairs": 108
+      },
+      "US-NV": {
+        "events": 10,
+        "approved_pairs": 37
+      },
+      "US-OK": {
+        "events": 1,
+        "approved_pairs": 2
+      },
+      "US-OR": {
+        "events": 150,
+        "approved_pairs": 894
+      },
+      "US-SD": {
+        "events": 2,
+        "approved_pairs": 2
+      },
+      "US-TN": {
+        "events": 1,
+        "approved_pairs": 2
+      },
+      "US-TX": {
+        "events": 2,
+        "approved_pairs": 2
+      },
+      "US-UT": {
+        "events": 31,
+        "approved_pairs": 123
+      },
+      "US-VA": {
+        "events": 5,
+        "approved_pairs": 6
+      },
+      "US-WA": {
+        "events": 76,
+        "approved_pairs": 421
+      },
+      "US-WI": {
+        "events": 2,
+        "approved_pairs": 2
+      },
+      "US-WY": {
+        "events": 24,
+        "approved_pairs": 85
+      }
+    },
+    "year": {
+      "2023": {
+        "events": 141,
+        "approved_pairs": 481
+      },
+      "2024": {
+        "events": 273,
+        "approved_pairs": 1201
+      },
+      "2025": {
+        "events": 247,
+        "approved_pairs": 1011
+      },
+      "2026": {
+        "events": 181,
+        "approved_pairs": 746
+      }
+    }
+  },
+  "derechos_resueltos": {
+    "schema": "wfd_wfigs_rights_policy_v1",
+    "policy_id": "nifc-wfigs-public-research-no-redistribution-v1",
+    "policy_checked_at": "2026-08-19",
+    "source_item_id": "7fa2437e625d49f7af1017c8617b68c1",
+    "source_item_url": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+    "owner": "NIFC_Authoritative",
+    "access": "public",
+    "explicit_reuse_licence": null,
+    "license_info_is_disclaimer": true,
+    "internal_noncommercial_research_allowed": true,
+    "internal_noncommercial_training_allowed": true,
+    "commercial_use_authorized": false,
+    "raw_data_redistribution_allowed": false,
+    "derived_dataset_redistribution_allowed": false,
+    "checkpoint_publication_allowed": false,
+    "rights_resolved_for_internal_noncommercial_training": true,
+    "rights_resolved_for_training_and_redistribution": false,
+    "publication_allowed": [
+      "aggregate_metrics",
+      "code",
+      "configuration",
+      "methodology",
+      "plots"
+    ],
+    "publication_blocked": [
+      "checkpoint",
+      "derived_dataset",
+      "geometry",
+      "raw_data",
+      "tensor",
+      "tile"
+    ],
+    "evidence": {
+      "arcgis_item": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+      "doi_copyright_policy": "https://www.doi.gov/copyright",
+      "arcgis_access_public": true,
+      "scientific_use_addressed_by_disclaimer": true,
+      "arcgis_terms_of_use_present": false
+    },
+    "basis": "Project policy permits internal non-commercial scientific use because the NIFC item is public and its disclaimer expressly addresses scientific and aggregate use. No affirmative redistribution licence was found, so public release of source data, derived datasets, tensors, or checkpoints remains blocked.",
+    "not_legal_advice": true,
+    "n_eventos_habilitados_investigacion_interna": 15661,
+    "n_eventos_pendientes_revision_redistribucion": 15661
+  },
+  "criterios": {
+    "delta_buckets_hours": {
+      "6_12h": "[6,12)",
+      "12_24h": "[12,24)",
+      "24_48h": "[24,48]"
+    },
+    "minimum_t0_containment": 0.75,
+    "minimum_area_ratio_t1_t0": 0.9,
+    "minimum_area_ha": 1.0,
+    "strict_utc_timestamp": true,
+    "adjacent_pairs_only": true,
+    "final_scars_m3_hotspots_rejected": true
+  },
+  "split_counts": {
+    "train": {
+      "events": 583,
+      "pairs": 2335
+    },
+    "validation": {
+      "events": 131,
+      "pairs": 525
+    },
+    "test": {
+      "events": 128,
+      "pairs": 579
+    }
+  },
+  "claims": {
+    "pairs_are_candidate_progression_labels": true,
+    "pairs_are_ground_truth": false,
+    "event_disjoint_splits": true,
+    "tile_disjoint_only": false,
+    "training_allowed_for_internal_noncommercial_research": true,
+    "training_blocked_until_rights_resolved": false,
+    "raw_or_derived_data_publication_blocked": true
+  }
+}

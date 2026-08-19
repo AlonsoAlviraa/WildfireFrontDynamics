@@ -1,0 +1,79 @@
+{
+  "schema": "wfd_wfigs_pair_enrichment_inventory_v1",
+  "generated_at": "2026-08-18T23:57:41.766388Z",
+  "counts": {
+    "pairs": 3439,
+    "pairs_missing_t0_bbox": 0,
+    "events_queried": 842,
+    "events_query_complete": 842,
+    "events_query_partial_or_error": 0,
+    "pairs_sentinel2_pre_t0": 3439,
+    "pairs_landsat_pre_t0": 3439,
+    "pairs_both_eo_pre_t0": 3439,
+    "pairs_any_eo_pre_t0": 3439,
+    "pairs_sentinel2_top_candidate_stac_created_by_t0": 2877,
+    "pairs_landsat_top_candidate_stac_created_by_t0": 1377,
+    "pairs_both_top_candidates_stac_created_by_t0": 1163,
+    "pairs_hrrr_available_by_t0_and_full_window": 2530,
+    "pairs_hrrr_unresolved": 909,
+    "pairs_outside_hrrr_conus_domain": 673,
+    "hrrr_archive_urls_probed": 7367
+  },
+  "contracts": {
+    "eo_acquisition_at_or_before_t0": true,
+    "eo_operational_publication_time_verified": false,
+    "eo_historical_reprocessing_possible": true,
+    "eo_selection": "top 3 by age_days + cloud_cover_pct/20 within sensor lookback",
+    "eo_scene_full_perimeter_coverage_verified": false,
+    "hrrr_max_forecast_lead_hours": 48,
+    "hrrr_run_available_by_t0_verified_from_s3_last_modified": true,
+    "hrrr_spatial_domain_verified_from_t0_bbox": true,
+    "t1_or_post_t0_observations_used_as_inputs": false,
+    "event_disjoint_splits_preserved": true
+  },
+  "rights": {
+    "schema": "wfd_wfigs_rights_policy_v1",
+    "policy_id": "nifc-wfigs-public-research-no-redistribution-v1",
+    "policy_checked_at": "2026-08-19",
+    "source_item_id": "7fa2437e625d49f7af1017c8617b68c1",
+    "source_item_url": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+    "owner": "NIFC_Authoritative",
+    "access": "public",
+    "explicit_reuse_licence": null,
+    "license_info_is_disclaimer": true,
+    "internal_noncommercial_research_allowed": true,
+    "internal_noncommercial_training_allowed": true,
+    "commercial_use_authorized": false,
+    "raw_data_redistribution_allowed": false,
+    "derived_dataset_redistribution_allowed": false,
+    "checkpoint_publication_allowed": false,
+    "rights_resolved_for_internal_noncommercial_training": true,
+    "rights_resolved_for_training_and_redistribution": false,
+    "publication_allowed": [
+      "aggregate_metrics",
+      "code",
+      "configuration",
+      "methodology",
+      "plots"
+    ],
+    "publication_blocked": [
+      "checkpoint",
+      "derived_dataset",
+      "geometry",
+      "raw_data",
+      "tensor",
+      "tile"
+    ],
+    "evidence": {
+      "arcgis_item": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+      "doi_copyright_policy": "https://www.doi.gov/copyright",
+      "arcgis_access_public": true,
+      "scientific_use_addressed_by_disclaimer": true,
+      "arcgis_terms_of_use_present": false
+    },
+    "basis": "Project policy permits internal non-commercial scientific use because the NIFC item is public and its disclaimer expressly addresses scientific and aggregate use. No affirmative redistribution licence was found, so public release of source data, derived datasets, tensors, or checkpoints remains blocked.",
+    "not_legal_advice": true,
+    "training_blocked_by_wfigs_rights": false,
+    "current_artifact_contains_metadata_only": true
+  }
+}

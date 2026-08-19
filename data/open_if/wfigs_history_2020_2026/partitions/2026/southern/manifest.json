@@ -1,0 +1,109 @@
+{
+  "schema": "wfd_wfigs_history_partition_v1",
+  "status": "complete",
+  "source_id": "us_wfigs_daily_perimeters",
+  "adapter_version": "1.0.0",
+  "partition": {
+    "year": 2026,
+    "region": "southern",
+    "gacc": "SACC",
+    "start": "2026-01-01",
+    "end": "2026-08-18"
+  },
+  "retrieved_at": "2026-08-18T18:41:20.713781Z",
+  "where_sha256": "d23ba51957d0eac6442e9ce9b5e5fc91540b1bbc5577ba38c4c2d30d06149477",
+  "counts": {
+    "server_count": 1441,
+    "raw_received": 1441,
+    "normalized": 1441,
+    "rejected": 0,
+    "events": 1030,
+    "effective_page_size": 250
+  },
+  "raw": [
+    {
+      "file": "raw/page_00000000.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=0&resultRecordCount=250",
+      "requested_records": 250,
+      "received_records": 250,
+      "bytes": 1486570,
+      "sha256": "fe0ec9e37b65c05da28c9f129f44e5f5fe1a34273b9fe954e584a58d4b1007c9",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    },
+    {
+      "file": "raw/page_00000250.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=250&resultRecordCount=250",
+      "requested_records": 250,
+      "received_records": 250,
+      "bytes": 5229310,
+      "sha256": "c2862ea2c6ab6334fdd842f6dde48ca61b9f3a22d986e10eb6b796db27326472",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    },
+    {
+      "file": "raw/page_00000500.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=500&resultRecordCount=250",
+      "requested_records": 250,
+      "received_records": 250,
+      "bytes": 6648797,
+      "sha256": "88088d721d07f92694b9b56866273b56ca5fd9b7785f468fa9da6ebfe55d7c34",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    },
+    {
+      "file": "raw/page_00000750.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=750&resultRecordCount=250",
+      "requested_records": 250,
+      "received_records": 250,
+      "bytes": 3263524,
+      "sha256": "3cfa4c0d0a8a24ee7871f49a8a93335bb69873bcabcfb0b81db6ad47dc0a88b1",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    },
+    {
+      "file": "raw/page_00001000.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=1000&resultRecordCount=250",
+      "requested_records": 250,
+      "received_records": 250,
+      "bytes": 11893867,
+      "sha256": "a87fb67e8170905cbf6839fff27301a380a1c99ba6d6ec67e76f329e2a4f0dc8",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    },
+    {
+      "file": "raw/page_00001250.geojson",
+      "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0/query?where=poly_FeatureCategory+%3D+%27Wildfire+Daily+Fire+Perimeter%27+AND+attr_IncidentTypeCategory+%3D+%27WF%27+AND+%28poly_DeleteThis+IS+NULL+OR+poly_DeleteThis+%3C%3E+%27Yes%27%29+AND+%28poly_FeatureAccess+IS+NULL+OR+poly_FeatureAccess+%3D+%27Public%27%29+AND+%28poly_IsVisible+IS+NULL+OR+poly_IsVisible+%3D+%27Yes%27%29+AND+attr_GACC+%3D+%27SACC%27+AND+attr_UniqueFireIdentifier+LIKE+%272026-%25%27+AND+poly_PolygonDateTime+%3E%3D+TIMESTAMP+%272026-01-01+00%3A00%3A00%27+AND+poly_PolygonDateTime+%3C%3D+TIMESTAMP+%272026-08-18+23%3A59%3A59%27&f=geojson&outFields=OBJECTID%2CGlobalID%2Cpoly_IncidentName%2Cpoly_FeatureCategory%2Cpoly_MapMethod%2Cpoly_GISAcres%2Cpoly_Acres_AutoCalc%2Cpoly_DeleteThis%2Cpoly_FeatureAccess%2Cpoly_FeatureStatus%2Cpoly_IsVisible%2Cpoly_CreateDate%2Cpoly_DateCurrent%2Cpoly_PolygonDateTime%2Cpoly_IRWINID%2Cpoly_FORID%2Cpoly_Source%2Cattr_IncidentName%2Cattr_IncidentTypeCategory%2Cattr_FireDiscoveryDateTime%2Cattr_IrwinID%2Cattr_UniqueFireIdentifier%2Cattr_POOState%2Cattr_GACC%2Cattr_IsValid%2Cattr_FinalAcres%2CBurnPeriod%2CAcreageChange%2Cattr_CreatedOnDateTime_dt%2Cattr_ModifiedOnDateTime_dt%2Cattr_Source&returnGeometry=true&outSR=4326&geometryPrecision=6&orderByFields=poly_PolygonDateTime+ASC%2COBJECTID+ASC&resultOffset=1250&resultRecordCount=191",
+      "requested_records": 191,
+      "received_records": 191,
+      "bytes": 2502513,
+      "sha256": "75c51ba60a77e3272ae23c623f473a0a6905caf01d4403ba189c0e8006d4de28",
+      "etag": "sd463292_462297239",
+      "last_modified": "Tue, 18 Aug 2026 18:32:36 GMT",
+      "reused": false,
+      "retry_count": 0
+    }
+  ],
+  "normalized": {
+    "file": "normalized.geojson",
+    "sha256": "5f10fe9c149ff985ad0eaa30c153c20b680f8d959c198e1b896373b458721a19"
+  },
+  "rejected": [],
+  "honesty": {
+    "daily_perimeters_are_candidate_progression_not_ground_truth": true,
+    "duplicate_same_event_timestamps_require_resolution": true,
+    "future_or_incident_year_mismatched_timestamps_rejected": true,
+    "same_event_temporal_pair_and_leakage_audit_required": true,
+    "not_validated_tactical_dispatch": true
+  }
+}

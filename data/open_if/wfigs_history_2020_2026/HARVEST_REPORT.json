@@ -1,0 +1,1382 @@
+{
+  "schema": "wfd_wfigs_history_harvest_v1",
+  "ok": true,
+  "started_at": "2026-08-18T19:08:59.124633Z",
+  "completed_at": "2026-08-18T19:15:28.323576Z",
+  "as_of": "2026-08-18",
+  "source_url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Daily_Perimeters_Public/FeatureServer/0",
+  "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "regions": [
+    "alaska",
+    "eastern",
+    "great_basin",
+    "northern_california",
+    "northern_rockies",
+    "northwest",
+    "rocky_mountain",
+    "southern",
+    "southern_california",
+    "southwest"
+  ],
+  "counts": {
+    "partitions_requested": 70,
+    "partitions_complete": 70,
+    "partitions_failed": 0,
+    "observations": 35562,
+    "events": 15661,
+    "downloaded_bytes": 2322055826
+  },
+  "failures": [],
+  "partitions": [
+    {
+      "partition": {
+        "year": 2020,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 17,
+        "raw_received": 17,
+        "normalized": 17,
+        "rejected": 0,
+        "events": 17,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 11,
+        "raw_received": 11,
+        "normalized": 11,
+        "rejected": 0,
+        "events": 11,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 27,
+        "raw_received": 27,
+        "normalized": 27,
+        "rejected": 0,
+        "events": 27,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 10,
+        "raw_received": 10,
+        "normalized": 10,
+        "rejected": 0,
+        "events": 10,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 5,
+        "raw_received": 5,
+        "normalized": 5,
+        "rejected": 0,
+        "events": 5,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 32,
+        "raw_received": 32,
+        "normalized": 32,
+        "rejected": 0,
+        "events": 32,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 45,
+        "raw_received": 45,
+        "normalized": 45,
+        "rejected": 0,
+        "events": 45,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 11,
+        "raw_received": 11,
+        "normalized": 11,
+        "rejected": 0,
+        "events": 11,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2020,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2020-01-01",
+        "end": "2020-12-31"
+      },
+      "counts": {
+        "server_count": 8,
+        "raw_received": 8,
+        "normalized": 8,
+        "rejected": 0,
+        "events": 8,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2020\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 96,
+        "raw_received": 96,
+        "normalized": 96,
+        "rejected": 0,
+        "events": 96,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 559,
+        "raw_received": 559,
+        "normalized": 559,
+        "rejected": 0,
+        "events": 559,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 181,
+        "raw_received": 181,
+        "normalized": 181,
+        "rejected": 0,
+        "events": 181,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 54,
+        "raw_received": 54,
+        "normalized": 54,
+        "rejected": 0,
+        "events": 54,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 286,
+        "raw_received": 286,
+        "normalized": 286,
+        "rejected": 0,
+        "events": 286,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 218,
+        "raw_received": 218,
+        "normalized": 218,
+        "rejected": 0,
+        "events": 218,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 224,
+        "raw_received": 224,
+        "normalized": 224,
+        "rejected": 0,
+        "events": 224,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 243,
+        "raw_received": 243,
+        "normalized": 243,
+        "rejected": 0,
+        "events": 243,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 90,
+        "raw_received": 90,
+        "normalized": 90,
+        "rejected": 0,
+        "events": 90,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2021,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2021-01-01",
+        "end": "2021-12-31"
+      },
+      "counts": {
+        "server_count": 163,
+        "raw_received": 163,
+        "normalized": 163,
+        "rejected": 0,
+        "events": 163,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2021\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": false,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 1,
+        "raw_received": 1,
+        "normalized": 1,
+        "rejected": 0,
+        "events": 1,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 1,
+        "raw_received": 1,
+        "normalized": 1,
+        "rejected": 0,
+        "events": 1,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 3,
+        "raw_received": 3,
+        "normalized": 3,
+        "rejected": 0,
+        "events": 3,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 9,
+        "raw_received": 9,
+        "normalized": 9,
+        "rejected": 0,
+        "events": 9,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 3,
+        "raw_received": 3,
+        "normalized": 3,
+        "rejected": 0,
+        "events": 3,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2022,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2022-01-01",
+        "end": "2022-12-31"
+      },
+      "counts": {
+        "server_count": 0,
+        "raw_received": 0,
+        "normalized": 0,
+        "rejected": 0,
+        "events": 0,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2022\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 477,
+        "raw_received": 477,
+        "normalized": 477,
+        "rejected": 0,
+        "events": 138,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 434,
+        "raw_received": 434,
+        "normalized": 434,
+        "rejected": 0,
+        "events": 388,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 180,
+        "raw_received": 180,
+        "normalized": 180,
+        "rejected": 0,
+        "events": 75,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 787,
+        "raw_received": 787,
+        "normalized": 787,
+        "rejected": 0,
+        "events": 61,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 453,
+        "raw_received": 453,
+        "normalized": 453,
+        "rejected": 0,
+        "events": 117,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 1283,
+        "raw_received": 1283,
+        "normalized": 1283,
+        "rejected": 0,
+        "events": 386,
+        "effective_page_size": 125
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 355,
+        "raw_received": 355,
+        "normalized": 355,
+        "rejected": 0,
+        "events": 153,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 1275,
+        "raw_received": 1275,
+        "normalized": 1275,
+        "rejected": 0,
+        "events": 1052,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 230,
+        "raw_received": 230,
+        "normalized": 230,
+        "rejected": 0,
+        "events": 153,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2023,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2023-01-01",
+        "end": "2023-12-31"
+      },
+      "counts": {
+        "server_count": 527,
+        "raw_received": 527,
+        "normalized": 527,
+        "rejected": 0,
+        "events": 205,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2023\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 767,
+        "raw_received": 767,
+        "normalized": 767,
+        "rejected": 0,
+        "events": 190,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 1232,
+        "raw_received": 1232,
+        "normalized": 1232,
+        "rejected": 0,
+        "events": 1024,
+        "effective_page_size": 116
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 1459,
+        "raw_received": 1459,
+        "normalized": 1459,
+        "rejected": 0,
+        "events": 340,
+        "effective_page_size": 62
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 189,
+        "raw_received": 189,
+        "normalized": 189,
+        "rejected": 0,
+        "events": 51,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 632,
+        "raw_received": 632,
+        "normalized": 632,
+        "rejected": 0,
+        "events": 320,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 3466,
+        "raw_received": 3466,
+        "normalized": 3466,
+        "rejected": 0,
+        "events": 513,
+        "effective_page_size": 125
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 621,
+        "raw_received": 621,
+        "normalized": 621,
+        "rejected": 0,
+        "events": 321,
+        "effective_page_size": 250
+      },
+      "resumed": false,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 519,
+        "raw_received": 519,
+        "normalized": 519,
+        "rejected": 0,
+        "events": 328,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 632,
+        "raw_received": 632,
+        "normalized": 632,
+        "rejected": 0,
+        "events": 285,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2024,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      "counts": {
+        "server_count": 531,
+        "raw_received": 531,
+        "normalized": 531,
+        "rejected": 0,
+        "events": 209,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2024\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 1168,
+        "raw_received": 1168,
+        "normalized": 1168,
+        "rejected": 0,
+        "events": 169,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 1481,
+        "raw_received": 1481,
+        "normalized": 1481,
+        "rejected": 0,
+        "events": 921,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 647,
+        "raw_received": 647,
+        "normalized": 647,
+        "rejected": 0,
+        "events": 223,
+        "effective_page_size": 62
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 325,
+        "raw_received": 325,
+        "normalized": 325,
+        "rejected": 0,
+        "events": 60,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 859,
+        "raw_received": 859,
+        "normalized": 859,
+        "rejected": 0,
+        "events": 305,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 1761,
+        "raw_received": 1761,
+        "normalized": 1761,
+        "rejected": 0,
+        "events": 359,
+        "effective_page_size": 125
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 496,
+        "raw_received": 496,
+        "normalized": 496,
+        "rejected": 0,
+        "events": 172,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 1369,
+        "raw_received": 1369,
+        "normalized": 1369,
+        "rejected": 0,
+        "events": 973,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 370,
+        "raw_received": 370,
+        "normalized": 370,
+        "rejected": 0,
+        "events": 131,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2025,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "counts": {
+        "server_count": 496,
+        "raw_received": 496,
+        "normalized": 496,
+        "rejected": 0,
+        "events": 101,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2025\\southwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "alaska",
+        "gacc": "AICC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 352,
+        "raw_received": 352,
+        "normalized": 352,
+        "rejected": 0,
+        "events": 115,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\alaska\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "eastern",
+        "gacc": "EACC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 1388,
+        "raw_received": 1388,
+        "normalized": 1386,
+        "rejected": 2,
+        "events": 923,
+        "effective_page_size": 31
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\eastern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "great_basin",
+        "gacc": "GBCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 655,
+        "raw_received": 655,
+        "normalized": 655,
+        "rejected": 0,
+        "events": 220,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\great_basin\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "northern_california",
+        "gacc": "ONCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 116,
+        "raw_received": 116,
+        "normalized": 116,
+        "rejected": 0,
+        "events": 54,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\northern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "northern_rockies",
+        "gacc": "NRCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 479,
+        "raw_received": 479,
+        "normalized": 479,
+        "rejected": 0,
+        "events": 210,
+        "effective_page_size": 114
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\northern_rockies\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "northwest",
+        "gacc": "NWCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 2281,
+        "raw_received": 2281,
+        "normalized": 2281,
+        "rejected": 0,
+        "events": 480,
+        "effective_page_size": 125
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\northwest\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "rocky_mountain",
+        "gacc": "RMCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 909,
+        "raw_received": 909,
+        "normalized": 909,
+        "rejected": 0,
+        "events": 338,
+        "effective_page_size": 125
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\rocky_mountain\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "southern",
+        "gacc": "SACC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 1441,
+        "raw_received": 1441,
+        "normalized": 1441,
+        "rejected": 0,
+        "events": 1030,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\southern\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "southern_california",
+        "gacc": "OSCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 225,
+        "raw_received": 225,
+        "normalized": 225,
+        "rejected": 0,
+        "events": 137,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\southern_california\\manifest.json"
+    },
+    {
+      "partition": {
+        "year": 2026,
+        "region": "southwest",
+        "gacc": "SWCC",
+        "start": "2026-01-01",
+        "end": "2026-08-18"
+      },
+      "counts": {
+        "server_count": 400,
+        "raw_received": 400,
+        "normalized": 400,
+        "rejected": 0,
+        "events": 134,
+        "effective_page_size": 250
+      },
+      "resumed": true,
+      "manifest": "data\\open_if\\wfigs_history_2020_2026\\partitions\\2026\\southwest\\manifest.json"
+    }
+  ],
+  "observations": {
+    "file": "data\\open_if\\wfigs_history_2020_2026\\observations.geojson",
+    "sha256": "3d71aac7959f111418d2d9a1695e0f523951763246c85e0404d05a47b3ccdc2a"
+  },
+  "request_fingerprint": "e079c9be625b9e88cdaed77bee85facb5ea6e821658136eb8a83017e90bb64c4",
+  "honesty": {
+    "daily_perimeters_are_candidate_progression_not_ground_truth": true,
+    "duplicate_same_event_timestamps_require_resolution": true,
+    "future_or_incident_year_mismatched_timestamps_rejected": true,
+    "same_event_temporal_pair_and_leakage_audit_required": true,
+    "not_validated_tactical_dispatch": true
+  }
+}

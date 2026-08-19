@@ -1,0 +1,45 @@
+{
+  "schema": "wfd_wfigs_rights_policy_v1",
+  "policy_id": "nifc-wfigs-public-research-no-redistribution-v1",
+  "policy_checked_at": "2026-08-19",
+  "source_item_id": "7fa2437e625d49f7af1017c8617b68c1",
+  "source_item_url": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+  "owner": "NIFC_Authoritative",
+  "access": "public",
+  "explicit_reuse_licence": null,
+  "license_info_is_disclaimer": true,
+  "internal_noncommercial_research_allowed": true,
+  "internal_noncommercial_training_allowed": true,
+  "commercial_use_authorized": false,
+  "raw_data_redistribution_allowed": false,
+  "derived_dataset_redistribution_allowed": false,
+  "checkpoint_publication_allowed": false,
+  "rights_resolved_for_internal_noncommercial_training": true,
+  "rights_resolved_for_training_and_redistribution": false,
+  "publication_allowed": [
+    "aggregate_metrics",
+    "code",
+    "configuration",
+    "methodology",
+    "plots"
+  ],
+  "publication_blocked": [
+    "checkpoint",
+    "derived_dataset",
+    "geometry",
+    "raw_data",
+    "tensor",
+    "tile"
+  ],
+  "evidence": {
+    "arcgis_item": "https://www.arcgis.com/sharing/rest/content/items/7fa2437e625d49f7af1017c8617b68c1",
+    "doi_copyright_policy": "https://www.doi.gov/copyright",
+    "arcgis_access_public": true,
+    "scientific_use_addressed_by_disclaimer": true,
+    "arcgis_terms_of_use_present": false
+  },
+  "basis": "Project policy permits internal non-commercial scientific use because the NIFC item is public and its disclaimer expressly addresses scientific and aggregate use. No affirmative redistribution licence was found, so public release of source data, derived datasets, tensors, or checkpoints remains blocked.",
+  "not_legal_advice": true,
+  "n_eventos_habilitados_investigacion_interna": 15661,
+  "n_eventos_pendientes_revision_redistribucion": 15661
+}

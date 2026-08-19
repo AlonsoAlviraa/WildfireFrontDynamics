@@ -1,0 +1,36 @@
+{
+  "schema": "wfd_wfigs_history_partition_v1",
+  "status": "complete",
+  "source_id": "us_wfigs_daily_perimeters",
+  "adapter_version": "1.0.0",
+  "partition": {
+    "year": 2022,
+    "region": "northern_california",
+    "gacc": "ONCC",
+    "start": "2022-01-01",
+    "end": "2022-12-31"
+  },
+  "retrieved_at": "2026-08-18T18:19:47.771183Z",
+  "where_sha256": "6cdddb1eba35d0c62e700d74c673ad5ba50e32fe559c9cb5e5716cdf1b24cd50",
+  "counts": {
+    "server_count": 0,
+    "raw_received": 0,
+    "normalized": 0,
+    "rejected": 0,
+    "events": 0,
+    "effective_page_size": 250
+  },
+  "raw": [],
+  "normalized": {
+    "file": "normalized.geojson",
+    "sha256": "fc2bcd51a222994be9c31c73cfaa17cfe17bc94cdd465dee818d714094e57949"
+  },
+  "rejected": [],
+  "honesty": {
+    "daily_perimeters_are_candidate_progression_not_ground_truth": true,
+    "duplicate_same_event_timestamps_require_resolution": true,
+    "future_or_incident_year_mismatched_timestamps_rejected": true,
+    "same_event_temporal_pair_and_leakage_audit_required": true,
+    "not_validated_tactical_dispatch": true
+  }
+}
