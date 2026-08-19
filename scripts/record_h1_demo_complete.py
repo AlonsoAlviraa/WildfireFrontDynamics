@@ -22,13 +22,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 STATUS_DEFAULT = ROOT / "docs" / "PLAN_1_MES_GRAPH_V6_STATUS.json"
+STAMP_DEFAULT = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
+CURRENT_STATE_DEFAULT = ROOT / "docs" / "CURRENT_STATE.md"
+SESSION_DEFAULT = ROOT / "docs" / "H1_DEMO_SESSION_READY.json"
+GO_TOTAL_DEFAULT = ROOT / "docs" / "GO_TOTAL_STATUS.json"
 
 # Placeholders that never count as a real human-signed third-party acta.
 _PLACEHOLDER_RE = re.compile(
@@ -90,9 +93,7 @@ def _is_real_value(value: str | None) -> bool:
         return False
     if _PLACEHOLDER_RE.match(v_clean):
         return False
-    if v_clean.lower() in {"_", "-", "—", "–", "...", "…"}:
-        return False
-    return True
+    return v_clean.lower() not in {"_", "-", "—", "–", "...", "…"}
 
 
 def _looks_like_date(value: str) -> bool:
@@ -191,6 +192,10 @@ def record(
     acta_path: Path,
     status_path: Path,
     dry_run: bool = False,
+    stamp_path: Path | None = None,
+    current_state_path: Path | None = None,
+    session_path: Path | None = None,
+    go_total_path: Path | None = None,
 ) -> tuple[int, dict[str, Any]]:
     """Validate acta and optionally write status. Returns (exit_code, payload)."""
     if not acta_path.is_file():
@@ -228,31 +233,112 @@ def record(
             "note": "Status NOT updated — fill fecha, presentador, tercero (no placeholders)",
         }
 
-    if not status_path.is_file():
+    stamp_path = Path(stamp_path) if stamp_path is not None else STAMP_DEFAULT
+    current_state_path = (
+        Path(current_state_path) if current_state_path is not None else CURRENT_STATE_DEFAULT
+    )
+    session_path = Path(session_path) if session_path is not None else SESSION_DEFAULT
+    go_total_path = Path(go_total_path) if go_total_path is not None else GO_TOTAL_DEFAULT
+
+    if not status_path.is_file() and not stamp_path.is_file():
         return 1, {
             "ok": False,
-            "error": f"status JSON missing: {status_path}",
+            "error": f"status and product stamp missing: {status_path}; {stamp_path}",
             "exit_code": 1,
             "go_q_met": False,
             "note": "Acta validated but cannot record without plan status JSON",
         }
 
-    try:
-        status = load_status(status_path)
-    except (OSError, json.JSONDecodeError) as exc:
-        return 1, {"ok": False, "error": str(exc), "exit_code": 1, "go_q_met": False}
+    status: dict[str, Any] | None = None
+    if status_path.is_file():
+        try:
+            status = load_status(status_path)
+        except (OSError, json.JSONDecodeError) as exc:
+            return 1, {"ok": False, "error": str(exc), "exit_code": 1, "go_q_met": False}
 
     try:
         rel = str(acta_path.resolve().relative_to(ROOT.resolve())).replace("\\", "/")
     except ValueError:
         rel = str(acta_path)
 
-    new_status = apply_h1_complete(status, acta_rel=rel, fields=fields)
+    new_status = (
+        apply_h1_complete(status, acta_rel=rel, fields=fields) if status is not None else None
+    )
+
+    try:
+        stamp: dict[str, Any] = load_status(stamp_path) if stamp_path.is_file() else {}
+        stamp["GO_Q"] = "complete"
+        stamp["h1_acta"] = {
+            "path": rel,
+            "fecha": fields.get("fecha"),
+            "presentador": fields.get("presentador"),
+            "tercero": fields.get("tercero"),
+        }
+    except (OSError, json.JSONDecodeError) as exc:
+        return 1, {"ok": False, "error": str(exc), "exit_code": 1, "go_q_met": False}
+
+    go_mes = bool(stamp.get("GO_MES"))
+    go_total_met = go_mes
+    session: dict[str, Any] = load_status(session_path) if session_path.is_file() else {}
+    session.update(
+        {
+            "go_q_met": True,
+            "product_unlock": False,
+            "go_total_met": go_total_met,
+        }
+    )
+    go_total: dict[str, Any] = (
+        load_status(go_total_path)
+        if go_total_path.is_file()
+        else {"schema": "wfd_go_total_status_v1"}
+    )
+    go_total.update({"met": go_total_met, "go_total": go_total_met})
+    go_total["gates"] = {
+        **(go_total.get("gates") or {}),
+        "GO_MES": go_mes,
+        "GO_Q": "complete",
+    }
+    go_total["go_q"] = {
+        **(go_total.get("go_q") or {}),
+        "met": True,
+        "status": "complete",
+        "h1_acta": stamp["h1_acta"],
+    }
+    go_total["remaining_human_steps"] = (
+        []
+        if go_total_met
+        else [
+            {
+                "id": "go_mes",
+                "owner": "human",
+                "detail": "GO_MES remains false; GO_Q completion alone cannot close GO_TOTAL.",
+            }
+        ]
+    )
 
     if not dry_run:
-        status_path.write_text(
-            json.dumps(new_status, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+        if new_status is not None:
+            status_path.write_text(
+                json.dumps(new_status, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        stamp_path.write_text(
+            json.dumps(stamp, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        if current_state_path.is_file():
+            current = current_state_path.read_text(encoding="utf-8")
+            current = re.sub(
+                r"\|\s*\*\*GO_Q\*\*\s*\|[^\n]*",
+                "| **GO_Q** | **complete** | H1 third-party acta registrada |",
+                current,
+                count=1,
+            )
+            current_state_path.write_text(current, encoding="utf-8")
+        session_path.write_text(
+            json.dumps(session, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        go_total_path.write_text(
+            json.dumps(go_total, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
     return 0, {
@@ -264,11 +350,17 @@ def record(
             "presentador": fields.get("presentador"),
             "tercero": fields.get("tercero"),
         },
+        "go_q_met": True,
+        "go_total_met": go_total_met,
         "updated": {
-            "M3.2": new_status["gates"]["M3.2"]["status"],
-            "H1_demo_acta": new_status["tracks"]["H"]["items"]["H1_demo_acta"],
-            "GO_Q": new_status["rails"]["GO_Q"],
-            "GO_Q_gate_met": new_status["gates"]["GO_Q"]["met"],
+            "M3.2": new_status["gates"]["M3.2"]["status"] if new_status else None,
+            "H1_demo_acta": (
+                new_status["tracks"]["H"]["items"]["H1_demo_acta"]
+                if new_status
+                else None
+            ),
+            "GO_Q": "complete",
+            "GO_Q_gate_met": True,
         },
         "status_path": str(status_path).replace("\\", "/"),
         "exit_code": 0,

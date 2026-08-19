@@ -47,6 +47,74 @@ def test_decide_service_inline_ops_can_go_or_hold():
     assert payload.get("system_reliability_pass") is False
 
 
+def test_http_surface_flags_catalog_card(tmp_path: Path):
+    outbox = tmp_path / "inc" / "outbox"
+    outbox.mkdir(parents=True)
+    (outbox / "fire_decision_card.json").write_text(
+        json.dumps(
+            {
+                "event_id": "http_card",
+                "decision": "HOLD",
+                "confidence_pred": 0.4,
+                "system_reliability_pass": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        with urllib.request.urlopen(f"{base}/v1/flags", timeout=5) as resp:
+            flags = json.loads(resp.read().decode("utf-8"))
+        assert flags["ok"] is True
+        assert str(flags["GO_Q"]).lower() == "partial"
+        with urllib.request.urlopen(f"{base}/v1/catalog", timeout=5) as resp:
+            catalog = json.loads(resp.read().decode("utf-8"))
+        assert "rcda_net" in catalog["not_ready_ids"]
+        with urllib.request.urlopen(f"{base}/v1/card?work_dir=inc", timeout=5) as resp:
+            card = json.loads(resp.read().decode("utf-8"))
+        assert card["ok"] is True
+        assert card["summary"]["decision"] == "HOLD"
+        with urllib.request.urlopen(f"{base}/v1/status?work_dir=inc", timeout=5) as resp:
+            status = json.loads(resp.read().decode("utf-8"))
+        assert status.get("ok") is True
+        with urllib.request.urlopen(f"{base}/v1/snapshot?work_dir=inc", timeout=5) as resp:
+            snap = json.loads(resp.read().decode("utf-8"))
+        assert snap["ok"] is True
+        assert snap["decision"] == "HOLD"
+        assert "ops" in snap["source_board"]
+        assert snap["rails"]["not_tactical_dispatch"] is True
+        cmp_body = json.dumps({"work_dir": "inc"}).encode("utf-8")
+        cmp_req = urllib.request.Request(
+            f"{base}/v1/compare",
+            data=cmp_body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(cmp_req, timeout=5) as resp:
+            cmp = json.loads(resp.read().decode("utf-8"))
+        assert cmp["ok"] is True
+        assert cmp["flipped"] is False
+        assert cmp["alert"]["delivered"] is False
+        save_req = urllib.request.Request(
+            f"{base}/v1/snapshot",
+            data=json.dumps({"work_dir": "inc", "save": True}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(save_req, timeout=5) as resp:
+            saved = json.loads(resp.read().decode("utf-8"))
+        assert saved["saved"] is True
+        assert (tmp_path / "inc" / "outbox" / "incident_snapshot.json").is_file()
+        with urllib.request.urlopen(f"{base}/", timeout=5) as resp:
+            root = json.loads(resp.read().decode("utf-8"))
+        assert any("flags" in item for item in root["endpoints"])
+        assert any("snapshot" in item for item in root["endpoints"])
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
 def test_http_api_health_and_decide(tmp_path: Path):
     httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
     base = f"http://127.0.0.1:{port}"
@@ -244,6 +312,45 @@ def test_reliability_gate_path_outside_allowlist_rejected(tmp_path: Path):
             },
             base=sandbox,
         )
+
+
+def test_http_auth_headers_cannot_unlock_field_ops(tmp_path: Path):
+    """Authorization / token headers must not bypass field_ops fail-closed."""
+    httpd, _thread, port = start_background(host="127.0.0.1", port=0, base_dir=tmp_path)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        body = json.dumps(
+            {
+                "event_id": "http_token",
+                "policy_id": "field_ops",
+                "ml_metrics": {"test_iou": 0.9, "improvement_vs_copy_iou": 0.25},
+                "gates_ok": True,
+                "determinism_ok": True,
+                "abstention_enforced": True,
+                "provenance_ok": True,
+                "trust_client_reliability": True,
+                "channel": "test",
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base}/v1/decide",
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer supersecret",
+                "X-WFD-Token": "supersecret",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            card = json.loads(resp.read().decode("utf-8"))
+        assert card.get("policy_id") == "field_ops"
+        assert card.get("system_reliability_pass") is False
+        assert card["decision"] != "GO"
+        assert card["decision"] == "ABSTAIN"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
 
 
 def test_http_ignores_client_asserted_gates(tmp_path: Path):

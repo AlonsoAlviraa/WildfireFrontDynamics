@@ -16,9 +16,11 @@ from wildfire_front.product.app_spa import build_product_app_payload, write_prod
 from wildfire_front.product.decide_service import REPO_ROOT, PathNotAllowedError
 from wildfire_front.product.live_ops import (
     LIVE_PATH_ACK_DECISION,
+    LIVE_PATH_COMPARE,
     LIVE_PATH_DECIDE,
     LIVE_PATH_EXPORT_ACTA,
     LIVE_PATH_HEALTH,
+    LIVE_PATH_SNAPSHOT,
     LIVE_PATH_STATUS,
     check_demo_day_artifacts,
     dispatch_live,
@@ -135,6 +137,11 @@ def test_payload_live_ops_flag():
     assert on["live_ops"]["endpoints"]["decide"] == LIVE_PATH_DECIDE
     assert "export-acta" in on["live_ops"]["endpoints"]["export_acta"]
     assert on["live_ops"]["endpoints"]["ack_decision"] == LIVE_PATH_ACK_DECISION
+    assert on["live_ops"]["endpoints"]["card"] == "/live/v1/card"
+    assert on["live_ops"]["endpoints"]["flags"] == "/live/v1/flags"
+    assert on["live_ops"]["endpoints"]["catalog"] == "/live/v1/catalog"
+    assert on["live_ops"]["endpoints"]["snapshot"] == "/live/v1/snapshot"
+    assert on["live_ops"]["endpoints"]["compare"] == "/live/v1/compare"
     # HTML must reference live endpoints when enabled
     paths = write_product_app(on, Path("outputs") / "_test_live_ops_spa")
     html = paths["html"].read_text(encoding="utf-8")
@@ -142,6 +149,18 @@ def test_payload_live_ops_flag():
     assert "/live/v1/decide" in html or "liveOps" in html
     assert "/live/v1/ack-decision" in html or "ack_decision" in html
     assert "runDlogAck" in html
+
+
+def test_dispatch_live_flags_catalog_get():
+    from wildfire_front.product.live_ops import LIVE_PATH_CATALOG, LIVE_PATH_FLAGS, dispatch_live
+
+    st, flags = dispatch_live(LIVE_PATH_FLAGS, method="GET")
+    assert st == 200
+    assert flags["ok"] is True
+    assert str(flags["GO_Q"]).lower() == "partial"
+    st2, catalog = dispatch_live(LIVE_PATH_CATALOG, method="GET")
+    assert st2 == 200
+    assert "rcda_net" in catalog["not_ready_ids"]
 
 
 def test_dispatch_health_and_disabled_path():
@@ -179,8 +198,26 @@ def test_live_http_decide_and_status(tmp_path: Path, sla_work_dir: Path):
         assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
         assert decided["honesty_rails"]["go_q_met"] is False
         summary = decided.get("summary") or {}
-        assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get("decision")
+        assert summary.get("decision") in ("GO", "HOLD", "ABSTAIN") or summary.get(
+            "decision"
+        )
         assert decided["honesty_rails"]["go_q_invent_forbidden"] is True
+        # The SSOT/release gate currently enables fusion; the same rail must
+        # remain visible and consistent after a decide request.
+        assert decided["honesty_rails"]["field_ops_ml_live_fusion"] == "ON"
+
+        st_snap, snap = _post_json(port, LIVE_PATH_SNAPSHOT, {"work_dir": rel})
+        assert st_snap == 200, snap
+        assert snap["act"] == "snapshot"
+        assert snap["decision"] in {"GO", "HOLD", "ABSTAIN"}
+        assert "ops" in snap["source_board"]
+        assert snap["rails"]["not_tactical_dispatch"] is True
+        assert snap["rails"]["go_q_complete"] is False
+        st_cmp, cmp = _post_json(port, LIVE_PATH_COMPARE, {"work_dir": rel})
+        assert st_cmp == 200, cmp
+        assert cmp["flipped"] is False
+        assert cmp["alert"]["delivered"] is False
+        assert cmp["not_tactical_dispatch"] is True
     finally:
         httpd.shutdown()
         httpd.server_close()

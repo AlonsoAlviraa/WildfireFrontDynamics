@@ -74,22 +74,35 @@ def _policy_from_mapping(data: Mapping[str, Any], *, fallback_id: str) -> Decisi
     return DecisionPolicy(**base)
 
 
+_POLICY_CATALOG_CACHE: tuple[str, float, int, dict[str, Any]] | None = None
+
+
 def load_policy_catalog(path: Path | str | None = None) -> dict[str, Any]:
+    global _POLICY_CATALOG_CACHE
     p = Path(path) if path else DEFAULT_CATALOG
+    fallback = {
+        "schema": "decision_policies_v1",
+        "default_policy": "default",
+        "policies": {"default": LEGACY_DEFAULT.to_dict()},
+    }
     if not p.is_file():
-        return {
-            "schema": "decision_policies_v1",
-            "default_policy": "default",
-            "policies": {"default": LEGACY_DEFAULT.to_dict()},
-        }
+        return fallback
     try:
-        return json.loads(p.read_text(encoding="utf-8"))
+        stat = p.stat()
+        key = (str(p.resolve()), stat.st_mtime, stat.st_size)
+    except OSError:
+        return fallback
+    cached = _POLICY_CATALOG_CACHE
+    if cached is not None and cached[0] == key[0] and cached[1] == key[1] and cached[2] == key[2]:
+        return cached[3]
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {
-            "schema": "decision_policies_v1",
-            "default_policy": "default",
-            "policies": {"default": LEGACY_DEFAULT.to_dict()},
-        }
+        return fallback
+    if not isinstance(data, dict):
+        return fallback
+    _POLICY_CATALOG_CACHE = (key[0], key[1], key[2], data)
+    return data
 
 
 def list_policies(path: Path | str | None = None) -> list[dict[str, Any]]:

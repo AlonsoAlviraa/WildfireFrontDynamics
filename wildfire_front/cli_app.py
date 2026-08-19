@@ -41,7 +41,7 @@ def register_app_commands(commands: Any, *, add_global_flags) -> None:
             "  · Dual-mode: Fácil (default, CLI oculta) | Pro (muestra python -m …)\n"
             "  · Primary acts always visible: Estado · Decidir · Acta\n"
             "  · Map-first + Decision Card + product_actions inventory\n"
-            "  · Tabs: Overview / Decisión / Acciones / Nuevo / Términos / Lista\n"
+            "  · Tabs: Decisión / Resumen / Qué hacer / Nuevo / Términos / Incendios / Modelo (Pro)\n"
             "  · All CTAs copy with toast feedback; fire picker + rebuild bound to work-dir\n"
             "Honesty: NOT tactical dispatch; field_ops ML fusion ON (human 2026-08-13); no GO_Q invent."
         ),
@@ -592,6 +592,28 @@ class _SafeSPARequestHandler:
             def _req_path(self) -> str:
                 return urllib.parse.urlparse(self.path).path or "/"
 
+            def _drain_available_body(self, *, max_bytes: int = 4_194_304) -> None:
+                """Consume bytes already sent without trusting Content-Length.
+
+                This avoids Windows TCP resets while never blocking for a
+                client that advertises a huge body and intentionally sends
+                only a few bytes.
+                """
+                previous_timeout = self.connection.gettimeout()
+                remaining = max_bytes
+                self.connection.settimeout(0.01)
+                try:
+                    while remaining > 0:
+                        try:
+                            chunk = self.rfile.read1(min(65_536, remaining))
+                        except (OSError, TimeoutError):
+                            break
+                        if not chunk:
+                            break
+                        remaining -= len(chunk)
+                finally:
+                    self.connection.settimeout(previous_timeout)
+
             def _safe_path(self) -> Path | None:
                 # Reject URL tricks; only serve files under root_res
                 import os as _os
@@ -678,7 +700,11 @@ class _SafeSPARequestHandler:
 
             def _read_json_body(self) -> tuple[dict | None, bytes | None]:
                 length = int(self.headers.get("Content-Length") or 0)
-                if length > 1_048_576:
+                path = self._req_path()
+                # Intake upload carries small GeoTIFFs as JSON/base64 (loopback only).
+                limit = 24_000_000 if path.rstrip("/").endswith("/intake/upload") else 1_048_576
+                if length > limit:
+                    self._drain_available_body()
                     self._send_bytes(413, b'{"error":"body_too_large"}')
                     return None, None
                 raw = self.rfile.read(length) if length > 0 else b"{}"
@@ -707,6 +733,11 @@ class _SafeSPARequestHandler:
                 if not path.startswith("/live/"):
                     return False
                 if not self.live_ops_enabled:
+                    # Drain a small POST body before closing the response. On
+                    # Windows, closing a socket with unread request bytes can
+                    # turn the intended HTTP 503 into TCP RST/WinError 10053.
+                    if method == "POST":
+                        self._drain_available_body()
                     self._send_bytes(
                         503,
                         b'{"ok":false,"error":"live_ops_disabled",'
@@ -720,13 +751,17 @@ class _SafeSPARequestHandler:
                         return True  # error already sent
                     if body is None:
                         body = {}
+                elif method == "GET":
+                    parsed = urllib.parse.urlparse(self.path)
+                    qs = urllib.parse.parse_qs(parsed.query)
+                    body = {key: vals[-1] for key, vals in qs.items() if vals}
                 status, payload = dispatch_live(
                     path,
                     body,
                     base=self.live_base_dir,
                     method=method,
                 )
-                data = json.dumps(payload, indent=2, default=str).encode()
+                data = json.dumps(payload, separators=(",", ":"), default=str).encode()
                 self._send_bytes(status, data)
                 return True
 
@@ -828,6 +863,7 @@ class _SafeSPARequestHandler:
                 ):
                     length = int(self.headers.get("Content-Length") or 0)
                     if length > 2_000_000:
+                        self._drain_available_body()
                         self._send_bytes(413, b'{"error":"body_too_large"}')
                         return
                     raw = self.rfile.read(length) if length > 0 else b"{}"

@@ -30,6 +30,11 @@ python -m wildfire_front commands --json
 | Method | Path | Role |
 |--------|------|------|
 | GET | `/live/v1/health` | health |
+| GET | `/live/v1/flags` | GO_Q / fusion / not_claims (read-only) |
+| GET | `/live/v1/catalog` | products + holdout_only |
+| GET/POST | `/live/v1/card` | last Decision Card (`work_dir`) |
+| GET/POST | `/live/v1/snapshot` | shareable snapshot: decision + source board + rails + hashes. POST `{save:true}` writes `outbox/incident_snapshot.json` |
+| POST | `/live/v1/compare` | saved snapshot vs current card (evolution) or two explicit cards; local alert (not SMS) |
 | POST | `/live/v1/status` | lightweight outbox status |
 | POST | `/live/v1/decide` | Decision Card via loopback channel |
 | POST | `/live/v1/export-acta` | forensic acta |
@@ -43,7 +48,7 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 
 1. Rails aloud: GO_MES true · GO_Q partial · fusion ON (cap 0.20 / abstain 0.45) · ABSTAIN = feature · fusion ON ≠ GO_Q complete ≠ despacho.
 2. `app --serve --fire _sla_measure` (or `--demo-day`).
-3. In browser: **Estado → Decidir → Acta** (Último acto shows result / path).
+3. In browser: **Estado → Decidir → Acta → Instantánea → Comparar** (Último acto shows result / path). Instantánea is a shareable COP-lite (sources present/missing). Comparar is a local flip alert — not SMS/WhatsApp/email, not dispatch.
 4. Offline path: open static SPA, same buttons → CLI copied, not invented GO_Q.
 5. SPA panel **Ensayo H1 eng** (`data-marker="h1-rehearsal"`) shows `go_q_met=false` always on this product surface — eng dry-run ≠ third-party acta (Copiar cmd for serve/offline).
 6. SPA **split-conf** (`data-marker="split-conf"`): **Conf. ML ≠ Conf. ROS** — no inventar conf ROS; IoU ≠ ROS; no es despacho táctico.
@@ -52,6 +57,8 @@ Design: `docs/design/LIVE_OPS_DEMO_KERNEL.md`.
 
 ## Honesty rails (UI)
 
+- Snapshot / compare inherit the same rails: fusion ON **≠** despacho · GO_Q **partial** · not tactical dispatch · no RCDA/Caldor product scores
+- Instant-to-instant `cited` / `cited_delta`: ROS, ha, Δt, frames, grade **only if already in ops/open**. Missing → `null`. Not invented ROS. Not dispatch.
 - field_ops ML fusion **ON** (human 2026-08-13) · **≠** despacho táctico · GO_Q partial
 - Confidence band = **prediction quality**, **no es ROS** · IoU ≠ ROS
 - SPA marker `uncertainty-bar` / payload `uncertainty_bar`: fill from existing `confidence_pred` only (no invented scores, never ROS)

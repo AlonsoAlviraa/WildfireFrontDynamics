@@ -180,6 +180,8 @@ def extract_replay_sources(
     ml_metrics: Mapping[str, Any] | None = None,
     ops_metrics: Mapping[str, Any] | None = None,
     open_metrics: Mapping[str, Any] | None = None,
+    ml_live_metrics: Mapping[str, Any] | None = None,
+    reliability_gate: Mapping[str, Any] | None = None,
     require_ops_for_go: bool = False,
 ) -> dict[str, Any]:
     """Build replay snapshot. Prefer explicit metrics; else reconstruct hints from card."""
@@ -190,12 +192,27 @@ def extract_replay_sources(
         ops_metrics = _metrics_from_card_source(card, "ops_thermal_front")
     if open_metrics is None:
         open_metrics = _metrics_from_card_source(card, "open_cems_perimeter")
+    if ml_live_metrics is None:
+        live = _metrics_from_card_source(card, "ml_live_reliability")
+        if live is None:
+            _metrics_block = card.get("metrics")
+            metrics_block: Mapping[str, Any] = (
+                _metrics_block if isinstance(_metrics_block, Mapping) else {}
+            )
+            raw_live = metrics_block.get("ml_live")
+            live = dict(raw_live) if isinstance(raw_live, dict) else None
+        ml_live_metrics = live
 
     _audit = card.get("audit")
     audit: Mapping[str, Any] = _audit if isinstance(_audit, Mapping) else {}
     _metrics = card.get("metrics")
     metrics: Mapping[str, Any] = _metrics if isinstance(_metrics, Mapping) else {}
     policy_id = audit.get("policy_id") or metrics.get("policy_id") or "default"
+    gate = reliability_gate
+    if gate is None:
+        snap = audit.get("reliability_gate_snapshot")
+        if isinstance(snap, Mapping) and snap:
+            gate = dict(snap)
     return {
         "schema": REPLAY_SOURCES_SCHEMA,
         "event_id": card.get("event_id") or "decision",
@@ -204,6 +221,8 @@ def extract_replay_sources(
         "ml_metrics": dict(ml_metrics) if ml_metrics else None,
         "ops_metrics": dict(ops_metrics) if ops_metrics else None,
         "open_metrics": dict(open_metrics) if open_metrics else None,
+        "ml_live_metrics": dict(ml_live_metrics) if ml_live_metrics else None,
+        "reliability_gate": dict(gate) if isinstance(gate, Mapping) else None,
         "expected_decision": card.get("decision"),
         "expected_output_hash": audit.get("output_hash"),
         "expected_input_hash": audit.get("input_hash"),
@@ -242,6 +261,8 @@ def replay_decision(
         "ml_metrics": sources.get("ml_metrics"),
         "ops_metrics": sources.get("ops_metrics"),
         "open_metrics": sources.get("open_metrics"),
+        "ml_live_metrics": sources.get("ml_live_metrics"),
+        "reliability_gate": sources.get("reliability_gate"),
         "require_ops_for_go": bool(sources.get("require_ops_for_go", False)),
         "policy_id": sources.get("policy_id") or sources.get("policy") or "default",
         "channel": "forensic_replay",
@@ -280,6 +301,8 @@ def write_forensic_bundle(
     ml_metrics: Mapping[str, Any] | None = None,
     ops_metrics: Mapping[str, Any] | None = None,
     open_metrics: Mapping[str, Any] | None = None,
+    ml_live_metrics: Mapping[str, Any] | None = None,
+    reliability_gate: Mapping[str, Any] | None = None,
     require_ops_for_go: bool = False,
     operator: str | None = None,
     lang: str = "es",
@@ -298,6 +321,8 @@ def write_forensic_bundle(
         ml_metrics=ml_metrics,
         ops_metrics=ops_metrics,
         open_metrics=open_metrics,
+        ml_live_metrics=ml_live_metrics,
+        reliability_gate=reliability_gate,
         require_ops_for_go=require_ops_for_go,
     )
 

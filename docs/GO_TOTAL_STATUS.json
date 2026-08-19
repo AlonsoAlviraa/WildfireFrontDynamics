@@ -1,0 +1,247 @@
+{
+  "schema": "wfd_go_total_status_v1",
+  "as_of_utc": "2026-08-13T14:15:23Z",
+  "met": false,
+  "go_total": false,
+  "definition": "GO_TOTAL = GO_MES AND GO_Q complete with real h1_acta evidence on the stamp. GO_MES+ is a separate stretch gate (2nd grade A / O2 / H1).",
+  "plan_ids": {
+    "ssot": "docs/PLAN_1M_GO_LATAM_2026-08-13.md",
+    "execution": "docs/PLAN_1M_EXECUTION_STATUS.json",
+    "week": "S1-S4 eng half 2026-08-13"
+  },
+  "h1_slot": {
+    "status": "not_booked",
+    "owner": "human",
+    "detail": "Alonso must book external tercero via docs/H1_CALENDAR_INVITE.md. Eng does not invent calendar events or third-party names.",
+    "artifact": "docs/H1_CALENDAR_INVITE.md",
+    "eng_checklist": "docs/H1_ENG_CHECKLIST.md"
+  },
+  "gates": {
+    "GO_MES": true,
+    "GO_Q": "partial",
+    "GO_MES_plus": false,
+    "ml_product_go": true,
+    "field_ops_fusion": "ON"
+  },
+  "go_q": {
+    "met": false,
+    "status": "partial",
+    "eng_session_ready": true,
+    "h1_acta": null,
+    "blocker": "human third-party demo + signed acta (do not invent tercero)"
+  },
+  "inventory": {
+    "sources": [
+      "docs/H1_GO_Q_RUNBOOK.md",
+      "scripts/record_h1_demo_complete.py",
+      "scripts/check_release_flags.py",
+      "docs/ML_PRODUCT_GO_STATUS.json",
+      "docs/CURRENT_STATE.md"
+    ],
+    "blockers": [
+      {
+        "id": "go_mes",
+        "source": "docs/ML_PRODUCT_GO_STATUS.json",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [
+          "GO_TOTAL"
+        ],
+        "detail": "GO_MES already true on stamp."
+      },
+      {
+        "id": "prepare_h1_demo_session",
+        "source": "docs/H1_GO_Q_RUNBOOK.md",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [],
+        "detail": "Session JSON + calendar invite + refuse-PENDING proof."
+      },
+      {
+        "id": "demo_third_party_pack",
+        "source": "docs/H1_GO_Q_RUNBOOK.md",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [],
+        "detail": "outputs/demo_third_party pack required files."
+      },
+      {
+        "id": "reliability_third_party",
+        "source": "docs/H1_GO_Q_RUNBOOK.md",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [],
+        "detail": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md pointer (not a field unlock)."
+      },
+      {
+        "id": "record_h1_ssot_wiring",
+        "source": "scripts/record_h1_demo_complete.py",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [],
+        "detail": "Valid acta updates stamp + CURRENT_STATE + session + GO_TOTAL; PENDING exits 2."
+      },
+      {
+        "id": "check_release_flags_h1_evidence",
+        "source": "scripts/check_release_flags.py",
+        "owner": "eng",
+        "status": "closed",
+        "blocks": [],
+        "detail": "GO_Q complete allowed only when stamp.h1_acta exists, is not PENDING, and parses."
+      },
+      {
+        "id": "agenda_tercero",
+        "source": "docs/H1_GO_Q_RUNBOOK.md",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_Q",
+          "GO_TOTAL"
+        ],
+        "detail": "Agendar persona externa al repo. Sin tercero no hay H1."
+      },
+      {
+        "id": "run_demo_12min",
+        "source": "docs/H1_GO_Q_RUNBOOK.md",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_Q",
+          "GO_TOTAL"
+        ],
+        "detail": "Demo 12–30 min con cheatsheet + kill list verbal."
+      },
+      {
+        "id": "signed_h1_acta",
+        "source": "docs/CURRENT_STATE.md",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_Q",
+          "GO_TOTAL"
+        ],
+        "detail": "Acta real Fecha + Presentador + Tercero. Do not invent names or use PENDING draft."
+      },
+      {
+        "id": "record_h1_exit_0",
+        "source": "scripts/record_h1_demo_complete.py",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_Q",
+          "GO_TOTAL"
+        ],
+        "detail": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md"
+      },
+      {
+        "id": "go_mes_plus_2nd_grade_a",
+        "source": "docs/CURRENT_STATE.md",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_MES+"
+        ],
+        "blocks_go_total": false,
+        "detail": "Hellín stays pending_external until cite + human promote. Stretch only."
+      },
+      {
+        "id": "go_mes_plus_o2_nacional",
+        "source": "docs/CURRENT_STATE.md",
+        "owner": "human",
+        "status": "open",
+        "blocks": [
+          "GO_MES+"
+        ],
+        "blocks_go_total": false,
+        "detail": "O2 nacional FOI/partner. Stretch only; no flag invention."
+      }
+    ]
+  },
+  "eng_closable": {
+    "prepare_h1_demo_session": true,
+    "demo_third_party_pack": true,
+    "reliability_third_party": true,
+    "record_h1_refuses_pending": true,
+    "record_h1_updates_stamp_and_current_state": true,
+    "check_release_flags_complete_only_with_h1_acta": true
+  },
+  "remaining_human_steps": [
+    {
+      "id": "agenda_tercero",
+      "owner": "human",
+      "detail": "Agendar persona externa al repo (emergencias / uni / partner). Sin tercero no hay H1.",
+      "artifact": "docs/H1_CALENDAR_INVITE.md"
+    },
+    {
+      "id": "run_demo_12min",
+      "owner": "human",
+      "detail": "Correr demo 12 min con cheatsheet; kill list verbal; no reclamar GO_Q complete.",
+      "commands": [
+        "python -m wildfire_front operator",
+        "python -m wildfire_front operator checklist",
+        "python -m wildfire_front operator do --act 4"
+      ]
+    },
+    {
+      "id": "fill_signed_acta",
+      "owner": "human",
+      "detail": "Copiar borrador a docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md y rellenar Fecha, Presentador, Tercero (externo) con nombres reales. No PENDING.",
+      "template": "docs/actas/ACTA_DEMO_PENDING_HUMAN.md"
+    },
+    {
+      "id": "record_h1",
+      "owner": "human",
+      "detail": "Registrar acta real. Exit 0 actualiza stamp + CURRENT_STATE. Exit 2 no muta.",
+      "command": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md"
+    },
+    {
+      "id": "verify_flags",
+      "owner": "human",
+      "detail": "Tras record exit 0, check_release_flags debe PASS con GO_Q complete + h1_acta.",
+      "command": "python scripts/check_release_flags.py"
+    }
+  ],
+  "remaining_go_mes_plus": {
+    "met": false,
+    "note": "Stretch; not required for GO_Q. Still open after H1.",
+    "items": [
+      "2nd grade A ops (Hellín stays pending_external until cite + human promote)",
+      "O2 nacional (FOI/partner; no flag invention)"
+    ],
+    "prep_doc": "docs/GO_MES_PLUS_PREP.md"
+  },
+  "human_commands": [
+    "python scripts/prepare_h1_demo_session.py",
+    "python -m wildfire_front operator",
+    "python -m wildfire_front operator checklist",
+    "# Agenda tercero externo (copiar docs/H1_CALENDAR_INVITE.md). Sin tercero no hay H1.",
+    "# Tras demo real: copiar docs/actas/ACTA_DEMO_PENDING_HUMAN.md → docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
+    "# Rellenar Fecha (YYYY-MM-DD), Presentador, Tercero (externo) — nombres reales, no placeholders.",
+    "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
+    "python scripts/check_release_flags.py"
+  ],
+  "not_claims": [
+    "not GO_Q complete without signed third-party acta",
+    "not invented tercero / forged acta",
+    "not tactical dispatch",
+    "not GO_MES+",
+    "fusion ON ≠ GO_Q complete ≠ despacho"
+  ],
+  "artifacts": {
+    "session": "docs/H1_DEMO_SESSION_READY.json",
+    "invite": "docs/H1_CALENDAR_INVITE.md",
+    "runbook": "docs/H1_GO_Q_RUNBOOK.md",
+    "pack": "outputs/demo_third_party",
+    "reliability": "docs/RELIABILITY_GATE_REPORT_THIRD_PARTY.md",
+    "stamp": "docs/ML_PRODUCT_GO_STATUS.json",
+    "current_state": "docs/CURRENT_STATE.md",
+    "record_cli": "python scripts/record_h1_demo_complete.py --acta docs/actas/ACTA_DEMO_YYYYMMDD_<org>.md",
+    "eng_checklist": "docs/H1_ENG_CHECKLIST.md"
+  },
+  "goal_harness": {
+    "invoked": true,
+    "met": false,
+    "note": "Human blocker: signed non-PENDING third-party acta required",
+    "checker_reason": "No signed non-PENDING third-party acta; inventing would fail honesty rails"
+  }
+}

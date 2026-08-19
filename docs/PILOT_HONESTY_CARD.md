@@ -1,15 +1,13 @@
 # Piloto de honestidad — tarjeta de decisión multi-fuente
 Tobarra · Níjar · Caminomorisco
-Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm_ensemble_v34
-**Honesty patch:** 2026-08-13 — stamp / `docs/CURRENT_STATE.md`: `ml_product_go` lab true · field_ops fusion **ON** (cap 0.20 / abstain 0.45) ≠ GO_Q complete ≠ despacho. Site table below is a **2026-07-24** run (fusion was OFF then).
+Generado: 2026-08-17T00:00:00+00:00 · política: research_open · producto: clm_ensemble_v34
 
 ## 0. Banner de honestidad (producto dual)
 - Ops (front_dynamics_v1) ≠ ML (máscara + fiabilidad de parche)
-- Fusión solo en tarjeta de decisión; field_ops fusión live = **ON** (cap 0.20 / abstain 0.45) ≠ despacho (stamp 2026-08-13). Tabla §1 = run 2026-07-24.
+- Fusión solo en tarjeta de decisión; field_ops fusión live = ON (cap 0.20 / abstain 0.45) ≠ despacho
 - No es orden táctica de despacho
 - U1 TEST honest (scorecard): IoU eval ≈ 0.857 · sel@80 ≈ 0.903 · ECE ≈ 0.153
 - Catalog holdout 0.8963 = provenance only (no es certeza en vivo)
-- `ml_product_go` = **true (lab only)** · **≠** field fusion / GO_Q
 
 ## 1. Tabla de hechos
 | Sitio | Pista | Fuentes | Decisión (research_open) | confianza | ML live | Decisión (field_ops) | Cifra clave | Notas |
@@ -22,36 +20,34 @@ Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm
 ### Tobarra (OPS)
 - Cifra clave: ROS primario (m/min) = 6.7521 (fuente: operational_metrics.speed_median_m_min; clave: primary_ros_m_min)
 - Tarjeta research_open: GO · confianza=0.672 · ML live=sí
-- Contraste field_ops: ABSTAIN (sin R1–R4 inventados; fusión OFF **en este run 2026-07-24**)
+- Contraste field_ops: ABSTAIN (sin R1–R4 inventados; fusión ON ≠ GO_Q complete ≠ despacho)
 - Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ### Níjar (OPEN_AND)
 - Cifra clave: área (ha) = 2169.3400 (fuente: metrics_o2.area_rediam_ha; clave: area_ha)
 - Tarjeta research_open: HOLD · confianza=0.610 · ML live=sí
-- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión OFF **en este run 2026-07-24**)
+- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión ON ≠ GO_Q complete ≠ despacho)
 - Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ### Caminomorisco (OPEN_EXT)
 - Cifra clave: área (ha) = 2679.1400 (fuente: metrics_o2.area_rai_ha; clave: area_ha)
 - Tarjeta research_open: HOLD · confianza=0.500 · ML live=no
-- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión OFF **en este run 2026-07-24**)
+- Contraste field_ops: HOLD (sin R1–R4 inventados; fusión ON ≠ GO_Q complete ≠ despacho)
 - Honestidad: Vp inventada=no; casco FIRMS≠quemado; fuentes incompletas=no
 
 ## 3. Contraste de políticas
 - research_open: laboratorio / amigable con open (HOLD); fusión live experimental
-- field_ops: require_ops_for_go; fusión live **ON** (cap 0.20 / abstain 0.45, human 2026-08-13) ≠ despacho; ABSTAIN fail-closed (cierre seguro) si GO sin fiabilidad verificada — el piloto no inventa gates. Contraste §1–§2 es el run 2026-07-24 (fusion then OFF).
+- field_ops: require_ops_for_go; fusión live ON (cap 0.20 / abstain 0.45); ABSTAIN fail-closed (cierre seguro) si GO sin fiabilidad verificada (reason field_ops_fail_closed_reliability_unverified) — el piloto no inventa gates; no es validado por emergencias
 
 ## 4. Límites y no-claims
 - No es multi-CCAA «funciona en toda España»
 - Casco FIRMS ≠ área quemada oficial
-- Sin reentrenamiento en este piloto (FREEZE_ML_AND_REQUEST_DATA)
-- **`ml_product_go` = true (lab only)** por stamp / CURRENT_STATE — **no** es GO de campo ni despacho. field_ops fusion **ON** ≠ GO_Q complete ≠ despacho.
-- GO_Q sigue **partial** hasta demo tercero + acta firmada
-- IoU de catálogo ≠ ROS / Vp
+- Sin reentrenamiento en este piloto
+- `ml_product_go` es lab only — no es GO de campo ni GO_Q complete
 
 ## 5. Modo presentación (1 página)
 - Tres sitios · un criterio: GO / HOLD / ABSTAIN con audit trail
-- research_open puede ir a GO experimental; field_ops se calla (ABSTAIN/HOLD) cuando faltan fuentes — fusion ON ≠ despacho
+- research_open puede ir a GO experimental; field_ops se calla (ABSTAIN/HOLD) — fusión ON ≠ despacho
 - Cifras solo de OPS (ROS) u open (ha); sin Vp táctica inventada
 - Holdout catálogo 0.8963 = provenance only, no certeza del incendio
 
@@ -59,3 +55,4 @@ Generado: 2026-07-24T00:00:00+00:00 · política: research_open · producto: clm
 - Raíz piloto: `outputs/pilot_honesty_card`
 - Por sitio: `decision_card.json`, `decision_card_field_ops.json`, `site_summary.json`
 - `facts_table.json` · `pilot_summary.json` · `index.html` · este informe
+

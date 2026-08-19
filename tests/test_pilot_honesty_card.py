@@ -54,7 +54,9 @@ def test_bare_fixture_root_loads_pilot_sites_json(tmp_path: Path):
     assert "Tobarra" in portal and "Níjar" in portal and "Caminomorisco" in portal
     assert "No es orden táctica" in portal
     assert "Not a tactical dispatch" not in portal
-    assert "field_ops" in portal and "OFF" in portal
+    assert "field_ops" in portal
+    fusion_word = "ON" if mod._field_ops_fusion_on() else "OFF"
+    assert f"fusión {fusion_word}" in portal or f"fusión live = {fusion_word}" in portal
     assert "provenance only" in portal
     assert "confianza" in portal
     assert "sitios OK" in portal
@@ -284,7 +286,13 @@ def test_report_pure_render_budget_and_substrings():
     assert len(nonempty) <= 90
     assert len(words) <= 1200
     assert GEN_AT in body
-    assert "field_ops" in body and "OFF" in body
+    fusion_word = "ON" if mod._field_ops_fusion_on() else "OFF"
+    assert "field_ops" in body
+    assert f"fusión live = {fusion_word}" in body or f"fusión live {fusion_word}" in body
+    assert "validado por emergencias" in body
+    assert "0.308" not in body
+    assert "Caldor" not in body
+    assert "GO_Q complete" in body or "GO_Q" in body
     assert "provenance only" in body
     assert "No es orden táctica" in body
     assert "Not a tactical dispatch" not in body

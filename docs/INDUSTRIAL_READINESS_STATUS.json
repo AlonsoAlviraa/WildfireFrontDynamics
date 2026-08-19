@@ -1,48 +1,58 @@
 {
-  "updated_at_utc": "2026-07-17T15:50:00+00:00",
+  "updated_at_utc": "2026-08-17T00:00:00+00:00",
+  "schema": "wfd_industrial_readiness_v2",
   "product_ml": "clm_ensemble_v34",
   "product_ops": "incident_runtime_v1",
+  "plan": "docs/PLAN_INDUSTRIAL_GARANTIAS_2026-08-17.md",
   "metrics_ml": {
     "u1_test_honest_mean_iou": 0.8569,
     "u1_test_honest_ece": 0.1528,
     "catalog_holdout_test_iou_provenance_only": 0.8963,
-    "improvement_vs_copy_iou": 0.2545,
-    "model_iou_growth": 0.9071,
-    "note": "Catalog IoU is provenance only — not live certainty, not ROS, not ml_product_go"
+    "note": "Catalog IoU is provenance only — not live certainty, not ROS, not field GO"
   },
   "honesty": {
     "u1_test_honest": true,
-    "ml_product_go": false,
-    "field_ops_allow_ml_live_in_fusion": false,
-    "research_open_live_fusion": "experimental",
-    "catalog_0_8963_is_provenance_only": true
+    "ml_product_go": true,
+    "ml_product_go_scope": "lab_only",
+    "field_ops_allow_ml_live_in_fusion": true,
+    "field_ops_ml_live_max_weight": 0.2,
+    "field_ops_ml_live_abstain_below": 0.45,
+    "catalog_0_8963_is_provenance_only": true,
+    "rcda_is_product": false,
+    "caldor_is_train_set": false
   },
   "gates": {
+    "GO_MES": true,
+    "GO_MES_plus": false,
+    "GO_Q": "partial",
+    "GO_TOTAL": false,
     "G0_ndws": "GO",
     "G1_ndws": "KILL",
     "G2_clm_v28": "GO",
     "G2e_ensemble_v34": "GO_RESEARCH_HOLDOUT",
     "O1_multi_anchor": "OPEN",
     "O2_hausdorff_official": "BLOCKED",
-    "O3_temporal": "PARTIAL",
-    "O4_brief": "GO_ENG",
     "O5_second_grade_a": "OPEN",
-    "P1_incident_2if": "PARTIAL",
-    "E1_ci_smokes": "GO_ENG",
-    "D1_cyl": "FOLLOW_UP",
-    "M2_v34_hold": "GO",
-    "M5_v35": "NO_DATA"
+    "T0_holdout_catalog": "GO_ENG",
+    "T1_1_field_ops_silent_go": "GO_ENG"
   },
-  "GO_MES": false,
-  "GO_MES_reason": "Blocked on external anchors/perimeters (O1/O2), not product regression",
+  "GO_MES_reason": "Minimum month gate already true on stamp. GO_MES+ still open on 2nd grade A / O2 / H1.",
   "GO_ENG": true,
+  "first_signer": "observatorio_cma_postprocess",
+  "h1_slot": "not_booked",
   "evidence": [
-    "docs/SCORECARD_MES_1.md",
-    "docs/FIELD_KIT_INCIDENT.md",
-    "docs/DATA_INTAKE_STATUS.md",
-    "docs/O2_HAUSDORFF_BLOCKED.md",
+    "docs/CURRENT_STATE.md",
+    "docs/ML_PRODUCT_GO_STATUS.json",
+    "docs/PLAN_INDUSTRIAL_GARANTIAS_2026-08-17.md",
     "models/catalog.json",
-    "scripts/demo_dual_product.py"
+    "scripts/industrial_product_gate.py"
   ],
-  "kill_list_enforced": true
+  "kill_list_enforced": true,
+  "not_claims": [
+    "not tactical dispatch",
+    "not GO_Q complete",
+    "not GO_MES+",
+    "not RCDA product IoU 0.308",
+    "not Caldor train"
+  ]
 }

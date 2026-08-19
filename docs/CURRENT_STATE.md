@@ -65,6 +65,7 @@
 | 1M plan eng half (S1–S4) | **In progress / eng snapshot** — `PLAN_1M_GO_LATAM_2026-08-13.md` · exec `PLAN_1M_EXECUTION_STATUS.json` · H1 `h1_slot=not_booked` |
 | H1 calendar slot | **not_booked** (human Alonso) — eng pack ready; no invented tercero |
 | Mes 3 plan (humanos A/B) | **Filed** — `PLAN_MES3_AGENTES_A_B_2026-09-12.md` (no gate flips) |
+| Industrial guarantees plan | **Filed** — `docs/PLAN_INDUSTRIAL_GARANTIAS_2026-08-17.md` · `scripts/industrial_product_gate.py` (T0/T1; GO_Q still partial; RCDA/Caldor holdout_only) |
 | Mes3 W1-A V&V UI read | **Shipped** — SPA `vv-scorecard` read-only #34; empty honest; no field scores |
 | field_ops ML live fusion | **ON** — human promote 2026-08-13 (catalog + stamp; ≠ despacho; GO_Q partial) |
 | ML leap program | **Filed** — `PLAN_ML_LEAP_2026-08-12.md` (FREEZE intact; no v35) |

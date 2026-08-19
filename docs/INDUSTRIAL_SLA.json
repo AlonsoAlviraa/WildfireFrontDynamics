@@ -1,0 +1,28 @@
+{
+  "schema": "wfd_industrial_sla_bundle_v1",
+  "decide": {
+    "schema": "wfd_industrial_decide_sla_v1",
+    "ops_path": "outputs\\temporal_windows\\tobarra_20240802\\mid\\operational_metrics.json",
+    "n": 40,
+    "p50_ms": 0.336,
+    "p95_ms": 0.606,
+    "max_ms": 0.759,
+    "budget_p95_ms": 500.0,
+    "sla_pass": true,
+    "last_decision": "ABSTAIN",
+    "system_reliability_pass": false,
+    "quality_grade": "B",
+    "n_frames_staged": 2
+  },
+  "rebuild": {
+    "schema": "wfd_industrial_rebuild_sla_v1",
+    "mid_dir": "outputs\\temporal_windows\\tobarra_20240802\\mid",
+    "wall_clock_s": 619.1309,
+    "pipeline_latency_s": 619.0221,
+    "status": "updated",
+    "n_staged": 4,
+    "decision": "ABSTAIN",
+    "rebuild_budget_s": 600.0,
+    "sla_pass": false
+  }
+}

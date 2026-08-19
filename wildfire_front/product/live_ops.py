@@ -44,6 +44,15 @@ LIVE_PATH_EXPORT_ACTA = "/live/v1/export-acta"
 LIVE_PATH_REPLAY = "/live/v1/replay-third-party"
 LIVE_PATH_ACK_DECISION = "/live/v1/ack-decision"
 LIVE_PATH_HEALTH = "/live/v1/health"
+LIVE_PATH_CARD = "/live/v1/card"
+LIVE_PATH_FLAGS = "/live/v1/flags"
+LIVE_PATH_CATALOG = "/live/v1/catalog"
+LIVE_PATH_SNAPSHOT = "/live/v1/snapshot"
+LIVE_PATH_COMPARE = "/live/v1/compare"
+LIVE_PATH_INTAKE = "/live/v1/intake"
+LIVE_PATH_INTAKE_OPEN = "/live/v1/intake/open"
+LIVE_PATH_INTAKE_PROCESS = "/live/v1/intake/process"
+LIVE_PATH_INTAKE_UPLOAD = "/live/v1/intake/upload"
 
 HONESTY_RAILS: dict[str, Any] = {
     "field_ops_ml_live_fusion": "OFF",  # fail-closed template; honesty_rails() overwrites
@@ -84,6 +93,15 @@ def live_ops_payload_block(*, enabled: bool) -> dict[str, Any]:
             "export_acta": LIVE_PATH_EXPORT_ACTA,
             "replay_third_party": LIVE_PATH_REPLAY,
             "ack_decision": LIVE_PATH_ACK_DECISION,
+            "card": LIVE_PATH_CARD,
+            "flags": LIVE_PATH_FLAGS,
+            "catalog": LIVE_PATH_CATALOG,
+            "snapshot": LIVE_PATH_SNAPSHOT,
+            "compare": LIVE_PATH_COMPARE,
+            "intake": LIVE_PATH_INTAKE,
+            "intake_open": LIVE_PATH_INTAKE_OPEN,
+            "intake_process": LIVE_PATH_INTAKE_PROCESS,
+            "intake_upload": LIVE_PATH_INTAKE_UPLOAD,
         },
         "policy_default": "field_ops",
         "channel": "live_ops_loopback",
@@ -229,6 +247,103 @@ def _lightweight_incident_status(work_dir: Path) -> dict[str, Any]:
         if report.get("primary_ros_m_min") is None:
             report["primary_ros_m_min"] = report.get("ops_primary_ros_m_min")
     return report
+
+
+def handle_card(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.surface_api import surface_card
+
+    req = dict(body or {})
+    root = Path(base or REPO_ROOT).resolve()
+    wd = resolve_work_dir(req.get("work_dir"), base=root)
+    payload = surface_card(wd)
+    payload["honesty_rails"] = honesty_rails()
+    payload["work_dir_rel"] = _rel_to_base(wd, root)
+    return payload
+
+
+def handle_flags(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.surface_api import surface_flags
+
+    payload = surface_flags()
+    payload["honesty_rails"] = honesty_rails()
+    return payload
+
+
+def handle_catalog(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.surface_api import surface_catalog
+
+    payload = surface_catalog()
+    payload["honesty_rails"] = honesty_rails()
+    return payload
+
+
+def handle_snapshot(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.surface_api import surface_snapshot
+
+    req = dict(body or {})
+    root = Path(base or REPO_ROOT).resolve()
+    wd = resolve_work_dir(req.get("work_dir"), base=root)
+    persist = bool(req.get("save"))
+    payload = surface_snapshot(wd, persist=persist)
+    payload["honesty_rails"] = honesty_rails()
+    payload["work_dir_rel"] = _rel_to_base(wd, root)
+    payload["summary"] = {
+        "decision": payload.get("decision"),
+        "event_id": payload.get("event_id"),
+        "source_board": payload.get("source_board"),
+        "drivers": payload.get("drivers"),
+        "cited": payload.get("cited"),
+        "saved": payload.get("saved"),
+        "not_tactical_dispatch": True,
+    }
+    return payload
+
+
+def handle_compare(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.surface_api import compare_from_request
+
+    req = dict(body or {})
+    root = Path(base or REPO_ROOT).resolve()
+
+    def _resolve(raw: str):
+        return resolve_work_dir(raw, base=root)
+
+    payload = compare_from_request(req, resolve_work_dir=_resolve)
+    payload["honesty_rails"] = honesty_rails()
+    payload["summary"] = {
+        "flipped": payload.get("flipped"),
+        "from": payload.get("from"),
+        "to": payload.get("to"),
+        "same_input": payload.get("same_input"),
+        "against": payload.get("against"),
+        "confidence_delta": payload.get("confidence_delta"),
+        "output_hash_changed": payload.get("output_hash_changed"),
+        "cited_delta": payload.get("cited_delta"),
+        "source_delta": payload.get("source_delta"),
+        "alert_kind": (payload.get("alert") or {}).get("kind"),
+        "not_tactical_dispatch": True,
+    }
+    return payload
 
 
 def handle_status(
@@ -589,6 +704,90 @@ def handle_ack_decision(
     }
 
 
+def _intake_work(
+    body: dict[str, Any] | None,
+    *,
+    base: Path | None,
+) -> tuple[Path, str]:
+    """Resolve existing work_dir or create outputs/incidents/<id> under base."""
+    from wildfire_front.product.operator_intake import (
+        ensure_named_work_dir,
+        sanitize_fire_id,
+    )
+
+    req = dict(body or {})
+    root = Path(base or REPO_ROOT).resolve()
+    fire_id = sanitize_fire_id(str(req.get("fire_id") or req.get("event_id") or ""))
+    raw_wd = req.get("work_dir")
+    if raw_wd:
+        try:
+            wd = resolve_work_dir(raw_wd, base=root)
+            return wd, fire_id or wd.name
+        except PathNotAllowedError:
+            # New fire name passed as work_dir basename — create under incidents.
+            fire_id = fire_id or sanitize_fire_id(Path(str(raw_wd)).name)
+    wd = ensure_named_work_dir(fire_id, base=root)
+    return wd, wd.name
+
+
+def handle_intake(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.operator_intake import intake_status
+
+    wd, fire_id = _intake_work(body, base=base)
+    out = intake_status(wd, fire_id=fire_id)
+    out["honesty_rails"] = honesty_rails()
+    out["go_q_met"] = False
+    return out
+
+
+def handle_intake_open(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.operator_intake import open_inbox
+
+    wd, _fid = _intake_work(body, base=base)
+    out = open_inbox(wd)
+    out["honesty_rails"] = honesty_rails()
+    out["go_q_met"] = False
+    return out
+
+
+def handle_intake_upload(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.operator_intake import receive_files
+
+    wd, _fid = _intake_work(body, base=base)
+    files = list((body or {}).get("files") or [])
+    out = receive_files(wd, files)
+    out["honesty_rails"] = honesty_rails()
+    out["go_q_met"] = False
+    return out
+
+
+def handle_intake_process(
+    body: dict[str, Any] | None = None,
+    *,
+    base: Path | None = None,
+) -> dict[str, Any]:
+    from wildfire_front.product.operator_intake import process_intake
+
+    root = Path(base or REPO_ROOT).resolve()
+    wd, fire_id = _intake_work(body, base=root)
+    out = process_intake(wd, fire_id=fire_id, base=root)
+    out["honesty_rails"] = honesty_rails()
+    out["go_q_met"] = False
+    return out
+
+
 def handle_health(*, live_ops_enabled: bool = True) -> dict[str, Any]:
     return {
         "ok": True,
@@ -602,6 +801,12 @@ def handle_health(*, live_ops_enabled: bool = True) -> dict[str, Any]:
             LIVE_PATH_EXPORT_ACTA,
             LIVE_PATH_REPLAY,
             LIVE_PATH_ACK_DECISION,
+            LIVE_PATH_SNAPSHOT,
+            LIVE_PATH_COMPARE,
+            LIVE_PATH_INTAKE,
+            LIVE_PATH_INTAKE_OPEN,
+            LIVE_PATH_INTAKE_PROCESS,
+            LIVE_PATH_INTAKE_UPLOAD,
         ],
         "honesty_rails": honesty_rails(),
         "disclaimer": "Not tactical dispatch. Loopback demo only.",
@@ -629,6 +834,15 @@ def dispatch_live(
         "/live/v1/replay": "replay_third_party",
         LIVE_PATH_ACK_DECISION.rstrip("/"): "ack_decision",
         "/live/v1/ack_decision": "ack_decision",
+        LIVE_PATH_CARD.rstrip("/"): "card",
+        LIVE_PATH_FLAGS.rstrip("/"): "flags",
+        LIVE_PATH_CATALOG.rstrip("/"): "catalog",
+        LIVE_PATH_SNAPSHOT.rstrip("/"): "snapshot",
+        LIVE_PATH_COMPARE.rstrip("/"): "compare",
+        LIVE_PATH_INTAKE.rstrip("/"): "intake",
+        LIVE_PATH_INTAKE_OPEN.rstrip("/"): "intake_open",
+        LIVE_PATH_INTAKE_PROCESS.rstrip("/"): "intake_process",
+        LIVE_PATH_INTAKE_UPLOAD.rstrip("/"): "intake_upload",
     }
     kind = aliases.get(p)
     if kind is None:
@@ -644,6 +858,59 @@ def dispatch_live(
             return 405, {"ok": False, "error": "method_not_allowed"}
         return 200, handle_health(live_ops_enabled=True)
 
+    if kind in {"flags", "catalog"}:
+        if method.upper() not in ("GET", "HEAD", "POST"):
+            return 405, {"ok": False, "error": "method_not_allowed"}
+        handler = handle_flags if kind == "flags" else handle_catalog
+        return 200, handler(body, base=base)
+
+    if kind == "card":
+        if method.upper() not in ("GET", "HEAD", "POST"):
+            return 405, {"ok": False, "error": "method_not_allowed"}
+        try:
+            payload = handle_card(body, base=base)
+        except PathNotAllowedError as exc:
+            return 400, {
+                "ok": False,
+                "act": "card",
+                "error": "path_not_allowed",
+                "detail": str(exc),
+                "honesty_rails": honesty_rails(),
+            }
+        code = 200 if payload.get("ok") else 400
+        return code, payload
+
+    if kind == "intake":
+        if method.upper() not in ("GET", "HEAD", "POST"):
+            return 405, {"ok": False, "error": "method_not_allowed"}
+        try:
+            payload = handle_intake(body, base=base)
+        except PathNotAllowedError as exc:
+            return 400, {
+                "ok": False,
+                "act": "intake",
+                "error": "path_not_allowed",
+                "detail": str(exc),
+                "honesty_rails": honesty_rails(),
+            }
+        return 200, payload
+
+    if kind == "snapshot":
+        if method.upper() not in ("GET", "HEAD", "POST"):
+            return 405, {"ok": False, "error": "method_not_allowed"}
+        try:
+            payload = handle_snapshot(body, base=base)
+        except PathNotAllowedError as exc:
+            return 400, {
+                "ok": False,
+                "act": "snapshot",
+                "error": "path_not_allowed",
+                "detail": str(exc),
+                "honesty_rails": honesty_rails(),
+            }
+        code = 200 if payload.get("ok") else 400
+        return code, payload
+
     if method.upper() != "POST":
         return 405, {
             "ok": False,
@@ -657,10 +924,19 @@ def dispatch_live(
             return 200, handle_status(body, base=base)
         if kind == "decide":
             return 200, handle_decide(body, base=base)
+        if kind == "compare":
+            payload = handle_compare(body, base=base)
+            return (200 if payload.get("ok") else 400), payload
         if kind == "export_acta":
             return 200, handle_export_acta(body, base=base)
         if kind == "replay_third_party":
             return 200, handle_replay_third_party(body, base=base)
+        if kind == "intake_open":
+            return 200, handle_intake_open(body, base=base)
+        if kind == "intake_upload":
+            return 200, handle_intake_upload(body, base=base)
+        if kind == "intake_process":
+            return 200, handle_intake_process(body, base=base)
         if kind == "ack_decision":
             payload = handle_ack_decision(body, base=base)
             # unknown id / missing decision_id → 400 fail closed (not 200 ok:false only)
