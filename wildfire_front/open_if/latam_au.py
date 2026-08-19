@@ -1,5 +1,4 @@
 """LATAM + AU open-IF packs (F1 rights, F2 CEMS GeoTIFF, F4 domain-gap schema).
-
 No network in this module except helpers that callers invoke explicitly.
 Does not invent model IoU, ROS, or release-flag flips.
 """
@@ -10,7 +9,7 @@ import hashlib
 import json
 import math
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +24,22 @@ RIGHTS_DOC = "docs/data_campaigns/LATAM_AU_RIGHTS.md"
 LICENSE_ID = "copernicus_ems_reg_2021_696_open"
 LICENSE_ID_MAPBIOMAS = "mapbiomas_cc_by"
 LICENSE_ID_NAFI = "nafi_open_research"
-ALLOWED_LICENSE_IDS = frozenset({LICENSE_ID, LICENSE_ID_MAPBIOMAS, LICENSE_ID_NAFI})
+LICENSE_ID_CONAF_PENDING = "conaf_pending_cession"
+ALLOWED_LICENSE_IDS = frozenset(
+    {LICENSE_ID, LICENSE_ID_MAPBIOMAS, LICENSE_ID_NAFI, LICENSE_ID_CONAF_PENDING}
+)
+MIN_LABEL_PAIR_HOURS = 12.0
+STATIC_LABEL_MASK_IOU = 0.98
+ANNUAL_EVAL_STATUS = "blocked_annual_not_event"
+# Next-mask dynamics only among CEMS extent products. FEP is a coarse first
+# estimate; GRA is damage grading — pairing them with DEL is not fire growth.
+GROWTH_LABEL_KINDS = frozenset({"delineation", "delineation_monitoring"})
+NON_GROWTH_LABEL_KINDS = frozenset({"first_estimate", "grading", "annual_burned", "annual_fire_scar"})
+NBR_THRESHOLD_SWEEP = (-0.20, -0.15, -0.10, -0.05, 0.0)
+WARP_SCHEMA = "wfd_latam_au_s2_warp_v1"
+CESSION_EVIDENCE_SUFFIXES = frozenset(
+    {".pdf", ".md", ".txt", ".png", ".jpg", ".jpeg", ".webp", ".json"}
+)
 PACK_META_SCHEMA = "wfd_open_if_pack_meta_v1"
 DOMAIN_GAP_SCHEMA = "wfd_ml_domain_gap_v1"
 LOFO_FOLD_SCHEMA = "wfd_latam_au_lofo_fold_v1"
@@ -217,6 +231,143 @@ EMSR_PACK_SPECS: dict[str, dict[str, Any]] = {
             },
         ],
     },
+    "BO_EMSR765": {
+        "event_id": "BO_EMSR765",
+        "region": "bo",
+        "country": "BO",
+        "activation": "EMSR765",
+        "aoi": "AOI01",
+        "aoi_name": "El Macho",
+        "year": 2024,
+        "class": "ml_weak",
+        "label_level": "L2_proxy",
+        "license_id": LICENSE_ID,
+        "crs_epsg": 32720,  # UTM 20S — Santa Cruz / El Macho
+        "gsd_m": 30.0,
+        "portal_url": f"{PORTAL_BASE}/EMSR765/",
+        "approx_lonlat": (-62.3000, -15.1500),
+        "source_kind": "cems_rapid_json",
+        "products": [
+            {
+                "product_id": "DEL_PRODUCT",
+                "kind": "delineation",
+                "dated": "20240926_171213",
+                "delivery_utc": "2024-09-26T17:12:13Z",
+                "url": f"{VIEWER_S3}/EMSR765/AOI01/DEL_PRODUCT/EMSR765_AOI01_DEL_PRODUCT_observedEventA_v1.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR765/AOI01/DEL_PRODUCT/EMSR765_AOI01_DEL_PRODUCT_v2.zip",
+            },
+            {
+                "product_id": "DEL_MONIT01",
+                "kind": "delineation_monitoring",
+                "dated": "20240930_094734",
+                "delivery_utc": "2024-09-30T09:47:34Z",
+                "url": f"{VIEWER_S3}/EMSR765/AOI01/DEL_MONIT01/EMSR765_AOI01_DEL_MONIT01_observedEventA_v1.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR765/AOI01/DEL_MONIT01/EMSR765_AOI01_DEL_MONIT01_v1.zip",
+            },
+            {
+                "product_id": "DEL_MONIT02",
+                "kind": "delineation_monitoring",
+                "dated": "20241004_194544",
+                "delivery_utc": "2024-10-04T19:45:44Z",
+                "url": f"{VIEWER_S3}/EMSR765/AOI01/DEL_MONIT02/EMSR765_AOI01_DEL_MONIT02_observedEventA_v1.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR765/AOI01/DEL_MONIT02/EMSR765_AOI01_DEL_MONIT02_v1.zip",
+            },
+        ],
+    },
+    "MX_EMSR717": {
+        "event_id": "MX_EMSR717",
+        "region": "mx",
+        "country": "MX",
+        "activation": "EMSR717",
+        "aoi": "AOI01",
+        "aoi_name": "Benito Juarez",
+        "year": 2024,
+        "class": "ml_weak",
+        "label_level": "L2_proxy",
+        "license_id": LICENSE_ID,
+        "crs_epsg": 32615,  # UTM 15N — Oaxaca / Benito Juárez
+        "gsd_m": 30.0,
+        "portal_url": f"{PORTAL_BASE}/EMSR717/",
+        "approx_lonlat": (-94.1250, 16.7700),
+        "source_kind": "cems_rapid_json",
+        "products": [
+            {
+                "product_id": "DEL_PRODUCT",
+                "kind": "delineation",
+                "dated": "20240409_063059",
+                "delivery_utc": "2024-04-09T06:30:59Z",
+                "url": f"{VIEWER_S3}/EMSR717/AOI01/DEL_PRODUCT/EMSR717_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR717/AOI01/DEL_PRODUCT/EMSR717_AOI01_DEL_PRODUCT_v2.zip",
+            },
+            {
+                "product_id": "DEL_MONIT05",
+                "kind": "delineation_monitoring",
+                "dated": "20240411_232818",
+                "delivery_utc": "2024-04-11T23:28:18Z",
+                "url": f"{VIEWER_S3}/EMSR717/AOI01/DEL_MONIT05/EMSR717_AOI01_DEL_MONIT05_observedEventA_v1.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR717/AOI01/DEL_MONIT05/EMSR717_AOI01_DEL_MONIT05_v1.zip",
+            },
+            {
+                "product_id": "GRA_PRODUCT",
+                "kind": "grading",
+                "dated": "20240418_221508",
+                "delivery_utc": "2024-04-18T22:15:08Z",
+                "url": f"{VIEWER_S3}/EMSR717/AOI01/GRA_PRODUCT/EMSR717_AOI01_GRA_PRODUCT_observedEventA_v1.json",
+                "zip_url": f"{RAPID_BACKEND}/EMSR717/AOI01/GRA_PRODUCT/EMSR717_AOI01_GRA_PRODUCT_v1.zip",
+            },
+        ],
+    },
+    "ES_EMSR685_TENERIFE": {
+        "event_id": "ES_EMSR685_TENERIFE",
+        "region": "es",
+        "country": "ES",
+        "activation": "EMSR685",
+        "aoi": "AOI01",
+        "aoi_name": "Candelaria",
+        "year": 2023,
+        "class": "ml_weak",
+        "label_level": "L2_proxy",
+        "license_id": LICENSE_ID,
+        "crs_epsg": 32628,  # UTM 28N — Tenerife / Candelaria
+        "gsd_m": 30.0,
+        "portal_url": f"{PORTAL_BASE}/EMSR685/",
+        "approx_lonlat": (-16.4800, 28.3500),
+        "source_kind": "cems_rapid_zip",
+        "grafcan_referral": (
+            "GRAFCAN / IDECanarias #260728 (2026-08-10): no Canary agency layer; "
+            "use Copernicus EMSR685"
+        ),
+        "products": [
+            {
+                "product_id": "DEL_PRODUCT",
+                "kind": "delineation",
+                "dated": "20230819_045000",
+                "delivery_utc": "2023-08-19T04:50:00Z",
+                "url": f"{RAPID_BACKEND}/EMSR685/AOI01/DEL_PRODUCT/EMSR685_AOI01_DEL_PRODUCT_v1.zip",
+            },
+            {
+                "product_id": "DEL_MONIT01",
+                "kind": "delineation_monitoring",
+                "dated": "20230822_003000",
+                "delivery_utc": "2023-08-22T00:30:00Z",
+                "url": f"{RAPID_BACKEND}/EMSR685/AOI01/DEL_MONIT01/EMSR685_AOI01_DEL_MONIT01_v2.zip",
+            },
+            {
+                "product_id": "DEL_MONIT02",
+                "kind": "delineation_monitoring",
+                "dated": "20230825_010000",
+                "delivery_utc": "2023-08-25T01:00:00Z",
+                "url": f"{RAPID_BACKEND}/EMSR685/AOI01/DEL_MONIT02/EMSR685_AOI01_DEL_MONIT02_v1.zip",
+            },
+            {
+                "product_id": "GRA_PRODUCT",
+                "kind": "grading",
+                "dated": "20230826_233000",
+                "delivery_utc": "2023-08-26T23:30:00Z",
+                "url": f"{RAPID_BACKEND}/EMSR685/AOI01/GRA_PRODUCT/EMSR685_AOI01_GRA_PRODUCT_v1.zip",
+            },
+        ],
+    },
 }
 
 # L1 annual / seasonal scars (not intra-event CEMS). Same pack-meta contract.
@@ -285,6 +436,7 @@ WEAK_PACK_SPECS: dict[str, dict[str, Any]] = {
 ALL_PACK_SPECS: dict[str, dict[str, Any]] = {**EMSR_PACK_SPECS, **WEAK_PACK_SPECS}
 
 ALLOWED_PACK_ROOT_PARTS = ("data", "open_if", "latam_au")
+ALLOWED_PACK_REGIONS = frozenset({"au", "cl", "br", "mx", "bo", "gt", "es"})
 GEOTIFF_NAME_RE = re.compile(
     r"(20\d{6}_\d{6}|20\d{2}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})"
 )
@@ -317,7 +469,7 @@ def is_allowed_pack_path(path: Path, *, repo_root: Path) -> bool:
     parts = rel.parts
     if len(parts) < 5:
         return False
-    return parts[:3] == ALLOWED_PACK_ROOT_PARTS and parts[3] in {"au", "cl", "br", "mx", "bo", "gt"}
+    return parts[:3] == ALLOWED_PACK_ROOT_PARTS and parts[3] in ALLOWED_PACK_REGIONS
 
 
 def sha256_file(path: Path, chunk: int = 1024 * 1024) -> str:
@@ -770,6 +922,21 @@ def validate_domain_gap(doc: dict[str, Any]) -> list[str]:
             fails.append(f"{side}_invented_iou_while_{status or 'empty'}")
         if iou is not None and not row.get("n"):
             fails.append(f"{side}_iou_without_n")
+    for extra in doc.get("extra_packs") or []:
+        if not isinstance(extra, dict):
+            continue
+        eid = str(extra.get("event_id") or "extra")
+        iou = extra.get("model_iou")
+        status = str(extra.get("eval_status") or "")
+        if iou is not None and status in {
+            "not_run",
+            "blocked_incompatible_schema",
+            ANNUAL_EVAL_STATUS,
+            "",
+        }:
+            fails.append(f"{eid}_invented_iou_while_{status or 'empty'}")
+        if iou is not None and not extra.get("n"):
+            fails.append(f"{eid}_iou_without_n")
     zs = doc.get("zero_shot") or {}
     if zs.get("status") == "measured" and zs.get("model_iou") is None:
         fails.append("zero_shot_measured_without_iou")
@@ -813,6 +980,9 @@ PRODUCT_PACK_SLUGS: dict[str, str] = {
     "CL_EMSR715_VALPARAISO": "emsr715_valparaiso",
     "BR_PANTANAL_2020_MAPBIOMAS": "mapbiomas_pantanal_2020",
     "AU_NAFI_NT_SEASON_2023": "nafi_nt_2023",
+    "BO_EMSR765": "emsr765_el_macho",
+    "MX_EMSR717": "emsr717_benito_juarez",
+    "ES_EMSR685_TENERIFE": "emsr685_tenerife",
 }
 
 # Product E2E default stays the two P0 packs so adding P1 specs does not fail
@@ -825,11 +995,6 @@ PRODUCT_E2E_DEFAULT_IDS: tuple[str, ...] = (
 ML_EXPORT_SCHEMA = "wfd_latam_au_ml_export_v1"
 ML_PATCH_CONTRACT = "cems_label_mask_patches_v1"
 PRODUCT_E2E_SCHEMA = "wfd_latam_au_product_e2e_v1"
-# Complete-on-disk packs for product E2E. EMSR408 stays catalogued, not required.
-PRODUCT_E2E_DEFAULT_IDS: tuple[str, ...] = (
-    "AU_EMSR500_PERTH",
-    "CL_EMSR647_NACIMIENTO",
-)
 
 
 def product_slug_for(event_id: str) -> str:
@@ -1255,6 +1420,20 @@ def build_lofo_fold_doc(
         labels = pack / "labels"
         if labels.is_dir():
             n_label = len(list(labels.glob("*.tif")))
+    annual = is_annual_l1_spec(spec)
+    if annual:
+        eval_status = ANNUAL_EVAL_STATUS
+        fold_reason = (
+            "Held-out fire is an annual/seasonal L1 scar (MapBiomas/NAFI), not an "
+            "intra-event next-mask. eval_status=blocked_annual_not_event. "
+            "Running UNet next-mask IoU would invent dynamics."
+        )
+    else:
+        eval_status = "blocked_incompatible_schema"
+        fold_reason = (
+            "Held-out fire is CEMS/weak burned-area GeoTIFF, not NDWS "
+            "17-channel sequences. Running UNet would invent transfer IoU."
+        )
     return {
         "schema": LOFO_FOLD_SCHEMA,
         "as_of_utc": utc_now(),
@@ -1278,13 +1457,10 @@ def build_lofo_fold_doc(
                 "train": sorted(clm_sources),
                 "val": "clm_holdout_v1_val",
                 "test": non_clm_event_id,
-                "eval_status": "blocked_incompatible_schema",
+                "eval_status": eval_status,
                 "model_iou": None,
                 "n": 0,
-                "reason": (
-                    "Held-out fire is CEMS/weak burned-area GeoTIFF, not NDWS "
-                    "17-channel sequences. Running UNet would invent transfer IoU."
-                ),
+                "reason": fold_reason,
             }
         },
         "rails": {
@@ -1383,7 +1559,8 @@ def rank_active_learning_tiles(
     """Rank tiles by label disagreement / mixed pos_frac. Not model IoU."""
     ranked: list[dict[str, Any]] = []
     for i, tile in enumerate(tiles):
-        pos = float(tile.get("pos_frac") if tile.get("pos_frac") is not None else 0.0)
+        raw_pos = tile.get("pos_frac")
+        pos = float(raw_pos) if isinstance(raw_pos, (int, float, str)) else 0.0
         # Mixed burned/unburned tiles are most useful to review (uncertainty proxy).
         mixed = 1.0 - abs(pos - 0.5) * 2.0
         disagree = tile.get("successive_disagreement")
@@ -1394,7 +1571,7 @@ def rank_active_learning_tiles(
             {
                 "event_id": event_id,
                 "rank": 0,
-                "tile_id": tile.get("file") or tile.get("tile_id") or f"tile_{i:03d}",
+                "tile_id": tile.get("tile_id") or tile.get("file") or f"tile_{i:03d}",
                 "pos_frac": pos,
                 "mixed_score": mixed,
                 "successive_disagreement": float(disagree),
@@ -1426,3 +1603,544 @@ def validate_al_ranking(doc: dict[str, Any]) -> list[str]:
         if forbidden in blob:
             fails.append(f"forbidden_key:{forbidden}")
     return fails
+
+
+def is_annual_l1_spec(spec: dict[str, Any] | None) -> bool:
+    spec = spec or {}
+    level = str(spec.get("label_level") or "")
+    kind = str(spec.get("source_kind") or "")
+    return level.startswith("L1") or kind.startswith("mapbiomas") or kind.startswith("nafi")
+
+
+def parse_iso_utc(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
+
+
+def hours_between(a: datetime, b: datetime) -> float:
+    return float((b - a).total_seconds() / 3600.0)
+
+
+def label_kind_family(kind: str | None) -> str:
+    k = str(kind or "").strip().lower()
+    if k in GROWTH_LABEL_KINDS:
+        return "growth"
+    if k in NON_GROWTH_LABEL_KINDS:
+        return "non_growth"
+    return "unknown"
+
+
+def compatible_growth_kinds(prev_kind: str | None, next_kind: str | None) -> bool:
+    """True when both labels are CEMS extent (DEL / MONIT). None/unknown does not block."""
+    if not prev_kind and not next_kind:
+        return True
+    return (
+        label_kind_family(prev_kind) == "growth"
+        and label_kind_family(next_kind) == "growth"
+    )
+
+
+def classify_temporal_pair(
+    *,
+    delta_hours: float | None,
+    label_mask_iou: float | None,
+    min_hours: float = MIN_LABEL_PAIR_HOURS,
+    static_iou: float = STATIC_LABEL_MASK_IOU,
+    prev_kind: str | None = None,
+    next_kind: str | None = None,
+) -> str:
+    """Classify a successive label pair.
+
+    incompatible_product_kind (FEP/GRA vs DEL) is not next-day growth.
+    too_short_delta wins over static copy when kinds are compatible.
+    """
+    if (prev_kind or next_kind) and not compatible_growth_kinds(prev_kind, next_kind):
+        return "incompatible_product_kind"
+    if delta_hours is not None and delta_hours < float(min_hours):
+        return "too_short_delta"
+    if label_mask_iou is not None and label_mask_iou > float(static_iou):
+        return "static_label_copy"
+    return "usable"
+
+
+def mean_usable_pair_ious(
+    pairs: list[dict[str, Any]], *, key: str = "complete_proxy_model_iou"
+) -> float | None:
+    vals = [
+        float(p[key])
+        for p in pairs
+        if p.get("pair_class") == "usable" and p.get(key) is not None
+    ]
+    if not vals:
+        return None
+    return float(sum(vals) / len(vals))
+
+
+def is_nested_to_cems_name(name: str) -> bool:
+    stem = Path(str(name)).stem
+    return stem.count("_to_cems") >= 2 or "_to_cems_to_cems" in stem
+
+
+def is_s2_source_tif(path: Path, *, pack_dir: Path) -> bool:
+    """True only for pack/eo/*.tif that are not already aligned."""
+    path = Path(path)
+    if path.suffix.lower() != ".tif":
+        return False
+    if path.stem.endswith("_to_cems") or is_nested_to_cems_name(path.name):
+        return False
+    try:
+        rel = path.resolve().relative_to(Path(pack_dir).resolve())
+    except ValueError:
+        return False
+    return len(rel.parts) == 2 and rel.parts[0] == "eo"
+
+
+def s2_source_paths(pack_dir: Path, meta: dict[str, Any] | None = None) -> list[Path]:
+    """S2 sources from pack/eo/*.tif only (never eo_aligned, never *_to_cems)."""
+    pack = Path(pack_dir)
+    found: list[Path] = []
+    seen: set[Path] = set()
+    for rec in (meta or {}).get("geotiffs") or []:
+        rel = str(rec.get("rel") or "")
+        if not rel or rel.replace("\\", "/").startswith("eo_aligned/"):
+            continue
+        path = pack / rel
+        if is_s2_source_tif(path, pack_dir=pack) and path not in seen:
+            seen.add(path)
+            found.append(path)
+    eo = pack / "eo"
+    if eo.is_dir():
+        for path in sorted(eo.glob("*.tif")):
+            if is_s2_source_tif(path, pack_dir=pack) and path not in seen:
+                seen.add(path)
+                found.append(path)
+    return found
+
+
+def aligned_s2_paths(pack_dir: Path) -> list[Path]:
+    """Canonical aligned dests: eo_aligned/{original_stem}_to_cems.tif (no nested repeats)."""
+    aligned = Path(pack_dir) / "eo_aligned"
+    if not aligned.is_dir():
+        return []
+    out: list[Path] = []
+    for path in sorted(aligned.glob("*.tif")):
+        if path.stem.endswith("_to_cems") and not is_nested_to_cems_name(path.name):
+            out.append(path)
+    return out
+
+
+def gc_nested_to_cems(pack_dir: Path) -> list[str]:
+    """Delete *_to_cems_to_cems*.tif (and deeper repeats) under eo_aligned/."""
+    aligned = Path(pack_dir) / "eo_aligned"
+    removed: list[str] = []
+    if not aligned.is_dir():
+        return removed
+    for path in sorted(aligned.glob("*.tif")):
+        if is_nested_to_cems_name(path.name):
+            path.unlink(missing_ok=True)
+            removed.append(f"eo_aligned/{path.name}")
+    return removed
+
+
+def load_warp_provenance(pack_dir: Path) -> dict[str, Any] | None:
+    path = Path(pack_dir) / "eo_aligned" / "WARP_PROVENANCE.json"
+    if not path.is_file():
+        return None
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return doc if isinstance(doc, dict) else None
+
+
+def warp_proxy_from_pack(pack_dir: Path) -> dict[str, Any] | None:
+    """Return already-computed NBR vs CEMS proxy if an audited warp exists."""
+    prov = load_warp_provenance(pack_dir)
+    aligned = aligned_s2_paths(pack_dir)
+    if prov is None or not aligned:
+        return None
+    metric = prov.get("proxy_metric") or {}
+    iou = metric.get("nbr_vs_cems_iou")
+    if iou is None:
+        iou = (prov.get("proxy") or {}).get("nbr_vs_cems_iou")
+    status = metric.get("status") or ("measured" if iou is not None else "warp_present_iou_null")
+    return {
+        "status": status,
+        "metric": metric.get("metric") or "nbr_vs_cems_iou",
+        "value": iou,
+        "threshold": metric.get("threshold"),
+        "reason": (
+            "Audited S2→CEMS warp present (WARP_PROVENANCE.json + eo_aligned). "
+            "Reporting stored proxy IoU — not model/transfer IoU."
+        ),
+        "n_aligned": len(aligned),
+        "provenance": "eo_aligned/WARP_PROVENANCE.json",
+        "honesty": metric.get("honesty")
+        or ["proxy NBR threshold IoU after audited warp", "not model IoU", "not transfer IoU"],
+    }
+
+
+def label_records_from_meta(pack_dir: Path, meta: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    pack = Path(pack_dir)
+    for rec in meta.get("geotiffs") or []:
+        if not str(rec.get("role") or "").startswith("label_"):
+            continue
+        rel = rec.get("rel")
+        if not rel:
+            continue
+        path = pack / rel
+        if not path.is_file():
+            continue
+        dt = parse_iso_utc(str(rec.get("delivery_utc") or rec.get("datetime") or ""))
+        rows.append(
+            {
+                "rel": str(rel).replace("\\", "/"),
+                "path": path,
+                "delivery_utc": rec.get("delivery_utc") or rec.get("datetime"),
+                "dt": dt,
+                "product_id": rec.get("product_id"),
+                "kind": rec.get("kind"),
+                "name": path.name,
+            }
+        )
+    rows.sort(key=lambda r: (r["dt"] or datetime.min.replace(tzinfo=UTC), r["name"]))
+    return rows
+
+
+def s2_datetime_from_name_or_meta(path: Path, rec: dict[str, Any] | None = None) -> datetime | None:
+    if rec:
+        dt = parse_iso_utc(str(rec.get("delivery_utc") or rec.get("datetime") or ""))
+        if dt is not None:
+            return dt
+    m = re.search(r"(20\d{6})_(\d{6})", path.stem)
+    if not m:
+        return None
+    try:
+        return datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+    except ValueError:
+        return None
+
+
+def pick_post_s2_path(
+    pack_dir: Path,
+    meta: dict[str, Any],
+    *,
+    aligned: bool = True,
+) -> dict[str, Any] | None:
+    """Prefer S2 datetime > last label; else nearest after first label."""
+    labels = label_records_from_meta(pack_dir, meta)
+    label_dts = [r["dt"] for r in labels if r.get("dt") is not None]
+    last_label = max(label_dts) if label_dts else None
+    first_label = min(label_dts) if label_dts else None
+    recs_by_stem: dict[str, dict[str, Any]] = {}
+    for rec in meta.get("geotiffs") or []:
+        rel = str(rec.get("rel") or "")
+        if rel:
+            recs_by_stem[Path(rel).stem] = rec
+    cands: list[dict[str, Any]] = []
+    if aligned:
+        for p in aligned_s2_paths(pack_dir):
+            src_stem = p.stem[: -len("_to_cems")] if p.stem.endswith("_to_cems") else p.stem
+            rec = recs_by_stem.get(src_stem) or recs_by_stem.get(p.stem) or {}
+            cands.append(
+                {
+                    "path": p,
+                    "rel": f"eo_aligned/{p.name}",
+                    "dt": s2_datetime_from_name_or_meta(p, rec),
+                    "rec": rec,
+                }
+            )
+    if not cands:
+        for p in s2_source_paths(pack_dir, meta):
+            rec = recs_by_stem.get(p.stem) or {}
+            cands.append(
+                {
+                    "path": p,
+                    "rel": f"eo/{p.name}",
+                    "dt": s2_datetime_from_name_or_meta(p, rec),
+                    "rec": rec,
+                }
+            )
+    if not cands:
+        return None
+    posts = [
+        c
+        for c in cands
+        if c["dt"] is not None and last_label is not None and c["dt"] > last_label
+    ]
+    if posts:
+        def _cov(c: dict[str, Any]) -> tuple[int, int]:
+            p = Path(c["path"])
+            return (p.stat().st_size if p.is_file() else 0, -int(c["dt"].timestamp()) if c.get("dt") else 0)
+
+        posts.sort(key=_cov, reverse=True)
+        pick = posts[0]
+        pick["pair_rule"] = "datetime_after_last_label"
+        return pick
+    after_first = [
+        c
+        for c in cands
+        if c["dt"] is not None and first_label is not None and c["dt"] > first_label
+    ]
+    if after_first:
+        after_first.sort(key=lambda c: c["dt"])
+        pick = after_first[0]
+        pick["pair_rule"] = "nearest_after_first_label"
+        return pick
+    dated = [c for c in cands if c["dt"] is not None]
+    pick = max(dated, key=lambda c: c["dt"]) if dated else cands[-1]
+    pick["pair_rule"] = "fallback_latest_s2"
+    return pick
+
+
+def pick_pre_s2_path(
+    pack_dir: Path,
+    meta: dict[str, Any],
+    *,
+    aligned: bool = True,
+) -> dict[str, Any] | None:
+    """Prefer S2 datetime < first label (pre-fire fuel). Do not use post-fire NBR as veg."""
+    labels = label_records_from_meta(pack_dir, meta)
+    label_dts = [r["dt"] for r in labels if r.get("dt") is not None]
+    first_label = min(label_dts) if label_dts else None
+    recs_by_stem: dict[str, dict[str, Any]] = {}
+    for rec in meta.get("geotiffs") or []:
+        rel = str(rec.get("rel") or "")
+        if rel:
+            recs_by_stem[Path(rel).stem] = rec
+    cands: list[dict[str, Any]] = []
+    if aligned:
+        for p in aligned_s2_paths(pack_dir):
+            src_stem = p.stem[: -len("_to_cems")] if p.stem.endswith("_to_cems") else p.stem
+            rec = recs_by_stem.get(src_stem) or recs_by_stem.get(p.stem) or {}
+            cands.append(
+                {
+                    "path": p,
+                    "rel": f"eo_aligned/{p.name}",
+                    "dt": s2_datetime_from_name_or_meta(p, rec),
+                    "rec": rec,
+                }
+            )
+    if not cands:
+        for p in s2_source_paths(pack_dir, meta):
+            rec = recs_by_stem.get(p.stem) or {}
+            cands.append(
+                {
+                    "path": p,
+                    "rel": f"eo/{p.name}",
+                    "dt": s2_datetime_from_name_or_meta(p, rec),
+                    "rec": rec,
+                }
+            )
+    if not cands:
+        return None
+    pres = [
+        c
+        for c in cands
+        if c["dt"] is not None and first_label is not None and c["dt"] < first_label
+    ]
+    if pres:
+        pres.sort(key=lambda c: c["dt"], reverse=True)
+        pick = pres[0]
+        pick["pair_rule"] = "datetime_before_first_label"
+        return pick
+    dated = [c for c in cands if c["dt"] is not None]
+    pick = min(dated, key=lambda c: c["dt"]) if dated else cands[0]
+    pick["pair_rule"] = "fallback_earliest_s2"
+    return pick
+
+
+def cession_evidence_ok(path: Path | None) -> tuple[bool, str]:
+    """Same file-level rules as record_conaf_cession (no product-flag writes)."""
+    if path is None:
+        return False, "missing_evidence"
+    evidence = Path(path)
+    if not evidence.is_file():
+        return False, f"evidence_missing:{evidence}"
+    if evidence.suffix.lower() not in CESSION_EVIDENCE_SUFFIXES:
+        return False, f"evidence_suffix_not_allowed:{evidence.suffix}"
+    if evidence.stat().st_size < 16:
+        return False, "evidence_too_small"
+    return True, "ok"
+
+
+def distinct_s2_windows(event_date: str) -> list[tuple[str, str]]:
+    """Non-overlapping pre/mid/post STAC datetime windows around YYYY-MM-DD."""
+    mid = datetime.strptime(event_date[:10], "%Y-%m-%d").replace(tzinfo=UTC)
+
+    def _fmt(a: datetime, b: datetime) -> str:
+        return f"{a.strftime('%Y-%m-%d')}/{b.strftime('%Y-%m-%d')}"
+
+    pre = (mid - timedelta(days=24), mid - timedelta(days=10))
+    midw = (mid - timedelta(days=9), mid + timedelta(days=5))
+    post = (mid + timedelta(days=6), mid + timedelta(days=20))
+    return [
+        ("pre", _fmt(*pre)),
+        ("mid", _fmt(*midw)),
+        ("post", _fmt(*post)),
+    ]
+
+
+def _s2_sort_key(rec: dict[str, Any]) -> str:
+    return str(
+        rec.get("datetime") or rec.get("delivery_utc") or rec.get("file") or rec.get("rel") or ""
+    )
+
+
+def assign_s2_roles_by_datetime(recs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Assign pre/mid/post by acquisition time. Same civil day extras are tiles."""
+    out: list[dict[str, Any]] = []
+    s2_idx: list[int] = []
+    for i, rec in enumerate(recs):
+        role = str(rec.get("role") or "")
+        if role.startswith("eo_s2_nbr") and "aligned" not in role:
+            s2_idx.append(i)
+        out.append(dict(rec))
+    if not s2_idx:
+        return out
+    ordered = sorted(s2_idx, key=lambda i: _s2_sort_key(out[i]))
+    civil_of: list[str] = []
+    for rank, i in enumerate(ordered):
+        dt = parse_iso_utc(_s2_sort_key(out[i]))
+        civil_of.append(dt.date().isoformat() if dt is not None else f"undated-{rank}")
+    unique_days: list[str] = []
+    for day in civil_of:
+        if day not in unique_days:
+            unique_days.append(day)
+    day_role: dict[str, str] = {}
+    n_days = len(unique_days)
+    for d_i, day in enumerate(unique_days):
+        if n_days == 1:
+            day_role[day] = "eo_s2_nbr_post"
+        elif d_i == 0:
+            day_role[day] = "eo_s2_nbr_pre"
+        elif d_i == n_days - 1:
+            day_role[day] = "eo_s2_nbr_post"
+        else:
+            day_role[day] = "eo_s2_nbr_mid"
+    seen_day: dict[str, int] = {}
+    remapped: list[dict[str, Any]] = []
+    for i, day in zip(ordered, civil_of, strict=True):
+        rec = dict(out[i])
+        count = seen_day.get(day, 0)
+        seen_day[day] = count + 1
+        if count > 0:
+            rec["role"] = "eo_s2_nbr_same_day_tile"
+            rec["s2_same_civil_day"] = True
+        else:
+            rec["role"] = day_role[day]
+        rec["s2_role_assigned_by"] = "datetime"
+        remapped.append(rec)
+    for slot, rec in zip(s2_idx, remapped, strict=True):
+        out[slot] = rec
+    return out
+
+
+def remap_pack_s2_roles(meta: dict[str, Any]) -> dict[str, Any]:
+    out = dict(meta)
+    if isinstance(out.get("geotiffs"), list):
+        out["geotiffs"] = assign_s2_roles_by_datetime(list(out["geotiffs"]))
+    if isinstance(out.get("stac_eo"), list):
+        out["stac_eo"] = assign_s2_roles_by_datetime(list(out["stac_eo"]))
+    return out
+
+
+def try_stac_s2_windows(
+    pack_dir: Path,
+    spec: dict[str, Any],
+    bbox_wgs84: tuple[float, float, float, float] | list[float],
+    event_date: str,
+    max_cloud: float = 60.0,
+) -> list[dict[str, Any]]:
+    """Windowed S2 NBR via Element84 STAC. Honest GAP rows on failure. No invented IoU."""
+    from .stac_s2 import load_nbr_for_item, stac_search
+
+    pack = Path(pack_dir)
+    eo_dir = pack / "eo"
+    eo_dir.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, Any]] = []
+    bbox = [float(x) for x in bbox_wgs84]
+    for role, rng in distinct_s2_windows(event_date):
+        start, end = rng.split("/")
+        stac_rng = f"{start}T00:00:00Z/{end}T23:59:59Z"
+        rec: dict[str, Any] = {
+            "role": f"eo_s2_nbr_{role}",
+            "range": stac_rng,
+            "status": "gap",
+        }
+        try:
+            items = stac_search(bbox, stac_rng, max_cloud=max_cloud, limit=5)
+        except Exception as exc:  # noqa: BLE001
+            rec["reason"] = f"stac_search_failed:{type(exc).__name__}:{exc}"
+            rows.append(rec)
+            continue
+        if not items:
+            rec["reason"] = "no_stac_item"
+            rows.append(rec)
+            continue
+        item = items[0]
+        props = item.get("properties") or {}
+        dt = str(props.get("datetime") or "")
+        try:
+            nbr, nbr_meta = load_nbr_for_item(item, bbox, max_size=256)
+        except Exception as exc:  # noqa: BLE001
+            rec["reason"] = f"nbr_read_failed:{type(exc).__name__}:{exc}"
+            rec["item_id"] = item.get("id")
+            rows.append(rec)
+            continue
+        stamp = "00000000_000000"
+        parsed = parse_iso_utc(dt)
+        if parsed is not None:
+            stamp = parsed.strftime("%Y%m%d_%H%M%S")
+        fname = f"{spec['event_id']}_S2NBR_{stamp}.tif"
+        dest = eo_dir / fname
+        try:
+            import rasterio
+            from rasterio.transform import from_bounds
+
+            h, w = nbr.shape
+            west, south, east, north = bbox
+            transform = from_bounds(west, south, east, north, w, h)
+            profile = {
+                "driver": "GTiff",
+                "height": h,
+                "width": w,
+                "count": 1,
+                "dtype": "float32",
+                "crs": "EPSG:4326",
+                "transform": transform,
+                "compress": "deflate",
+            }
+            with rasterio.open(dest, "w", **profile) as ds:
+                ds.write(nbr.astype("float32"), 1)
+            rec.update(
+                {
+                    "status": "ok",
+                    "rel": f"eo/{fname}",
+                    "file": fname,
+                    "datetime": dt,
+                    "item_id": item.get("id"),
+                    "sensor": "Sentinel-2 L2A (windowed NBR)",
+                    "crs": "EPSG:4326",
+                    "bytes": dest.stat().st_size,
+                    "sha256": sha256_file(dest),
+                    "cloud_cover": props.get("eo:cloud_cover"),
+                    "nbr_meta": {k: nbr_meta.get(k) for k in ("item_id",) if k in nbr_meta},
+                }
+            )
+        except Exception as exc:  # noqa: BLE001
+            rec["reason"] = f"write_failed:{type(exc).__name__}:{exc}"
+            rec["item_id"] = item.get("id")
+        rows.append(rec)
+    return assign_s2_roles_by_datetime(rows)

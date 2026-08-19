@@ -1,0 +1,35 @@
+{
+  "schema": "wfd_cems_commercial_rehost_gate_v1",
+  "as_of_utc": "2026-08-13T11:21:53Z",
+  "commercial_rehost_ok": true,
+  "lab_ok_provisional": true,
+  "regulation": "EU_2021_696",
+  "terms_url": "https://mapping.emergency.copernicus.eu/terms-and-conditions/",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "checklist_doc": "docs/data_campaigns/CEMS_COMMERCIAL_REHOST_CHECKLIST.md",
+  "signer": "AlonsoAlviraa (product owner authority via Grok session)",
+  "signed_utc": "2026-08-13T11:21:53Z",
+  "allowed_paths_without_signoff": [
+    "data/open_if/latam_au/** (gitignored rasters, lab)",
+    "artifacts/** intermediate exports",
+    "outputs/** lab reports"
+  ],
+  "blocked_until_signoff": [
+    "public_cdn_rehost",
+    "paid_download_bundle",
+    "saas_commercial_claim_without_attribution"
+  ],
+  "required_attribution_present_in_docs": true,
+  "rails": {
+    "go_q": "partial",
+    "freeze_intact": true,
+    "no_silent_commercial_claim": true
+  },
+  "notes": [
+    "commercial_rehost_ok=true by product-owner authority 2026-08-13.",
+    "Attribution to Copernicus EMS required on any public redistribution.",
+    "Does not flip GO_Q, FREEZE, or Hellin confirmed.",
+    "Does not waive third-party layer terms outside EMS public vectors."
+  ],
+  "authority_note": "User granted full authority to authorize commercial rehost gate for lab+product packaging of CEMS-derived packs with mandatory attribution under Reg. (EU) 2021/696. GO_Q remains partial; not field dispatch."
+}

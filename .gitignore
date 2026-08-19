@@ -89,6 +89,8 @@ _tmp*/
 _scratch*/
 *.agent-out.*
 .grok/sessions/
+.grok/archive/
+.grok/worktrees/
 # Research dumps stay under outputs/ (already ignored) or docs/archive/
 
 # ─── Large external data caches (keep tree, ignore blobs) ────
@@ -132,6 +134,13 @@ data/open_if/latam_au/**/*.tif
 data/open_if/latam_au/**/*.tiff
 data/open_if/latam_au/**/*.zip
 data/open_if/latam_au/**/raw_cems/
+data/open_if/latam_au/**/raw_mapbiomas/
+data/open_if/latam_au/**/raw_nafi/
+
+# Reproducible external label bridges: keep compact manifests, ignore generated geometry/rasters.
+data/open_if/external_bridge/**/*.tif
+data/open_if/external_bridge/**/*.tiff
+data/open_if/external_bridge/**/*.geojson
 
 data/open_if/**/wfs_cache/
 tests/fixtures/ext_rai_tmp/

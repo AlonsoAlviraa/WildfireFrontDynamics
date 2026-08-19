@@ -1,0 +1,240 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "AU_NAFI_NT_SEASON_2023",
+  "region": "au",
+  "country": "AU",
+  "activation": "NAFI_FIRESCHAR",
+  "aoi": "DARWIN_NT_WINDOW",
+  "aoi_name": "Darwin / north NT (windowed annual scars)",
+  "year": 2023,
+  "class": "ml_weak",
+  "label_level": "L1_annual",
+  "license_id": "nafi_open_research",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://firenorth.org.au/nafi3/views/data/Download1.html",
+  "crs": "EPSG:4326",
+  "gsd_m": 250.0,
+  "sensor": "NAFI 250m fire scars (windowed)",
+  "geotiff_origin": "nafi_annual_windowed",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2021-12-31T00:00:00Z",
+    "2022-12-31T00:00:00Z",
+    "2023-12-31T00:00:00Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20211231_000000.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_20211231_000000.tif",
+      "role": "label_burned_nafi_annual",
+      "product_id": "NAFI_2021",
+      "kind": "annual_fire_scar",
+      "delivery_utc": "2021-12-31T00:00:00Z",
+      "source_url": "https://firenorth.org.au/nafi3/downloads/firescars/2021/2021 firescar image files.zip",
+      "source_zip": "nafi_2021_image.zip",
+      "source_member": "FS2021_MTHS.tif",
+      "sha256": "9cd1e3eeb2a47dc576604fbba1b79323b7d509ab6153d1a2ecf971cff10812e1",
+      "bytes": 12943,
+      "crs": "EPSG:4283",
+      "width": 360,
+      "height": 440,
+      "positive_pixels": 49986,
+      "note": "NAFI 250m annual scar windowed to Darwin/NT bbox. L1 weak."
+    },
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20221231_000000.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_20221231_000000.tif",
+      "role": "label_burned_nafi_annual",
+      "product_id": "NAFI_2022",
+      "kind": "annual_fire_scar",
+      "delivery_utc": "2022-12-31T00:00:00Z",
+      "source_url": "https://firenorth.org.au/nafi3/downloads/firescars/2022/2022 firescar image files.zip",
+      "source_zip": "nafi_2022_image.zip",
+      "source_member": "FS2022_MTHS.tif",
+      "sha256": "ec5ff4bb9567d7d51df6dfdbf7efc70dc9593663128f02971787fa6b078c23ca",
+      "bytes": 13607,
+      "crs": "EPSG:4283",
+      "width": 360,
+      "height": 440,
+      "positive_pixels": 51591,
+      "note": "NAFI 250m annual scar windowed to Darwin/NT bbox. L1 weak."
+    },
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20231231_000000.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_20231231_000000.tif",
+      "role": "label_burned_nafi_annual",
+      "product_id": "NAFI_2023",
+      "kind": "annual_fire_scar",
+      "delivery_utc": "2023-12-31T00:00:00Z",
+      "source_url": "https://firenorth.org.au/nafi3/downloads/firescars/2023/2023 firescar image files.zip",
+      "source_zip": "nafi_2023_image.zip",
+      "source_member": "FS2023_MTHS.tif",
+      "sha256": "5db31eb036ae32439c9d793c4dd8e2a17463dee45674a6deda471973e307e39f",
+      "bytes": 14961,
+      "crs": "EPSG:4283",
+      "width": 360,
+      "height": 440,
+      "positive_pixels": 45457,
+      "note": "NAFI 250m annual scar windowed to Darwin/NT bbox. L1 weak."
+    },
+    {
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230723_014055.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230723_014055.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2023-07-23T01:40:55.572000Z",
+      "sha256": "e533ad468e8fd6045a5cfa3e031ecd4445cb90e58ecd4aa7d0f6896bb16f41c4",
+      "bytes": 16349,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230807_014107.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230807_014107.tif",
+      "role": "eo_s2_nbr_mid",
+      "delivery_utc": "2023-08-07T01:41:07.048000Z",
+      "sha256": "c85a289e47f907dfe6d44bb10730588bdbd122f3d3842f1e05fb97ba30aa234e",
+      "bytes": 49708,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230819_013108.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230819_013108.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2023-08-19T01:31:08.762000Z",
+      "sha256": "46e60a08728f361fdd51df00c8b1480052dd55b0739d6b2b8913a56ca5de3537",
+      "bytes": 2326,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20211231_000000.tif",
+      "kind": "nafi_annual_scar_window"
+    },
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20221231_000000.tif",
+      "kind": "nafi_annual_scar_window"
+    },
+    {
+      "rel": "labels/AU_NAFI_NT_SEASON_2023_20231231_000000.tif",
+      "kind": "nafi_annual_scar_window"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-13T09:52:58.120973Z",
+  "bbox_wgs84": [
+    130.5,
+    -13.1,
+    131.4,
+    -12.0
+  ],
+  "n_geotiff": 6,
+  "stac_eo": [
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_pre",
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230723_014055.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230723_014055.tif",
+      "sha256": "e533ad468e8fd6045a5cfa3e031ecd4445cb90e58ecd4aa7d0f6896bb16f41c4",
+      "bytes": 16349,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2A_52LGL_20230723_0_L2A",
+      "datetime": "2023-07-23T01:40:55.572000Z",
+      "stac": {
+        "id": "S2A_52LGL_20230723_0_L2A",
+        "datetime": "2023-07-23T01:40:55.572000Z",
+        "eo:cloud_cover": 0,
+        "platform": "sentinel-2a",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/7/S2A_52LGL_20230723_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/7/S2A_52LGL_20230723_0_L2A/B12.tif",
+        "bbox": [
+          130.84117523973725,
+          -12.902212594019074,
+          131.75667262695666,
+          -12.64974198319277
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2A_52LGL_20230723_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/7/S2A_52LGL_20230723_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/7/S2A_52LGL_20230723_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_mid",
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230807_014107.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230807_014107.tif",
+      "sha256": "c85a289e47f907dfe6d44bb10730588bdbd122f3d3842f1e05fb97ba30aa234e",
+      "bytes": 49708,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2B_52LFL_20230807_0_L2A",
+      "datetime": "2023-08-07T01:41:07.048000Z",
+      "stac": {
+        "id": "S2B_52LFL_20230807_0_L2A",
+        "datetime": "2023-08-07T01:41:07.048000Z",
+        "eo:cloud_cover": 0.003228,
+        "platform": "sentinel-2b",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/FL/2023/8/S2B_52LFL_20230807_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/FL/2023/8/S2B_52LFL_20230807_0_L2A/B12.tif",
+        "bbox": [
+          129.92090167395952,
+          -13.655153200298894,
+          130.93951216306942,
+          -12.657006390818566
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2B_52LFL_20230807_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/FL/2023/8/S2B_52LFL_20230807_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/FL/2023/8/S2B_52LFL_20230807_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "status": "ok",
+      "role": "eo_s2_nbr_post",
+      "rel": "eo/AU_NAFI_NT_SEASON_2023_S2NBR_20230819_013108.tif",
+      "file": "AU_NAFI_NT_SEASON_2023_S2NBR_20230819_013108.tif",
+      "sha256": "46e60a08728f361fdd51df00c8b1480052dd55b0739d6b2b8913a56ca5de3537",
+      "bytes": 2326,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "item_id": "S2A_52LGL_20230819_0_L2A",
+      "datetime": "2023-08-19T01:31:08.762000Z",
+      "stac": {
+        "id": "S2A_52LGL_20230819_0_L2A",
+        "datetime": "2023-08-19T01:31:08.762000Z",
+        "eo:cloud_cover": 7e-06,
+        "platform": "sentinel-2a",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/8/S2A_52LGL_20230819_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/8/S2A_52LGL_20230819_0_L2A/B12.tif",
+        "bbox": [
+          131.256118604299,
+          -13.646620579681803,
+          131.86291959423934,
+          -12.648743894609575
+        ]
+      },
+      "nbr_meta": {
+        "item_id": "S2A_52LGL_20230819_0_L2A",
+        "nir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/8/S2A_52LGL_20230819_0_L2A/B08.tif",
+        "swir_href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/L/GL/2023/8/S2A_52LGL_20230819_0_L2A/B12.tif"
+      },
+      "s2_role_assigned_by": "datetime"
+    }
+  ]
+}
