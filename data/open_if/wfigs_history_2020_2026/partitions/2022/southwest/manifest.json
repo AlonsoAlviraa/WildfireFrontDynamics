@@ -1,0 +1,36 @@
+{
+  "schema": "wfd_wfigs_history_partition_v1",
+  "status": "complete",
+  "source_id": "us_wfigs_daily_perimeters",
+  "adapter_version": "1.0.0",
+  "partition": {
+    "year": 2022,
+    "region": "southwest",
+    "gacc": "SWCC",
+    "start": "2022-01-01",
+    "end": "2022-12-31"
+  },
+  "retrieved_at": "2026-08-18T18:19:55.135635Z",
+  "where_sha256": "066d6c82fc52f7aa18aa3490ee5edef175fcd9ade69b262512919a0271da785d",
+  "counts": {
+    "server_count": 0,
+    "raw_received": 0,
+    "normalized": 0,
+    "rejected": 0,
+    "events": 0,
+    "effective_page_size": 250
+  },
+  "raw": [],
+  "normalized": {
+    "file": "normalized.geojson",
+    "sha256": "8fa328b4bdf86f1a27ecb75162f40a663a882a4b8c5faf279f813e58eedbcb16"
+  },
+  "rejected": [],
+  "honesty": {
+    "daily_perimeters_are_candidate_progression_not_ground_truth": true,
+    "duplicate_same_event_timestamps_require_resolution": true,
+    "future_or_incident_year_mismatched_timestamps_rejected": true,
+    "same_event_temporal_pair_and_leakage_audit_required": true,
+    "not_validated_tactical_dispatch": true
+  }
+}
