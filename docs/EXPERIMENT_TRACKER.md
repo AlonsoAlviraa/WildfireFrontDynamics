@@ -62,16 +62,34 @@
 
 - **Protocol:** 886 fires / 8,131 samples; TRAIN 596/5,552, VAL 106/928,
   TEST 184/1,651; event-disjoint and TRAIN-only normalization.
-- **Phase-1 VAL leader:** `resunet_hybrid_v1`, event-macro growth IoU 0.18021
-  at epoch 24; bootstrap 95% CI [0.15783, 0.20413]. This is not TEST.
+- **Frozen VAL winner:** `resunet_hybrid_event_balanced_v1`, event-macro
+  growth IoU 0.20867 at epoch 28 and threshold 0.45; event-bootstrap 95% CI
+  [0.18047, 0.24000]. Its paired delta over the previous low-LR leader is
+  +0.01456 (95% CI [-0.00111, 0.03307]; wins on 50.94% of fires). This is
+  model-selection evidence on VALIDATION, not TEST.
+- **Independent reproducibility:** a second private T4 execution produced a
+  byte-identical checkpoint (`2bd3729438de...`), identical selected metrics,
+  and exactly the same 106 per-fire IoUs (maximum absolute difference 0).
 - **Corrected geometric TEST comparator:** dilation radius 6 selected on VAL
   event-macro IoU, TEST 0.12724. Legacy pooled-selection radius 3 is retained
   but superseded.
-- **VAL ensemble audit:** best multi-model combination 0.17440 versus best
-  individual 0.18066 (Δ −0.00626); cross-architecture ensemble rejected.
+- **VAL ensemble audit:** equal-weight combinations were rejected. A bounded
+  low-LR-weight search found `low3_phase1_growth` (weights 3:1:1),
+  event-macro IoU 0.19736 at threshold 0.40, delta +0.00325 versus `low_lr`.
+  Paired event-bootstrap 95% CI [-0.00004, 0.00681], wins 49.06%; descriptive,
+  not confirmatory. It was excluded from the frozen recipe after the
+  event-balanced run became the winner; the only retained ensemble is the
+  preregistered mean probability across the winner's three seeds.
+- **VAL spatial decoder:** fixed threshold 0.80, one-pixel dilation, and t0
+  connectivity reached 0.19839 (delta +0.00428; paired 95% CI
+  [-0.00126, 0.00991]). It was excluded from the frozen recipe because the
+  low-LR run did not remain the winner; applying it to the event-balanced model
+  would be an unregistered cross-run transfer.
 - **TRAIN sampler audit:** 15/5,552 zero-growth samples; default event-mass
   CV 0.647 versus approximately 0 for `uniform_events`; all 5,552 transitions
-  retain every t0-positive pixel. Conditional uniform-event ablation registered.
+  retain every t0-positive pixel. The two sampler candidates now match the
+  low-LR leader in architecture, target, LR, epoch cap, patience, loss and seed;
+  only event-mass exponent or sampler changes.
 - **GCP long run recovered:** `resunet_hybrid_long_v2` reached a finite best at
   epoch 13, VAL event-macro IoU 0.16766 (threshold 0.20), then produced a
   non-finite loss at epoch 16. A full scan found 0/13,002 non-finite TRAIN NPY
@@ -82,19 +100,37 @@
   encountered a non-finite loss at epoch 21. Its finite checkpoint was
   re-evaluated on all 928 VAL samples and is explicitly marked truncated; it
   did not beat the phase-1 leader and never accessed TEST.
-- **Active Kaggle T4 run:** `resunet_hybrid_low_lr_v2` now runs privately under
-  the alternate account `alonsoalviraaaa`; the source datasets remain private
-  and shared read-only. The main account had reached its 30 h weekly GPU quota.
-  The partial GCP precision run was aborted solely for backend migration and is
-  ineligible. Subsequent runners stop optimization on a non-finite loss, retain
-  only a verified finite VAL checkpoint, reject non-AMP non-finite gradients,
-  delegate AMP scale overflows to `GradScaler`, and clip gradient norm at 5.0.
-  Later candidates remain conditional on best completed VAL staying below 0.20.
-- **Final contract:** freeze one recipe, train seeds 11/29/47, then evaluate
-  RCDA TEST once. WFIGS zero-shot and adaptation remain blocked until freeze.
+- **Completed growth-only run:** `resunet_growth_v1` finished normally at epoch
+  18 with VAL event-macro IoU 0.17395, pooled IoU 0.16184, threshold 0.95 and
+  far-front recall 0.06850. It did not beat the low-LR hybrid leader; TEST was
+  not evaluated. The leader's paired advantage was +0.02016 across 106 fires
+  (event-bootstrap 95% CI [0.00786, 0.03310]; wins on 57.55%).
+- **Matched growth-only low-LR run:** `resunet_growth_low_lr_v1` recovered to
+  0.18804 event-macro IoU (95% CI [0.16821, 0.20843]), pooled IoU 0.14030,
+  epoch 25 and threshold 0.95. It ranks third. Against the then-matched hybrid
+  low-LR run, the hybrid advantage was +0.00607 (95% CI [-0.00502, 0.01720]);
+  against the frozen event-balanced winner the paired delta is +0.02063 (95%
+  CI [-0.00076, 0.04444]). These target-mode contrasts remain descriptive.
+- **Completed event-balanced run:** `resunet_hybrid_event_balanced_v1` crossed
+  the preregistered 0.20 stopping threshold at 0.20867. Therefore the later
+  `uniform_events` and FiLM candidates were not launched. The source datasets
+  remained private and shared read-only on the alternate Kaggle account.
+- **Frozen final contract:** one raw primary recipe and the mean-seed
+  probability ensemble were frozen for seeds 11/29/47. The old low-LR spatial
+  decoder and weighted checkpoint ensemble were excluded as run-mismatched.
+  WFIGS zero-shot and adaptation may proceed only from this frozen recipe.
+- **Final execution audit:** the first final Kaggle kernel failed after 7.7 s
+  while importing the generated script because JSON `false` had been embedded
+  as a Python name. It produced no seed report or checkpoint and did not load
+  or evaluate TEST. The serializer and an AST-level regression test were fixed
+  in PR #65; TEST therefore remains sealed for the corrected execution.
 - **Pre-TEST registry:** `PRETEST_DECISION_LOG.json` records evidence, numerical
   recovery, gradient-safety amendment and code/runtime hashes; the future
   frozen recipe must carry its SHA-256.
+- **Engineering verification:** 1,365 tests collected; the full `not slow`
+  suite passed 1,363 with 1 skip after deselecting exactly one known live-data
+  assertion whose locally modified NDWS report contains one ready pack instead
+  of the required two. The RCDA/WFIGS/UI focused suite passes 130/130.
 - **Artifacts:** `outputs/ml_eval/rcda_paper_nightwatch_20260819/` and
   `docs/RCDA_PAPER_PROTOCOL_2026.md`.
 

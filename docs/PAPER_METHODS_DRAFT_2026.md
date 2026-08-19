@@ -96,7 +96,12 @@ launched next. The runner now emits a completed, explicitly truncated report
 from a late finite checkpoint instead of losing the whole kernel artifact.
 
 The lower-learning-rate ResUNet completed its validation-only schedule with a
-best checkpoint at epoch 27 and threshold 0.05. Its event-macro IoU was 0.19411
+best checkpoint at epoch 27 and threshold 0.05. The same private T4 kernel was
+then rerun independently. It reproduced the checkpoint byte-for-byte (SHA-256
+`2bd3729438de2aa17d56f280bcaf607bc255b195a2ac026f9df579b30bc6a7e0`),
+the selected threshold, event-macro IoU, and every one of the 106 per-event
+IoUs exactly; only execution metadata in the summary JSON differed. Its
+event-macro IoU was 0.19411
 over the same 106 VALIDATION fires (event-bootstrap 95% interval
 0.17244–0.21723), compared with 0.18021 for the phase-1 ResUNet leader. The
 paired mean improvement was 0.01390 and its descriptive bootstrap interval
@@ -107,16 +112,68 @@ between IoU and duration (Spearman ρ=0.10, p=0.30) or growth support
 (ρ≈0, p=0.96). Pooled precision increased from 0.18274 to 0.19723 while recall
 changed from 0.37674 to 0.37064; recall beyond 10.5 pixels from the observed
 front increased from 0.13805 to 0.14436. These are interim model-selection results, not confirmatory TEST
-evidence. The conditional growth-only, event-balanced, uniform-event and FiLM
-candidates remain eligible while the completed VALIDATION leader is below
-0.20; TEST remains unobserved. A small validation-only decoder grid subsequently
+evidence. The first growth-only ResUNet completed at 0.17395 event-macro IoU
+(threshold 0.95, epoch 18). The hybrid low-LR leader's paired advantage was
++0.02016 (event-bootstrap 95% CI 0.00786 to 0.03310; wins on 57.55% of fires),
+so the first growth-only recipe did not beat the leader. The matched
+growth-only low-LR and event-balanced candidates were then run in the
+preregistered order. The latter crossed the 0.20 stopping threshold, so the
+conditional uniform-event and FiLM candidates were not launched; TEST remained
+unobserved. A small validation-only decoder grid had previously
 improved the same checkpoint to 0.19839 event-macro IoU (pooled IoU 0.14885)
 using a one-pixel dilation and retention of components connected to t0. This
 corresponded to a paired event-level delta of +0.00428 (10,000-resample 95%
 bootstrap CI -0.00126 to +0.00991; wins on 57.55% of events). Because the
 interval includes zero and the decoder was selected on VALIDATION, this is
-descriptive rather than confirmatory evidence. The decoder remains provisional
-until the remaining preregistered candidates complete.
+descriptive rather than confirmatory evidence. The decoder was excluded after
+`resunet_hybrid_event_balanced_v1` became the winner because its
+hyperparameters were not selected for that run. It cannot alter the primary
+endpoint or the paper gate.
+
+The sampler experiments were specified as controlled ablations of the
+low-learning-rate leader. Both retained the residual U-Net, hybrid target,
+learning rate 2e-4, 32-epoch cap, patience 8, loss, and seed. `event_balanced`
+changed only the event-mass exponent from 0.5 to 1.0; the conditional
+`uniform_events` recipe would have changed only the sampler to equal event
+probability. The stopping rule meant only the event-balanced ablation was run.
+
+One additional target ablation, `resunet_growth_low_lr_v1`, was evaluated before
+the sampler experiments because the completed validation leader remained below
+0.20 at that point. It matched the low-learning-rate leader in architecture, optimizer,
+learning rate, epoch cap, patience, loss and seed, changing only the prediction
+target from hybrid extent/growth supervision to growth-only. This closes the
+target-mode branch; no further target or learning-rate combinations are searched.
+The matched run completed at 0.18804 event-macro IoU (event-bootstrap 95% CI
+0.16821 to 0.20843), epoch 25 and threshold 0.95, ranking third after the
+sampler ablation completed. The hybrid
+leader's paired advantage was +0.00607 (95% CI -0.00502 to 0.01720; wins on
+52.83% of fires). Lowering the learning rate therefore recovered most of the
+first growth-only deficit, but did not displace hybrid supervision on VAL.
+
+The matched event-balanced sampler completed at epoch 28 and became the frozen
+VALIDATION winner with event-macro IoU 0.20867 (event-bootstrap 95% CI 0.18047
+to 0.24000), pooled IoU 0.15608 and threshold 0.45. Its paired improvement over
+the previous low-learning-rate leader was +0.01456 (95% CI -0.00111 to
++0.03307; wins on 50.94% of the 106 fires). Because the preregistered stopping
+rule was crossed, the later uniform-event and FiLM candidates were not run.
+The spatial decoder and weighted checkpoint ensemble tuned for the displaced
+low-LR run were excluded rather than transferred across runs. The frozen
+secondary ensemble is therefore limited to mean probability across three
+independent seeds of the event-balanced winner.
+
+A descriptive validation-only subgroup audit found no detectable monotonic
+association between event IoU and sequence duration (Spearman rho 0.101,
+p=0.301) or total observed growth support (rho -0.0049, p=0.960) across 106
+fires. Event-macro IoU across growth-support quartiles ranged from 0.17033 to
+0.20712, with Q3 weakest. These post-selection subgroup results identify a
+failure mode for discussion; they are not confirmatory subgroup claims.
+
+![Validation-only candidate ranking and paired leader comparison](figures/rcda_validation_evidence_20260819.svg)
+
+The corresponding reproducible candidate table is in
+[`tables/rcda_validation_results_20260819.md`](tables/rcda_validation_results_20260819.md),
+with a machine-readable CSV beside it. Both are generated directly from the
+VAL-only scorecard.
 
 Equal-weight late ensembles did not improve the individual checkpoint:
 `low_lr + phase1` reached 0.19333 (Δ −0.00078 versus `low_lr`) and the
@@ -124,10 +181,14 @@ three-model `low_lr + phase1 + growth` ensemble reached 0.19195. They were
 rejected on VALIDATION. The preregistered bounded leader-weight grid then found
 one improvement: `low3_phase1_growth`, equivalent to weights 3:1:1, reached
 0.19736 event-macro IoU (Δ +0.00325 versus `low_lr`) at threshold 0.40. It is
-retained as the sole multi-model candidate; the weight search is closed and no
-further ensemble tuning is permitted before TEST. The separately selected
-single-checkpoint spatial decoder remains numerically higher on VALIDATION at
-0.19839, with the uncertainty caveat above.
+associated with a paired event-bootstrap 95% interval of -0.00004 to +0.00681
+and wins on 49.06% of the 106 validation fires. Because this interval crosses
+zero and the weights and threshold were selected on VALIDATION, the gain is
+treated as descriptive rather than confirmatory. It is
+recorded as a descriptive audit; the weight search is closed. It was not
+retained after the event-balanced model displaced `low_lr`. The separately
+selected single-checkpoint spatial decoder reached 0.19839 on the displaced
+run and was likewise excluded from the frozen recipe.
 
 ## Final primary evaluation
 
@@ -136,6 +197,13 @@ epoch and threshold on VALIDATION and performs exactly one TEST evaluation.
 The primary endpoint is mean event-macro growth IoU across seeds. Uncertainty is
 estimated by a paired 95% event bootstrap; a one-sided paired Wilcoxon test is
 reported as a secondary contrast.
+
+The first final-kernel launch failed during Python module initialization after
+7.7 seconds because the packager emitted a JSON boolean as a Python name. The
+failure occurred before dataset discovery, training, checkpoint creation or
+any TEST access. The serialization defect was corrected and covered by an
+AST-level regression test without changing the frozen model, sampler, seed,
+epoch-selection, threshold-selection or evaluation contract.
 
 The strict gate requires: three completed preregistered seeds; mean event-macro
 IoU ≥ 0.20; every seed above the strongest reproduced learned baseline; and a
