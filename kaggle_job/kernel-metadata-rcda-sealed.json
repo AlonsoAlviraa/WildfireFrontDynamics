@@ -1,0 +1,17 @@
+{
+  "id": "alonsoalvira/wfd-rcda-sealed-v1",
+  "title": "wfd-rcda-sealed-v1",
+  "code_file": "run_rcda_sealed_train.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": false,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [
+    "alonsoalvira/wfd-rcda-sealed",
+    "alonsoalvira/wfd-rcda-archive"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

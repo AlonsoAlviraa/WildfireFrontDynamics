@@ -1,0 +1,271 @@
+{
+  "schema": "wfd_rcda_caldor_why_root_cause_v1",
+  "generated_at_utc": "2026-08-16T23:30:00Z",
+  "status": "complete",
+  "parent_results_audit": "docs/RCDA_CALDOR_RESULTS_AUDIT.json",
+  "executive_verdict": {
+    "rcda_0_308_is": "information-limited local-ring predictor, not a broken architecture",
+    "protocol_contamination": "real and disqualifies independence; does not produce the 0.31",
+    "caldor": "no valid inference; temporal contract broken at acquisition time by this repo",
+    "main_bottleneck": "scene-level weather + static optics + single previous mask + soft Dice on 1% positives",
+    "honest_sealed_retrain_prior_same_recipe": [0.26, 0.32]
+  },
+  "causal_ranking": [
+    {
+      "rank": 1,
+      "id": "weather_is_scene_scalar",
+      "claim": "MERRA-2 at 0.5x0.625 deg cannot steer a 7.68 km patch; weather is a global bias, not a 30 m field.",
+      "survives": true,
+      "confidence": 0.95,
+      "evidence": {
+        "merra2_native_deg": [0.5, 0.625],
+        "patch_km": 7.68,
+        "test_zero_spatial_range_fraction": {
+          "wind_speed": 0.46932515337423314,
+          "wind_direction": 0.4699386503067485,
+          "temperature": 0.4687116564417178,
+          "precipitation": 0.4705521472392638,
+          "humidity": 0.4687116564417178,
+          "air_density": 0.4687116564417178
+        },
+        "test_median_spatial_range": {
+          "wind_speed_ms": 0.0380859375,
+          "wind_direction_rad": 0.01220703125,
+          "temperature_K": 0.0506134033203125
+        },
+        "full_corpus_constant_weather_samples": [3184, 3188, 3177, 3186, 3178, 3179],
+        "full_corpus_n": 8131
+      }
+    },
+    {
+      "rank": 2,
+      "id": "optical_is_static",
+      "claim": "Landsat BGR+NDVI is a constant snapshot; 96.5% of consecutive TEST day pairs are byte-identical.",
+      "survives": true,
+      "confidence": 0.95,
+      "evidence": {
+        "readme_temporal_resolution": "Constant",
+        "consecutive_test_pairs": 1446,
+        "byte_identical_pairs": 1395,
+        "identical_fraction": 0.9647302904564315,
+        "maxabs_median": 0.0,
+        "maxabs_p90": 0.0
+      }
+    },
+    {
+      "rank": 3,
+      "id": "far_growth_mass_unexplained",
+      "claim": "42.1% of all growth pixels sit >10.5 px from the previous front; the model predicts a 2.6 px ring and never matches the tail.",
+      "survives": true,
+      "confidence": 0.95,
+      "evidence": {
+        "global_far_growth_pixel_share": 0.4214968440366636,
+        "far_growth_pixels": 459899,
+        "total_growth_pixels": 1091109,
+        "scene_median_mean_growth_distance_px": 2.571496610546568,
+        "scene_median_mean_pred_distance_px": 2.6302002216575864,
+        "scene_p90_mean_growth_distance_px": 13.011056198367587,
+        "scene_p90_mean_pred_distance_px": 6.907309255730443,
+        "scene_mean_frac_growth_gt_10_5": 0.12779035428482358,
+        "scene_mean_frac_pred_gt_10_5": 0.05604797844511914,
+        "far_ring_recall": 0.1527096166767051,
+        "far_ring_iou": 0.1154310152130751,
+        "near_0_1_5_iou": 0.5828143857108375,
+        "dilated_copy_best_iou_official_test": 0.11113463115523592,
+        "rcda_iou_official_test": 0.30830993792603173
+      }
+    },
+    {
+      "rank": 4,
+      "id": "soft_dice_plus_imbalance_saturates",
+      "claim": "Soft Dice on 1.02% positives plus a local CAA (11 px) yields a near-binary ring; threshold search is inert.",
+      "survives": true,
+      "confidence": 0.9,
+      "evidence": {
+        "documented_loss": "DiceLoss",
+        "growth_prevalence": 0.010214111702573811,
+        "prob_lte_0_01": 0.9898731723153518,
+        "prob_gte_0_99": 0.009323625623082822,
+        "prob_between_0_2_and_0_6": 0.0001543758836991948,
+        "f1_range_threshold_0_2_to_0_6": 9.53735995866678e-05,
+        "brier_rcda": 0.010456521667002486,
+        "brier_all_zero": 0.010214111702573811,
+        "high_bin_mean_p": 0.9995237899098831,
+        "high_bin_frequency": 0.48979585783606144,
+        "mid_bins_frequency_stuck_near": 0.23,
+        "caa_kernel_px": 11,
+        "architecture": "U-Net depth 4 + AGCA channel + CAA spatial"
+      }
+    },
+    {
+      "rank": 5,
+      "id": "missing_physical_conditioning",
+      "claim": "No explicit slope/aspect, no sin/cos wind, no distance-to-front, no horizon, no perimeter history.",
+      "survives": true,
+      "confidence": 0.85,
+      "evidence": {
+        "rcda_channels": [
+          "previous_fire",
+          "dem",
+          "blue",
+          "green",
+          "red",
+          "ndvi",
+          "wind_speed",
+          "wind_direction_scalar",
+          "temperature",
+          "precipitation",
+          "humidity",
+          "air_density"
+        ],
+        "dem_always_spatially_varying": true,
+        "dem_median_range_m": 128.0,
+        "horizon_as_input": false,
+        "history_perimeters": 1
+      }
+    },
+    {
+      "rank": 6,
+      "id": "small_fire_overprediction_drives_zero_iou_and_2017",
+      "claim": "Zero-IoU scenes are tiny increments; 2017 is the worst year because fires are smaller, not because weather is impossible.",
+      "survives": true,
+      "confidence": 0.9,
+      "evidence": {
+        "zero_iou_scenes": 154,
+        "zero_iou_support_lt_100": 133,
+        "zero_iou_median_dist_gt_10_5": 6,
+        "size_1_to_99_precision": 0.13606741473680486,
+        "size_1_to_99_recall": 0.6165064102564103,
+        "year_2017_n_official_test": 528,
+        "year_2017_share": 0.32392638036809814,
+        "year_2017_median_growth_px": 102.5,
+        "year_2015_median_growth_px": 266.0,
+        "year_2017_median_previous_px": 1440.5,
+        "year_2015_median_previous_px": 3580.0,
+        "year_2017_precision": 0.350879602605043,
+        "year_2017_recall": 0.5322622651009624,
+        "year_2017_iou": 0.26818613928369384
+      }
+    },
+    {
+      "rank": 7,
+      "id": "protocol_contamination_disqualifies_independence",
+      "claim": "Checkpoint, threshold and two extrema use TEST; UID_656 is adjacent same-fire leakage. This forbids treating 0.308 as independent. It does not create the 0.31.",
+      "survives": true,
+      "confidence": 0.95,
+      "evidence": {
+        "train_py_evaluates_and_saves_on_test": true,
+        "eval_py_selects_threshold_on_test": true,
+        "no_upstream_val_split": true,
+        "uid_656_train_dates": ["2018-08-11", "2018-08-31"],
+        "uid_656_test_dates": ["2018-09-01", "2018-09-07"],
+        "uid_656_train_n": 21,
+        "uid_656_test_n": 7,
+        "iou_with_656": 0.30830993792603173,
+        "iou_without_656": 0.3081093989239911,
+        "normalization_test_extrema_channels": ["wind_speed", "precipitation"],
+        "seed_declared": false,
+        "sealed_split_ready": true,
+        "sealed_retraining_completed": false
+      }
+    },
+    {
+      "rank": 8,
+      "id": "caldor_temporal_contract_broken_in_our_acquisition",
+      "claim": "HRRR_LEADS is hardcoded 0-24 from cycle; ERC uses t0 calendar day that ends 07 UTC next day. This repo wrote the leak.",
+      "survives": true,
+      "confidence": 0.95,
+      "evidence": {
+        "source": "scripts/acquire_caldor_clean17.py",
+        "hrrr_leads_constant": [0, 3, 6, 9, 12, 15, 18, 21, 24],
+        "pairs_with_exact_window": 0,
+        "mean_hours_before_t0_mixed_in": 4.6,
+        "mean_target_hours_uncovered": 4.94,
+        "worst_uncovered_hours": 9.5,
+        "worst_pair": ["2021-08-25T05:07:00Z", "2021-08-26T09:30:00Z"],
+        "erc_uses_t0_calendar_day": true,
+        "erc_day_ends": "07:00 UTC next day",
+        "pairs_with_erc_unavailable_at_t0": 15,
+        "contract_requires_last_erc_published_by_t0": true,
+        "clean17_ready_set_by_file_count": true,
+        "stacked_npz": 0,
+        "legacy17_compatible": false,
+        "n_pairs": 15,
+        "n_events": 1
+      }
+    },
+    {
+      "rank": 9,
+      "id": "schema_zoo_and_audit_without_retrain",
+      "claim": "Multiple incompatible channel contracts plus repeated audits without sealed retraining keep reproducing the same number.",
+      "survives": true,
+      "confidence": 0.8,
+      "evidence": {
+        "schemas": [
+          "rcda_12",
+          "legacy17_plus_prev_fire",
+          "clean12",
+          "physics14",
+          "physics15",
+          "clean17_physical_v1"
+        ],
+        "latam_au_proxy_delta_vs_copy": -0.07005287003701288,
+        "latam_weather_spatially_constant": true
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "need_a_different_architecture_first",
+      "claim": "The 0.31 is primarily an RCDA-vs-U-Net architecture failure.",
+      "survives": false,
+      "reason": "No sealed U-Net comparison exists. RCDA already beats isotropic dilation by 0.20 IoU using DEM+Landsat. Architecture may matter after information is fixed, not before."
+    },
+    {
+      "id": "threshold_is_the_knob",
+      "claim": "A better threshold would recover F1/IoU.",
+      "survives": false,
+      "reason": "F1 changes by 9.5e-5 from 0.2 to 0.6 because probabilities are saturated."
+    },
+    {
+      "id": "uid_656_explains_the_score",
+      "claim": "Train/test leakage on UID_656 inflates IoU to 0.31.",
+      "survives": false,
+      "reason": "Excluding the 7 TEST days leaves IoU 0.3081."
+    },
+    {
+      "id": "caldor_has_a_poor_model_score",
+      "claim": "Caldor failed as a model.",
+      "survives": false,
+      "reason": "No compatible checkpoint, no stacked tensor, temporal contract fail. There is no model score."
+    },
+    {
+      "id": "reuse_legacy17_or_rcda_on_caldor",
+      "claim": "Existing weights can be evaluated on clean17 Caldor.",
+      "survives": false,
+      "reason": "legacy17 learned constant placeholder slots; RCDA-12 is a different 12-channel contract."
+    }
+  ],
+  "next_falsifiable_experiments": [
+    {
+      "id": "sealed_retrain_same_recipe",
+      "kills_if_false": "hope that 0.31 is just test-selection optimism",
+      "accept": "micro IoU on sealed TEST after VAL-only selection, 3 seeds"
+    },
+    {
+      "id": "add_dist_sincos_horizon",
+      "kills_if_false": "representation of angle/geometry as the cheap bottleneck",
+      "accept": "same sealed TEST; lift in far recall and event-macro IoU"
+    },
+    {
+      "id": "repair_caldor_valid_time",
+      "kills_if_false": "current HRRR/ERC maps as usable nowcasts",
+      "accept": "15/15 ERC available at t0 and 15/15 exact [t0,t1] windows"
+    },
+    {
+      "id": "focal_tversky_plus_size_balanced_sampling",
+      "kills_if_false": "loss/sampling as the reason for small-fire FP and far FN",
+      "accept": "precision on 1-99 px up and recall >10.5 px up on sealed TEST"
+    }
+  ]
+}

@@ -96,6 +96,46 @@ def evaluate_checkpoint(
         "improvement_vs_dilated_copy_iou_growth": float(
             primary.get("improvement_vs_dilated_copy_iou_growth", 0.0)
         ),
+        "model_growth_transition_iou": float(
+            primary.get("model_growth_transition_iou", 0.0)
+        ),
+        "model_change_transition_iou": float(
+            primary.get("model_change_transition_iou", 0.0)
+        ),
+        "improvement_vs_dilated_copy_growth_transition_iou": float(
+            primary.get("improvement_vs_dilated_copy_growth_transition_iou", 0.0)
+        ),
+        "improvement_vs_dilated_copy_change_transition_iou": float(
+            primary.get("improvement_vs_dilated_copy_change_transition_iou", 0.0)
+        ),
+        "model_growth_average_precision_macro": float(
+            primary.get("model_growth_average_precision_macro", 0.0)
+        ),
+        "model_growth_fcer_iou": float(primary.get("model_growth_fcer_iou", 0.0)),
+        "model_growth_fcer_average_precision_macro": float(
+            primary.get("model_growth_fcer_average_precision_macro", 0.0)
+        ),
+        "observed_growth_fcer_capture_macro": float(
+            primary.get("observed_growth_fcer_capture_macro", 0.0)
+        ),
+        "model_front_boundary_f1_macro": float(
+            primary.get("model_front_boundary_f1_macro", 0.0)
+        ),
+        "improvement_vs_dilated_copy_front_boundary_f1": float(
+            primary.get("improvement_vs_dilated_copy_front_boundary_f1", 0.0)
+        ),
+        "model_growth_fcer_ece_macro": float(
+            primary.get("model_growth_fcer_ece_macro", 0.0)
+        ),
+        "model_growth_fcer_selective_error_80_macro": float(
+            primary.get("model_growth_fcer_selective_error_80_macro", 0.0)
+        ),
+        "model_growth_fcer_aurc_macro": float(
+            primary.get("model_growth_fcer_aurc_macro", 0.0)
+        ),
+        "observed_growth_fcer_prevalence_macro": float(
+            primary.get("observed_growth_fcer_prevalence_macro", 0.0)
+        ),
         "config": asdict(config),
         "test_metrics": results,
     }

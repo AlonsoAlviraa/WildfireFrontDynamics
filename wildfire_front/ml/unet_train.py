@@ -463,6 +463,46 @@ def evaluate_loader(
             results["improvement_vs_dilated_copy_iou_growth"] = agg.get(
                 "improvement_vs_dilated_copy_iou_growth", 0.0
             )
+            results["model_growth_transition_iou"] = agg.get(
+                "model_growth_transition_iou", 0.0
+            )
+            results["model_change_transition_iou"] = agg.get(
+                "model_change_transition_iou", 0.0
+            )
+            results["improvement_vs_dilated_copy_growth_transition_iou"] = agg.get(
+                "improvement_vs_dilated_copy_growth_transition_iou", 0.0
+            )
+            results["improvement_vs_dilated_copy_change_transition_iou"] = agg.get(
+                "improvement_vs_dilated_copy_change_transition_iou", 0.0
+            )
+            results["model_growth_average_precision_macro"] = agg.get(
+                "model_growth_average_precision_macro", 0.0
+            )
+            results["model_growth_fcer_iou"] = agg.get("model_growth_fcer_iou", 0.0)
+            results["model_growth_fcer_average_precision_macro"] = agg.get(
+                "model_growth_fcer_average_precision_macro", 0.0
+            )
+            results["observed_growth_fcer_capture_macro"] = agg.get(
+                "observed_growth_fcer_capture_macro", 0.0
+            )
+            results["model_front_boundary_f1_macro"] = agg.get(
+                "model_front_boundary_f1_macro", 0.0
+            )
+            results["improvement_vs_dilated_copy_front_boundary_f1"] = agg.get(
+                "improvement_vs_dilated_copy_front_boundary_f1", 0.0
+            )
+            results["model_growth_fcer_ece_macro"] = agg.get(
+                "model_growth_fcer_ece_macro", 0.0
+            )
+            results["model_growth_fcer_selective_error_80_macro"] = agg.get(
+                "model_growth_fcer_selective_error_80_macro", 0.0
+            )
+            results["model_growth_fcer_aurc_macro"] = agg.get(
+                "model_growth_fcer_aurc_macro", 0.0
+            )
+            results["observed_growth_fcer_prevalence_macro"] = agg.get(
+                "observed_growth_fcer_prevalence_macro", 0.0
+            )
 
     return results
 
@@ -480,6 +520,11 @@ EARLY_STOP_METRICS = frozenset(
         "model_iou",
         "model_iou_changed",
         "model_iou_growth",
+        "model_growth_transition_iou",
+        "model_change_transition_iou",
+        "improvement_vs_dilated_copy_growth_transition_iou",
+        "improvement_vs_dilated_copy_change_transition_iou",
+        "model_growth_average_precision_macro",
         # Multi-objective: full Δcopy + λ * growth IoU (does NOT use growth alone)
         "multi_full_growth",
         "multi_full_growth_05",

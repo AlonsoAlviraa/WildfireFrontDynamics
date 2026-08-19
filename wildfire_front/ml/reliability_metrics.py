@@ -46,17 +46,105 @@ def ece_pixel_prob(
     n_bins: int = 15,
     max_pixels: int = 200_000,
     rng: np.random.Generator | None = None,
+    eligible_mask: np.ndarray | None = None,
 ) -> float:
-    """Pixel-level ECE; optional subsample for large maps."""
-    p = np.asarray(probs, dtype=np.float64).ravel()
-    t = np.asarray(targets, dtype=np.float64).ravel()
-    if p.size == 0 or p.size != t.size:
+    """Pixel-level ECE; optional target-independent support and subsample."""
+    p_full = np.asarray(probs, dtype=np.float64)
+    t_full = np.asarray(targets, dtype=np.float64)
+    if p_full.shape != t_full.shape or p_full.size == 0:
+        return float("nan")
+    eligible = np.ones(p_full.shape, dtype=bool)
+    if eligible_mask is not None:
+        candidate = np.asarray(eligible_mask) > 0.5
+        if candidate.shape != p_full.shape:
+            return float("nan")
+        eligible &= candidate
+    eligible &= np.isfinite(p_full) & np.isfinite(t_full)
+    p = p_full[eligible].ravel()
+    t = t_full[eligible].ravel()
+    if p.size == 0:
         return float("nan")
     if p.size > max_pixels:
         gen = rng or np.random.default_rng(0)
         idx = gen.choice(p.size, size=max_pixels, replace=False)
         p, t = p[idx], t[idx]
     return ece_patch_conf(p, (t >= 0.5).astype(np.float64), n_bins=n_bins)
+
+
+def pixel_selective_error_at_coverage(
+    probs: np.ndarray,
+    targets: np.ndarray,
+    *,
+    coverage: float = 0.8,
+    eligible_mask: np.ndarray | None = None,
+    threshold: float = 0.5,
+) -> dict[str, float]:
+    """Classification error after retaining the most confident pixels.
+
+    Confidence is the distance from the binary decision boundary.  An
+    ``eligible_mask`` may restrict evaluation only when it is derived without
+    looking at the target (for example the FCER ring from ``t0``).
+    """
+    p_full = np.asarray(probs, dtype=np.float64)
+    t_full = np.asarray(targets, dtype=np.float64)
+    empty = {"selective_error": float("nan"), "coverage_actual": 0.0, "n_keep": 0.0}
+    if p_full.shape != t_full.shape or p_full.size == 0:
+        return empty
+    eligible = np.ones(p_full.shape, dtype=bool)
+    if eligible_mask is not None:
+        candidate = np.asarray(eligible_mask) > 0.5
+        if candidate.shape != p_full.shape:
+            return empty
+        eligible &= candidate
+    eligible &= np.isfinite(p_full) & np.isfinite(t_full)
+    p = np.clip(p_full[eligible].ravel(), 0.0, 1.0)
+    target = t_full[eligible].ravel() >= threshold
+    if p.size == 0 or coverage <= 0.0:
+        return empty
+    n_keep = p.size if coverage >= 1.0 else max(1, int(np.ceil(float(coverage) * p.size)))
+    confidence = np.abs(p - threshold)
+    keep = np.argsort(-confidence, kind="mergesort")[:n_keep]
+    error = (p[keep] >= threshold) != target[keep]
+    return {
+        "selective_error": float(error.mean()),
+        "coverage_actual": float(n_keep / p.size),
+        "n_keep": float(n_keep),
+    }
+
+
+def pixel_risk_coverage_curve(
+    probs: np.ndarray,
+    targets: np.ndarray,
+    *,
+    coverages: Sequence[float] = (0.2, 0.4, 0.6, 0.8, 1.0),
+    eligible_mask: np.ndarray | None = None,
+    threshold: float = 0.5,
+) -> dict[str, Any]:
+    """Return a compact selective pixel-error curve and normalized AURC."""
+    points = []
+    for coverage in coverages:
+        row = pixel_selective_error_at_coverage(
+            probs,
+            targets,
+            coverage=float(coverage),
+            eligible_mask=eligible_mask,
+            threshold=threshold,
+        )
+        points.append({"coverage": float(coverage), **row})
+    valid = [row for row in points if np.isfinite(row["selective_error"])]
+    if len(valid) < 2:
+        aurc = float("nan")
+    else:
+        x = np.asarray([row["coverage_actual"] for row in valid], dtype=np.float64)
+        y = np.asarray([row["selective_error"] for row in valid], dtype=np.float64)
+        order = np.argsort(x)
+        width = float(x[order][-1] - x[order][0])
+        aurc = float(np.trapezoid(y[order], x[order]) / width) if width > 0.0 else float(y.mean())
+    return {
+        "points": points,
+        "aurc_normalized": aurc,
+        "semantics": "pixel_classification_error_ranked_by_probability_margin",
+    }
 
 
 def selective_iou_at_coverage(

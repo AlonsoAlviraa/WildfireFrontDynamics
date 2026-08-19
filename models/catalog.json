@@ -60,5 +60,23 @@
   "fallback_ml_product": "clm_v28",
   "research_ml_product": "ndws_v21",
   "ops_product": "front_dynamics_v1",
-  "ops_note": "Observed front ROS + sector ROS + envelope are front_dynamics_v1 — not ML. Entry: scripts/smoke_emergency_products.py"
+  "ops_note": "Observed front ROS + sector ROS + envelope are front_dynamics_v1 — not ML. Entry: scripts/smoke_emergency_products.py",
+  "holdout_only": {
+    "rcda_net": {
+      "id": "rcda_net",
+      "status": "not_ready",
+      "role": "research_audit",
+      "ready": false,
+      "not_for": "product catalog, field GO, sealed TEST promotion, emergency ML",
+      "notes": "Scene-level MERRA-2 + static Landsat. Published IoU 0.308 is a contaminated protocol, not a product score. Sealed dilated-copy TEST IoU 0.1108 is the honest baseline."
+    },
+    "caldor_clean17_physical_v1": {
+      "id": "caldor_clean17_physical_v1",
+      "status": "holdout_only",
+      "role": "external_holdout",
+      "ready": false,
+      "not_for": "training, single-fire promote, product weights",
+      "notes": "One fire, 15 pairs. temporal_ok after ERC/HRRR valid-time contract. Never train."
+    }
+  }
 }

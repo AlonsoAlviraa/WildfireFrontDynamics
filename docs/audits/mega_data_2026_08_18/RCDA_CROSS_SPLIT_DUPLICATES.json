@@ -1,0 +1,11 @@
+{
+  "schema": "wfd_rcda_cross_split_exact_duplicate_audit_v1",
+  "files_resolved": 16262,
+  "files_missing_hash": 0,
+  "cross_split_duplicate_groups": 0,
+  "cross_split_input_groups": 0,
+  "cross_split_label_groups": 0,
+  "event_disjoint": true,
+  "exact_binary_duplicate_free_across_splits": true,
+  "groups": []
+}

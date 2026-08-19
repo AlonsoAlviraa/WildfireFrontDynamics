@@ -1,0 +1,71 @@
+{
+  "schema": "wfd_rcda_protocol_audit_v1",
+  "generated_at_utc": "2026-08-16T18:02:55.443419Z",
+  "ok": true,
+  "sample_scope": 2,
+  "sample_hashes_match_manifest": true,
+  "sample_rows": [
+    {
+      "file": "UID_FIRE_665_2016-07-15.npy",
+      "ok": true,
+      "input_sha256": "72068ed80a3bf13b4439e834641a8daf64ca9f96fdf3a77f985e817ac812e323",
+      "label_sha256": "c7308aa2ef327f712521de1edcac03565f7cabdfbd61833021e0d066e099248a",
+      "previous_positive_pixels": 19849,
+      "label_positive_pixels": 20608,
+      "previous_retained_fraction": 1.0,
+      "new_growth_pixels": 759,
+      "negative_after_upstream_subtraction": 0,
+      "all_six_weather_channels_spatially_constant": true
+    },
+    {
+      "file": "UID_FIRE_94_2015-06-24.npy",
+      "ok": true,
+      "input_sha256": "646d6f8af18cb16186f63c61c77f96c85014e13b4f347a4e1c06a8d78ac275f3",
+      "label_sha256": "c5c6d6e9dc63b2ab8b1b4785d075bc6b093c6858dd459f24b9164202d20bf1a0",
+      "previous_positive_pixels": 7865,
+      "label_positive_pixels": 10534,
+      "previous_retained_fraction": 1.0,
+      "new_growth_pixels": 2669,
+      "negative_after_upstream_subtraction": 0,
+      "all_six_weather_channels_spatially_constant": true
+    }
+  ],
+  "label_semantics": {
+    "zenodo_description": "increment_mask",
+    "observed_public_sample": "next_cumulative_extent",
+    "upstream_loader_operation": "label_minus_input_channel_0",
+    "subtraction_produces_binary_growth_on_public_sample": true,
+    "documentation_and_bytes_disagree": true
+  },
+  "protocol_findings": {
+    "train_script_uses_test_every_epoch": true,
+    "early_stopping_selects_best_epoch_on_test": true,
+    "eval_script_selects_threshold_on_test": true,
+    "separate_validation_split_present": false,
+    "normalization_extrema_provenance_documented": false,
+    "event_uid_disjointness_train_test_verified": false,
+    "published_test_result_is_sealed": false
+  },
+  "wfd_compatibility": {
+    "same_task_incremental_growth": true,
+    "same_input_schema": false,
+    "rcda_channels": 12,
+    "wfd_legacy_channels_plus_previous_fire": 18,
+    "direct_weight_transfer_allowed": false,
+    "numeric_comparison_allowed": false
+  },
+  "required_reproduction_protocol": [
+    "split by UID fire event before patch sampling",
+    "create disjoint TRAIN, VAL and TEST event groups",
+    "fit normalization and choose threshold on TRAIN/VAL only",
+    "run TEST once with frozen epoch and threshold",
+    "report copy, dilated-copy, transition IoU, AP, FCER and boundary metrics",
+    "publish train/val/test UID lists and per-event scores"
+  ],
+  "sources": {
+    "dataset": "https://zenodo.org/records/16641619",
+    "dataset_loader": "https://raw.githubusercontent.com/hxxAlways/RCDA-Net/main/dataset.py",
+    "train": "https://raw.githubusercontent.com/hxxAlways/RCDA-Net/main/train.py",
+    "eval": "https://raw.githubusercontent.com/hxxAlways/RCDA-Net/main/eval.py"
+  }
+}

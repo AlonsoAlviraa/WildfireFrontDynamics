@@ -1,0 +1,159 @@
+{
+  "schema": "wfd_rcda_full_protocol_v1",
+  "generated_at_utc": "2026-08-16T19:29:19.711818Z",
+  "status": "complete",
+  "source": {
+    "zenodo_record": "https://zenodo.org/records/16641619",
+    "archive": "data/external/rcda_net_full/dataset.rar",
+    "archive_bytes": 6699819425,
+    "archive_md5": "d7856d77dcb823d0bdb5e10c6bac4f87",
+    "published_md5": "d7856d77dcb823d0bdb5e10c6bac4f87",
+    "archive_hash_matches": true,
+    "upstream_commit": "f7aebf6815d10bb2312e5683469d0c902d6f19e4"
+  },
+  "inventory": {
+    "samples": 8131,
+    "input_files": 8131,
+    "label_files": 8131,
+    "original_train_samples": 6501,
+    "original_test_samples": 1630,
+    "events": 886,
+    "years": [
+      2015,
+      2016,
+      2017,
+      2018,
+      2019
+    ]
+  },
+  "upstream_leakage": {
+    "event_overlap_count": 1,
+    "overlap_events": [
+      "UID_FIRE_656"
+    ],
+    "uid_656_train_samples": 21,
+    "uid_656_test_samples": 7,
+    "adjacent_temporal_event_leakage": true
+  },
+  "sealed_protocol": {
+    "seed": "wfd_rcda_event_split_v1",
+    "validation_fraction_of_train_only_events": 0.15,
+    "upstream_test_events_reserved_for_test": true,
+    "overlapping_events_moved_entirely_to_test": true,
+    "train_val_test_event_disjoint": true,
+    "normalization_fit_on_train_only": true,
+    "threshold_selection_split": "val",
+    "test_usage": "once_after_frozen_checkpoint_and_threshold"
+  },
+  "manifests": {
+    "train": {
+      "path": "data/external/rcda_net_full/protocol/train.json",
+      "sha256": "b3593745486a42d5c9a736fcf3c0865a02d5b725bceb7f99fc59be27a8df0dbd",
+      "n_events": 596,
+      "n_samples": 5552,
+      "year_counts": {
+        "2015": 1750,
+        "2016": 130,
+        "2017": 1823,
+        "2018": 1148,
+        "2019": 701
+      }
+    },
+    "val": {
+      "path": "data/external/rcda_net_full/protocol/val.json",
+      "sha256": "385d8f462b495bb2570f12916a93c015d6428c5b9bb02f4aa6f52937458f01f6",
+      "n_events": 106,
+      "n_samples": 928,
+      "year_counts": {
+        "2015": 292,
+        "2016": 70,
+        "2017": 347,
+        "2018": 103,
+        "2019": 116
+      }
+    },
+    "test": {
+      "path": "data/external/rcda_net_full/protocol/test.json",
+      "sha256": "c6fa72b32b3cfbc357ea7b8216d7e74bd2638182a8d077c4d477bfbac2d47009",
+      "n_events": 184,
+      "n_samples": 1651,
+      "year_counts": {
+        "2015": 227,
+        "2016": 269,
+        "2017": 528,
+        "2018": 376,
+        "2019": 251
+      }
+    }
+  },
+  "normalization": {
+    "path": "data/external/rcda_net_full/protocol/normalization_train_only.json",
+    "sha256": "3a2f36e449ea1090a101a3cdfde641f8d4dbf6ebb684a475cc302cbd1c891612",
+    "schema": "wfd_rcda_train_only_minmax_v1",
+    "fit_split": "train",
+    "channel_min": [
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0,
+      0.0163726806640625,
+      -3.140625,
+      270.5065612792969,
+      0.0,
+      0.002109996974468231,
+      0.9423993229866028
+    ],
+    "channel_max": [
+      1.0,
+      3413.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      12.9921875,
+      3.140625,
+      300.23919677734375,
+      0.0006809886544942856,
+      0.015439476817846298,
+      1.270668625831604
+    ],
+    "constant_channels": []
+  },
+  "array_audit": {
+    "samples_scanned": 8131,
+    "invalid_shapes": 0,
+    "nonfinite_input_values": 0,
+    "nonbinary_previous_masks": 0,
+    "nonbinary_labels": 0,
+    "samples_with_negative_growth_after_subtraction": 0,
+    "negative_growth_pixels": 0,
+    "previous_positive_pixels": 34340408,
+    "previous_retained_pixels": 34340408,
+    "growth_positive_pixels": 5264307,
+    "weather_constant_sample_counts": [
+      3184,
+      3188,
+      3177,
+      3186,
+      3178,
+      3179
+    ],
+    "input_dtypes": {
+      "float32": 8131
+    },
+    "label_dtypes": {
+      "bool": 8131
+    },
+    "global_previous_retained_fraction": 1.0
+  },
+  "acceptance": {
+    "archive_verified": true,
+    "all_8131_pairs_present": true,
+    "all_shapes_valid": true,
+    "sealed_splits_event_disjoint": true,
+    "ready_for_training": true,
+    "published_checkpoint_is_valid_for_new_sealed_test": false
+  }
+}

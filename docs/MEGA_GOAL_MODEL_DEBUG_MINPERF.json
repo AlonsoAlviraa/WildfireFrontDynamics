@@ -1,0 +1,41 @@
+{
+  "id": "MEGA_GOAL_MODEL_DEBUG_MINPERF_2026-08-16",
+  "spec": "docs/MEGA_GOAL_MODEL_DEBUG_MINPERF_2026-08-16.md",
+  "as_of_utc_baseline": "2026-08-16T13:30:02Z",
+  "baseline_json": "outputs/ml_eval/latam_au_complete_iou/complete_proxy_model_iou.json",
+  "baseline": {
+    "n_pairs_used": 4,
+    "mean_complete_proxy_model_iou": 0.7373603356853442,
+    "mean_delta_vs_copy": "negative_on_all_4",
+    "nacimiento_delta_vs_copy": -0.08821336123697487,
+    "emsr715_n_pairs_used": 0,
+    "perth_n_pairs_used": 0
+  },
+  "met_when": {
+    "inventory": "outputs/ml_eval/mega_goal_model/INVENTORY.json zero pending on olas 1-5",
+    "buglog": "outputs/ml_eval/mega_goal_model/BUGLOG.md",
+    "forward": "outputs/ml_eval/mega_goal_model/FORWARD.md",
+    "reeval": "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json",
+    "n_pairs_used_min": 4,
+    "mean_delta_vs_copy": "> 0",
+    "pair_floor": "no usable delta_vs_copy < -0.05 without BUGLOG file:line",
+    "emsr715": "n_pairs_used stays 0 unless real DEL/MONIT growth pair",
+    "not_claims": [
+      "not sealed transfer IoU",
+      "not U1 TEST 0.857",
+      "not catalog 0.8963",
+      "not ROS",
+      "not GO_Q complete",
+      "not lab_ok_conaf",
+      "not product FREEZE lift"
+    ],
+    "tests": [
+      "tests/test_latam_au_code_improve.py",
+      "tests/test_latam_au_product_e2e.py",
+      "tests/test_unet_model.py",
+      "tests/test_u1_honest_eval.py",
+      "tests/test_ndws_metrics.py",
+      "scripts/check_release_flags.py"
+    ]
+  }
+}
