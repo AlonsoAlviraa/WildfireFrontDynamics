@@ -1,0 +1,170 @@
+{
+  "schema": "wfd_firebench_caldor_channel_audit_v1",
+  "generated_at_utc": "2026-08-16T17:51:10.842413Z",
+  "ok": true,
+  "status": "blocked_incompatible_and_restricted",
+  "source_h5": "data/external/firebench/caldor_2021/v2026.1/Caldor.h5",
+  "wfd_model": "clm_ensemble_v34",
+  "expected_schema": "legacy17_plus_prev_fire",
+  "expected_channels": [
+    "slope",
+    "aspect",
+    "max_temperature",
+    "min_temperature",
+    "wind_speed",
+    "wind_direction",
+    "precipitation",
+    "pressure",
+    "humidity",
+    "cloud_cover",
+    "visibility",
+    "dew_point",
+    "vegetation_0",
+    "vegetation_1",
+    "vegetation_2",
+    "vegetation_3",
+    "erc_or_drought"
+  ],
+  "channel_mapping": {
+    "slope": "missing_no_elevation_or_terrain_raster",
+    "aspect": "missing_no_elevation_or_terrain_raster",
+    "max_temperature": "restricted_station_series_not_gridded",
+    "min_temperature": "restricted_station_series_not_gridded",
+    "wind_speed": "restricted_station_series_not_gridded",
+    "wind_direction": "restricted_station_series_not_gridded",
+    "precipitation": "restricted_station_series_not_gridded_or_complete",
+    "pressure": "missing",
+    "humidity": "restricted_station_series_not_gridded",
+    "cloud_cover": "missing",
+    "visibility": "missing",
+    "dew_point": "missing",
+    "vegetation_0": "canopy_layers_exist_but_not_legacy17_class_semantics",
+    "vegetation_1": "canopy_layers_exist_but_not_legacy17_class_semantics",
+    "vegetation_2": "canopy_layers_exist_but_not_legacy17_class_semantics",
+    "vegetation_3": "missing_fourth_compatible_class",
+    "erc_or_drought": "missing"
+  },
+  "n_compatible_channels": 0,
+  "model_inference_allowed": false,
+  "model_iou_allowed": false,
+  "training_allowed": false,
+  "geometry_label_evaluation_allowed_in_place": true,
+  "reasons": [
+    "Caldor.h5 does not contain a complete NDWS legacy17 tensor contract.",
+    "Weather is point-station data, not an aligned forecast grid available at t0.",
+    "All staged stations are restricted/non-redistributable Synoptic-derived data.",
+    "Neutral placeholder channels are shape-compatible but scientifically incompatible."
+  ],
+  "spatial_groups": [
+    {
+      "group": "Caldor_CBD",
+      "variables": [
+        "canopy_density_bulk"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "LANDFIRE LF2020_CBD_200_CONUS/LC20_CBD_200.tif",
+      "license": null,
+      "redistribution_allowed": null
+    },
+    {
+      "group": "Caldor_CBH",
+      "variables": [
+        "canopy_height_bottom"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "LANDFIRE LF2020_CBH_200_CONUS/LC20_CBH_200.tif",
+      "license": null,
+      "redistribution_allowed": null
+    },
+    {
+      "group": "Caldor_CH",
+      "variables": [
+        "canopy_height"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "LANDFIRE LF2020_CH_200_CONUS/LC20_CH_200.tif",
+      "license": null,
+      "redistribution_allowed": null
+    },
+    {
+      "group": "Caldor_MTBS",
+      "variables": [
+        "fire_burn_severity"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "MTBS ca3858612053820210815/ca3858612053820210815_20210805_20220723_dnbr6.tif",
+      "license": "/DATA_LICENSES/mtbs.txt",
+      "redistribution_allowed": true
+    },
+    {
+      "group": "ravg_ba",
+      "variables": [
+        "ravg_live_basal_area_loss"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "RAVG Fire_data_bundles_ZonZGZ0bbMii36dM6E5b/mtbs/2021/RAVG_CONUS/ravg_2021_ba7.tif",
+      "license": "/DATA_LICENSES/ravg.txt",
+      "redistribution_allowed": true
+    },
+    {
+      "group": "ravg_cbi",
+      "variables": [
+        "ravg_composite_burn_index_severity"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "RAVG Fire_data_bundles_ZonZGZ0bbMii36dM6E5b/mtbs/2021/RAVG_CONUS/ravg_2021_cbi4.tif",
+      "license": "/DATA_LICENSES/ravg.txt",
+      "redistribution_allowed": true
+    },
+    {
+      "group": "ravg_cc",
+      "variables": [
+        "ravg_canopy_cover_loss"
+      ],
+      "crs": "EPSG:4326",
+      "data_source": "RAVG Fire_data_bundles_ZonZGZ0bbMii36dM6E5b/mtbs/2021/RAVG_CONUS/ravg_2021_cc5.tif",
+      "license": "/DATA_LICENSES/ravg.txt",
+      "redistribution_allowed": true
+    }
+  ],
+  "station_inventory": {
+    "n_stations": 105,
+    "n_restricted_or_nonredistributable": 105,
+    "variable_station_counts": {
+      "air_temperature": 104,
+      "fuel_moisture_content_10h": 16,
+      "relative_humidity": 90,
+      "solar_radiation": 21,
+      "wind_direction": 86,
+      "wind_gust": 75,
+      "wind_speed": 88
+    },
+    "rights_counts": {
+      "No commercial use allowed": 105
+    }
+  },
+  "rights": {
+    "declared_license_refs": [
+      "/DATA_LICENSES/Synoptic.txt",
+      "/DATA_LICENSES/mtbs.txt",
+      "/DATA_LICENSES/ravg.txt"
+    ],
+    "staged_license_files": [
+      "LANDFIRE.txt",
+      "NIFC.txt",
+      "calfire.txt",
+      "mtbs.txt",
+      "ravg.txt"
+    ],
+    "missing_declared_license_refs": [
+      "/DATA_LICENSES/Synoptic.txt"
+    ],
+    "synoptic_notice_missing": true
+  },
+  "existing_placeholder_npz": {
+    "manifest": "artifacts/datasets/firebench_caldor_patches.json",
+    "status": "refused_for_model_inference",
+    "allowed_use": "pipeline_shape_smoke_only"
+  },
+  "next_technical_path": "Join public NIFC perimeter labels to independently licensed t0-available terrain/weather/fuel grids, then publish a new provenance manifest."
+}

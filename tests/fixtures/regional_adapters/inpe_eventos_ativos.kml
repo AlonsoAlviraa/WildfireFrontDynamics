@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Folder>
+      <name>Eventos Ativos 20260818</name>
+      <Folder id="event-folder">
+        <name>Evento 837945 – Nova Queima Isolada</name>
+        <Folder>
+          <name>Frentes</name>
+          <Placemark id="front-1">
+            <name>Frente 837945</name>
+            <description><![CDATA[
+              <table>
+                <tr><td><b>Tipo</b></td><td>Nova Queima Isolada</td></tr>
+                <tr><td><b>Data início</b></td><td>2026-08-17</td></tr>
+                <tr><td><b>Data fim</b></td><td>2026-08-17</td></tr>
+                <tr><td><b>Último foco</b></td><td>2026-08-17 18:41:00</td></tr>
+                <tr><td><b>Município</b></td><td>CRUZEIRO DO SUL</td></tr>
+                <tr><td><b>Estado</b></td><td>ACRE</td></tr>
+              </table>
+            ]]></description>
+            <LineString><coordinates>-72.82,-7.99,0 -72.81,-7.98,0</coordinates></LineString>
+          </Placemark>
+        </Folder>
+        <Folder>
+          <name>Focos</name>
+          <Placemark id="focus-1">
+            <name>Foco 837945</name>
+            <description><![CDATA[
+              <table><tr><td><b>Último foco</b></td><td>2026-08-17 18:41:00</td></tr></table>
+            ]]></description>
+            <Point><coordinates>-72.815,-7.985,0</coordinates></Point>
+          </Placemark>
+        </Folder>
+        <Placemark id="extent-1">
+          <name>Evento 837945</name>
+          <description><![CDATA[
+            <table>
+              <tr><td><b>Data fim</b></td><td>2026-08-17</td></tr>
+              <tr><td><b>Último foco</b></td><td>2026-08-17 18:41:00</td></tr>
+              <tr><td><b>Total de focos</b></td><td>6</td></tr>
+            </table>
+          ]]></description>
+          <Polygon><outerBoundaryIs><LinearRing><coordinates>-72.82,-7.99,0 -72.81,-7.99,0 -72.81,-7.98,0 -72.82,-7.98,0 -72.82,-7.99,0</coordinates></LinearRing></outerBoundaryIs></Polygon>
+        </Placemark>
+      </Folder>
+    </Folder>
+  </Document>
+</kml>

@@ -18,6 +18,11 @@ from .cli_app import register_app_commands, run_app
 from .cli_incident import incident_config_from_args as _incident_config_from_args
 from .cli_incident import register_incident_subcommands
 from .cli_operator import dispatch_operator_command, register_operator_commands
+from .cli_regional import (
+    format_regional_result,
+    register_regional_ingest_command,
+    run_regional_ingest,
+)
 from .cli_report import (
     enrich_incident_summary,
     print_demo_report,
@@ -379,6 +384,9 @@ def build_parser() -> argparse.ArgumentParser:
     isp.add_argument("--speed-max-turn-angle-deg", type=float, default=60.0)
     isp.add_argument("--speed-max-normal-to-nearest-ratio", type=float, default=2.0)
     _add_global_flags(ingest)
+
+    # Regional public-data adapters (WFIGS / CWFIS / INPE)
+    register_regional_ingest_command(commands, add_global_flags=_add_global_flags)
 
     # ─ incident ───────────────────────────────────────────────────────────────
     register_incident_subcommands(commands, add_global_flags=_add_global_flags)
@@ -742,6 +750,14 @@ def main(argv: Sequence[str] | None = None) -> None:
                 or bool(args.scientific_clean),
             )
             print_ingest_report(args.output, metrics, as_json=as_json, event_id=args.event_id)
+            return
+
+        if args.command == "ingest-regional":
+            payload = run_regional_ingest(args)
+            if as_json:
+                print_json(payload)
+            else:
+                print(format_regional_result(payload))
             return
 
         if args.command == "decide":

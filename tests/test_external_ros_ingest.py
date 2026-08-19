@@ -23,6 +23,7 @@ from wildfire_front.open_if.external_ros import (
     inventory_ndws_kaggle_proxy,
     inventory_nirops_mendeley,
     inventory_path_counts,
+    parse_caldor_kml_timestamp,
     parse_gofer_fire_catalog,
     write_pack_readme,
 )
@@ -229,8 +230,18 @@ def test_caldor_kml_inventory(tmp_path: Path) -> None:
     assert inv["ok"] is True
     assert inv["n_dated"] == 3
     assert inv["r1_ge3_dated_kml"] is True
+    assert inv["dates_utc"][0] == "2021-08-18T03:20:00Z"
+    assert inv["n_pairs_12_to_36h"] == 2
+    assert all(pair["next_day_compatible"] for pair in inv["temporal_pairs"])
     assert inv["native_geotiff"] is False
     assert inv["not_product_ros"] is True
+
+
+def test_parse_caldor_kml_timestamp_preserves_offset() -> None:
+    parsed = parse_caldor_kml_timestamp("Caldor_2021_08_26T03_30_06_00.kml")
+    assert parsed is not None
+    assert parsed.isoformat() == "2021-08-26T03:30:00-06:00"
+    assert parse_caldor_kml_timestamp("Caldor_perimeter_mtbs.kml") is None
 
 
 def test_zip_inventory_and_readme(tmp_path: Path) -> None:

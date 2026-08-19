@@ -6,6 +6,7 @@ from .anchor_guard import (
     promote_anchor_to_confirmed,
 )
 from .dnbr import classify_dnbr, compute_dnbr, compute_nbr, severity_fractions
+from .regional import CWFISAdapter, INPEFireEventsAdapter, RegionalQuery, WFIGSAdapter
 
 __all__ = [
     "compute_nbr",
@@ -15,4 +16,8 @@ __all__ = [
     "can_promote_to_confirmed",
     "promote_anchor_to_confirmed",
     "assert_not_fake_confirmed",
+    "WFIGSAdapter",
+    "CWFISAdapter",
+    "INPEFireEventsAdapter",
+    "RegionalQuery",
 ]

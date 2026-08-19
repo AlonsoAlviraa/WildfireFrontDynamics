@@ -1,0 +1,51 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 101,
+      "properties": {
+        "OBJECTID": 101,
+        "GlobalID": "{WFIGS-GLOBAL-101}",
+        "poly_IncidentName": "Fixture Fire",
+        "poly_FeatureCategory": "Wildfire Daily Fire Perimeter",
+        "poly_MapMethod": "Infrared Image",
+        "poly_GISAcres": 125.5,
+        "poly_FeatureAccess": "Public",
+        "poly_FeatureStatus": "Approved",
+        "poly_IsVisible": "Yes",
+        "poly_DeleteThis": "No",
+        "poly_PolygonDateTime": 1786960800000,
+        "poly_DateCurrent": 1786968000000,
+        "attr_ModifiedOnDateTime_dt": 1786968000000,
+        "attr_UniqueFireIdentifier": "2026-CAABC-000101",
+        "attr_IncidentTypeCategory": "WF",
+        "attr_POOState": "US-CA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-120.2, 39.9], [-120.0, 39.9], [-120.0, 40.1], [-120.2, 40.1], [-120.2, 39.9]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 102,
+      "properties": {
+        "OBJECTID": 102,
+        "GlobalID": "{WFIGS-GLOBAL-102}",
+        "poly_IncidentName": "Reference Fire",
+        "poly_FeatureCategory": "Prescribed Fire",
+        "poly_FeatureAccess": "Public",
+        "poly_FeatureStatus": "Approved",
+        "poly_IsVisible": "Yes",
+        "poly_DeleteThis": "No",
+        "poly_PolygonDateTime": 1786960800000,
+        "attr_UniqueFireIdentifier": "2026-CAABC-000102"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-119.2, 39.9], [-119.0, 39.9], [-119.0, 40.1], [-119.2, 40.1], [-119.2, 39.9]]]
+      }
+    }
+  ]
+}
