@@ -1,0 +1,95 @@
+{
+  "schema": "wfd_external_ml_compatibility_audit_v1",
+  "generated_at_utc": "2026-08-16T17:54:40.943126Z",
+  "frozen_model": "clm_ensemble_v34_legacy17_plus_prev_fire",
+  "packs": [
+    {
+      "pack_id": "US_FIREBENCH_CALDOR_2021",
+      "region": "us",
+      "label_temporal_compatible": true,
+      "n_observations": 21,
+      "n_temporal_pairs_12_to_36h": 15,
+      "input_tensor_semantic_compatible": false,
+      "rights_evaluation_in_place": true,
+      "rights_training": false,
+      "model_inference_allowed": false,
+      "sealed_model_iou_allowed": false,
+      "allowed_now": [
+        "geometry_evaluation",
+        "label_pair_analysis"
+      ],
+      "blockers": [
+        "legacy17 covariates incomplete",
+        "station weather is restricted and not gridded",
+        "Synoptic license notice missing"
+      ],
+      "evidence": {
+        "channel_audit_status": "blocked_incompatible_and_restricted",
+        "n_compatible_channels": 0
+      }
+    },
+    {
+      "pack_id": "PT_FIRESPRD_SAO_JOAO_PESQUEIRA_2020",
+      "region": "pt",
+      "label_temporal_compatible": true,
+      "n_observations": 8,
+      "input_tensor_semantic_compatible": false,
+      "rights_evaluation_in_place": true,
+      "rights_training": true,
+      "model_inference_allowed": false,
+      "sealed_model_iou_allowed": false,
+      "allowed_now": [
+        "geometry_evaluation",
+        "label_progression_research"
+      ],
+      "blockers": [
+        "no legacy17 covariate stack",
+        "source timestamp timezone unspecified",
+        "weather join cannot be audited until timezone is resolved"
+      ],
+      "evidence": {
+        "license_id": "cc-by-4.0",
+        "aligned": true,
+        "timestamp_tz": "unspecified_in_source",
+        "not_verified_utc": true
+      }
+    },
+    {
+      "pack_id": "LATAM_AU_EMSR_REAL_PROXY",
+      "region": "latam_au",
+      "label_temporal_compatible": true,
+      "n_temporal_pairs_used": 4,
+      "input_tensor_shape_compatible": true,
+      "input_tensor_semantic_compatible": false,
+      "model_inference_allowed": true,
+      "model_inference_scope": "exploratory_proxy_only",
+      "sealed_model_iou_allowed": false,
+      "allowed_now": [
+        "exploratory_proxy_benchmark"
+      ],
+      "blockers": [
+        "not an NDWS-native stack",
+        "weather is a point-derived spatially constant field",
+        "proxy benchmark has no sealed transfer protocol"
+      ],
+      "evidence": {
+        "pack_macro_model_iou": 0.7373603356853442,
+        "pack_macro_copy_iou": 0.8074132057223571,
+        "pack_macro_delta_vs_copy": -0.07005287003701288,
+        "pair_macro_model_iou": 0.7696194833516594,
+        "pair_macro_copy_iou": 0.8305921077886913,
+        "pair_macro_delta_vs_copy": -0.060972624437031886,
+        "n_pairs_beating_copy": 0
+      }
+    }
+  ],
+  "policy": {
+    "neutral_or_zero_filled_covariates_are_model_incompatible": true,
+    "post_fire_outcomes_are_forbidden_as_inputs": [
+      "MTBS",
+      "RAVG"
+    ],
+    "proxy_iou_must_not_be_reported_as_sealed_transfer_iou": true,
+    "model_iou_requires_real_t0_available_inputs_and_real_t1_labels": true
+  }
+}

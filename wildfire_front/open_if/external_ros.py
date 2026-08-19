@@ -11,13 +11,13 @@ import csv
 import hashlib
 import json
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 INVENTORY_SCHEMA = "wfd_external_ros_inventory_v1"
 CALDOR_KML_RE = re.compile(
-    r"Caldor_(\d{4})_(\d{2})_(\d{2})T(\d{2})_(\d{2})_(\d{2})",
+    r"Caldor_(\d{4})_(\d{2})_(\d{2})T(\d{2})_(\d{2})_(\d{2})_(\d{2})",
     re.IGNORECASE,
 )
 
@@ -402,25 +402,57 @@ def inventory_ndws_kaggle_proxy(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def parse_caldor_kml_timestamp(name: str) -> datetime | None:
+    """Parse FireBench's ``...THH_MM_SS_oo_mm`` local timestamp.
+
+    The Caldor package replaces the minus sign in offsets such as ``-07:00``
+    with an underscore in filenames.  HDF5 polygon keys retain the signed
+    form and establish this convention.
+    """
+    match = CALDOR_KML_RE.search(str(name))
+    if not match:
+        return None
+    year, month, day, hour, minute, offset_hour, offset_minute = (
+        int(value) for value in match.groups()
+    )
+    offset = timezone(-timedelta(hours=offset_hour, minutes=offset_minute))
+    try:
+        return datetime(year, month, day, hour, minute, tzinfo=offset)
+    except ValueError:
+        return None
+
+
 def inventory_caldor_kml(kml_dir: Path) -> dict[str, Any]:
     """Inventory FireBench Caldor 2021 dated KMLs already on disk."""
     if not kml_dir.is_dir():
         return {"ok": False, "reason": f"missing:{kml_dir}", "files": []}
     files: list[dict[str, Any]] = []
-    dated: list[str] = []
+    dated: list[datetime] = []
     for path in sorted(kml_dir.glob("*.kml")):
-        match = CALDOR_KML_RE.search(path.name)
-        stamp = None
-        if match:
-            y, mo, d, h, mi, s = match.groups()
-            stamp = f"{y}-{mo}-{d}T{h}:{mi}:{s}"
-            dated.append(stamp)
+        dt = parse_caldor_kml_timestamp(path.name)
+        stamp = dt.isoformat() if dt is not None else None
+        stamp_utc = dt.astimezone(UTC).isoformat().replace("+00:00", "Z") if dt else None
+        if dt is not None:
+            dated.append(dt)
         files.append(
             {
                 "file": path.name,
                 "bytes": int(path.stat().st_size),
                 "parsed_stamp": stamp,
+                "parsed_stamp_utc": stamp_utc,
                 "is_mtbs_perimeter": "perimeter_mtbs" in path.name.lower(),
+            }
+        )
+    dated.sort(key=lambda value: value.astimezone(UTC))
+    pairs: list[dict[str, Any]] = []
+    for previous, current in zip(dated, dated[1:], strict=False):
+        delta_hours = (current.astimezone(UTC) - previous.astimezone(UTC)).total_seconds() / 3600
+        pairs.append(
+            {
+                "previous_utc": previous.astimezone(UTC).isoformat().replace("+00:00", "Z"),
+                "current_utc": current.astimezone(UTC).isoformat().replace("+00:00", "Z"),
+                "delta_hours": round(float(delta_hours), 6),
+                "next_day_compatible": 12.0 <= delta_hours <= 36.0,
             }
         )
     return {
@@ -429,7 +461,12 @@ def inventory_caldor_kml(kml_dir: Path) -> dict[str, Any]:
         "n_kml": len(files),
         "n_dated": len(dated),
         "r1_ge3_dated_kml": len(dated) >= 3,
-        "dates": dated,
+        "dates": [value.isoformat() for value in dated],
+        "dates_utc": [
+            value.astimezone(UTC).isoformat().replace("+00:00", "Z") for value in dated
+        ],
+        "temporal_pairs": pairs,
+        "n_pairs_12_to_36h": sum(bool(pair["next_day_compatible"]) for pair in pairs),
         "files": files,
         "native_geotiff": False,
         "h5_is_benchmark_not_geotiff_contract": True,

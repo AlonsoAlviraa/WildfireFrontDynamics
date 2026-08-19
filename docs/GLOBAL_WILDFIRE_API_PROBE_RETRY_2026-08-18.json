@@ -1,0 +1,71 @@
+{
+  "schema": "wfd_global_wildfire_api_probe_v1",
+  "generated_at_utc": "2026-08-18T17:08:23.712989+00:00",
+  "registry": "research\\global_wildfire_api_registry_2026.json",
+  "selection": {
+    "priorities": [],
+    "sources": [
+      "global_dwd_icon",
+      "global_nasa_firms_area",
+      "us_landfire"
+    ],
+    "n_selected": 3
+  },
+  "safety": {
+    "sequential": true,
+    "interval_seconds": 0.25,
+    "timeout_seconds": 60.0,
+    "max_response_bytes": 262144,
+    "bulk_downloads": false,
+    "secrets_persisted": false
+  },
+  "counts": {
+    "PASS": 1,
+    "FAIL": 2,
+    "SKIP": 0
+  },
+  "results": [
+    {
+      "id": "global_nasa_firms_area",
+      "name": "NASA FIRMS Area API",
+      "priority": "P0",
+      "checked_at_utc": "2026-08-18T17:08:21.670031+00:00",
+      "status": "FAIL",
+      "url": "https://firms.modaps.eosdis.nasa.gov/api/countries/?format=html",
+      "http_status": 400,
+      "reason": "Bad Request",
+      "error_sample_sha256": "4462796c141a899f49a01305353340ceeed7996274971dfa8d87b6dcfb7edd29",
+      "elapsed_ms": 629.8
+    },
+    {
+      "id": "global_dwd_icon",
+      "name": "DWD ICON Open Data",
+      "priority": "P1",
+      "checked_at_utc": "2026-08-18T17:08:22.551317+00:00",
+      "status": "FAIL",
+      "url": "https://opendata.dwd.de/weather/nwp/icon/grib/",
+      "reason": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)>",
+      "elapsed_ms": 198.0
+    },
+    {
+      "id": "us_landfire",
+      "name": "LANDFIRE Product Services",
+      "priority": "P1",
+      "checked_at_utc": "2026-08-18T17:08:22.999894+00:00",
+      "status": "PASS",
+      "url": "https://lfps.usgs.gov/arcgis/rest/services/LANDFIREProductService/GPServer?f=json",
+      "http_status": 200,
+      "final_url": "https://lfps.usgs.gov/arcgis/rest/services/LANDFIREProductService/GPServer?f=json",
+      "content_type": "application/json; charset=UTF-8",
+      "bytes_sampled": 155,
+      "sample_truncated": false,
+      "sample_sha256": "cd15275394fcfe973cf60ad97b3298589164b62326c2a7693e400fc06f49ef72",
+      "json_valid": true,
+      "json_type": "dict",
+      "top_level_keys": [
+        "error"
+      ],
+      "elapsed_ms": 714.1
+    }
+  ]
+}
