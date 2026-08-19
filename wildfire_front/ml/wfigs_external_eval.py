@@ -42,6 +42,68 @@ RCDA_RAW_FROM_WFIGS = (
     "air_density",
 )
 
+_DRY_AIR_GAS_CONSTANT_J_KG_K = 287.05
+
+
+def _wfigs_to_rcda_raw(
+    raw_all: np.ndarray,
+    *,
+    horizon_hours: float,
+) -> np.ndarray:
+    """Convert WFIGS/HRRR physical channels to the RCDA/MERRA-2 raw contract.
+
+    WFIGS stores HRRR ``APCP`` as accumulated water depth in millimetres and
+    ``RH`` as relative humidity in percent.  The sealed RCDA normalization was
+    fitted to MERRA-2 precipitation flux (kg m-2 s-1) and near-surface specific
+    humidity (kg kg-1).  Temperature (K), air density (kg m-3), wind and EO
+    channels already share compatible physical units.
+
+    The precipitation conversion assumes that the stored APCP accumulation
+    spans the pair horizon.  This approximation is explicit and, importantly,
+    is fixed before WFIGS TEST is materialized or evaluated.
+    """
+
+    if not np.isfinite(horizon_hours) or horizon_hours <= 0.0:
+        raise ValueError("WFIGS horizon_hours must be finite and positive")
+
+    indices = [WFIGS_CHANNELS.index(name) for name in RCDA_RAW_FROM_WFIGS]
+    raw = np.asarray(raw_all[indices], dtype=np.float32).copy()
+
+    wind_index = RCDA_RAW_FROM_WFIGS.index("wind_speed")
+    precipitation_index = RCDA_RAW_FROM_WFIGS.index("precipitation_mm")
+    humidity_index = RCDA_RAW_FROM_WFIGS.index("humidity_pct")
+    temperature_index = RCDA_RAW_FROM_WFIGS.index("temperature_k")
+    density_index = RCDA_RAW_FROM_WFIGS.index("air_density")
+
+    raw[wind_index] = np.maximum(raw[wind_index], 0.0)
+    accumulation_mm = np.maximum(raw[precipitation_index], 0.0)
+    raw[precipitation_index] = accumulation_mm / (horizon_hours * 3600.0)
+
+    temperature_k = raw[temperature_index].astype(np.float64)
+    density = np.maximum(raw[density_index].astype(np.float64), 0.0)
+    relative_humidity = np.clip(raw[humidity_index].astype(np.float64), 0.0, 100.0)
+    pressure_pa = density * _DRY_AIR_GAS_CONSTANT_J_KG_K * temperature_k
+    temperature_c = temperature_k - 273.15
+    saturation_vapor_pressure_pa = 611.2 * np.exp(
+        (17.67 * temperature_c) / (temperature_c + 243.5)
+    )
+    vapor_pressure_pa = (relative_humidity / 100.0) * saturation_vapor_pressure_pa
+    vapor_pressure_pa = np.minimum(vapor_pressure_pa, pressure_pa * 0.99)
+    denominator = pressure_pa - 0.378 * vapor_pressure_pa
+    specific_humidity = np.divide(
+        0.622 * vapor_pressure_pa,
+        denominator,
+        out=np.zeros_like(vapor_pressure_pa),
+        where=denominator > 0.0,
+    )
+    raw[humidity_index] = np.nan_to_num(
+        specific_humidity,
+        nan=0.0,
+        posinf=0.0,
+        neginf=0.0,
+    ).astype(np.float32)
+    return raw
+
 
 def _paired_event_bootstrap(
     reports: list[dict[str, Any]],
@@ -109,7 +171,6 @@ class WFIGSExternalDataset(Dataset):
         self.augment = augment
         if self.channel_min.shape != (12,) or self.channel_max.shape != (12,):
             raise ValueError("RCDA normalization must contain 12 raw channels")
-        self.indices = [WFIGS_CHANNELS.index(name) for name in RCDA_RAW_FROM_WFIGS]
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -126,7 +187,7 @@ class WFIGSExternalDataset(Dataset):
             channel = raw_all[WFIGS_CHANNELS.index(name)]
             fill = float(np.median(channel[valid])) if valid.any() else 0.0
             channel[~valid] = fill
-        raw = raw_all[self.indices]
+        raw = _wfigs_to_rcda_raw(raw_all, horizon_hours=horizon)
         features = encode_features(
             raw,
             channel_min=self.channel_min,
@@ -500,6 +561,7 @@ __all__ = [
     "EXTERNAL_EVAL_SCHEMA",
     "RCDA_RAW_FROM_WFIGS",
     "WFIGSExternalDataset",
+    "_wfigs_to_rcda_raw",
     "evaluate_adapted_rcda_on_wfigs",
     "evaluate_frozen_rcda_on_wfigs",
 ]

@@ -61,3 +61,22 @@ todos con forma `13×256×256`. `scripts/audit_wfigs_tensor_dataset.py` releyó 
 80 archivos, recomputó los extremos de normalización sólo desde TRAIN y verificó
 finitud, máscaras binarias, definición del target de crecimiento, IDs únicos y
 disjunción por evento. Resultado: `pass`, 0 incidencias. TEST permaneció ausente.
+
+## Contrato físico WFIGS → RCDA
+
+La auditoría TRAIN/VALIDATION detectó que HRRR y MERRA-2 expresan dos variables
+meteorológicas en unidades distintas. Antes de materializar TEST se congeló este
+puente determinista:
+
+- `APCP` acumulado de HRRR (mm = kg m-2) se divide por el horizonte en segundos
+  para obtener el flujo medio de precipitación RCDA (kg m-2 s-1);
+- humedad relativa HRRR (%) se convierte a humedad específica (kg kg-1) mediante
+  presión inferida de temperatura y densidad del aire y presión de vapor de
+  saturación de Tetens;
+- precipitación y velocidad del viento negativas se recortan a cero;
+- temperatura, densidad, viento, DEM y canales EO conservan sus unidades.
+
+La acumulación de `APCP` se aproxima como correspondiente al horizonte completo
+del par. El contrato queda fijado antes de WFIGS TEST y se prueba con valores
+físicos conocidos para impedir que los canales normalizados se saturen por un
+error de unidades.
