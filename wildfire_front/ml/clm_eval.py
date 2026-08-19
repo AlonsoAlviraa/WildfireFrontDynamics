@@ -175,6 +175,36 @@ def evaluate_clm_weights(
         ),
         "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
         "model_iou_changed": _agg_float(agg, "model_iou_changed"),
+        "model_growth_transition_iou": _agg_float(agg, "model_growth_transition_iou"),
+        "model_change_transition_iou": _agg_float(agg, "model_change_transition_iou"),
+        "improvement_vs_dilated_copy_growth_transition_iou": _agg_float(
+            agg, "improvement_vs_dilated_copy_growth_transition_iou"
+        ),
+        "improvement_vs_dilated_copy_change_transition_iou": _agg_float(
+            agg, "improvement_vs_dilated_copy_change_transition_iou"
+        ),
+        "model_growth_average_precision_macro": _agg_float(
+            agg, "model_growth_average_precision_macro"
+        ),
+        "model_growth_fcer_iou": _agg_float(agg, "model_growth_fcer_iou"),
+        "model_growth_fcer_average_precision_macro": _agg_float(
+            agg, "model_growth_fcer_average_precision_macro"
+        ),
+        "observed_growth_fcer_capture_macro": _agg_float(
+            agg, "observed_growth_fcer_capture_macro"
+        ),
+        "model_front_boundary_f1_macro": _agg_float(agg, "model_front_boundary_f1_macro"),
+        "improvement_vs_dilated_copy_front_boundary_f1": _agg_float(
+            agg, "improvement_vs_dilated_copy_front_boundary_f1"
+        ),
+        "model_growth_fcer_ece_macro": _agg_float(agg, "model_growth_fcer_ece_macro"),
+        "model_growth_fcer_selective_error_80_macro": _agg_float(
+            agg, "model_growth_fcer_selective_error_80_macro"
+        ),
+        "model_growth_fcer_aurc_macro": _agg_float(agg, "model_growth_fcer_aurc_macro"),
+        "observed_growth_fcer_prevalence_macro": _agg_float(
+            agg, "observed_growth_fcer_prevalence_macro"
+        ),
         "aggregate": agg,
     }
 
@@ -325,6 +355,36 @@ def score_mix_from_cache(
         ),
         "improvement_vs_copy_iou_changed": _agg_float(agg, "improvement_vs_copy_iou_changed"),
         "model_iou_changed": _agg_float(agg, "model_iou_changed"),
+        "model_growth_transition_iou": _agg_float(agg, "model_growth_transition_iou"),
+        "model_change_transition_iou": _agg_float(agg, "model_change_transition_iou"),
+        "improvement_vs_dilated_copy_growth_transition_iou": _agg_float(
+            agg, "improvement_vs_dilated_copy_growth_transition_iou"
+        ),
+        "improvement_vs_dilated_copy_change_transition_iou": _agg_float(
+            agg, "improvement_vs_dilated_copy_change_transition_iou"
+        ),
+        "model_growth_average_precision_macro": _agg_float(
+            agg, "model_growth_average_precision_macro"
+        ),
+        "model_growth_fcer_iou": _agg_float(agg, "model_growth_fcer_iou"),
+        "model_growth_fcer_average_precision_macro": _agg_float(
+            agg, "model_growth_fcer_average_precision_macro"
+        ),
+        "observed_growth_fcer_capture_macro": _agg_float(
+            agg, "observed_growth_fcer_capture_macro"
+        ),
+        "model_front_boundary_f1_macro": _agg_float(agg, "model_front_boundary_f1_macro"),
+        "improvement_vs_dilated_copy_front_boundary_f1": _agg_float(
+            agg, "improvement_vs_dilated_copy_front_boundary_f1"
+        ),
+        "model_growth_fcer_ece_macro": _agg_float(agg, "model_growth_fcer_ece_macro"),
+        "model_growth_fcer_selective_error_80_macro": _agg_float(
+            agg, "model_growth_fcer_selective_error_80_macro"
+        ),
+        "model_growth_fcer_aurc_macro": _agg_float(agg, "model_growth_fcer_aurc_macro"),
+        "observed_growth_fcer_prevalence_macro": _agg_float(
+            agg, "observed_growth_fcer_prevalence_macro"
+        ),
         "aggregate": agg,
     }
 

@@ -14,6 +14,9 @@ from wildfire_front.ml.protocol_rails import (
 )
 from wildfire_front.ml.reliability_metrics import (
     ece_patch_conf,
+    ece_pixel_prob,
+    pixel_risk_coverage_curve,
+    pixel_selective_error_at_coverage,
     random_selective_baseline,
     selective_beats_random,
     selective_iou_at_coverage,
@@ -129,6 +132,29 @@ def test_ece_known_bins():
     # Fully miscalibrated: conf always 1, labels always 0
     ece_bad = ece_patch_conf([1.0, 1.0, 1.0, 1.0], [0, 0, 0, 0], n_bins=2)
     assert ece_bad == pytest.approx(1.0, abs=1e-9)
+
+
+def test_pixel_ece_and_selective_support_mask():
+    probs = np.array([[0.9, 0.8, 0.2, 0.1]], dtype=np.float64)
+    target = np.array([[1.0, 1.0, 0.0, 0.0]], dtype=np.float64)
+    eligible = np.array([[1.0, 1.0, 0.0, 0.0]], dtype=np.float64)
+
+    assert ece_pixel_prob(probs, target, n_bins=2, eligible_mask=eligible) == pytest.approx(0.15)
+    selected = pixel_selective_error_at_coverage(
+        probs, target, coverage=0.5, eligible_mask=eligible
+    )
+    assert selected["selective_error"] == pytest.approx(0.0)
+    assert selected["n_keep"] == 1.0
+
+
+def test_pixel_risk_curve_improves_at_low_coverage_for_ranked_errors():
+    probs = np.array([0.99, 0.9, 0.6, 0.51], dtype=np.float64)
+    target = np.array([1.0, 1.0, 0.0, 0.0], dtype=np.float64)
+    curve = pixel_risk_coverage_curve(probs, target, coverages=(0.5, 1.0))
+
+    assert curve["points"][0]["selective_error"] == pytest.approx(0.0)
+    assert curve["points"][1]["selective_error"] == pytest.approx(0.5)
+    assert 0.0 <= curve["aurc_normalized"] <= 1.0
 
 
 def test_selective_coverage_edge():

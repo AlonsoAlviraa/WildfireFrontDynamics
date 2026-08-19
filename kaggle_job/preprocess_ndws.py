@@ -27,10 +27,11 @@ Usage (Kaggle):
     #   --sequence-length 1  (1 = single timestep, 3 = real temporal stack)
 """
 
+import argparse
+import glob
 import os
 import sys
-import glob
-import argparse
+
 import numpy as np
 
 parser = argparse.ArgumentParser(description="NDWS TFRecord preprocessor (v2)")
@@ -104,7 +105,7 @@ for d in CANDIDATE_INPUT_DIRS:
 
 # Fallback: scan all /kaggle/input subdirs for any .tfrecord files
 if input_dir is None:
-    print(f"Neither candidate dir exists. Scanning /kaggle/input/ ...")
+    print("Neither candidate dir exists. Scanning /kaggle/input/ ...")
     for root, _dirs, files in os.walk("/kaggle/input"):
         for f in files:
             if f.endswith(".tfrecord"):
@@ -114,7 +115,7 @@ if input_dir is None:
             break
 
 if input_dir is None:
-    print("Error: No input directory with TFRecord files found!")
+    print("Error: No TFRecord input directory found!")
     if os.path.exists("/kaggle/input"):
         for item in os.listdir("/kaggle/input"):
             print(f"  {item}")
@@ -219,7 +220,7 @@ for k, v in mapped_keys.items():
     print(f"  {k} -> {v}")
 
 feature_description = {}
-for req_key, actual_key in mapped_keys.items():
+for _req_key, actual_key in mapped_keys.items():
     feature_description[actual_key] = tf.io.FixedLenFeature([64, 64], tf.float32)
 
 
@@ -533,6 +534,6 @@ for file_path in tfrecord_files:
     except Exception as e:
         print(f"Error reading file {file_path}: {e}")
 
-print(f"=== Preprocessing v2 Completed ===")
+print("=== Preprocessing v2 Completed ===")
 print(f"Processed {sequence_count} full sequences.")
 print(f"Generated {patch_count} patches ({args.patch_size}x{args.patch_size}) saved to {output_dir}.")

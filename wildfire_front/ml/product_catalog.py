@@ -94,6 +94,26 @@ def get_product(product_id: str, catalog_path: Path | None = None) -> ProductSpe
     )
 
 
+def list_holdout_only(catalog_path: Path | None = None) -> list[dict[str, Any]]:
+    """Research/holdout IDs that must never report ready or enter get_product()."""
+    data = load_catalog(catalog_path)
+    out: list[dict[str, Any]] = []
+    for pid, row in sorted((data.get("holdout_only") or {}).items()):
+        if not isinstance(row, dict):
+            continue
+        out.append(
+            {
+                "id": str(row.get("id") or pid),
+                "status": str(row.get("status") or "not_ready"),
+                "role": str(row.get("role") or ""),
+                "ready": False,
+                "not_for": str(row.get("not_for") or ""),
+                "notes": str(row.get("notes") or ""),
+            }
+        )
+    return out
+
+
 def list_products(catalog_path: Path | None = None) -> list[dict[str, Any]]:
     data = load_catalog(catalog_path)
     out = []

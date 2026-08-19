@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from wildfire_front.ml.product_catalog import get_product, list_products, load_catalog
+from wildfire_front.ml.product_catalog import (
+    get_product,
+    list_holdout_only,
+    list_products,
+    load_catalog,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -93,6 +98,20 @@ def test_ensemble_manifest_has_v34_temps():
     assert m.get("version") == "clm_ensemble_v34"
     assert m.get("member_temperatures") == [0.7, 0.7, 1.3]
     assert len(m.get("member_weights") or []) == 3
+
+
+def test_holdout_only_not_ready_and_not_in_products():
+    data = load_catalog()
+    holdout = {row["id"]: row for row in list_holdout_only()}
+    products = {p["id"] for p in list_products()}
+    assert "rcda_net" in holdout
+    assert "caldor_clean17_physical_v1" in holdout
+    for pid, row in holdout.items():
+        assert row["ready"] is False
+        assert pid not in products
+        assert pid not in (data.get("products") or {})
+        with pytest.raises(KeyError):
+            get_product(pid)
 
 
 def test_infocam_anchors_schema():
