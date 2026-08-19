@@ -102,7 +102,7 @@ def test_research_status_surfaces_kaggle_runtime_without_fake_epoch(
     assert progress["registered_runs"] == 2
     assert progress["recovered_runs"] == 1
     assert progress["test_evaluated"] is False
-    assert len(status["experiment_queue"]) == 6
+    assert len(status["experiment_queue"]) == 7
     assert status["experiment_queue"][0]["status"] == "recovered"
     assert status["experiment_queue"][1]["status"] == "active"
     assert status["experiment_queue"][2]["status"] == "planned"
@@ -229,6 +229,61 @@ def test_research_status_surfaces_val_only_postprocess_delta(tmp_path: Path) -> 
     assert status["validation_postprocess"]["test_evaluated"] is False
 
 
+def test_research_status_surfaces_exact_val_reproducibility(tmp_path: Path) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(
+        work / "LOW_LR_REPRODUCIBILITY.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "run_name": "resunet_hybrid_low_lr_v2",
+            "events": 106,
+            "checkpoint_exact": True,
+            "metrics_exact": True,
+            "reproducible": True,
+            "max_absolute_event_iou_difference": 0.0,
+            "checkpoint_sha256": {"first": "abc123", "rerun": "abc123"},
+        },
+    )
+
+    status = build_research_status(tmp_path)
+
+    assert status["validation_reproducibility"]["reproducible"] is True
+    assert status["validation_reproducibility"]["events"] == 106
+    assert status["validation_reproducibility"]["test_evaluated"] is False
+
+
+def test_research_status_surfaces_only_val_strata(tmp_path: Path) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(
+        work / "LOW_LR_VALIDATION_STRATA.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "run_name": "low_lr",
+            "events": 106,
+            "duration_spearman": {"rho": 0.10, "p_value": 0.30},
+            "growth_support_spearman": {"rho": -0.005, "p_value": 0.96},
+            "duration_strata": [],
+            "growth_strata": [
+                {"label": "Q1", "event_macro_iou": 0.21},
+                {"label": "Q3", "event_macro_iou": 0.17},
+            ],
+        },
+    )
+
+    status = build_research_status(tmp_path)
+
+    assert status["validation_strata"]["events"] == 106
+    assert status["validation_strata"]["growth_support_spearman"]["rho"] == -0.005
+    assert status["validation_strata"]["test_evaluated"] is False
+    assert status["artifacts"]["validation_strata"].endswith(
+        "LOW_LR_VALIDATION_STRATA.json"
+    )
+
+
 def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Path) -> None:
     work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
     _write(
@@ -275,6 +330,21 @@ def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Pa
         },
     )
     _write(
+        work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "decision": {
+                "paired_validation": {
+                    "events": 106,
+                    "event_bootstrap_95_ci": [-0.00004, 0.00681],
+                    "wins_event_fraction": 0.4906,
+                }
+            },
+        },
+    )
+    _write(
         work / "PRETEST_DECISION_LOG.json",
         {
             "new_candidate_test_evaluated": False,
@@ -301,6 +371,12 @@ def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Pa
     assert status["validation_ensemble"]["event_macro_iou"] == 0.19
     assert status["validation_ensemble"]["delta_vs_best_individual"] == -0.01
     assert status["validation_ensemble"]["preregistered"] is False
+    assert status["validation_ensemble"]["paired_delta_95_ci"] == [
+        -0.00004,
+        0.00681,
+    ]
+    assert status["validation_ensemble"]["paired_events"] == 106
+    assert status["validation_ensemble"]["paired_wins_event_fraction"] == 0.4906
     assert status["training_sampler_audit"]["default_event_mass_cv"] == 0.65
     assert status["training_sampler_audit"]["uniform_event_mass_cv"] == 0.0
     assert status["training_sampler_audit"]["samples_with_any_t0_loss"] == 0
@@ -315,6 +391,9 @@ def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Pa
     assert status["validation_ensemble"]["test_evaluated"] is False
     assert status["artifacts"]["validation_ensemble"].endswith(
         "PHASE1_VAL_ENSEMBLES.json"
+    )
+    assert status["artifacts"]["validation_ensemble_paired"].endswith(
+        "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json"
     )
 
     _write(
@@ -433,6 +512,14 @@ def test_research_status_surfaces_frozen_winner_and_final_gates(tmp_path: Path):
                 "paired_delta_event_bootstrap_95_ci": [0.05, 0.18],
             },
             "gate": {"test_not_used_for_selection": True},
+            "ensemble": {
+                "role": "preregistered_secondary_probability_ensemble",
+                "event_macro_iou": 0.25,
+            },
+            "decoder": {
+                "role": "preregistered_secondary_spatial_decoder",
+                "event_macro_iou": 0.26,
+            },
         },
     )
 
@@ -441,6 +528,8 @@ def test_research_status_surfaces_frozen_winner_and_final_gates(tmp_path: Path):
     assert status["validation_winner"]["run_name"] == "film_hybrid"
     assert status["final"]["model_event_macro_iou"] == 0.24
     assert status["final"]["gates"]["test_not_used_for_selection"] is True
+    assert status["final"]["ensemble_event_macro_iou"] == 0.25
+    assert status["final"]["decoder_event_macro_iou"] == 0.26
     assert status["claims"]["paper_ready"] is True
     assert status["claims"]["external_generalization_proven"] is False
 
@@ -509,7 +598,12 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Telemetría de entrenamiento" in html
     assert "Delta vs 2º VAL" in html
     assert "Mejor ensemble VAL" in html
+    assert "Decoder TEST" in html
     assert "Postproceso VAL" in html
+    assert "Rango estratos VAL" in html
+    assert "Dependencia del tamaño" in html
+    assert "validation_evidence.svg?research=" in html
+    assert "Evidencia sÃ³lo VAL" in html
     assert "Masa por incendio" in html
     assert "WFIGS zero-shot" in html
     assert "Ensemble WFIGS" in html

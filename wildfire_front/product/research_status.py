@@ -23,6 +23,7 @@ PHASE_LABELS = {
     "validation_only_stage2_precision_kaggle": "Fase 2 · balance precisión/recall en VAL (Kaggle T4)",
     "validation_only_stage2_low_lr_kaggle": "Fase 2 · LR bajo en VAL (Kaggle T4)",
     "validation_only_stage2_growth_kaggle": "Fase 2 · growth-only en VAL (Kaggle T4)",
+    "validation_only_stage2_growth_low_lr_kaggle": "Fase 2 · growth-only con LR bajo en VAL (Kaggle T4)",
     "validation_only_stage2_event_balanced_kaggle": "Fase 2 · muestreo por incendio en VAL (Kaggle T4)",
     "validation_only_stage2_uniform_events_kaggle": "Fase 2 · masa uniforme por incendio en VAL (Kaggle T4)",
     "validation_only_stage2_film_kaggle": "Fase 2 · condicionamiento físico FiLM en VAL (Kaggle T4)",
@@ -37,6 +38,7 @@ VALIDATION_RUN_ORDER = (
     "resunet_hybrid_precision_v3",
     "resunet_hybrid_low_lr_v2",
     "resunet_growth_v1",
+    "resunet_growth_low_lr_v1",
     "resunet_hybrid_event_balanced_v1",
     "resunet_hybrid_uniform_events_v1",
     "film_growth_v1",
@@ -351,6 +353,27 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     validation_ensemble_decision = (
         (validation_ensemble_report or {}).get("decision") or {}
     )
+    validation_ensemble_paired_path = (
+        work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json" if work else None
+    )
+    validation_ensemble_paired_report = (
+        _read_json(validation_ensemble_paired_path)
+        if validation_ensemble_paired_path
+        and validation_ensemble_paired_path.is_file()
+        else None
+    )
+    if validation_ensemble_paired_report and not (
+        validation_ensemble_paired_report.get("selection_split") == "val"
+        and validation_ensemble_paired_report.get("test_evaluated") is False
+        and validation_ensemble_paired_report.get("test_used_for_selection") is False
+    ):
+        validation_ensemble_paired_report = None
+    validation_ensemble_paired = (
+        (validation_ensemble_paired_report or {}).get("decision", {}).get(
+            "paired_validation"
+        )
+        or {}
+    )
     validation_postprocess_path = work / "LOW_LR_POSTPROCESS_VAL.json" if work else None
     validation_postprocess = (
         _read_json(validation_postprocess_path) if validation_postprocess_path else None
@@ -361,6 +384,32 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     ):
         validation_postprocess = None
     validation_postprocess_best = (validation_postprocess or {}).get("best") or {}
+    validation_reproducibility_path = (
+        work / "LOW_LR_REPRODUCIBILITY.json" if work else None
+    )
+    validation_reproducibility = (
+        _read_json(validation_reproducibility_path)
+        if validation_reproducibility_path
+        else None
+    )
+    if validation_reproducibility and not (
+        validation_reproducibility.get("selection_split") == "val"
+        and validation_reproducibility.get("test_evaluated") is False
+        and validation_reproducibility.get("test_used_for_selection") is False
+    ):
+        validation_reproducibility = None
+    validation_strata_path = (
+        work / "LOW_LR_VALIDATION_STRATA.json" if work else None
+    )
+    validation_strata = (
+        _read_json(validation_strata_path) if validation_strata_path else None
+    )
+    if validation_strata and not (
+        validation_strata.get("selection_split") == "val"
+        and validation_strata.get("test_evaluated") is False
+        and validation_strata.get("test_used_for_selection") is False
+    ):
+        validation_strata = None
     postprocess_checkpoint = str((validation_postprocess or {}).get("checkpoint") or "")
     postprocess_source = next(
         (
@@ -418,6 +467,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     )
     scorecard_path = work / "PAPER_SCORECARD.json" if work else None
     scorecard = _read_json(scorecard_path) if scorecard_path else None
+    validation_figure_path = (
+        root / "docs/figures/rcda_validation_evidence_20260819.svg"
+    )
 
     phase = str(state.get("phase") or "not_started")
     winner = (frozen or {}).get("winner") or state.get("winner") or None
@@ -441,6 +493,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             }
     primary = (scorecard or {}).get("primary") or None
     ensemble = (scorecard or {}).get("ensemble") or None
+    decoder = (scorecard or {}).get("decoder") or None
     gates = (scorecard or {}).get("gate") or None
     status = str(state.get("status") or state.get("kernel_status") or "pending")
     if scorecard:
@@ -486,6 +539,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "validation_only_stage2_precision_kaggle",
                 "validation_only_stage2_low_lr_kaggle",
                 "validation_only_stage2_growth_kaggle",
+                "validation_only_stage2_growth_low_lr_kaggle",
                 "validation_only_stage2_event_balanced_kaggle",
                 "validation_only_stage2_uniform_events_kaggle",
                 "validation_only_stage2_film_kaggle",
@@ -534,6 +588,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "validation_only_stage2_precision_kaggle",
                 "validation_only_stage2_low_lr_kaggle",
                 "validation_only_stage2_growth_kaggle",
+                "validation_only_stage2_growth_low_lr_kaggle",
                 "validation_only_stage2_event_balanced_kaggle",
                 "validation_only_stage2_uniform_events_kaggle",
                 "validation_only_stage2_film_kaggle",
@@ -627,6 +682,13 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "preregistered": validation_ensemble_decision.get(
                     "preregister_multi_model_ensemble"
                 ),
+                "paired_delta_95_ci": validation_ensemble_paired.get(
+                    "event_bootstrap_95_ci"
+                ),
+                "paired_wins_event_fraction": validation_ensemble_paired.get(
+                    "wins_event_fraction"
+                ),
+                "paired_events": validation_ensemble_paired.get("events"),
                 "selection_split": "val",
                 "test_evaluated": False,
             }
@@ -658,6 +720,45 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             }
             if isinstance(validation_postprocess_best, dict)
             and validation_postprocess_best
+            else None
+        ),
+        "validation_reproducibility": (
+            {
+                "run_name": validation_reproducibility.get("run_name"),
+                "events": validation_reproducibility.get("events"),
+                "checkpoint_exact": validation_reproducibility.get(
+                    "checkpoint_exact"
+                ),
+                "metrics_exact": validation_reproducibility.get("metrics_exact"),
+                "reproducible": validation_reproducibility.get("reproducible"),
+                "max_absolute_event_iou_difference": validation_reproducibility.get(
+                    "max_absolute_event_iou_difference"
+                ),
+                "checkpoint_sha256": (
+                    validation_reproducibility.get("checkpoint_sha256") or {}
+                ).get("first"),
+                "selection_split": "val",
+                "test_evaluated": False,
+            }
+            if validation_reproducibility
+            else None
+        ),
+        "validation_strata": (
+            {
+                "run_name": validation_strata.get("run_name"),
+                "events": validation_strata.get("events"),
+                "duration_spearman": validation_strata.get(
+                    "duration_spearman"
+                ),
+                "growth_support_spearman": validation_strata.get(
+                    "growth_support_spearman"
+                ),
+                "duration_strata": validation_strata.get("duration_strata") or [],
+                "growth_strata": validation_strata.get("growth_strata") or [],
+                "selection_split": "val",
+                "test_evaluated": False,
+            }
+            if validation_strata
             else None
         ),
         "training_sampler_audit": (
@@ -716,6 +817,12 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "ensemble_role": ensemble.get("role")
                 if isinstance(ensemble, dict)
                 else None,
+                "decoder_event_macro_iou": decoder.get("event_macro_iou")
+                if isinstance(decoder, dict)
+                else None,
+                "decoder_role": decoder.get("role")
+                if isinstance(decoder, dict)
+                else None,
             }
             if scorecard and isinstance(primary, dict)
             else None
@@ -742,11 +849,35 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 else None,
                 root,
             ),
+            "validation_ensemble_paired": _relative(
+                validation_ensemble_paired_path
+                if validation_ensemble_paired_path
+                and validation_ensemble_paired_path.is_file()
+                else None,
+                root,
+            ),
             "validation_postprocess": _relative(
                 validation_postprocess_path
                 if validation_postprocess_path
                 and validation_postprocess_path.is_file()
                 else None,
+                root,
+            ),
+            "validation_reproducibility": _relative(
+                validation_reproducibility_path
+                if validation_reproducibility_path
+                and validation_reproducibility_path.is_file()
+                else None,
+                root,
+            ),
+            "validation_strata": _relative(
+                validation_strata_path
+                if validation_strata_path and validation_strata_path.is_file()
+                else None,
+                root,
+            ),
+            "validation_figure": _relative(
+                validation_figure_path if validation_figure_path.is_file() else None,
                 root,
             ),
             "training_sampler_audit": _relative(

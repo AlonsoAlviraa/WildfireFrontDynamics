@@ -575,6 +575,8 @@ body.tab-work .rail-stack{min-height:58vh}
 .research-progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 12px}
 .research-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#818cf8);width:0}
 .research-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.research-figure{margin:12px 0 0}.research-figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:var(--r);background:#fff}
+.research-figure figcaption{margin-top:5px;font-size:9px;color:var(--muted)}
 .research-stat{min-width:0;padding:9px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
 .research-stat .k{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
 .research-stat .v{margin-top:3px;font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
@@ -2163,7 +2165,7 @@ function renderResearchStatus() {
 
   const progress = document.createElement('div'); progress.className = 'research-progress';
   const fill = document.createElement('span');
-  const progressByPhase = {not_started:0, validation_only_tuning:20, validation_only_stage2:48, validation_only_stage2_gcp:48, validation_only_stage2_precision_gcp:52, validation_only_stage2_precision_kaggle:52, validation_only_stage2_low_lr_gcp:55, validation_only_stage2_low_lr_kaggle:55, validation_only_stage2_growth_gcp:58, validation_only_stage2_growth_kaggle:58, validation_only_stage2_event_balanced_gcp:60, validation_only_stage2_event_balanced_kaggle:60, validation_only_stage2_uniform_events_gcp:62, validation_only_stage2_uniform_events_kaggle:62, validation_only_stage2_film_gcp:64, validation_only_stage2_film_kaggle:64, recipe_frozen:66, preregistered_final_test:84, preregistered_final_test_gcp:84, preregistered_final_test_kaggle:84, complete:100};
+  const progressByPhase = {not_started:0, validation_only_tuning:20, validation_only_stage2:48, validation_only_stage2_gcp:48, validation_only_stage2_precision_gcp:52, validation_only_stage2_precision_kaggle:52, validation_only_stage2_low_lr_gcp:55, validation_only_stage2_low_lr_kaggle:55, validation_only_stage2_growth_gcp:58, validation_only_stage2_growth_kaggle:58, validation_only_stage2_growth_low_lr_kaggle:59, validation_only_stage2_event_balanced_gcp:60, validation_only_stage2_event_balanced_kaggle:60, validation_only_stage2_uniform_events_gcp:62, validation_only_stage2_uniform_events_kaggle:62, validation_only_stage2_film_gcp:64, validation_only_stage2_film_kaggle:64, recipe_frozen:66, preregistered_final_test:84, preregistered_final_test_gcp:84, preregistered_final_test_kaggle:84, complete:100};
   fill.style.width = String(progressByPhase[rs.phase] || 0) + '%'; progress.appendChild(fill); host.appendChild(progress);
 
   const protocol = rs.protocol || {};
@@ -2172,6 +2174,8 @@ function renderResearchStatus() {
   const winner = rs.validation_winner || {};
   const valEnsemble = rs.validation_ensemble || {};
   const valPostprocess = rs.validation_postprocess || {};
+  const valReproducibility = rs.validation_reproducibility || {};
+  const valStrata = rs.validation_strata || {};
   const samplerAudit = rs.training_sampler_audit || {};
   const numericStability = rs.numeric_stability || {};
   const final = rs.final || {};
@@ -2184,6 +2188,9 @@ function renderResearchStatus() {
     researchStat(grid, 'Delta pareado', (Number(final.paired_delta) >= 0 ? '+' : '') + researchScore(final.paired_delta), 'bootstrap por incendio');
     if (final.ensemble_event_macro_iou != null) {
       researchStat(grid, 'Ensemble TEST', researchScore(final.ensemble_event_macro_iou), 'secundario · promedio de probabilidades');
+    }
+    if (final.decoder_event_macro_iou != null) {
+      researchStat(grid, 'Decoder TEST', researchScore(final.decoder_event_macro_iou), 'secundario · geometría congelada en VAL');
     }
   } else if (winner.event_macro_iou != null) {
     const winnerDetail = winner.frozen ? (winner.run_name || winner.model_name || 'receta congelada') : ((winner.run_name || winner.model_name || 'receta') + ' · provisional');
@@ -2199,11 +2206,31 @@ function renderResearchStatus() {
     if ((winner.event_bootstrap_95_ci || []).length === 2) {
       researchStat(grid, 'IC 95% líder', researchScore(winner.event_bootstrap_95_ci[0]) + '–' + researchScore(winner.event_bootstrap_95_ci[1]), 'bootstrap por 106 incendios');
     }
+    if (valReproducibility.reproducible === true) {
+      const replicaEvents = String(valReproducibility.events || 0);
+      const replicaHash = String(valReproducibility.checkpoint_sha256 || '').slice(0, 10);
+      researchStat(grid, 'Réplica independiente', 'exacta', replicaEvents + ' incendios · pesos ' + replicaHash + '… · TEST sellado');
+    }
+    const growthStrata = valStrata.growth_strata || [];
+    if (growthStrata.length) {
+      const stratumScores = growthStrata.map(row => Number(row.event_macro_iou)).filter(Number.isFinite);
+      const growthRho = Number((valStrata.growth_support_spearman || {}).rho);
+      if (stratumScores.length) {
+        researchStat(grid, 'Rango estratos VAL', researchScore(Math.min(...stratumScores)) + '–' + researchScore(Math.max(...stratumScores)), growthStrata.length + ' cuartiles por crecimiento · descriptivo');
+      }
+      if (Number.isFinite(growthRho)) {
+        researchStat(grid, 'Dependencia del tamaño', researchScore(growthRho), 'Spearman en ' + String(valStrata.events || 0) + ' incendios · sólo VAL');
+      }
+    }
     if (valEnsemble.event_macro_iou != null) {
       const ensembleDelta = Number(valEnsemble.delta_vs_best_individual);
-      const ensembleHint = Number.isFinite(ensembleDelta)
+      const ensembleCi = valEnsemble.paired_delta_95_ci || [];
+      let ensembleHint = Number.isFinite(ensembleDelta)
         ? ((ensembleDelta >= 0 ? '+' : '') + researchScore(ensembleDelta) + ' vs mejor individual' + (valEnsemble.preregistered === false ? ' · descartado' : ''))
         : 'promedio de probabilidades · sólo VAL';
+      if (ensembleCi.length === 2) {
+        ensembleHint += ' · IC 95% ' + researchScore(ensembleCi[0]) + '–' + researchScore(ensembleCi[1]) + ' · sólo VAL';
+      }
       researchStat(grid, 'Mejor ensemble VAL', researchScore(valEnsemble.event_macro_iou), ensembleHint);
     }
     if (valPostprocess.event_macro_iou != null) {
@@ -2225,6 +2252,17 @@ function renderResearchStatus() {
     researchStat(grid, 'Protección anti-NaN', 'grad ≤ ' + researchScore(numericStability.max_grad_norm), String(numericStability.train_files_scanned || 0) + ' NPY finitos');
   }
   host.appendChild(grid);
+
+  if ((rs.artifacts || {}).validation_figure) {
+    const figure = document.createElement('figure'); figure.className = 'research-figure';
+    const image = document.createElement('img');
+    image.src = 'validation_evidence.svg?research=' + encodeURIComponent(String(rs.updated_at || 'current'));
+    image.alt = 'Ranking de candidatos en validaciÃ³n con intervalos bootstrap y comparaciÃ³n pareada; TEST permanece sellado.';
+    image.loading = 'lazy';
+    const caption = document.createElement('figcaption');
+    caption.textContent = 'Evidencia sÃ³lo VAL Â· IC por incendio Â· TEST sellado';
+    figure.append(image, caption); host.appendChild(figure);
+  }
 
   renderValidationBoard(
     host,

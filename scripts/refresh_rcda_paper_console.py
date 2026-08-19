@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -23,6 +24,11 @@ def refresh_console(output: Path, repo_root: Path = ROOT) -> dict:
     payload = json.loads(payload_path.read_text(encoding="utf-8"))
     payload["research_status"] = build_research_status(repo_root)
     write_product_app(payload, output)
+    validation_figure = (
+        repo_root / "docs/figures/rcda_validation_evidence_20260819.svg"
+    )
+    if validation_figure.is_file():
+        shutil.copy2(validation_figure, output / "validation_evidence.svg")
     return payload["research_status"]
 
 
