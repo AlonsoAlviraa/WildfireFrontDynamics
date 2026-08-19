@@ -19,7 +19,7 @@ import ipaddress
 import json
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -145,7 +145,7 @@ def load_candidates_csv(path: Path) -> list[UrlRecord]:
             raise ValueError(f"CSV has no header: {path}")
         rows = list(reader)
     out: list[UrlRecord] = []
-    for _i, row in enumerate(rows):
+    for i, row in enumerate(rows):
         # Skip comment-like rows
         eid = (row.get("event_id") or "").strip()
         if not eid or eid.startswith("#"):

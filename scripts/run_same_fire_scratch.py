@@ -31,13 +31,13 @@ from scripts.run_same_fire_multi_geometry import (  # noqa: E402
     pair_row,
     vector_copy_iou,
 )
-from wildfire_front.ml.feature_schema import schema_channel_count  # noqa: E402
 from wildfire_front.ml.unet_train import (  # noqa: E402
     UNetTrainConfig,
     build_model,
     model_forward,
     prepare_input,
 )
+from wildfire_front.ml.feature_schema import schema_channel_count  # noqa: E402
 from wildfire_front.open_if.same_fire_model import (  # noqa: E402
     aoi_ref_geom,
     binary_iou,
@@ -138,7 +138,7 @@ def _collect_caldor_tiles(max_patches: int) -> list[dict[str, Any]]:
         recs.append({"utc": item.get("timestamp_utc"), "path": path})
     tiles: list[dict[str, Any]] = []
     cache: dict[str, np.ndarray] = {}
-    for prev, nxt in zip(recs, recs[1:], strict=False):
+    for prev, nxt in zip(recs, recs[1:]):
         if prev["path"] not in cache:
             cache[prev["path"]] = (load_tif(prev["path"]) > 0).astype(np.float32)
         if nxt["path"] not in cache:
@@ -146,11 +146,7 @@ def _collect_caldor_tiles(max_patches: int) -> list[dict[str, Any]]:
         prev_m = cache[prev["path"]]
         next_m = cache[nxt["path"]]
         copy = binary_iou(prev_m > 0, next_m > 0)
-        from wildfire_front.open_if.latam_au import (
-            classify_temporal_pair,
-            hours_between,
-            parse_iso_utc,
-        )
+        from wildfire_front.open_if.latam_au import classify_temporal_pair, hours_between, parse_iso_utc
 
         delta = None
         a = parse_iso_utc(str(prev.get("utc") or ""))
@@ -236,7 +232,10 @@ def main(argv: list[str] | None = None) -> int:
             seq = seq_all[idx].to(device)
             cur = cur_all[idx].to(device)
             tgt = tgt_all[idx].to(device)
-            seq_in = seq.unsqueeze(1) if seq.ndim == 4 else seq
+            if seq.ndim == 4:
+                seq_in = seq.unsqueeze(1)
+            else:
+                seq_in = seq
             x = prepare_input(seq_in, cur)
             logits = model_forward(model, x, cur, "residual")
             loss = frozen_ring_decode_loss(logits, cur, tgt, fp_weight=4.0)

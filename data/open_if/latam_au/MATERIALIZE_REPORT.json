@@ -1,0 +1,21 @@
+{
+  "schema": "wfd_open_if_latam_au_materialize_v1",
+  "built_at_utc": "2026-08-18T13:42:35.627031Z",
+  "packs": [
+    {
+      "event_id": "BO_EMSR765",
+      "pack_dir": "data/open_if/latam_au/bo/BO_EMSR765",
+      "n_geotiff": 6,
+      "stac_ok": 3,
+      "status": "ok"
+    },
+    {
+      "event_id": "MX_EMSR717",
+      "pack_dir": "data/open_if/latam_au/mx/MX_EMSR717",
+      "n_geotiff": 6,
+      "stac_ok": 3,
+      "status": "ok"
+    }
+  ],
+  "gaps": []
+}

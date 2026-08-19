@@ -1,0 +1,436 @@
+{
+  "schema": "wfd_latam_au_complete_proxy_model_iou_v1",
+  "as_of_utc": "2026-08-17T15:34:59Z",
+  "product_id": "lab_scratch_frozen_decode_seed42",
+  "weights": "outputs/ml_eval/mega_goal_model/lab_scratch_frozen/weights_pretrained_best.pt",
+  "schema_mode": "real_proxy_fill",
+  "architecture": "residual",
+  "target_mode": "delta",
+  "copy_safety_gate": {
+    "enabled": false,
+    "feature": "mean_growth_probability_outside_t0",
+    "min_feature": null,
+    "lab_only": true
+  },
+  "growth_threshold": 0.9,
+  "require_growth_ring": true,
+  "mean_complete_proxy_model_iou": 0.8308818512500475,
+  "mean_copy_baseline_iou": 0.8305921077886913,
+  "mean_delta_vs_copy": 0.00028974346135623996,
+  "pack_macro_complete_proxy_model_iou": 0.8079926926450696,
+  "pack_macro_copy_baseline_iou": 0.8074132057223571,
+  "pair_macro_complete_proxy_model_iou": 0.8308818512500475,
+  "pair_macro_copy_baseline_iou": 0.8305921077886913,
+  "pair_macro_delta_vs_copy": 0.00028974346135623996,
+  "n_pairs_used": 4,
+  "n_pairs_measured": 4,
+  "n_pairs_beating_copy": 1,
+  "n_packs_measured": 2,
+  "pair_protocol": {
+    "min_delta_hours": 12.0,
+    "static_label_copy_iou_gt": 0.98,
+    "growth_product_kinds": [
+      "delineation",
+      "delineation_monitoring"
+    ],
+    "excluded_classes": [
+      "too_short_delta",
+      "static_label_copy",
+      "incompatible_product_kind"
+    ],
+    "emsr715_fep_to_del_reintroduced": false
+  },
+  "packs": [
+    {
+      "event_id": "AU_EMSR500_PERTH",
+      "ok": true,
+      "n_pairs": 2,
+      "n_pairs_used": 0,
+      "pairs": [
+        {
+          "from": "AU_EMSR500_PERTH_20210205_203225.tif",
+          "to": "AU_EMSR500_PERTH_20210211_170324.tif",
+          "from_kind": "delineation",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2021-02-05T20:32:25Z",
+          "to_utc": "2021-02-11T17:03:24Z",
+          "delta_hours": 140.51638888888888,
+          "label_mask_iou": 0.989882818947021,
+          "copy_mask_iou": 0.989882818947021,
+          "pair_class": "static_label_copy",
+          "complete_proxy_model_iou": null,
+          "n_tiles": 0
+        },
+        {
+          "from": "AU_EMSR500_PERTH_20210211_170324.tif",
+          "to": "AU_EMSR500_PERTH_20210213_022304.tif",
+          "from_kind": "delineation_monitoring",
+          "to_kind": "grading",
+          "from_utc": "2021-02-11T17:03:24Z",
+          "to_utc": "2021-02-13T02:23:04Z",
+          "delta_hours": 33.327777777777776,
+          "label_mask_iou": 1.0,
+          "copy_mask_iou": 1.0,
+          "pair_class": "incompatible_product_kind",
+          "complete_proxy_model_iou": null,
+          "n_tiles": 0
+        }
+      ],
+      "delta_hours": [
+        140.51638888888888,
+        33.327777777777776
+      ],
+      "label_mask_iou": [
+        0.989882818947021,
+        1.0
+      ],
+      "complete_proxy_model_iou": null,
+      "copy_baseline_iou": null,
+      "delta_vs_copy": null,
+      "excluded": [
+        {
+          "from": "AU_EMSR500_PERTH_20210205_203225.tif",
+          "to": "AU_EMSR500_PERTH_20210211_170324.tif",
+          "pair_class": "static_label_copy",
+          "delta_hours": 140.51638888888888,
+          "label_mask_iou": 0.989882818947021
+        },
+        {
+          "from": "AU_EMSR500_PERTH_20210211_170324.tif",
+          "to": "AU_EMSR500_PERTH_20210213_022304.tif",
+          "pair_class": "incompatible_product_kind",
+          "delta_hours": 33.327777777777776,
+          "label_mask_iou": 1.0
+        }
+      ],
+      "schema_mode": "real_proxy_fill",
+      "compatible_with_clm_ensemble_v34": true,
+      "threshold": 0.5,
+      "in_channels": 18,
+      "architecture": "residual",
+      "target_mode": "delta",
+      "copy_safety_min_mean_outside_prob": null,
+      "growth_threshold": 0.9,
+      "require_growth_ring": true,
+      "not_claims": [
+        "not sealed transfer IoU",
+        "not GO_Q complete",
+        "not FREEZE lift",
+        "not NDWS-native stack",
+        "meteo is Open-Meteo point field (see covariates provenance)",
+        "mean excludes too_short_delta (<12h) and static_label_copy (mask IoU>0.98)"
+      ]
+    },
+    {
+      "event_id": "CL_EMSR647_NACIMIENTO",
+      "ok": true,
+      "n_pairs": 2,
+      "n_pairs_used": 1,
+      "pairs": [
+        {
+          "from": "CL_EMSR647_NACIMIENTO_20230213_235634.tif",
+          "to": "CL_EMSR647_NACIMIENTO_20230214_021543.tif",
+          "from_kind": "delineation",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2023-02-13T23:56:34Z",
+          "to_utc": "2023-02-14T02:15:43Z",
+          "delta_hours": 2.319166666666667,
+          "label_mask_iou": 0.8591920444164995,
+          "copy_mask_iou": 0.8591920444164995,
+          "pair_class": "too_short_delta",
+          "complete_proxy_model_iou": null,
+          "n_tiles": 0
+        },
+        {
+          "from": "CL_EMSR647_NACIMIENTO_20230214_021543.tif",
+          "to": "CL_EMSR647_NACIMIENTO_20230215_212410.tif",
+          "from_kind": "delineation_monitoring",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2023-02-14T02:15:43Z",
+          "to_utc": "2023-02-15T21:24:10Z",
+          "delta_hours": 43.14083333333333,
+          "label_mask_iou": 0.9478757857568567,
+          "copy_mask_iou": 0.7610554015896887,
+          "pair_class": "usable",
+          "complete_proxy_model_iou": 0.7622143754351136,
+          "n_tiles": 32,
+          "delta_vs_copy": 0.0011589738454249598,
+          "tile_strata": {
+            "edge": 12,
+            "interior": 10,
+            "low_density": 10,
+            "fallback_center": 0
+          },
+          "copy_safety_gate": {
+            "enabled": false,
+            "feature": "mean_growth_probability_outside_t0",
+            "min_feature": null,
+            "n_model_tiles": 32,
+            "n_copy_fallback_tiles": 0,
+            "score_min": 0.0,
+            "score_max": 0.9952910542488098
+          }
+        }
+      ],
+      "delta_hours": [
+        2.319166666666667,
+        43.14083333333333
+      ],
+      "label_mask_iou": [
+        0.8591920444164995,
+        0.9478757857568567
+      ],
+      "complete_proxy_model_iou": 0.7622143754351136,
+      "copy_baseline_iou": 0.7610554015896887,
+      "delta_vs_copy": 0.0011589738454249598,
+      "excluded": [
+        {
+          "from": "CL_EMSR647_NACIMIENTO_20230213_235634.tif",
+          "to": "CL_EMSR647_NACIMIENTO_20230214_021543.tif",
+          "pair_class": "too_short_delta",
+          "delta_hours": 2.319166666666667,
+          "label_mask_iou": 0.8591920444164995
+        }
+      ],
+      "schema_mode": "real_proxy_fill",
+      "compatible_with_clm_ensemble_v34": true,
+      "threshold": 0.5,
+      "in_channels": 18,
+      "architecture": "residual",
+      "target_mode": "delta",
+      "copy_safety_min_mean_outside_prob": null,
+      "growth_threshold": 0.9,
+      "require_growth_ring": true,
+      "not_claims": [
+        "not sealed transfer IoU",
+        "not GO_Q complete",
+        "not FREEZE lift",
+        "not NDWS-native stack",
+        "meteo is Open-Meteo point field (see covariates provenance)",
+        "mean excludes too_short_delta (<12h) and static_label_copy (mask IoU>0.98)"
+      ]
+    },
+    {
+      "event_id": "AU_EMSR408_NSW",
+      "ok": true,
+      "n_pairs": 3,
+      "n_pairs_used": 3,
+      "pairs": [
+        {
+          "from": "AU_EMSR408_NSW_20191114_211550.tif",
+          "to": "AU_EMSR408_NSW_20191116_181046.tif",
+          "from_kind": "delineation",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2019-11-14T21:15:50Z",
+          "to_utc": "2019-11-16T18:10:46Z",
+          "delta_hours": 44.91555555555556,
+          "label_mask_iou": 0.9199249029285014,
+          "copy_mask_iou": 0.9175493188838265,
+          "pair_class": "usable",
+          "complete_proxy_model_iou": 0.9175493188838265,
+          "n_tiles": 32,
+          "delta_vs_copy": 0.0,
+          "tile_strata": {
+            "edge": 12,
+            "interior": 10,
+            "low_density": 10,
+            "fallback_center": 0
+          },
+          "copy_safety_gate": {
+            "enabled": false,
+            "feature": "mean_growth_probability_outside_t0",
+            "min_feature": null,
+            "n_model_tiles": 32,
+            "n_copy_fallback_tiles": 0,
+            "score_min": 0.0,
+            "score_max": 0.01865231990814209
+          }
+        },
+        {
+          "from": "AU_EMSR408_NSW_20191116_181046.tif",
+          "to": "AU_EMSR408_NSW_20191118_215333.tif",
+          "from_kind": "delineation_monitoring",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2019-11-16T18:10:46Z",
+          "to_utc": "2019-11-18T21:53:33Z",
+          "delta_hours": 51.713055555555556,
+          "label_mask_iou": 0.8592498826608258,
+          "copy_mask_iou": 0.6952090404183184,
+          "pair_class": "usable",
+          "complete_proxy_model_iou": 0.6952090404183184,
+          "n_tiles": 32,
+          "delta_vs_copy": 0.0,
+          "tile_strata": {
+            "edge": 12,
+            "interior": 10,
+            "low_density": 10,
+            "fallback_center": 0
+          },
+          "copy_safety_gate": {
+            "enabled": false,
+            "feature": "mean_growth_probability_outside_t0",
+            "min_feature": null,
+            "n_model_tiles": 32,
+            "n_copy_fallback_tiles": 0,
+            "score_min": 0.0,
+            "score_max": 0.009262480773031712
+          }
+        },
+        {
+          "from": "AU_EMSR408_NSW_20191118_215333.tif",
+          "to": "AU_EMSR408_NSW_20191121_212042.tif",
+          "from_kind": "delineation_monitoring",
+          "to_kind": "delineation_monitoring",
+          "from_utc": "2019-11-18T21:53:33Z",
+          "to_utc": "2019-11-21T21:20:42Z",
+          "delta_hours": 71.4525,
+          "label_mask_iou": 0.8854797331965111,
+          "copy_mask_iou": 0.9485546702629319,
+          "pair_class": "usable",
+          "complete_proxy_model_iou": 0.9485546702629319,
+          "n_tiles": 32,
+          "delta_vs_copy": 0.0,
+          "tile_strata": {
+            "edge": 12,
+            "interior": 10,
+            "low_density": 10,
+            "fallback_center": 0
+          },
+          "copy_safety_gate": {
+            "enabled": false,
+            "feature": "mean_growth_probability_outside_t0",
+            "min_feature": null,
+            "n_model_tiles": 32,
+            "n_copy_fallback_tiles": 0,
+            "score_min": 0.0004607299342751503,
+            "score_max": 0.09623809158802032
+          }
+        }
+      ],
+      "delta_hours": [
+        44.91555555555556,
+        51.713055555555556,
+        71.4525
+      ],
+      "label_mask_iou": [
+        0.9199249029285014,
+        0.8592498826608258,
+        0.8854797331965111
+      ],
+      "complete_proxy_model_iou": 0.8537710098550256,
+      "copy_baseline_iou": 0.8537710098550256,
+      "delta_vs_copy": 0.0,
+      "excluded": [],
+      "schema_mode": "real_proxy_fill",
+      "compatible_with_clm_ensemble_v34": true,
+      "threshold": 0.5,
+      "in_channels": 18,
+      "architecture": "residual",
+      "target_mode": "delta",
+      "copy_safety_min_mean_outside_prob": null,
+      "growth_threshold": 0.9,
+      "require_growth_ring": true,
+      "not_claims": [
+        "not sealed transfer IoU",
+        "not GO_Q complete",
+        "not FREEZE lift",
+        "not NDWS-native stack",
+        "meteo is Open-Meteo point field (see covariates provenance)",
+        "mean excludes too_short_delta (<12h) and static_label_copy (mask IoU>0.98)"
+      ]
+    },
+    {
+      "event_id": "CL_EMSR715_VALPARAISO",
+      "ok": true,
+      "n_pairs": 2,
+      "n_pairs_used": 0,
+      "pairs": [
+        {
+          "from": "CL_EMSR715_VALPARAISO_20240204_200240.tif",
+          "to": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+          "from_kind": "first_estimate",
+          "to_kind": "delineation",
+          "from_utc": "2024-02-04T20:02:40Z",
+          "to_utc": "2024-02-06T16:52:36Z",
+          "delta_hours": 44.83222222222222,
+          "label_mask_iou": 0.5642428935111862,
+          "copy_mask_iou": 0.5642428935111862,
+          "pair_class": "incompatible_product_kind",
+          "complete_proxy_model_iou": null,
+          "n_tiles": 0
+        },
+        {
+          "from": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+          "to": "CL_EMSR715_VALPARAISO_20240209_140139.tif",
+          "from_kind": "delineation",
+          "to_kind": "grading",
+          "from_utc": "2024-02-06T16:52:36Z",
+          "to_utc": "2024-02-09T14:01:39Z",
+          "delta_hours": 69.15083333333334,
+          "label_mask_iou": 0.9924231070256948,
+          "copy_mask_iou": 0.9924231070256948,
+          "pair_class": "incompatible_product_kind",
+          "complete_proxy_model_iou": null,
+          "n_tiles": 0
+        }
+      ],
+      "delta_hours": [
+        44.83222222222222,
+        69.15083333333334
+      ],
+      "label_mask_iou": [
+        0.5642428935111862,
+        0.9924231070256948
+      ],
+      "complete_proxy_model_iou": null,
+      "copy_baseline_iou": null,
+      "delta_vs_copy": null,
+      "excluded": [
+        {
+          "from": "CL_EMSR715_VALPARAISO_20240204_200240.tif",
+          "to": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+          "pair_class": "incompatible_product_kind",
+          "delta_hours": 44.83222222222222,
+          "label_mask_iou": 0.5642428935111862
+        },
+        {
+          "from": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+          "to": "CL_EMSR715_VALPARAISO_20240209_140139.tif",
+          "pair_class": "incompatible_product_kind",
+          "delta_hours": 69.15083333333334,
+          "label_mask_iou": 0.9924231070256948
+        }
+      ],
+      "schema_mode": "real_proxy_fill",
+      "compatible_with_clm_ensemble_v34": true,
+      "threshold": 0.5,
+      "in_channels": 18,
+      "architecture": "residual",
+      "target_mode": "delta",
+      "copy_safety_min_mean_outside_prob": null,
+      "growth_threshold": 0.9,
+      "require_growth_ring": true,
+      "not_claims": [
+        "not sealed transfer IoU",
+        "not GO_Q complete",
+        "not FREEZE lift",
+        "not NDWS-native stack",
+        "meteo is Open-Meteo point field (see covariates provenance)",
+        "mean excludes too_short_delta (<12h) and static_label_copy (mask IoU>0.98)"
+      ]
+    }
+  ],
+  "not_claims": [
+    "not sealed transfer IoU",
+    "not experimental_partial_fill_model_iou",
+    "not GO_Q complete",
+    "not FREEZE lift",
+    "not NDWS-native stack"
+  ],
+  "rails": {
+    "go_q": "partial",
+    "freeze_intact": true,
+    "no_retrain": false,
+    "model_label": "lab_scratch_frozen_decode_seed42"
+  }
+}

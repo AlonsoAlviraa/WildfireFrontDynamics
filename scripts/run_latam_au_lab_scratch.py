@@ -17,15 +17,7 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
-    DEFAULT_EVENT_IDS,
-    EMSR_PACK_SPECS,
-    OOD_GROWTH_THRESHOLD,
-    eval_pack,
-    fire_growth_ring,
-    iter_usable_eval_tiles,
-    pack_dir_for,
-)
+from wildfire_front.ml.dataset import NpzWildfireDataset  # noqa: E402
 from wildfire_front.ml.unet_train import (  # noqa: E402
     UNetTrainConfig,
     build_model,
@@ -33,6 +25,18 @@ from wildfire_front.ml.unet_train import (  # noqa: E402
     prepare_input,
     run_training,
 )
+from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
+    DEFAULT_EVENT_IDS,
+    EMSR_PACK_SPECS,
+    OOD_GROWTH_THRESHOLD,
+    binary_iou,
+    decode_complete_proxy_pred,
+    eval_pack,
+    fire_growth_ring,
+    iter_usable_eval_tiles,
+    pack_dir_for,
+)
+
 
 DEFAULT_DATA = ROOT / "artifacts" / "mega_goal_model" / "lab_scratch_dataset"
 DEFAULT_INIT = ROOT / "models" / "clm_ensemble" / "weights_multi_if.pt"

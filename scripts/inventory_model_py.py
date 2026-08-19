@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "outputs" / "ml_eval" / "mega_goal_model" / "INVENTORY.json"
 FINAL_STATUSES = {"audited_ok", "bug_fixed", "out_of_perf", "blocked"}

@@ -1,0 +1,16 @@
+{
+  "schema": "wfd_conaf_send_status_public_v1",
+  "as_of_utc": "2026-08-13T11:39:05Z",
+  "status": "external_request_dispatched",
+  "delivery_channel": "public_agency_contact",
+  "personal_sender_redacted": true,
+  "message_identifiers_redacted": true,
+  "rails": {
+    "go_q": "partial",
+    "freeze_intact": true,
+    "lab_ok_conaf": false,
+    "no_auto_send": true
+  },
+  "cession": null,
+  "note": "Public repository snapshot; operational mailbox metadata remains local."
+}

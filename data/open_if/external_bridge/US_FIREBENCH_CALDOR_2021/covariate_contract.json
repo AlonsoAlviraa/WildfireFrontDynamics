@@ -1,0 +1,117 @@
+{
+  "schema": "wfd_caldor_clean17_physical_contract_v1",
+  "event_id": "US_FIREBENCH_CALDOR_2021",
+  "status": "clean17_temporal_pass_holdout_only_training_required",
+  "target_model_contract": "clean17_physical_v1_plus_prev_fire",
+  "channel_order": [
+    "slope_rad",
+    "aspect_rad",
+    "max_temperature_c",
+    "min_temperature_c",
+    "wind_speed_ms",
+    "wind_direction_deg",
+    "precipitation_mm_24h",
+    "surface_pressure_hpa",
+    "relative_humidity_pct",
+    "total_cloud_cover_pct",
+    "visibility_km",
+    "dew_point_c",
+    "canopy_height_m",
+    "canopy_base_height_m",
+    "canopy_bulk_density_kg_m3",
+    "canopy_presence",
+    "erc_g"
+  ],
+  "target_grid": {
+    "crs": "EPSG:32610",
+    "gsd_m": 30.0,
+    "width": 2199,
+    "height": 1302
+  },
+  "sources": [
+    {
+      "role": "terrain",
+      "provider": "USGS 3DEP",
+      "product": "1/3 arc-second bare-earth DEM",
+      "url": "https://data.usgs.gov/datacatalog/data/USGS:3a81321b-c153-416f-98b7-cc8e5f0e17c3",
+      "rights": "public_domain",
+      "derived_channels": ["slope", "aspect"],
+      "time_rule": "static; record source tile edition and checksum"
+    },
+    {
+      "role": "forecast_weather",
+      "provider": "NOAA",
+      "product": "HRRR surface archive",
+      "url": "https://rapidrefresh.noaa.gov/hrrr/",
+      "rights": "open_public_noaa",
+      "derived_channels": [
+        "max_temperature",
+        "min_temperature",
+        "wind_speed",
+        "wind_direction",
+        "precipitation",
+        "pressure",
+        "humidity",
+        "cloud_cover",
+        "visibility",
+        "dew_point"
+      ],
+      "time_rule": "only a forecast cycle initialized at or before perimeter t0; preserve cycle and lead time"
+    },
+    {
+      "role": "fuel_and_vegetation",
+      "provider": "USGS/USFS LANDFIRE",
+      "product": "pre-fire vegetation/fuels release, 30 m",
+      "url": "https://landfire.gov/data",
+      "rights": "public_domain",
+      "derived_channels": [
+        "canopy_height_m",
+        "canopy_base_height_m",
+        "canopy_bulk_density_kg_m3",
+        "canopy_presence"
+      ],
+      "time_rule": "release and source imagery must predate 2021-08-14; never use a layer incorporating Caldor disturbance"
+    },
+    {
+      "role": "fire_danger",
+      "provider": "Climatology Lab",
+      "product": "gridMET Energy Release Component",
+      "url": "https://www.climatologylab.org/gridmet.html",
+      "rights": "cc0_or_no_known_copyright_restrictions",
+      "derived_channels": ["erc_or_drought"],
+      "time_rule": "use only the latest daily value that would have been published by t0; record vintage and preliminary status"
+    }
+  ],
+  "alignment_rules": {
+    "continuous_resampling": "bilinear",
+    "categorical_resampling": "nearest",
+    "all_outputs_must_match_target_grid_exactly": true,
+    "nodata_must_be_explicit": true,
+    "per_channel_sha256_required": true,
+    "source_url_and_retrieved_at_required": true
+  },
+  "leakage_guards": {
+    "forecast_initialization_must_be_lte_t0": true,
+    "post_fire_outcomes_forbidden_as_inputs": [
+      "MTBS final severity/perimeter",
+      "RAVG mortality and canopy outcomes",
+      "cumulative perimeter at t1 or later",
+      "LANDFIRE releases incorporating the Caldor disturbance"
+    ],
+    "labels_may_only_enter_prev_fire_and_target_fields": true,
+    "neutral_or_zero_placeholder_channels_forbidden": true,
+    "split_by_event_before_patch_sampling": true
+  },
+  "acceptance": {
+    "required_real_channels": 17,
+    "current_real_compatible_channels": 17,
+    "spatial_materialization_ready": true,
+    "temporal_availability_ready": true,
+    "clean17_covariates_ready": true,
+    "legacy17_checkpoint_compatible": false,
+    "model_inference_allowed": false,
+    "model_iou_allowed": false,
+    "blocking_temporal_findings": [],
+    "unlock_condition": "train a clean17-native checkpoint on a multi-fire CONUS corpus; keep Caldor as one-fire external holdout; never reuse legacy17 weights"
+  }
+}

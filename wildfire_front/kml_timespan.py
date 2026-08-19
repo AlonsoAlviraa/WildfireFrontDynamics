@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from xml.etree import ElementTree as ET
 
@@ -55,12 +55,12 @@ def local_cest_to_utc(instant: datetime) -> datetime:
     """Treat naive datetimes as CEST; convert to UTC."""
     if instant.tzinfo is None:
         instant = instant.replace(tzinfo=CEST)
-    return instant.astimezone(UTC)
+    return instant.astimezone(timezone.utc)
 
 
 def kml_z(dt: datetime) -> str:
     """XML Schema dateTime in UTC with Z suffix."""
-    utc = dt.astimezone(UTC) if dt.tzinfo else dt.replace(tzinfo=UTC)
+    utc = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
     return utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -90,11 +90,10 @@ def contiguous_timespans(instants_utc: list[datetime]) -> list[tuple[datetime, d
         return [(ordered[0], ordered[0] + hold)]
     spans: list[tuple[datetime, datetime]] = []
     for i, t0 in enumerate(ordered):
-        t1 = (
-            ordered[i + 1]
-            if i + 1 < len(ordered)
-            else ordered[i] + (ordered[i] - ordered[i - 1])
-        )
+        if i + 1 < len(ordered):
+            t1 = ordered[i + 1]
+        else:
+            t1 = ordered[i] + (ordered[i] - ordered[i - 1])
         if t1 <= t0:
             t1 = t0 + timedelta(seconds=1)
         spans.append((t0, t1))
@@ -458,7 +457,7 @@ def timed_rings_from_ops(perims: list[Any]) -> list[TimedRing]:
             TimedRing(
                 name=name,
                 instant_local=instant,
-                ring_lonlat=tuple(p.coords_wgs84),
+                ring_lonlat=tuple(getattr(p, "coords_wgs84")),
                 role=ROLE_PERIMETER,
                 properties={
                     "sup_ha": getattr(p, "sup_ha", None),

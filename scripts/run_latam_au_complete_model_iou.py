@@ -692,7 +692,10 @@ def main(argv: list[str] | None = None) -> int:
     model.eval()
 
     known = {**EMSR_PACK_SPECS, **WEAK_PACK_SPECS}
-    ids = list(args.event_ids) if args.event_ids else list(DEFAULT_EVENT_IDS)
+    if args.event_ids:
+        ids = list(args.event_ids)
+    else:
+        ids = list(DEFAULT_EVENT_IDS)
     rows: list[dict[str, Any]] = []
     all_ious: list[float] = []
     all_copy_ious: list[float] = []

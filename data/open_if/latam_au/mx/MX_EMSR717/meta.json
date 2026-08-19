@@ -1,0 +1,294 @@
+{
+  "schema": "wfd_open_if_pack_meta_v1",
+  "event_id": "MX_EMSR717",
+  "region": "mx",
+  "country": "MX",
+  "activation": "EMSR717",
+  "aoi": "AOI01",
+  "aoi_name": "Benito Juarez",
+  "year": 2024,
+  "class": "ml_weak",
+  "label_level": "L2_proxy",
+  "license_id": "copernicus_ems_reg_2021_696_open",
+  "rights_doc": "docs/data_campaigns/LATAM_AU_RIGHTS.md",
+  "portal_url": "https://mapping.emergency.copernicus.eu/activations/EMSR717/",
+  "crs": "EPSG:32615",
+  "gsd_m": 30.0,
+  "sensor": "CEMS Rapid Mapping observedEvent (rasterized vector)",
+  "geotiff_origin": "rasterized_cems_vector+stac_s2_nbr",
+  "native_cems_geotiff_listed": false,
+  "dates": [
+    "2024-04-09T06:30:59Z",
+    "2024-04-11T23:28:18Z",
+    "2024-04-18T22:15:08Z"
+  ],
+  "geotiffs": [
+    {
+      "rel": "labels/MX_EMSR717_20240409_063059.tif",
+      "file": "MX_EMSR717_20240409_063059.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_PRODUCT",
+      "kind": "delineation",
+      "delivery_utc": "2024-04-09T06:30:59Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR717/AOI01/DEL_PRODUCT/EMSR717_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "source_zip": "EMSR717_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "source_member": "EMSR717_AOI01_DEL_PRODUCT_observedEventA_v2.json",
+      "area_ha": 15256.449851503436,
+      "sha256": "ed9d0818a121c30b46b8103f32bb23d495d1001d932cf2107ae4dfe39233a54d",
+      "bytes": 12614,
+      "crs": "EPSG:32615",
+      "gsd_m": 30.0,
+      "width": 755,
+      "height": 775,
+      "positive_pixels": 178615
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240411_232818.tif",
+      "file": "MX_EMSR717_20240411_232818.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "DEL_MONIT05",
+      "kind": "delineation_monitoring",
+      "delivery_utc": "2024-04-11T23:28:18Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR717/AOI01/DEL_MONIT05/EMSR717_AOI01_DEL_MONIT05_observedEventA_v1.json",
+      "source_zip": "EMSR717_AOI01_DEL_MONIT05_observedEventA_v1.json",
+      "source_member": "EMSR717_AOI01_DEL_MONIT05_observedEventA_v1.json",
+      "area_ha": 16663.1941688034,
+      "sha256": "c25589229b5dd8410edce796867afb903b1b781b354aadb48384be52fc8ffcc0",
+      "bytes": 13560,
+      "crs": "EPSG:32615",
+      "gsd_m": 30.0,
+      "width": 755,
+      "height": 775,
+      "positive_pixels": 194598
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240418_221508.tif",
+      "file": "MX_EMSR717_20240418_221508.tif",
+      "role": "label_burned_cems_rasterized",
+      "product_id": "GRA_PRODUCT",
+      "kind": "grading",
+      "delivery_utc": "2024-04-18T22:15:08Z",
+      "source_url": "https://rapidmapping-viewer.s3.eu-west-1.amazonaws.com/EMSR717/AOI01/GRA_PRODUCT/EMSR717_AOI01_GRA_PRODUCT_observedEventA_v1.json",
+      "source_zip": "EMSR717_AOI01_GRA_PRODUCT_observedEventA_v1.json",
+      "source_member": "EMSR717_AOI01_GRA_PRODUCT_observedEventA_v1.json",
+      "area_ha": 17061.00454572874,
+      "sha256": "b9622aa9a9b55a479a2a27cd00e51150e9f81b5c42f428d4ba117488c38f83e9",
+      "bytes": 13720,
+      "crs": "EPSG:32615",
+      "gsd_m": 30.0,
+      "width": 755,
+      "height": 775,
+      "positive_pixels": 199052
+    },
+    {
+      "rel": "eo/MX_EMSR717_S2NBR_20240330_165903.tif",
+      "file": "MX_EMSR717_S2NBR_20240330_165903.tif",
+      "role": "eo_s2_nbr_pre",
+      "delivery_utc": "2024-03-30T16:59:03.663000Z",
+      "sha256": "b827069b603c34ea712dd01f8621797e9d8b0eed787a3007fdaa6901779ef049",
+      "bytes": 238080,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/MX_EMSR717_S2NBR_20240409_165903.tif",
+      "file": "MX_EMSR717_S2NBR_20240409_165903.tif",
+      "role": "eo_s2_nbr_mid",
+      "delivery_utc": "2024-04-09T16:59:03.819000Z",
+      "sha256": "4d9c6bf8b9416e31436cd9bc14635f12b1f7d31834769967bb46df363e9eddc4",
+      "bytes": 240059,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo/MX_EMSR717_S2NBR_20240419_165905.tif",
+      "file": "MX_EMSR717_S2NBR_20240419_165905.tif",
+      "role": "eo_s2_nbr_post",
+      "delivery_utc": "2024-04-19T16:59:05.026000Z",
+      "sha256": "0b154fc993b11ed749623327cb83a847f1247fef7a457b3958d66a34cc46d384",
+      "bytes": 239549,
+      "crs": "EPSG:4326",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "rel": "eo_aligned/MX_EMSR717_S2NBR_20240330_165903_to_cems.tif",
+      "file": "MX_EMSR717_S2NBR_20240330_165903_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32615",
+      "warp": {
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240330_165903.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/MX_EMSR717_S2NBR_20240409_165903_to_cems.tif",
+      "file": "MX_EMSR717_S2NBR_20240409_165903_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32615",
+      "warp": {
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240409_165903.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    },
+    {
+      "rel": "eo_aligned/MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+      "file": "MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+      "role": "eo_s2_nbr_aligned_to_cems",
+      "crs": "EPSG:32615",
+      "warp": {
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240419_165905.tif",
+        "src_crs": "EPSG:4326",
+        "tool": "rasterio.warp.reproject"
+      }
+    }
+  ],
+  "labels": [
+    {
+      "rel": "labels/MX_EMSR717_20240409_063059.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR717_AOI01_DEL_PRODUCT_observedEventA_v2.json"
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240409_063059.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240411_232818.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR717_AOI01_DEL_MONIT05_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240411_232818.geojson",
+      "kind": "cems_observed_event_geojson"
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240418_221508.tif",
+      "kind": "cems_observed_event_raster",
+      "vector_member": "EMSR717_AOI01_GRA_PRODUCT_observedEventA_v1.json"
+    },
+    {
+      "rel": "labels/MX_EMSR717_20240418_221508.geojson",
+      "kind": "cems_observed_event_geojson"
+    }
+  ],
+  "not_national_cadastre": true,
+  "not_o2_es": true,
+  "not_lwir": true,
+  "not_grade_a": true,
+  "not_tactical_ros": true,
+  "lab_ok_provisional": true,
+  "built_at_utc": "2026-08-18T13:42:35.609235Z",
+  "bbox_wgs84": [
+    -94.19343752299994,
+    16.664465278000023,
+    -93.99189953799998,
+    16.86321616500004
+  ],
+  "n_geotiff": 6,
+  "stac_eo": [
+    {
+      "role": "eo_s2_nbr_pre",
+      "range": "2024-03-16T00:00:00Z/2024-03-30T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/MX_EMSR717_S2NBR_20240330_165903.tif",
+      "file": "MX_EMSR717_S2NBR_20240330_165903.tif",
+      "datetime": "2024-03-30T16:59:03.663000Z",
+      "item_id": "S2B_15QUU_20240330_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 238080,
+      "sha256": "b827069b603c34ea712dd01f8621797e9d8b0eed787a3007fdaa6901779ef049",
+      "cloud_cover": 0.095882,
+      "nbr_meta": {
+        "item_id": "S2B_15QUU_20240330_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "role": "eo_s2_nbr_mid",
+      "range": "2024-03-31T00:00:00Z/2024-04-14T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/MX_EMSR717_S2NBR_20240409_165903.tif",
+      "file": "MX_EMSR717_S2NBR_20240409_165903.tif",
+      "datetime": "2024-04-09T16:59:03.819000Z",
+      "item_id": "S2B_15QUU_20240409_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 240059,
+      "sha256": "4d9c6bf8b9416e31436cd9bc14635f12b1f7d31834769967bb46df363e9eddc4",
+      "cloud_cover": 1.475413,
+      "nbr_meta": {
+        "item_id": "S2B_15QUU_20240409_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    },
+    {
+      "role": "eo_s2_nbr_post",
+      "range": "2024-04-15T00:00:00Z/2024-04-29T23:59:59Z",
+      "status": "ok",
+      "rel": "eo/MX_EMSR717_S2NBR_20240419_165905.tif",
+      "file": "MX_EMSR717_S2NBR_20240419_165905.tif",
+      "datetime": "2024-04-19T16:59:05.026000Z",
+      "item_id": "S2B_15QUU_20240419_0_L2A",
+      "sensor": "Sentinel-2 L2A (windowed NBR)",
+      "crs": "EPSG:4326",
+      "bytes": 239549,
+      "sha256": "0b154fc993b11ed749623327cb83a847f1247fef7a457b3958d66a34cc46d384",
+      "cloud_cover": 13.852884,
+      "nbr_meta": {
+        "item_id": "S2B_15QUU_20240419_0_L2A"
+      },
+      "s2_role_assigned_by": "datetime"
+    }
+  ],
+  "warp_s2_to_cems": {
+    "as_of_utc": "2026-08-18T13:42:41Z",
+    "schema": "wfd_latam_au_s2_warp_v1",
+    "reference_label": "labels/MX_EMSR717_20240409_063059.tif",
+    "n_warped": 3,
+    "n_s2_sources": 3,
+    "aligned_dir": "eo_aligned",
+    "tool": "rasterio.warp.reproject",
+    "resampling": "bilinear",
+    "files": [
+      {
+        "rel": "eo_aligned/MX_EMSR717_S2NBR_20240330_165903_to_cems.tif",
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240330_165903.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32615"
+      },
+      {
+        "rel": "eo_aligned/MX_EMSR717_S2NBR_20240409_165903_to_cems.tif",
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240409_165903.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32615"
+      },
+      {
+        "rel": "eo_aligned/MX_EMSR717_S2NBR_20240419_165905_to_cems.tif",
+        "source_rel": "eo/MX_EMSR717_S2NBR_20240419_165905.tif",
+        "src_crs": "EPSG:4326",
+        "dst_crs": "EPSG:32615"
+      }
+    ],
+    "proxy": {
+      "metric": "nbr_vs_cems_iou",
+      "nbr_vs_cems_iou": 0.3447539232602087,
+      "status": "measured",
+      "threshold": 0.0,
+      "threshold_source": "held_out_label_sweep_frozen",
+      "low_iou_reason": null,
+      "s2_pair_rule": "datetime_after_last_label"
+    }
+  },
+  "ndws_covariates": {
+    "schema": "wfd_latam_au_ndws_covariates_v1",
+    "as_of_utc": "2026-08-18T18:05:41Z",
+    "ready_for_real_proxy_ndws": true,
+    "rel": "covariates/PROVENANCE.json"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:05:43Z",
+  "event_id": "AU_EMSR500_PERTH",
+  "label_ref": "labels/AU_EMSR500_PERTH_20210205_203225.tif",
+  "shape": [
+    378,
+    1012
+  ],
+  "crs": "EPSG:32750",
+  "meteo": {
+    "status": "ok",
+    "source": "weather/open_meteo_era5_archive.json",
+    "elevation_m_point": 218.0,
+    "temperature_c_mean": 26.8,
+    "humidity_pct_mean": 36.0,
+    "wind_speed_ms_mean": 4.388888888888889,
+    "wind_speed_kmh_mean": 15.8,
+    "wind_dir_deg_mean": 66.0,
+    "precip_mm_mean": 0.0,
+    "n_hourly": 216,
+    "not_cds_era5_land_native": true,
+    "meteo_spatial": "constant_point",
+    "spatial": "constant_point",
+    "sample": "label_timestamp_nearest_hour",
+    "sample_at": "2021-02-13T02:00",
+    "gridded": false
+  },
+  "meteo_spatial": "constant_point",
+  "meteo_by_label": [
+    {
+      "label": "AU_EMSR500_PERTH_20210205_203225.tif",
+      "delivery_utc": "2021-02-05T20:32:25Z",
+      "sample_at": "2021-02-05T21:00",
+      "temperature_c": 16.6,
+      "humidity_pct": 58.0,
+      "wind_speed_ms": 6.472222222222222,
+      "wind_dir_deg": 107.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "AU_EMSR500_PERTH_20210211_170324.tif",
+      "delivery_utc": "2021-02-11T17:03:24Z",
+      "sample_at": "2021-02-11T17:00",
+      "temperature_c": 15.7,
+      "humidity_pct": 62.0,
+      "wind_speed_ms": 4.888888888888889,
+      "wind_dir_deg": 121.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "AU_EMSR500_PERTH_20210213_022304.tif",
+      "delivery_utc": "2021-02-13T02:23:04Z",
+      "sample_at": "2021-02-13T02:00",
+      "temperature_c": 26.8,
+      "humidity_pct": 36.0,
+      "wind_speed_ms": 4.388888888888889,
+      "wind_dir_deg": 66.0,
+      "precip_mm": 0.0
+    }
+  ],
+  "dem": {
+    "status": "reused",
+    "rel": "covariates/elevation_m.tif"
+  },
+  "vegetation": {
+    "status": "ok",
+    "rel": "covariates/vegetation_proxy.tif",
+    "nbr_rel": "covariates/s2_nbr_aligned.tif",
+    "mapping": "veg = clip((nbr+1)/2, 0, 1) from pre-fire NBR",
+    "veg_mean": 0.5607224106788635,
+    "nbr_pick_rule": "datetime_before_first_label",
+    "nbr_source_rel": "eo_aligned/AU_EMSR500_PERTH_S2NBR_20210121_022636_to_cems.tif",
+    "source": "s2_nbr"
+  },
+  "meteo_fields": [
+    "covariates/temperature_c.tif",
+    "covariates/humidity_pct.tif",
+    "covariates/wind_speed_ms.tif",
+    "covariates/wind_dir_deg.tif",
+    "covariates/precip_mm.tif"
+  ],
+  "channels_ready": {
+    "meteo": true,
+    "dem": true,
+    "veg": true,
+    "lst": true,
+    "harmonic_ndvi": true
+  },
+  "not_claims": [
+    "not NDWS-native multi-band stack",
+    "not CDS ERA5-Land native",
+    "not transfer IoU",
+    "meteo_spatial=constant_point (Open-Meteo archive is a point, not a grid)",
+    "veg is S2 NBR proxy not NDVI training covariate",
+    "LST sidecar is not Open-Meteo t2m / not written to temperature_c.tif"
+  ],
+  "ready_for_real_proxy_ndws": true
+}

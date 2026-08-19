@@ -17,15 +17,15 @@ from wildfire_front.open_if.modis_ee import (  # noqa: E402
     ANNUAL_TAU_MS,
     EE_UNAVAILABLE,
     LST_COLLECTION,
-    MIN_LST_COVERAGE,
     N_HARMONICS,
     NDVI_COLLECTION,
     NDVI_COLLECTION_FLAMEFORECAST,
     EarthEngineUnavailable,
-    _finite_in_range_frac,
-    _reproject_geotiff_bytes,
     apply_harmonic_coefs,
     array_from_sample_rectangle,
+    MIN_LST_COVERAGE,
+    _finite_in_range_frac,
+    _reproject_geotiff_bytes,
     empty_lst_point_doc,
     fetch_harmonic_ndvi,
     fetch_lst_point,
@@ -204,67 +204,67 @@ class _FakeImg:
     def __init__(self, payload: object | None = None) -> None:
         self.payload = payload
 
-    def select(self, *_a: object, **_k: object) -> _FakeImg:
+    def select(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def updateMask(self, *_a: object, **_k: object) -> _FakeImg:
+    def updateMask(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def multiply(self, *_a: object, **_k: object) -> _FakeImg:
+    def multiply(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def subtract(self, *_a: object, **_k: object) -> _FakeImg:
+    def subtract(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def add(self, *_a: object, **_k: object) -> _FakeImg:
+    def add(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def addBands(self, *_a: object, **_k: object) -> _FakeImg:
+    def addBands(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def rename(self, *_a: object, **_k: object) -> _FakeImg:
+    def rename(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def toFloat(self) -> _FakeImg:
+    def toFloat(self) -> "_FakeImg":
         return self
 
-    def clip(self, *_a: object, **_k: object) -> _FakeImg:
+    def clip(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def cos(self) -> _FakeImg:
+    def cos(self) -> "_FakeImg":
         return self
 
-    def sin(self) -> _FakeImg:
+    def sin(self) -> "_FakeImg":
         return self
 
-    def bitwiseAnd(self, *_a: object, **_k: object) -> _FakeImg:
+    def bitwiseAnd(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def eq(self, *_a: object, **_k: object) -> _FakeImg:
+    def eq(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def Or(self, *_a: object, **_k: object) -> _FakeImg:
+    def Or(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def copyProperties(self, *_a: object, **_k: object) -> _FakeImg:
+    def copyProperties(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
     def sampleRectangle(self, **_k: object) -> _Info:
         return _Info(self.payload)
 
-    def reduce(self, *_a: object, **_k: object) -> _FakeImg:
+    def reduce(self, *_a: object, **_k: object) -> "_FakeImg":
         raise RuntimeError("force_monthly_fallback")
 
-    def arrayProject(self, *_a: object, **_k: object) -> _FakeImg:
+    def arrayProject(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def arrayFlatten(self, *_a: object, **_k: object) -> _FakeImg:
+    def arrayFlatten(self, *_a: object, **_k: object) -> "_FakeImg":
         return self
 
-    def median(self) -> _FakeImg:
+    def median(self) -> "_FakeImg":
         return self
 
-    def map(self, fn: object) -> _FakeImg:
+    def map(self, fn: object) -> "_FakeImg":
         return self
 
 
@@ -273,10 +273,10 @@ class _FakeCol(_FakeImg):
         super().__init__(payload)
         self.name = name
 
-    def filterDate(self, *_a: object, **_k: object) -> _FakeCol:
+    def filterDate(self, *_a: object, **_k: object) -> "_FakeCol":
         return self
 
-    def filterBounds(self, *_a: object, **_k: object) -> _FakeCol:
+    def filterBounds(self, *_a: object, **_k: object) -> "_FakeCol":
         return self
 
     def getRegion(self, *_a: object, **_k: object) -> _Info:
@@ -582,11 +582,7 @@ def test_cli_missing_pack_live_exit_1(tmp_path: Path, monkeypatch: pytest.Monkey
 def _mini_fill_pack(tmp_path: Path, event_id: str = "AU_EMSR500_PERTH") -> Path:
     from shapely.geometry import Polygon
 
-    from wildfire_front.open_if.latam_au import (
-        EMSR_PACK_SPECS,
-        pack_dir_for,
-        rasterize_geom_to_geotiff,
-    )
+    from wildfire_front.open_if.latam_au import EMSR_PACK_SPECS, pack_dir_for, rasterize_geom_to_geotiff
 
     spec = EMSR_PACK_SPECS[event_id]
     pack = pack_dir_for(tmp_path / "latam_au", spec)

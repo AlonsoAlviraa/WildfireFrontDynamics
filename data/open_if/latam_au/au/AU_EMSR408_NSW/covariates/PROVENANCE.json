@@ -1,0 +1,109 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:05:43Z",
+  "event_id": "AU_EMSR408_NSW",
+  "label_ref": "labels/AU_EMSR408_NSW_20191114_211550.tif",
+  "shape": [
+    474,
+    433
+  ],
+  "crs": "EPSG:32756",
+  "meteo": {
+    "status": "ok",
+    "source": "weather/open_meteo_era5_archive.json",
+    "elevation_m_point": 1040.0,
+    "temperature_c_mean": 19.8,
+    "humidity_pct_mean": 36.0,
+    "wind_speed_ms_mean": 4.694444444444444,
+    "wind_speed_kmh_mean": 16.9,
+    "wind_dir_deg_mean": 358.0,
+    "precip_mm_mean": 0.0,
+    "n_hourly": 192,
+    "not_cds_era5_land_native": true,
+    "meteo_spatial": "constant_point",
+    "spatial": "constant_point",
+    "sample": "label_timestamp_nearest_hour",
+    "sample_at": "2019-11-21T21:00",
+    "gridded": false
+  },
+  "meteo_spatial": "constant_point",
+  "meteo_by_label": [
+    {
+      "label": "AU_EMSR408_NSW_20191114_211550.tif",
+      "delivery_utc": "2019-11-14T21:15:50Z",
+      "sample_at": "2019-11-14T21:00",
+      "temperature_c": 12.8,
+      "humidity_pct": 43.0,
+      "wind_speed_ms": 0.8611111111111112,
+      "wind_dir_deg": 306.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "AU_EMSR408_NSW_20191116_181046.tif",
+      "delivery_utc": "2019-11-16T18:10:46Z",
+      "sample_at": "2019-11-16T18:00",
+      "temperature_c": 9.4,
+      "humidity_pct": 98.0,
+      "wind_speed_ms": 1.6944444444444442,
+      "wind_dir_deg": 62.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "AU_EMSR408_NSW_20191118_215333.tif",
+      "delivery_utc": "2019-11-18T21:53:33Z",
+      "sample_at": "2019-11-18T22:00",
+      "temperature_c": 20.3,
+      "humidity_pct": 26.0,
+      "wind_speed_ms": 2.0833333333333335,
+      "wind_dir_deg": 235.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "AU_EMSR408_NSW_20191121_212042.tif",
+      "delivery_utc": "2019-11-21T21:20:42Z",
+      "sample_at": "2019-11-21T21:00",
+      "temperature_c": 19.8,
+      "humidity_pct": 36.0,
+      "wind_speed_ms": 4.694444444444444,
+      "wind_dir_deg": 358.0,
+      "precip_mm": 0.0
+    }
+  ],
+  "dem": {
+    "status": "reused",
+    "rel": "covariates/elevation_m.tif"
+  },
+  "vegetation": {
+    "status": "ok",
+    "rel": "covariates/vegetation_proxy.tif",
+    "nbr_rel": "covariates/s2_nbr_aligned.tif",
+    "mapping": "veg = clip((nbr+1)/2, 0, 1) from pre-fire NBR",
+    "veg_mean": 0.4971263110637665,
+    "nbr_pick_rule": "datetime_before_first_label",
+    "nbr_source_rel": "eo_aligned/AU_EMSR408_NSW_S2NBR_20191106_000524_to_cems.tif",
+    "source": "s2_nbr"
+  },
+  "meteo_fields": [
+    "covariates/temperature_c.tif",
+    "covariates/humidity_pct.tif",
+    "covariates/wind_speed_ms.tif",
+    "covariates/wind_dir_deg.tif",
+    "covariates/precip_mm.tif"
+  ],
+  "channels_ready": {
+    "meteo": true,
+    "dem": true,
+    "veg": true,
+    "lst": true,
+    "harmonic_ndvi": true
+  },
+  "not_claims": [
+    "not NDWS-native multi-band stack",
+    "not CDS ERA5-Land native",
+    "not transfer IoU",
+    "meteo_spatial=constant_point (Open-Meteo archive is a point, not a grid)",
+    "veg is S2 NBR proxy not NDVI training covariate",
+    "LST sidecar is not Open-Meteo t2m / not written to temperature_c.tif"
+  ],
+  "ready_for_real_proxy_ndws": true
+}

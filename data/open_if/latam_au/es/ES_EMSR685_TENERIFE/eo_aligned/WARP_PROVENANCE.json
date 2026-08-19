@@ -1,0 +1,104 @@
+{
+  "schema": "wfd_latam_au_s2_warp_v1",
+  "as_of_utc": "2026-08-18T13:41:28Z",
+  "event_id": "ES_EMSR685_TENERIFE",
+  "tool": "rasterio.warp.reproject",
+  "resampling": "bilinear",
+  "reference_label": "labels/ES_EMSR685_TENERIFE_20230819_045000.tif",
+  "reference_crs": "EPSG:32628",
+  "warped": [
+    {
+      "dest": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230808_115346_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32628",
+      "width": 766,
+      "height": 659,
+      "finite_pixels": 449763,
+      "nan_frac": 0.10901674742568257,
+      "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230808_115346.tif",
+      "role": "eo_s2_nbr_pre",
+      "aligned_rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230808_115346_to_cems.tif",
+      "skipped": false
+    },
+    {
+      "dest": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32628",
+      "width": 766,
+      "height": 659,
+      "finite_pixels": 449763,
+      "nan_frac": 0.10901674742568257,
+      "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230813_115347.tif",
+      "role": "eo_s2_nbr_mid",
+      "aligned_rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230813_115347_to_cems.tif",
+      "skipped": false
+    },
+    {
+      "dest": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+      "src_crs": "EPSG:4326",
+      "dst_crs": "EPSG:32628",
+      "width": 766,
+      "height": 659,
+      "finite_pixels": 449763,
+      "nan_frac": 0.10901674742568257,
+      "source_rel": "eo/ES_EMSR685_TENERIFE_S2NBR_20230907_115346.tif",
+      "role": "eo_s2_nbr_post",
+      "aligned_rel": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+      "skipped": false,
+      "pair_rule": "datetime_after_last_label"
+    }
+  ],
+  "warp_errors": [],
+  "n_s2_sources": 3,
+  "n_warped": 3,
+  "n_skipped_existing": 0,
+  "gc_removed": [],
+  "proxy_metric": {
+    "status": "measured",
+    "metric": "nbr_vs_cems_iou",
+    "nbr_vs_cems_iou": 0.3625466811227563,
+    "threshold": -0.05,
+    "threshold_rule": "nbr < thr (default thr=-0.1) on warped grid",
+    "pred_pos_frac": 0.21033134308252474,
+    "label_pos_frac": 0.2826043891171448,
+    "honesty": [
+      "Proxy NBR threshold IoU after audited warp \u2014 not model IoU",
+      "not transfer IoU",
+      "not O2 / CONAF official",
+      "threshold is lab default, not agency-calibrated"
+    ],
+    "threshold_source": "held_out_label_sweep_frozen",
+    "threshold_sweep": [
+      {
+        "threshold": -0.2,
+        "holdout_iou": 0.10061729700019026,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.15,
+        "holdout_iou": 0.12959923867973083,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.1,
+        "holdout_iou": 0.15357321253251116,
+        "status": "measured"
+      },
+      {
+        "threshold": -0.05,
+        "holdout_iou": 0.1548195907252413,
+        "status": "measured"
+      },
+      {
+        "threshold": 0.0,
+        "holdout_iou": 0.15289186747620748,
+        "status": "measured"
+      }
+    ],
+    "s2_pair_rule": "datetime_after_last_label",
+    "low_iou_reason": null
+  },
+  "label_for_metric": "labels/ES_EMSR685_TENERIFE_20230826_233000.tif",
+  "nbr_source_aligned": "eo_aligned/ES_EMSR685_TENERIFE_S2NBR_20230907_115346_to_cems.tif",
+  "s2_pair_rule": "datetime_after_last_label"
+}

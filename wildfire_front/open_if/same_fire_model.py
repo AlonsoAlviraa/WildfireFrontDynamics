@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import urllib.parse
 import urllib.request
-from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -469,15 +468,19 @@ def _rasterize_observed_or_stream(
             obs = None
         geom = obs.get("geometry") if obs else None
         if geom is not None and not getattr(geom, "is_empty", True):
-            with suppress(Exception):
+            try:
                 geom = geom.simplify(0.0008, preserve_topology=True)
+            except Exception:  # noqa: BLE001
+                pass
             try:
                 geom_m = _project_wgs84(geom, epsg)
             except Exception:  # noqa: BLE001
                 geom_m = None
             if geom_m is not None and not getattr(geom_m, "is_empty", True):
-                with suppress(Exception):
+                try:
                     geom_m = geom_m.simplify(8.0, preserve_topology=True)
+                except Exception:  # noqa: BLE001
+                    pass
                 return _rasterize_projected(geom_m, transform_aff, height, width).astype(np.float32)
         return None
     return _rasterize_geojson_path(path, transform_aff, height, width, epsg)
@@ -505,8 +508,10 @@ def _rasterize_geojson_path(
             continue
         if geom_m is None or getattr(geom_m, "is_empty", True):
             continue
-        with suppress(Exception):
+        try:
             geom_m = geom_m.simplify(2.0, preserve_topology=True)
+        except Exception:  # noqa: BLE001
+            pass
         batch.append((geom_m, 1))
         n_ok += 1
         if n_ok >= max_features:

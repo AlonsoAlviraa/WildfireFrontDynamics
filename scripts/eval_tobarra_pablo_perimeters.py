@@ -507,7 +507,7 @@ def build_report(
         "fire_id": "tobarra_20240802",
         "incident_code": "2024020124",
         "source_drop": repo_relative_path(drop_dir),
-        "source_contact": "GEACAM-CMA (private transfer contact omitted)",
+        "source_contact": "pablo.arroyobretano@geacam.com / GEACAM-CMA",
         "received_date": "2026-07-30",
         "product_class": "operational_active_perimeter",
         "clock_model": _clock_model_doc(),

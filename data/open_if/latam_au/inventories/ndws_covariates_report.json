@@ -1,0 +1,31 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:08:23Z",
+  "n": 1,
+  "n_ok": 1,
+  "n_ready": 1,
+  "packs": [
+    {
+      "event_id": "BO_EMSR765",
+      "ok": true,
+      "ready_for_real_proxy_ndws": true,
+      "channels_ready": {
+        "meteo": true,
+        "dem": true,
+        "veg": true,
+        "lst": true,
+        "harmonic_ndvi": true
+      },
+      "dem_status": "reused",
+      "veg_status": "ok",
+      "meteo_status": "ok",
+      "meteo_spatial": "constant_point",
+      "provenance": "covariates/PROVENANCE.json"
+    }
+  ],
+  "not_claims": [
+    "not transfer IoU",
+    "not NDWS-native",
+    "meteo is period-mean constant field"
+  ]
+}

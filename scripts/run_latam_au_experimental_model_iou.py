@@ -1,30 +1,25 @@
 ﻿from __future__ import annotations
-
-import json
-import sys
-from datetime import UTC, datetime
+import json, sys
+from datetime import datetime, UTC
 from pathlib import Path
-
 import numpy as np
-import rasterio
 import torch
-from rasterio.warp import Resampling, reproject
+import rasterio
+from rasterio.warp import reproject, Resampling
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from wildfire_front.ml.feature_schema import schema_channel_count  # noqa: E402
-from wildfire_front.ml.unet_train import (  # noqa: E402
-    UNetTrainConfig,
-    build_model,
-    prepare_input,
-)
-from wildfire_front.open_if.latam_au import (  # noqa: E402
+from wildfire_front.ml.feature_schema import schema_channel_count
+from wildfire_front.ml.unet_train import UNetTrainConfig, build_model, prepare_input
+from wildfire_front.open_if.latam_au import (
     EMSR_PACK_SPECS,
     classify_temporal_pair,
     hours_between,
     label_records_from_meta,
+    mean_usable_pair_ious,
     pack_dir_for,
+    parse_iso_utc,
 )
 
 N_CH = schema_channel_count("legacy17")

@@ -33,6 +33,7 @@ from wildfire_front.open_if.latam_au import (  # noqa: E402
     is_nested_to_cems_name,
     mean_usable_pair_ious,
     pack_dir_for,
+    pick_pre_s2_path,
     rasterize_geom_to_geotiff,
     s2_source_paths,
     source_pack_ready,
@@ -432,10 +433,7 @@ def test_frozen_ring_loss_penalizes_residual_leak_below_decode_threshold() -> No
 def test_mega_goal_claim_is_single_frozen_pipeline() -> None:
     import inspect
 
-    report = ROOT / "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json"
-    if not report.is_file():
-        pytest.skip("local mega-goal evaluation artifact is not distributed")
-    doc = json.loads(report.read_text(encoding="utf-8"))
+    doc = json.loads((ROOT / "outputs/ml_eval/mega_goal_model/complete_proxy_model_iou.json").read_text(encoding="utf-8"))
     assert float(doc["growth_threshold"]) == 0.90
     weights = str(doc["weights"]).replace("\\", "/")
     assert "_fp" not in weights
@@ -783,9 +781,12 @@ def test_conaf_ingest_roundtrip_lab_ok_false(tmp_path: Path) -> None:
     meta = json.loads((pack / "meta.json").read_text(encoding="utf-8"))
     assert meta["class"] == "ml_weak"
     assert meta["lab_ok_conaf"] is False
-    if CONAF_SEND_STATUS.is_file():
-        status = json.loads(CONAF_SEND_STATUS.read_text(encoding="utf-8"))
-        assert (status.get("rails") or {}).get("lab_ok_conaf") is False
+    status = json.loads(
+        (ROOT / "docs" / "data_campaigns" / "conaf_send" / "send_status.public.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert (status.get("rails") or {}).get("lab_ok_conaf") is False
 
 
 def test_conaf_ingest_missing_vector_exit1(tmp_path: Path) -> None:
@@ -934,7 +935,7 @@ COMPLETE_PROXY_REPORT = (
     ROOT / "outputs" / "ml_eval" / "latam_au_complete_iou" / "complete_proxy_model_iou.json"
 )
 PRODUCT_STAMP = ROOT / "docs" / "ML_PRODUCT_GO_STATUS.json"
-CONAF_SEND_STATUS = ROOT / "docs" / "data_campaigns" / "conaf_send" / "send_status.json"
+CONAF_SEND_STATUS = ROOT / "docs" / "data_campaigns" / "conaf_send" / "send_status.public.json"
 
 
 def test_product_stamp_go_q_partial_freeze_intact() -> None:
@@ -957,8 +958,6 @@ def test_product_stamp_go_q_partial_freeze_intact() -> None:
 
 def test_product_lab_ok_conaf_false() -> None:
     """Product CONAF rail stays false; ingest must not flip send_status."""
-    if not CONAF_SEND_STATUS.is_file():
-        pytest.skip("private CONAF correspondence state is not distributed")
     status = json.loads(CONAF_SEND_STATUS.read_text(encoding="utf-8"))
     assert (status.get("rails") or {}).get("lab_ok_conaf") is False
     rights = (ROOT / "docs" / "data_campaigns" / "LATAM_AU_RIGHTS.md").read_text(encoding="utf-8")
@@ -970,8 +969,7 @@ def test_product_lab_ok_conaf_false() -> None:
 
 def test_complete_proxy_report_emsr715_not_fep_dressed() -> None:
     """Live eval: EMSR715 stays listed; FEP→DEL is not a usable growth pair; mean ≠ 0.85."""
-    if not COMPLETE_PROXY_REPORT.is_file():
-        pytest.skip("local complete-proxy evaluation artifact is not distributed")
+    assert COMPLETE_PROXY_REPORT.is_file(), COMPLETE_PROXY_REPORT
     doc = json.loads(COMPLETE_PROXY_REPORT.read_text(encoding="utf-8"))
     assert doc.get("schema") == "wfd_latam_au_complete_proxy_model_iou_v1"
     packs = {p.get("event_id"): p for p in doc.get("packs") or []}
@@ -1011,8 +1009,5 @@ def test_campaign_docs_do_not_sell_dressed_085_as_current() -> None:
     scorecard = (ROOT / "docs" / "SCORECARD_1M_GO_LATAM_2026-08-13.md").read_text(encoding="utf-8")
     assert "mean **~0.85** on Perth+Nacimiento only" not in scorecard
     assert "not" in scorecard.lower() and "transfer" in scorecard.lower()
-    handoff_path = ROOT / "docs" / "HANDOFF_1M_TO_MES3_2026-08-13.md"
-    if not handoff_path.is_file():
-        pytest.skip("local handoff document is not distributed")
-    handoff = handoff_path.read_text(encoding="utf-8")
+    handoff = (ROOT / "docs" / "HANDOFF_1M_TO_MES3_2026-08-13.md").read_text(encoding="utf-8")
     assert "complete_proxy IoU ~0.85" not in handoff

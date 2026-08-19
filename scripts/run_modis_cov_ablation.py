@@ -36,11 +36,9 @@ from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
     GROWTH_RING_MIN_NEIGHBORS,
     N_CH,
     OOD_GROWTH_THRESHOLD,
-    eval_pack,
-    fire_growth_ring,  # noqa: F401 - exported for frozen-contract checks
-)
-from scripts.run_latam_au_complete_model_iou import (  # noqa: E402
     WEIGHTS as PRODUCT_WEIGHTS,
+    eval_pack,
+    fire_growth_ring,
 )
 from wildfire_front.open_if.latam_au import (  # noqa: E402
     ALL_PACK_SPECS,
@@ -140,11 +138,13 @@ def is_forbidden_out_root(path: Path) -> bool:
     official_json = OFFICIAL_JSON.resolve()
     official_dir = official_json.parent
     product_dir = PRODUCT_WEIGHTS_DIR.resolve()
-    if resolved in (official_json, official_dir):
+    if resolved == official_json or resolved == official_dir:
         return True
     if (resolved / "complete_proxy_model_iou.json") == official_json:
         return True
-    return resolved in (PRODUCT_WEIGHTS.resolve(), product_dir)
+    if resolved == PRODUCT_WEIGHTS.resolve() or resolved == product_dir:
+        return True
+    return False
 
 
 def _read_tif(path: Path) -> np.ndarray | None:

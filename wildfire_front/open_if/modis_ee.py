@@ -14,10 +14,9 @@ from __future__ import annotations
 import json
 import math
 import os
-from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -727,14 +726,15 @@ def _reproject_geotiff_bytes(raw: bytes, ref_grid: dict[str, Any]) -> np.ndarray
         raise ValueError("ref_grid_empty")
     if not raw:
         raise ValueError("ee_geotiff_empty")
-    with MemoryFile(raw) as mem, mem.open() as src:
-        return _reproject_array(
-            src.read(1),
-            src_transform=src.transform,
-            src_crs=src.crs,
-            ref_grid=ref_grid,
-            src_nodata=src.nodata,
-        )
+    with MemoryFile(raw) as mem:
+        with mem.open() as src:
+            return _reproject_array(
+                src.read(1),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                ref_grid=ref_grid,
+                src_nodata=src.nodata,
+            )
 
 
 def _ee_bbox_rect(ee: Any, bbox: list[float]) -> Any:

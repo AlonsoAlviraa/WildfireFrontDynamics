@@ -1,0 +1,99 @@
+{
+  "schema": "wfd_latam_au_ndws_covariates_v1",
+  "as_of_utc": "2026-08-18T18:05:42Z",
+  "event_id": "CL_EMSR715_VALPARAISO",
+  "label_ref": "labels/CL_EMSR715_VALPARAISO_20240204_200240.tif",
+  "shape": [
+    950,
+    852
+  ],
+  "crs": "EPSG:32719",
+  "meteo": {
+    "status": "ok",
+    "source": "weather/open_meteo_era5_archive.json",
+    "elevation_m_point": 198.0,
+    "temperature_c_mean": 18.8,
+    "humidity_pct_mean": 69.0,
+    "wind_speed_ms_mean": 3.138888888888889,
+    "wind_speed_kmh_mean": 11.3,
+    "wind_dir_deg_mean": 239.0,
+    "precip_mm_mean": 0.0,
+    "n_hourly": 144,
+    "not_cds_era5_land_native": true,
+    "meteo_spatial": "constant_point",
+    "spatial": "constant_point",
+    "sample": "label_timestamp_nearest_hour",
+    "sample_at": "2024-02-09T14:00",
+    "gridded": false
+  },
+  "meteo_spatial": "constant_point",
+  "meteo_by_label": [
+    {
+      "label": "CL_EMSR715_VALPARAISO_20240204_200240.tif",
+      "delivery_utc": "2024-02-04T20:02:40Z",
+      "sample_at": "2024-02-04T20:00",
+      "temperature_c": 19.6,
+      "humidity_pct": 76.0,
+      "wind_speed_ms": 3.222222222222222,
+      "wind_dir_deg": 275.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "CL_EMSR715_VALPARAISO_20240206_165236.tif",
+      "delivery_utc": "2024-02-06T16:52:36Z",
+      "sample_at": "2024-02-06T17:00",
+      "temperature_c": 20.5,
+      "humidity_pct": 72.0,
+      "wind_speed_ms": 3.611111111111111,
+      "wind_dir_deg": 264.0,
+      "precip_mm": 0.0
+    },
+    {
+      "label": "CL_EMSR715_VALPARAISO_20240209_140139.tif",
+      "delivery_utc": "2024-02-09T14:01:39Z",
+      "sample_at": "2024-02-09T14:00",
+      "temperature_c": 18.8,
+      "humidity_pct": 69.0,
+      "wind_speed_ms": 3.138888888888889,
+      "wind_dir_deg": 239.0,
+      "precip_mm": 0.0
+    }
+  ],
+  "dem": {
+    "status": "reused",
+    "rel": "covariates/elevation_m.tif"
+  },
+  "vegetation": {
+    "status": "ok",
+    "rel": "covariates/vegetation_proxy.tif",
+    "nbr_rel": "covariates/s2_nbr_aligned.tif",
+    "mapping": "veg = clip((nbr+1)/2, 0, 1) from pre-fire NBR",
+    "veg_mean": 0.5262150764465332,
+    "nbr_pick_rule": "datetime_before_first_label",
+    "nbr_source_rel": "eo_aligned/CL_EMSR715_VALPARAISO_S2NBR_20240108_145206_to_cems.tif",
+    "source": "s2_nbr"
+  },
+  "meteo_fields": [
+    "covariates/temperature_c.tif",
+    "covariates/humidity_pct.tif",
+    "covariates/wind_speed_ms.tif",
+    "covariates/wind_dir_deg.tif",
+    "covariates/precip_mm.tif"
+  ],
+  "channels_ready": {
+    "meteo": true,
+    "dem": true,
+    "veg": true,
+    "lst": true,
+    "harmonic_ndvi": true
+  },
+  "not_claims": [
+    "not NDWS-native multi-band stack",
+    "not CDS ERA5-Land native",
+    "not transfer IoU",
+    "meteo_spatial=constant_point (Open-Meteo archive is a point, not a grid)",
+    "veg is S2 NBR proxy not NDVI training covariate",
+    "LST sidecar is not Open-Meteo t2m / not written to temperature_c.tif"
+  ],
+  "ready_for_real_proxy_ndws": true
+}

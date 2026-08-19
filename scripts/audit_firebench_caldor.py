@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.open_if.external_ros import inventory_caldor_kml  # noqa: E402
+from wildfire_front.open_if.external_ros import inventory_caldor_kml
 
 DEFAULT_PACK = ROOT / "data" / "external" / "firebench" / "caldor_2021" / "v2026.1"
 DEFAULT_OUT = ROOT / "outputs" / "data_audits" / "firebench_caldor_2026_1.json"

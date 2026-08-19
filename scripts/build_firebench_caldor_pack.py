@@ -11,9 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.open_if.firebench_caldor import (  # noqa: E402
-    materialize_caldor_label_pack,
-)
+from wildfire_front.open_if.firebench_caldor import materialize_caldor_label_pack
 
 DEFAULT_SOURCE = ROOT / "data" / "external" / "firebench" / "caldor_2021" / "v2026.1"
 DEFAULT_OUT = ROOT / "data" / "open_if" / "external_bridge" / "US_FIREBENCH_CALDOR_2021"

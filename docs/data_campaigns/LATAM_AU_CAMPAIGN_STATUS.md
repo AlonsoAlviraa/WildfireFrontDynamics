@@ -48,7 +48,7 @@ Inventory of what shipped before this P1–P2 pass, then P0–P2 IDs.
 
 | # | Track | Eng | Humano |
 |---|-------|-----|--------|
-| 1 | CONAF solicitud formal | Plantilla pública preparada; correspondencia externa excluida del repositorio | Esperar autorización escrita antes de usar o redistribuir datos |
+| 1 | CONAF envío OIRS | **`sent_gmail`** via `dispatch_conaf_oirs.py` → `consulta.oirs@conaf.cl` | Esperar respuesta OIRS / folio |
 | 1b | Cesión → `lab_ok_conaf` | `record_conaf_cession.py` (exige evidencia escrita) · **lab_ok_conaf=false** | Cesión escrita CONAF |
 | 2 | CEMS commercial rehost | gate + checklist + fail-closed script | legal si rehost producto |
 | 3 | NDWS real (meteo/DEM/veg) | `fill_latam_au_ndws_covariates.py` + `--mode real_proxy` + `run_latam_au_complete_model_iou.py` · mean **complete_proxy** now excludes Δt<12h and static label copies (Perth out; Nacimiento 2.3 h out). See `outputs/ml_eval/latam_au_complete_iou/complete_proxy_model_iou.json`. **Not** transfer IoU | No transfer IoU sellado |
@@ -72,6 +72,7 @@ python scripts/rank_latam_au_active_learning.py
 python scripts/eval_latam_au_domain_gap.py
 
 # residual backlog eng
+python scripts/prepare_conaf_send_package.py
 python scripts/check_cems_commercial_rehost.py
 python scripts/check_cems_commercial_rehost.py --require-commercial-rehost  # expect exit 1
 python scripts/adapt_latam_au_to_ndws_patches.py --event-id AU_EMSR500_PERTH --zero-shot-eval
