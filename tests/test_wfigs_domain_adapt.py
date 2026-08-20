@@ -179,6 +179,21 @@ def test_decoder_plus_input_scope_trains_only_input_projections() -> None:
     assert model.enc2.training is False
 
 
+def test_decoder_plus_enc1_scope_trains_first_encoder_and_decoder() -> None:
+    model = build_model("resunet", in_channels=19, base=8)
+
+    trainable = configure_trainable_scope(model, "decoder_plus_enc1")
+    set_adaptation_train_mode(model, "decoder_plus_enc1")
+
+    assert trainable
+    assert all(parameter.requires_grad for parameter in model.enc1.parameters())
+    assert all(parameter.requires_grad for parameter in model.dec1.parameters())
+    assert all(not parameter.requires_grad for parameter in model.enc2.parameters())
+    assert all(not parameter.requires_grad for parameter in model.enc3.parameters())
+    assert model.enc1.training is True
+    assert model.enc2.training is False
+
+
 def test_wfigs_dataset_can_append_explicit_valid_mask(tmp_path: Path) -> None:
     dataset = tmp_path / "dataset"
     sample = _sample(dataset, "validation", "pair", "event")
