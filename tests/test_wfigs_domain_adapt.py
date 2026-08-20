@@ -99,7 +99,14 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
         wfigs_dataset_root=dataset,
         rcda_normalization_path=normalization,
         output_root=tmp_path / "adapted",
-        adaptation=WFIGSAdaptConfig(epochs=1, batch_size=1, patience=0),
+        adaptation=WFIGSAdaptConfig(
+            epochs=1,
+            batch_size=1,
+            patience=0,
+            tversky_alpha=0.7,
+            tversky_beta=0.3,
+            tversky_gamma=0.6,
+        ),
         progress_callback=progress.append,
     )
     assert report["counts"]["reports"] == 2
@@ -115,6 +122,9 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     assert all(row["epoch"] == 1 for row in progress)
     assert all(row["selection_split"] == "wfigs_validation" for row in progress)
     assert all(row["test_evaluated"] is False for row in progress)
+    assert report["configuration"]["tversky_alpha"] == 0.7
+    assert report["configuration"]["tversky_beta"] == 0.3
+    assert report["configuration"]["tversky_gamma"] == 0.6
 
 
 def test_decoder_scope_freezes_encoder_parameters_and_statistics() -> None:
