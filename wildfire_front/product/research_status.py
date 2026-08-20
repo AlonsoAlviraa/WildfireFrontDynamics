@@ -27,6 +27,7 @@ PHASE_LABELS = {
     "validation_only_stage2_event_balanced_kaggle": "Fase 2 · muestreo por incendio en VAL (Kaggle T4)",
     "validation_only_stage2_uniform_events_kaggle": "Fase 2 · masa uniforme por incendio en VAL (Kaggle T4)",
     "validation_only_stage2_multitask_uniform_kaggle": "Fase 2 · crecimiento/extensión multitarea en VAL (Kaggle T4)",
+    "validation_only_stage2_multitask_front_ring_kaggle": "Fase 2 · frente activo multitarea en VAL (Kaggle T4)",
     "validation_only_stage2_film_kaggle": "Fase 2 · condicionamiento físico FiLM en VAL (Kaggle T4)",
     "recipe_frozen": "Receta congelada",
     "preregistered_final_test": "TEST final · semillas preregistradas",
@@ -43,6 +44,7 @@ VALIDATION_RUN_ORDER = (
     "resunet_hybrid_event_balanced_v1",
     "resunet_hybrid_uniform_events_v1",
     "resunet_multitask_uniform_events_v1",
+    "resunet_multitask_front_ring_v1",
     "film_growth_v1",
 )
 
@@ -135,7 +137,9 @@ def _experiment_queue(
     *,
     status: str,
     phase: str,
+    completed_run_names: set[str] | None = None,
 ) -> list[dict[str, Any]]:
+    completed_run_names = completed_run_names or set()
     by_name = {
         str(row.get("run_name")): row
         for row in runtime_runs
@@ -165,12 +169,14 @@ def _experiment_queue(
     queue = []
     for index, run_name in enumerate(VALIDATION_RUN_ORDER):
         row = by_name.get(run_name) or {}
-        if not row:
-            run_status = "planned"
+        if run_name == active_name:
+            run_status = "active"
         elif row.get("recovered_finite_checkpoint"):
             run_status = "recovered"
-        elif run_name == active_name:
-            run_status = "active"
+        elif run_name in completed_run_names:
+            run_status = "completed"
+        elif not row:
+            run_status = "planned"
         elif validation_finished or (active_index is not None and index < active_index):
             run_status = "completed"
         else:
@@ -594,6 +600,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "validation_only_stage2_growth_low_lr_kaggle",
                 "validation_only_stage2_event_balanced_kaggle",
                 "validation_only_stage2_uniform_events_kaggle",
+                "validation_only_stage2_multitask_uniform_kaggle",
+                "validation_only_stage2_multitask_front_ring_kaggle",
                 "validation_only_stage2_film_kaggle",
                 "preregistered_final_test_kaggle",
             }
@@ -643,6 +651,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "validation_only_stage2_growth_low_lr_kaggle",
                 "validation_only_stage2_event_balanced_kaggle",
                 "validation_only_stage2_uniform_events_kaggle",
+                "validation_only_stage2_multitask_uniform_kaggle",
+                "validation_only_stage2_multitask_front_ring_kaggle",
                 "validation_only_stage2_film_kaggle",
                 "preregistered_final_test_gcp",
                 "preregistered_final_test_kaggle",
@@ -719,6 +729,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             state,
             status=status,
             phase=phase,
+            completed_run_names={
+                str(row.get("run_name"))
+                for row in validation_ranking
+                if isinstance(row, dict) and row.get("run_name")
+            },
         ),
         "validation_ensemble": (
             {
