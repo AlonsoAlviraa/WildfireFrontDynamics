@@ -2232,7 +2232,7 @@ function renderResearchStatus() {
   const expansionRecipeIndex = Number(wfigs.expansion_recipe_index || 0);
   const expansionRecipesTotal = Number(wfigs.expansion_recipes_total || 0);
   const expansionEpoch = Number((wfigs.expansion_training_progress || {}).epoch || 0);
-  const expansionEpochs = Number((wfigs.expansion_training_progress || {}).epochs || 0);
+  const expansionEpochs = Number((wfigs.expansion_training_progress || {}).epochs_total || (wfigs.expansion_training_progress || {}).epochs || 0);
   const expansionRecipeFraction = expansionRecipesTotal > 0
     ? Math.min(1, Math.max(0, (expansionRecipeIndex - 1 + (expansionEpochs > 0 ? expansionEpoch / expansionEpochs : 0)) / expansionRecipesTotal))
     : 0;
@@ -2431,7 +2431,7 @@ function renderResearchStatus() {
       'Barrido DEV',
       String(wfigs.expansion_recipe_index || 0) + '/' + String(wfigs.expansion_recipes_total || '—'),
       researchRunName(wfigs.expansion_active_recipe)
-        + (expansionLive.epoch != null ? (' · época ' + String(expansionLive.epoch) + '/' + String(expansionLive.epochs || '—')) : '')
+        + (expansionLive.epoch != null ? (' · época ' + String(expansionLive.epoch) + '/' + String(expansionLive.epochs_total || expansionLive.epochs || '—')) : '')
         + failureDetail,
       wfigs.expansion_recipe_status !== 'failed_numeric'
     );

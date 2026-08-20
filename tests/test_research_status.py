@@ -856,7 +856,7 @@ def test_research_status_surfaces_live_expansion_recipe_and_numeric_failures(
             "recipe_index": 8,
             "recipes_total": 8,
             "recipe_status": "training",
-            "training_progress": {"epoch": 3, "epochs": 18, "train_loss": 0.4},
+            "training_progress": {"epoch": 3, "epochs_total": 18, "train_loss": 0.4},
             "test_loaded": False,
         },
     )
@@ -873,6 +873,7 @@ def test_research_status_surfaces_live_expansion_recipe_and_numeric_failures(
     assert status["expansion_recipe_index"] == 8
     assert status["expansion_recipes_total"] == 8
     assert status["expansion_training_progress"]["epoch"] == 3
+    assert status["expansion_training_progress"]["epochs_total"] == 18
     assert status["expansion_numeric_failures"] == 1
 
 
