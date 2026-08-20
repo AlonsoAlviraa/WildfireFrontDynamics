@@ -77,7 +77,7 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
                             "seed": 11,
                             "model_name": "unet",
                             "base_channels": 8,
-                            "target_mode": "growth",
+                            "target_mode": "hybrid",
                         },
                     },
                     {
@@ -86,7 +86,7 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
                             "seed": 29,
                             "model_name": "unet",
                             "base_channels": 8,
-                            "target_mode": "growth",
+                            "target_mode": "hybrid",
                         },
                     },
                 ],
@@ -106,6 +106,8 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
             tversky_alpha=0.7,
             tversky_beta=0.3,
             tversky_gamma=0.6,
+            target_mode="growth",
+            augment=False,
         ),
         progress_callback=progress.append,
     )
@@ -113,6 +115,10 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     assert report["wfigs_test_loaded"] is False
     assert report["reports"][0]["test_evaluated"] is False
     assert report["reports"][0]["threshold_selected_on"] == "wfigs_validation"
+    adapted_checkpoint = torch.load(
+        report["reports"][0]["checkpoint"], map_location="cpu", weights_only=False
+    )
+    assert adapted_checkpoint["target_mode"] == "growth"
     assert report["ensemble"]["aggregation"] == "mean_seed_probability"
     assert report["ensemble"]["members"] == 2
     assert report["ensemble"]["threshold_selected_on"] == "wfigs_validation"
@@ -125,6 +131,8 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     assert report["configuration"]["tversky_alpha"] == 0.7
     assert report["configuration"]["tversky_beta"] == 0.3
     assert report["configuration"]["tversky_gamma"] == 0.6
+    assert report["configuration"]["target_mode"] == "growth"
+    assert report["configuration"]["augment"] is False
 
 
 def test_decoder_scope_freezes_encoder_parameters_and_statistics() -> None:
