@@ -747,6 +747,42 @@ def test_research_status_keeps_sealed_external_result_during_scaleup(
     assert status["campaign_running"] is True
 
 
+def test_research_status_prioritizes_active_scaleup_adaptation_state(
+    tmp_path: Path,
+) -> None:
+    historical = tmp_path / "outputs/ml_eval/wfigs_domain_adaptation_20260819"
+    _write(historical / "STATE.json", {"phase": "complete"})
+    _write(
+        historical / "WFIGS_ADAPTED_TEST_EVAL.json",
+        {
+            "protocol": {"wfigs_test_used_for_selection": False},
+            "summary": {"ensemble_event_macro_iou": 0.09},
+        },
+    )
+    scaleup = tmp_path / "outputs/ml_eval/wfigs_scaleup_paper_20260820"
+    _write(
+        scaleup / "STATE.json",
+        {
+            "phase": "training_frozen_adaptation_three_seeds",
+            "winner": "decoder_front_ring",
+            "training_progress": {"seed": 29, "epoch": 3},
+            "test_evaluated": False,
+        },
+    )
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["adapted_evaluation_executed"] is True
+    assert status["adaptation_phase"] == "training_frozen_adaptation_three_seeds"
+    assert status["scaleup_adaptation_active"] is True
+    assert status["scaleup_adaptation_recipe"] == "decoder_front_ring"
+    assert status["scaleup_adaptation_training_progress"] == {
+        "seed": 29,
+        "epoch": 3,
+    }
+    assert status["scaleup_prospective_test_evaluated"] is False
+
+
 def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     payload = build_product_app_payload(repo=tmp_path, scan=False, live=False)
     html = render_product_app_html(payload)

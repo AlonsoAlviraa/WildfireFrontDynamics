@@ -268,6 +268,21 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     )
     adapted_path = adaptation_root / "WFIGS_ADAPTED_TEST_EVAL.json" if adaptation_root else None
     adapted = _read_json(adapted_path) if adapted_path else None
+    scaleup_adaptation_roots = sorted(
+        (root / "outputs/ml_eval").glob("wfigs_scaleup_paper_*")
+    )
+    scaleup_adaptation_root = (
+        scaleup_adaptation_roots[-1] if scaleup_adaptation_roots else None
+    )
+    scaleup_adaptation_state_path = (
+        scaleup_adaptation_root / "STATE.json" if scaleup_adaptation_root else None
+    )
+    scaleup_adaptation_state = (
+        _read_json(scaleup_adaptation_state_path)
+        if scaleup_adaptation_state_path
+        else None
+    )
+    scaleup_adaptation_phase = (scaleup_adaptation_state or {}).get("phase")
     external_protocol = (external or {}).get("protocol") or {}
     adapted_protocol = (adapted or {}).get("protocol") or {}
     campaign_incomplete = bool(campaign_state) and int(
@@ -307,7 +322,23 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "test_groups_total": int((test_state or {}).get("groups_total") or 0),
         "test_materialization_phase": (external_state or {}).get("phase"),
         "dataset_phase": (data_state or {}).get("phase"),
-        "adaptation_phase": (adaptation_state or {}).get("phase"),
+        "adaptation_phase": scaleup_adaptation_phase
+        or (adaptation_state or {}).get("phase"),
+        "scaleup_adaptation_phase": scaleup_adaptation_phase,
+        "scaleup_adaptation_active": bool(scaleup_adaptation_state)
+        and scaleup_adaptation_phase != "complete",
+        "scaleup_adaptation_recipe": (scaleup_adaptation_state or {}).get(
+            "active_recipe"
+        )
+        or (scaleup_adaptation_state or {}).get("winner"),
+        "scaleup_adaptation_training_progress": (
+            scaleup_adaptation_state or {}
+        ).get("training_progress"),
+        "scaleup_prospective_test_evaluated": bool(
+            (scaleup_adaptation_state or {}).get(
+                "prospective_test_loaded_after_recipe_freeze"
+            )
+        ),
         "dataset_audit_status": (audit or {}).get("status"),
         "dataset_audit_samples": int(audit_counts.get("samples_audited") or 0),
         "dataset_audit_issues": int(audit_counts.get("issues") or 0),
@@ -346,6 +377,13 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         ),
         "adapted_artifact": _relative(
             adapted_path if adapted_path and adapted_path.is_file() else None,
+            root,
+        ),
+        "scaleup_adaptation_artifact": _relative(
+            scaleup_adaptation_state_path
+            if scaleup_adaptation_state_path
+            and scaleup_adaptation_state_path.is_file()
+            else None,
             root,
         ),
     }
