@@ -92,12 +92,13 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig, str], ...] = (
         "wfigs_converted_train",
     ),
     (
-        "all_medium_lr_wfigs_normalized",
+        "all_intermediate_lr_wfigs_normalized",
         WFIGSAdaptConfig(
             epochs=18,
             patience=5,
-            lr=1e-4,
+            lr=5e-5,
             trainable_scope="all",
+            max_grad_norm=2.0,
             source_seeds=(47,),
         ),
         "wfigs_converted_train",
@@ -175,6 +176,46 @@ def _pilot_score(report: dict[str, Any]) -> float:
     if len(rows) != 1 or report.get("wfigs_test_loaded") is not False:
         raise ValueError("pilot is not a single-seed validation-only report")
     return float(rows[0]["validation"]["selected"]["event_macro_iou"])
+
+
+def _pilot_failure_record(
+    *,
+    name: str,
+    config: WFIGSAdaptConfig,
+    normalization_mode: str,
+    error: FloatingPointError,
+) -> dict[str, Any]:
+    return {
+        "schema": "wfd_wfigs_expansion_pilot_failure_v1",
+        "failed_at": utc_now(),
+        "name": name,
+        "status": "failed_numeric",
+        "error_type": type(error).__name__,
+        "message": str(error),
+        "configuration": asdict(config),
+        "normalization": normalization_mode,
+        "test_loaded": False,
+    }
+
+
+def _validate_pilot_failure(
+    failure: dict[str, Any],
+    *,
+    name: str,
+    config: WFIGSAdaptConfig,
+    normalization_mode: str,
+) -> None:
+    expected = {
+        "schema": "wfd_wfigs_expansion_pilot_failure_v1",
+        "name": name,
+        "status": "failed_numeric",
+        "error_type": "FloatingPointError",
+        "configuration": asdict(config),
+        "normalization": normalization_mode,
+        "test_loaded": False,
+    }
+    if any(failure.get(key) != value for key, value in expected.items()):
+        raise ValueError(f"recorded pilot failure does not match preregistered recipe: {name}")
 
 
 def _claim_confirmation(claim_path: Path, evidence: dict[str, str]) -> dict[str, Any]:
@@ -321,6 +362,10 @@ def main() -> int:
             "test_loaded": False,
         },
         "selection_rule": "max_wfigs_development_event_macro_iou_then_recipe_order",
+        "pilot_numeric_failure_rule": (
+            "record FloatingPointError, exclude that recipe from selection, and continue; "
+            "all other exceptions remain fatal"
+        ),
         "final_seeds": [11, 29, 47],
         "confirmation_rule": "evaluate_frozen_thresholds_once_after_recipe_freeze",
         "prospective_test_never_loaded": True,
@@ -333,6 +378,7 @@ def main() -> int:
             "tuning_audit_sha256",
             "confirmation_audit_sha256",
             "pilot_recipes",
+            "pilot_numeric_failure_rule",
         ):
             if existing.get(key) != preregistration.get(key):
                 raise ValueError("expansion preregistration changed after creation")
@@ -344,8 +390,19 @@ def main() -> int:
     for index, (name, config, normalization_mode) in enumerate(PILOT_RECIPES, start=1):
         recipe_root = args.output / "pilots" / name
         summary_path = recipe_root / "WFIGS_ADAPTATION_VAL_ONLY.json"
+        failure_path = recipe_root / "PILOT_FAILURE.json"
         report = _read(summary_path)
-        if not report:
+        failure = _read(failure_path)
+        if report and failure:
+            raise ValueError(f"pilot has both success and failure artifacts: {name}")
+        if failure:
+            _validate_pilot_failure(
+                failure,
+                name=name,
+                config=config,
+                normalization_mode=normalization_mode,
+            )
+        elif not report:
             _atomic_write_json(
                 state_path,
                 {
@@ -379,28 +436,72 @@ def main() -> int:
                     },
                 )
 
-            report = adapt_frozen_rcda_on_wfigs(
-                final_summary_path=args.source_final,
-                wfigs_dataset_root=args.tuning_dataset,
-                rcda_normalization_path=normalization_paths[normalization_mode],
-                output_root=recipe_root,
-                adaptation=config,
-                progress_callback=pilot_progress,
+            try:
+                report = adapt_frozen_rcda_on_wfigs(
+                    final_summary_path=args.source_final,
+                    wfigs_dataset_root=args.tuning_dataset,
+                    rcda_normalization_path=normalization_paths[normalization_mode],
+                    output_root=recipe_root,
+                    adaptation=config,
+                    progress_callback=pilot_progress,
+                )
+            except FloatingPointError as error:
+                failure = _pilot_failure_record(
+                    name=name,
+                    config=config,
+                    normalization_mode=normalization_mode,
+                    error=error,
+                )
+                _atomic_write_json(failure_path, failure)
+                _atomic_write_json(
+                    state_path,
+                    {
+                        "phase": "development_pilot_sweep",
+                        "updated_at": utc_now(),
+                        "active_recipe": name,
+                        "recipe_index": index,
+                        "recipes_total": len(PILOT_RECIPES),
+                        "recipe_status": "failed_numeric",
+                        "test_loaded": False,
+                    },
+                )
+        common = {
+            "name": name,
+            "configuration": asdict(config),
+            "normalization": normalization_mode,
+            "normalization_sha256": sha256_file(normalization_paths[normalization_mode]),
+        }
+        if failure:
+            ranking.append(
+                {
+                    **common,
+                    "status": "failed_numeric",
+                    "development_event_macro_iou": None,
+                    "failure": str(failure_path),
+                    "failure_sha256": sha256_file(failure_path),
+                }
             )
-        ranking.append(
-            {
-                "name": name,
-                "development_event_macro_iou": _pilot_score(report),
-                "summary": str(summary_path),
-                "summary_sha256": sha256_file(summary_path),
-                "configuration": asdict(config),
-                "normalization": normalization_mode,
-                "normalization_sha256": sha256_file(normalization_paths[normalization_mode]),
-            }
-        )
+        else:
+            ranking.append(
+                {
+                    **common,
+                    "status": "success",
+                    "development_event_macro_iou": _pilot_score(report),
+                    "summary": str(summary_path),
+                    "summary_sha256": sha256_file(summary_path),
+                }
+            )
     order = {name: index for index, (name, _config, _normalization) in enumerate(PILOT_RECIPES)}
-    ranking.sort(key=lambda row: (-float(row["development_event_macro_iou"]), order[row["name"]]))
-    winner = ranking[0]
+    successful = [row for row in ranking if row["status"] == "success"]
+    if not successful:
+        raise RuntimeError("every preregistered WFIGS pilot failed numerically")
+    successful.sort(
+        key=lambda row: (-float(row["development_event_macro_iou"]), order[row["name"]])
+    )
+    failed = [row for row in ranking if row["status"] != "success"]
+    failed.sort(key=lambda row: order[row["name"]])
+    ranking = [*successful, *failed]
+    winner = successful[0]
     winner_config, winner_normalization_mode = next(
         (config, normalization_mode)
         for name, config, normalization_mode in PILOT_RECIPES

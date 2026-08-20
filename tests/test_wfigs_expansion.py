@@ -7,9 +7,13 @@ import numpy as np
 import pytest
 
 from scripts.run_wfigs_expansion_nightwatch import (
+    PILOT_RECIPES,
     _claim_confirmation,
+    _pilot_failure_record,
     _resume_confirmation,
+    _validate_pilot_failure,
 )
+from wildfire_front.ml.wfigs_domain_adapt import WFIGSAdaptConfig
 from wildfire_front.ml.wfigs_expansion import (
     fit_converted_train_normalization,
     paired_event_comparison,
@@ -93,6 +97,37 @@ def test_confirmation_claim_resumes_without_reopening(tmp_path: Path) -> None:
     assert _resume_confirmation(claim_path=claim, result_path=result, evidence=evidence) is not None
     with pytest.raises(ValueError, match="different frozen evidence"):
         _claim_confirmation(claim, {"freeze": "changed"})
+
+
+def test_numeric_pilot_failure_is_bound_to_preregistered_recipe() -> None:
+    config = WFIGSAdaptConfig(lr=5e-5, max_grad_norm=2.0, source_seeds=(47,))
+    failure = _pilot_failure_record(
+        name="candidate",
+        config=config,
+        normalization_mode="wfigs_converted_train",
+        error=FloatingPointError("non-finite gradient"),
+    )
+    _validate_pilot_failure(
+        failure,
+        name="candidate",
+        config=config,
+        normalization_mode="wfigs_converted_train",
+    )
+    failure["configuration"]["lr"] = 1e-4
+    with pytest.raises(ValueError, match="does not match preregistered recipe"):
+        _validate_pilot_failure(
+            failure,
+            name="candidate",
+            config=config,
+            normalization_mode="wfigs_converted_train",
+        )
+
+
+def test_normalized_all_layer_candidate_avoids_unstable_pilot_rate() -> None:
+    recipes = {name: config for name, config, _normalization in PILOT_RECIPES}
+    candidate = recipes["all_intermediate_lr_wfigs_normalized"]
+    assert candidate.lr == pytest.approx(5e-5)
+    assert candidate.max_grad_norm == pytest.approx(2.0)
 
 
 def test_converted_normalization_uses_train_only(tmp_path: Path) -> None:
