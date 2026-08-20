@@ -19,6 +19,7 @@ from wildfire_front.ml.rcda_sealed import (
     confusion,
     encode_features,
     background_bce_loss,
+    balanced_growth_bce_loss,
     far_background_bce_loss,
     focal_tversky_loss,
     load_protocol,
@@ -191,6 +192,22 @@ def test_background_bce_is_zero_for_all_growth_target() -> None:
     target = torch.ones(1, 1, 2, 2)
     logits = torch.zeros_like(target)
     assert float(background_bce_loss(logits, target)) == 0.0
+
+
+def test_balanced_growth_bce_rewards_correct_sparse_growth() -> None:
+    target = torch.zeros(1, 1, 4, 4)
+    target[:, :, 1, 1] = 1.0
+    correct = torch.full_like(target, -4.0)
+    correct[:, :, 1, 1] = 4.0
+    wrong = -correct
+    assert float(balanced_growth_bce_loss(correct, target)) < float(
+        balanced_growth_bce_loss(wrong, target)
+    )
+
+
+def test_balanced_growth_bce_rejects_invalid_max_weight() -> None:
+    with pytest.raises(ValueError, match="max_pos_weight"):
+        balanced_growth_bce_loss(torch.zeros(1, 1, 2, 2), torch.zeros(1, 1, 2, 2), max_pos_weight=0.5)
 
 
 def test_far_background_bce_ignores_near_front_logits() -> None:
