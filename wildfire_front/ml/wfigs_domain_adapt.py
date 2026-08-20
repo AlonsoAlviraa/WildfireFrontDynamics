@@ -65,7 +65,7 @@ def configure_trainable_scope(
 ) -> list[torch.nn.Parameter]:
     """Freeze the source encoder for low-data decoder-only adaptation."""
 
-    if scope not in {"all", "decoder", "decoder_plus_input"}:
+    if scope not in {"all", "decoder", "decoder_plus_input", "decoder_plus_enc1"}:
         raise ValueError(f"unknown WFIGS adaptation trainable scope: {scope!r}")
     frozen_prefixes = ("enc1.", "enc2.", "enc3.", "enc4.", "context.")
     trainable: list[torch.nn.Parameter] = []
@@ -77,6 +77,7 @@ def configure_trainable_scope(
                 scope == "decoder_plus_input"
                 and name in {"enc1.body.0.weight", "enc1.skip.weight"}
             )
+            or (scope == "decoder_plus_enc1" and name.startswith("enc1."))
         )
         if parameter.requires_grad:
             trainable.append(parameter)
@@ -89,7 +90,7 @@ def set_adaptation_train_mode(model: torch.nn.Module, scope: str) -> None:
     """Enter train mode while keeping frozen encoder normalization immutable."""
 
     model.train()
-    if scope in {"decoder", "decoder_plus_input"}:
+    if scope in {"decoder", "decoder_plus_input", "decoder_plus_enc1"}:
         for name, module in model.named_children():
             frozen = {"enc2", "enc3", "enc4", "context"}
             if scope == "decoder":
