@@ -532,8 +532,12 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     )
 
     phase = str(state.get("phase") or "not_started")
-    winner = (frozen or {}).get("winner") or state.get("winner") or None
-    if winner is None and validation_leader:
+    frozen_winner = (frozen or {}).get("winner") or None
+    frozen_run_name = str(
+        ((frozen_winner or {}).get("config") or {}).get("run_name") or ""
+    )
+    winner = None
+    if validation_leader:
         winner = {
             "val_event_macro_iou": validation_leader.get("event_macro_iou"),
             "val_pooled_iou": validation_leader.get("pooled_iou"),
@@ -541,7 +545,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             "best_epoch": validation_leader.get("best_epoch"),
             "config": {"run_name": validation_leader.get("run_name")},
         }
-    elif winner is None and tuning:
+    elif frozen_winner is not None:
+        winner = frozen_winner
+    elif state.get("winner") is not None:
+        winner = state.get("winner")
+    elif tuning:
         leader = ((tuning.get("ranking") or [None])[0])
         if isinstance(leader, dict):
             winner = {
@@ -679,7 +687,16 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "pooled_iou": winner.get("val_pooled_iou"),
                 "threshold": winner.get("selected_threshold"),
                 "best_epoch": winner.get("best_epoch"),
-                "frozen": bool(frozen),
+                "frozen": bool(
+                    frozen_run_name
+                    and frozen_run_name
+                    == str((winner.get("config") or {}).get("run_name") or "")
+                ),
+                "post_freeze_candidate": bool(
+                    frozen_run_name
+                    and frozen_run_name
+                    != str((winner.get("config") or {}).get("run_name") or "")
+                ),
                 "event_bootstrap_95_ci": validation_leader.get("event_bootstrap_95_ci"),
                 "delta_vs_runner_up": validation_runner_up.get(
                     "leader_minus_candidate_paired_delta"
@@ -689,6 +706,22 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 ),
             }
             if isinstance(winner, dict)
+            else None
+        ),
+        "frozen_test_recipe": (
+            {
+                "run_name": frozen_run_name,
+                "event_macro_iou": frozen_winner.get("val_event_macro_iou"),
+                "threshold": frozen_winner.get("selected_threshold"),
+                "best_epoch": frozen_winner.get("best_epoch"),
+                "tested": bool(scorecard),
+                "superseded_on_validation": bool(
+                    validation_leader
+                    and frozen_run_name
+                    and frozen_run_name != str(validation_leader.get("run_name") or "")
+                ),
+            }
+            if isinstance(frozen_winner, dict)
             else None
         ),
         "validation_candidates": [

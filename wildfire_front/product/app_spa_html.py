@@ -2197,6 +2197,7 @@ function renderResearchStatus() {
   const baseline = rs.baseline || {};
   const wfigs = rs.wfigs || {};
   const winner = rs.validation_winner || {};
+  const frozenTestRecipe = rs.frozen_test_recipe || {};
   const valEnsemble = rs.validation_ensemble || {};
   const valPostprocess = rs.validation_postprocess || {};
   const valReproducibility = rs.validation_reproducibility || {};
@@ -2421,11 +2422,16 @@ function renderResearchStatus() {
   section.append(sectionTitle, checks); host.appendChild(section);
 
   const warning = document.createElement('div'); warning.className = 'research-warning';
-  warning.textContent = wfigs.adapted_evaluation_executed && (wfigs.adapted_summary || {}).adapted_transfer_signal_gate !== true
+  const baseWarning = wfigs.adapted_evaluation_executed && (wfigs.adapted_summary || {}).adapted_transfer_signal_gate !== true
     ? 'La adaptación mejora el resultado WFIGS, pero su intervalo pareado cruza cero: la generalización externa sigue sin demostrarse y la nueva cohorte permanece en escalado.'
     : ((rs.claims || {}).paper_ready
       ? (wfigs.external_evaluation_executed ? 'Candidato RCDA con evaluación WFIGS ejecutada; revisar el informe externo antes de formular claims.' : 'Candidato de paper en este dataset. WFIGS se está materializando, pero la generalización externa aún no ha sido evaluada.')
       : (wfigs.external_evaluation_executed ? 'Evaluación WFIGS disponible, pero no implica todavía validez operativa.' : 'Aún no es un claim de paper ni una métrica operativa. WFIGS ya tiene pipeline físico, pero su evaluación externa sigue pendiente.'));
+  const postFreezeWarning = winner.post_freeze_candidate === true && frozenTestRecipe.tested === true
+    ? ('Nuevo líder sólo VAL (' + researchRunName(winner.run_name) + ', ' + researchScore(winner.event_macro_iou)
+      + '); no hereda las métricas TEST de la receta congelada ' + researchRunName(frozenTestRecipe.run_name) + '. ')
+    : '';
+  warning.textContent = postFreezeWarning + baseWarning;
   host.appendChild(warning);
   const path = document.createElement('div'); path.className = 'research-path';
   path.textContent = ((rs.artifacts || {}).scorecard || (rs.artifacts || {}).frozen_recipe || (rs.artifacts || {}).state || 'Sin artefacto');
