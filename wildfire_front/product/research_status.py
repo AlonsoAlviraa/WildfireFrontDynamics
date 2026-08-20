@@ -149,15 +149,12 @@ def _experiment_queue(
         (
             name
             for name, row in by_name.items()
-            if row.get("kernel") == state.get("kernel")
-            and status in {"running", "queued"}
+            if row.get("kernel") == state.get("kernel") and status in {"running", "queued"}
         ),
         None,
     )
     active_index = (
-        VALIDATION_RUN_ORDER.index(active_name)
-        if active_name in VALIDATION_RUN_ORDER
-        else None
+        VALIDATION_RUN_ORDER.index(active_name) if active_name in VALIDATION_RUN_ORDER else None
     )
     validation_finished = phase in {
         "recipe_frozen",
@@ -206,18 +203,14 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     counts = (campaign or {}).get("counts") or {}
     state_rows = (campaign_state or {}).get("rows") or []
     state_materialized = sum(
-        int((row.get("counts") or {}).get("pairs_materialized") or 0)
-        for row in state_rows
+        int((row.get("counts") or {}).get("pairs_materialized") or 0) for row in state_rows
     )
     state_ready = sum(
-        int((row.get("counts") or {}).get("training_ready") or 0)
-        for row in state_rows
+        int((row.get("counts") or {}).get("training_ready") or 0) for row in state_rows
     )
     dataset_roots = sorted((root / "outputs/ml_eval").glob("wfigs_tensor_dataset_*"))
     complete_dataset_roots = [
-        candidate
-        for candidate in dataset_roots
-        if (candidate / "DATASET_REPORT.json").is_file()
+        candidate for candidate in dataset_roots if (candidate / "DATASET_REPORT.json").is_file()
     ]
     dataset_root = (
         complete_dataset_roots[-1]
@@ -225,11 +218,7 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         else (dataset_roots[-1] if dataset_roots else None)
     )
     active_dataset_root = dataset_roots[-1] if dataset_roots else None
-    data_state_path = (
-        active_dataset_root / "NIGHTWATCH_STATE.json"
-        if active_dataset_root
-        else None
-    )
+    data_state_path = active_dataset_root / "NIGHTWATCH_STATE.json" if active_dataset_root else None
     data_state = _read_json(data_state_path) if data_state_path else None
     dataset_report_path = dataset_root / "DATASET_REPORT.json" if dataset_root else None
     dataset_report = _read_json(dataset_report_path) if dataset_report_path else None
@@ -246,61 +235,41 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         or (candidate / "EXTERNAL_NIGHTWATCH_STATE.json").is_file()
     ]
     external_root = external_roots[-1] if external_roots else dataset_root
-    external_path = (
-        external_root / "WFIGS_EXTERNAL_EVAL.json" if external_root else None
-    )
+    external_path = external_root / "WFIGS_EXTERNAL_EVAL.json" if external_root else None
     external = _read_json(external_path) if external_path else None
     external_state_path = (
         external_root / "EXTERNAL_NIGHTWATCH_STATE.json" if external_root else None
     )
     external_state = _read_json(external_state_path) if external_state_path else None
-    test_campaigns = sorted(
-        (root / "outputs/ml_eval").glob("wfigs_test_campaign_*")
-    )
+    test_campaigns = sorted((root / "outputs/ml_eval").glob("wfigs_test_campaign_*"))
     test_campaign_root = test_campaigns[-1] if test_campaigns else None
     test_state_path = test_campaign_root / "STATE.json" if test_campaign_root else None
     test_state = _read_json(test_state_path) if test_state_path else None
     adaptation_roots = sorted((root / "outputs/ml_eval").glob("wfigs_domain_adaptation_*"))
     adaptation_root = adaptation_roots[-1] if adaptation_roots else None
     adaptation_state_path = adaptation_root / "STATE.json" if adaptation_root else None
-    adaptation_state = (
-        _read_json(adaptation_state_path) if adaptation_state_path else None
-    )
+    adaptation_state = _read_json(adaptation_state_path) if adaptation_state_path else None
     adapted_path = adaptation_root / "WFIGS_ADAPTED_TEST_EVAL.json" if adaptation_root else None
     adapted = _read_json(adapted_path) if adapted_path else None
-    scaleup_adaptation_roots = sorted(
-        (root / "outputs/ml_eval").glob("wfigs_scaleup_paper_*")
-    )
-    scaleup_adaptation_root = (
-        scaleup_adaptation_roots[-1] if scaleup_adaptation_roots else None
-    )
+    scaleup_adaptation_roots = sorted((root / "outputs/ml_eval").glob("wfigs_scaleup_paper_*"))
+    scaleup_adaptation_root = scaleup_adaptation_roots[-1] if scaleup_adaptation_roots else None
     scaleup_adaptation_state_path = (
         scaleup_adaptation_root / "STATE.json" if scaleup_adaptation_root else None
     )
     scaleup_adaptation_state = (
-        _read_json(scaleup_adaptation_state_path)
-        if scaleup_adaptation_state_path
-        else None
+        _read_json(scaleup_adaptation_state_path) if scaleup_adaptation_state_path else None
     )
     scaleup_adaptation_phase = (scaleup_adaptation_state or {}).get("phase")
-    prospective_roots = sorted(
-        (root / "outputs/ml_eval").glob("wfigs_prospective_final_*")
-    )
+    prospective_roots = sorted((root / "outputs/ml_eval").glob("wfigs_prospective_final_*"))
     prospective_root = prospective_roots[-1] if prospective_roots else None
     prospective_claim_path = (
         prospective_root / "PROSPECTIVE_OPEN_ONCE.json" if prospective_root else None
     )
-    prospective_claim = (
-        _read_json(prospective_claim_path) if prospective_claim_path else None
-    )
+    prospective_claim = _read_json(prospective_claim_path) if prospective_claim_path else None
     prospective_result_path = (
-        prospective_root / "WFIGS_PROSPECTIVE_TEST_EVAL.json"
-        if prospective_root
-        else None
+        prospective_root / "WFIGS_PROSPECTIVE_TEST_EVAL.json" if prospective_root else None
     )
-    prospective_result = (
-        _read_json(prospective_result_path) if prospective_result_path else None
-    )
+    prospective_result = _read_json(prospective_result_path) if prospective_result_path else None
     prospective_complete = bool(
         prospective_claim
         and prospective_claim.get("phase") == "complete"
@@ -308,15 +277,49 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         and prospective_result
     )
     effective_adapted = prospective_result if prospective_complete else adapted
-    effective_adapted_path = (
-        prospective_result_path if prospective_complete else adapted_path
-    )
+    effective_adapted_path = prospective_result_path if prospective_complete else adapted_path
     effective_adapted_protocol = (effective_adapted or {}).get("protocol") or {}
     external_protocol = (external or {}).get("protocol") or {}
     campaign_incomplete = bool(campaign_state) and int(
         (campaign_state or {}).get("groups_complete") or 0
     ) < int((campaign_state or {}).get("groups_total") or 0)
     data_active = bool(data_state) and (data_state or {}).get("phase") != "complete"
+    expansion_train_roots = sorted((root / "outputs/ml_eval").glob("wfigs_training_expansion_*"))
+    expansion_validation_roots = sorted(
+        (root / "outputs/ml_eval").glob("wfigs_validation_expansion_*")
+    )
+    expansion_train_root = expansion_train_roots[-1] if expansion_train_roots else None
+    expansion_validation_root = (
+        expansion_validation_roots[-1] if expansion_validation_roots else None
+    )
+    expansion_train_state_path = (
+        expansion_train_root / "STATE.json" if expansion_train_root else None
+    )
+    expansion_validation_state_path = (
+        expansion_validation_root / "STATE.json" if expansion_validation_root else None
+    )
+    expansion_train_state = (
+        _read_json(expansion_train_state_path) if expansion_train_state_path else None
+    ) or {}
+    expansion_validation_state = (
+        _read_json(expansion_validation_state_path) if expansion_validation_state_path else None
+    ) or {}
+    expansion_roots = sorted((root / "outputs/ml_eval").glob("wfigs_expansion_paper_*"))
+    expansion_root = expansion_roots[-1] if expansion_roots else None
+    expansion_state_path = expansion_root / "STATE.json" if expansion_root else None
+    expansion_state = (_read_json(expansion_state_path) if expansion_state_path else None) or {}
+    expansion_prereg_path = expansion_root / "PREREGISTRATION.json" if expansion_root else None
+    expansion_prereg = (_read_json(expansion_prereg_path) if expansion_prereg_path else None) or {}
+    expansion_result_path = expansion_root / "CONFIRMATION_RESULT.json" if expansion_root else None
+    expansion_result = (_read_json(expansion_result_path) if expansion_result_path else None) or {}
+    expansion_isolation = expansion_prereg.get("isolation") or {}
+    expansion_counts = expansion_isolation.get("counts") or {}
+    expansion_comparison = expansion_result.get("comparison") or (
+        expansion_state.get("comparison") or {}
+    )
+    expansion_phase = expansion_state.get("phase")
+    expansion_complete = expansion_phase == "complete" and bool(expansion_result)
+    expansion_active = bool(expansion_phase) and not expansion_complete
     return {
         "pairs_enriched": int(enrichment_counts.get("pairs") or 0),
         "pairs_hrrr_space_time_valid": int(
@@ -326,9 +329,7 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
             enrichment_counts.get("pairs_outside_hrrr_conus_domain") or 0
         ),
         "spatial_weather_contract": bool(
-            (enrichment.get("contracts") or {}).get(
-                "hrrr_spatial_domain_verified_from_t0_bbox"
-            )
+            (enrichment.get("contracts") or {}).get("hrrr_spatial_domain_verified_from_t0_bbox")
         ),
         "campaign_running": campaign_incomplete or data_active,
         "campaign_groups_complete": int((campaign_state or {}).get("groups_complete") or 0),
@@ -352,38 +353,46 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "dataset_phase": (data_state or {}).get("phase"),
         "adaptation_phase": "complete"
         if prospective_complete
-        else scaleup_adaptation_phase
-        or (adaptation_state or {}).get("phase"),
+        else scaleup_adaptation_phase or (adaptation_state or {}).get("phase"),
         "scaleup_adaptation_phase": "complete"
         if prospective_complete
         else scaleup_adaptation_phase,
         "scaleup_adaptation_active": False
         if prospective_complete
-        else bool(scaleup_adaptation_state)
-        and scaleup_adaptation_phase != "complete",
-        "scaleup_adaptation_recipe": (scaleup_adaptation_state or {}).get(
-            "active_recipe"
-        )
+        else bool(scaleup_adaptation_state) and scaleup_adaptation_phase != "complete",
+        "scaleup_adaptation_recipe": (scaleup_adaptation_state or {}).get("active_recipe")
         or (scaleup_adaptation_state or {}).get("winner"),
-        "scaleup_adaptation_training_progress": (
-            scaleup_adaptation_state or {}
-        ).get("training_progress"),
+        "scaleup_adaptation_training_progress": (scaleup_adaptation_state or {}).get(
+            "training_progress"
+        ),
         "scaleup_prospective_test_evaluated": prospective_complete
         or bool(
-            (scaleup_adaptation_state or {}).get(
-                "prospective_test_loaded_after_recipe_freeze"
-            )
+            (scaleup_adaptation_state or {}).get("prospective_test_loaded_after_recipe_freeze")
         ),
         "prospective_events_selected": int(
-            ((prospective_claim or {}).get("cohort") or {}).get("events_selected")
-            or 0
+            ((prospective_claim or {}).get("cohort") or {}).get("events_selected") or 0
         ),
         "prospective_events_materialized": int(
-            ((prospective_claim or {}).get("cohort") or {}).get(
-                "events_materialized"
-            )
-            or 0
+            ((prospective_claim or {}).get("cohort") or {}).get("events_materialized") or 0
         ),
+        "expansion_phase": expansion_phase,
+        "expansion_active": expansion_active,
+        "expansion_complete": expansion_complete,
+        "expansion_train_groups_complete": int(expansion_train_state.get("groups_complete") or 0),
+        "expansion_train_groups_total": int(expansion_train_state.get("groups_total") or 0),
+        "expansion_validation_groups_complete": int(
+            expansion_validation_state.get("groups_complete") or 0
+        ),
+        "expansion_validation_groups_total": int(
+            expansion_validation_state.get("groups_total") or 0
+        ),
+        "expansion_train_events": int(expansion_counts.get("train_events") or 0),
+        "expansion_development_events": int(expansion_counts.get("development_events") or 0),
+        "expansion_confirmation_events": int(expansion_counts.get("confirmation_events") or 0),
+        "expansion_prospective_excluded": expansion_isolation.get("prospective_excluded"),
+        "expansion_confirmation_opened_once": expansion_result.get("confirmation_opened_once"),
+        "expansion_confirmation_gate": expansion_result.get("confirmation_gate"),
+        "expansion_comparison": expansion_comparison,
         "dataset_audit_status": (audit or {}).get("status"),
         "dataset_audit_samples": int(audit_counts.get("samples_audited") or 0),
         "dataset_audit_issues": int(audit_counts.get("issues") or 0),
@@ -392,9 +401,7 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
             "normalization_recomputed_from_train_only"
         ),
         "external_evaluation_executed": bool(external),
-        "external_test_used_for_selection": external_protocol.get(
-            "wfigs_test_used_for_selection"
-        ),
+        "external_test_used_for_selection": external_protocol.get("wfigs_test_used_for_selection"),
         "external_summary": (external or {}).get("summary"),
         "adapted_evaluation_executed": bool(effective_adapted),
         "adapted_test_used_for_selection": effective_adapted_protocol.get(
@@ -434,9 +441,18 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         ),
         "scaleup_adaptation_artifact": _relative(
             scaleup_adaptation_state_path
-            if scaleup_adaptation_state_path
-            and scaleup_adaptation_state_path.is_file()
+            if scaleup_adaptation_state_path and scaleup_adaptation_state_path.is_file()
             else None,
+            root,
+        ),
+        "expansion_artifact": _relative(
+            expansion_result_path
+            if expansion_result_path and expansion_result_path.is_file()
+            else (
+                expansion_prereg_path
+                if expansion_prereg_path and expansion_prereg_path.is_file()
+                else expansion_state_path
+            ),
             root,
         ),
     }
@@ -452,13 +468,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     )
     replication_root = replication_roots[-1] if replication_roots else None
     replication_summary_path = (
-        replication_root / "RCDA_VAL_REPLICATION_SUMMARY.json"
-        if replication_root
-        else None
+        replication_root / "RCDA_VAL_REPLICATION_SUMMARY.json" if replication_root else None
     )
-    replication_summary = (
-        _read_json(replication_summary_path) if replication_summary_path else None
-    )
+    replication_summary = _read_json(replication_summary_path) if replication_summary_path else None
     if replication_summary and not (
         replication_summary.get("schema") == "wfd_rcda_val_replication_summary_v1"
         and replication_summary.get("selection_split") == "val"
@@ -473,8 +485,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         _read_json(replication_ensemble_path) if replication_ensemble_path else None
     )
     if replication_ensemble and not (
-        replication_ensemble.get("schema")
-        == "wfd_rcda_val_probability_ensemble_tune_v2"
+        replication_ensemble.get("schema") == "wfd_rcda_val_probability_ensemble_tune_v2"
         and replication_ensemble.get("selection_split") == "val"
         and replication_ensemble.get("test_evaluated") is False
         and replication_ensemble.get("test_used_for_selection") is False
@@ -519,9 +530,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     validation_ranking = (validation_scorecard or {}).get("ranking") or []
     validation_leader = validation_ranking[0] if validation_ranking else {}
     validation_runner_up = validation_ranking[1] if len(validation_ranking) > 1 else {}
-    validation_ensemble_path = (
-        work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES.json" if work else None
-    )
+    validation_ensemble_path = work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES.json" if work else None
     if validation_ensemble_path and not validation_ensemble_path.is_file():
         validation_ensemble_path = work / "LOW_LR_VAL_ENSEMBLES.json"
     if validation_ensemble_path and not validation_ensemble_path.is_file():
@@ -535,27 +544,18 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         and validation_ensemble_report.get("test_used_for_selection") is False
     ):
         validation_ensemble_report = None
-    validation_ensemble_ranking = (
-        (validation_ensemble_report or {}).get("ranking") or []
-    )
+    validation_ensemble_ranking = (validation_ensemble_report or {}).get("ranking") or []
     validation_ensemble_best = next(
-        (
-            row
-            for row in validation_ensemble_ranking
-            if len(row.get("members") or []) > 1
-        ),
+        (row for row in validation_ensemble_ranking if len(row.get("members") or []) > 1),
         None,
     )
-    validation_ensemble_decision = (
-        (validation_ensemble_report or {}).get("decision") or {}
-    )
+    validation_ensemble_decision = (validation_ensemble_report or {}).get("decision") or {}
     validation_ensemble_paired_path = (
         work / "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json" if work else None
     )
     validation_ensemble_paired_report = (
         _read_json(validation_ensemble_paired_path)
-        if validation_ensemble_paired_path
-        and validation_ensemble_paired_path.is_file()
+        if validation_ensemble_paired_path and validation_ensemble_paired_path.is_file()
         else None
     )
     if validation_ensemble_paired_report and not (
@@ -564,12 +564,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         and validation_ensemble_paired_report.get("test_used_for_selection") is False
     ):
         validation_ensemble_paired_report = None
-    validation_ensemble_paired = (
-        (validation_ensemble_paired_report or {}).get("decision", {}).get(
-            "paired_validation"
-        )
-        or {}
-    )
+    validation_ensemble_paired = (validation_ensemble_paired_report or {}).get("decision", {}).get(
+        "paired_validation"
+    ) or {}
     validation_postprocess_path = work / "LOW_LR_POSTPROCESS_VAL.json" if work else None
     validation_postprocess = (
         _read_json(validation_postprocess_path) if validation_postprocess_path else None
@@ -580,13 +577,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     ):
         validation_postprocess = None
     validation_postprocess_best = (validation_postprocess or {}).get("best") or {}
-    validation_reproducibility_path = (
-        work / "LOW_LR_REPRODUCIBILITY.json" if work else None
-    )
+    validation_reproducibility_path = work / "LOW_LR_REPRODUCIBILITY.json" if work else None
     validation_reproducibility = (
-        _read_json(validation_reproducibility_path)
-        if validation_reproducibility_path
-        else None
+        _read_json(validation_reproducibility_path) if validation_reproducibility_path else None
     )
     if validation_reproducibility and not (
         validation_reproducibility.get("selection_split") == "val"
@@ -594,12 +587,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         and validation_reproducibility.get("test_used_for_selection") is False
     ):
         validation_reproducibility = None
-    validation_strata_path = (
-        work / "LOW_LR_VALIDATION_STRATA.json" if work else None
-    )
-    validation_strata = (
-        _read_json(validation_strata_path) if validation_strata_path else None
-    )
+    validation_strata_path = work / "LOW_LR_VALIDATION_STRATA.json" if work else None
+    validation_strata = _read_json(validation_strata_path) if validation_strata_path else None
     if validation_strata and not (
         validation_strata.get("selection_split") == "val"
         and validation_strata.get("test_evaluated") is False
@@ -624,8 +613,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     ):
         train_sampler_report = None
     train_sampler_strategies = {
-        str(row.get("name")): row
-        for row in (train_sampler_report or {}).get("strategies") or []
+        str(row.get("name")): row for row in (train_sampler_report or {}).get("strategies") or []
     }
     pretest_decision_path = work / "PRETEST_DECISION_LOG.json" if work else None
     pretest_decision = _read_json(pretest_decision_path) if pretest_decision_path else None
@@ -634,24 +622,16 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         and pretest_decision.get("new_candidate_test_evaluated") is False
         and pretest_decision.get("test_used_for_model_selection") is False
     )
-    numeric_recovery = (
-        ((pretest_decision or {}).get("evidence") or {}).get(
-            "numeric_failure_recovery"
-        )
-        or {}
-    )
+    numeric_recovery = ((pretest_decision or {}).get("evidence") or {}).get(
+        "numeric_failure_recovery"
+    ) or {}
     numeric_failure = numeric_recovery.get("numeric_failure") or {}
     numeric_ranking = numeric_recovery.get("ranking") or []
-    numeric_hotfix = (
-        ((pretest_decision or {}).get("decisions") or {}).get(
-            "numeric_stability_hotfix"
-        )
-        or {}
-    )
-    runtime_manifest_path = work / "KAGGLE_RUNTIME_MANIFEST.json" if work else None
-    runtime_manifest = (
-        _read_json(runtime_manifest_path) if runtime_manifest_path else None
+    numeric_hotfix = ((pretest_decision or {}).get("decisions") or {}).get(
+        "numeric_stability_hotfix"
     ) or {}
+    runtime_manifest_path = work / "KAGGLE_RUNTIME_MANIFEST.json" if work else None
+    runtime_manifest = (_read_json(runtime_manifest_path) if runtime_manifest_path else None) or {}
     runtime_runs = runtime_manifest.get("runs") or []
     active_runtime = next(
         (
@@ -663,15 +643,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     )
     scorecard_path = work / "PAPER_SCORECARD.json" if work else None
     scorecard = _read_json(scorecard_path) if scorecard_path else None
-    validation_figure_path = (
-        root / "docs/figures/rcda_validation_evidence_20260819.svg"
-    )
+    validation_figure_path = root / "docs/figures/rcda_validation_evidence_20260819.svg"
 
     phase = str(state.get("phase") or "not_started")
     frozen_winner = (frozen or {}).get("winner") or None
-    frozen_run_name = str(
-        ((frozen_winner or {}).get("config") or {}).get("run_name") or ""
-    )
+    frozen_run_name = str(((frozen_winner or {}).get("config") or {}).get("run_name") or "")
     winner = None
     if validation_leader:
         winner = {
@@ -686,7 +662,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
     elif state.get("winner") is not None:
         winner = state.get("winner")
     elif tuning:
-        leader = ((tuning.get("ranking") or [None])[0])
+        leader = (tuning.get("ranking") or [None])[0]
         if isinstance(leader, dict):
             winner = {
                 "val_event_macro_iou": leader.get("val_event_macro_iou"),
@@ -736,7 +712,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "preregistered_final_test_gcp",
             }
             else "kaggle_gpu"
-            if phase in {
+            if phase
+            in {
                 "validation_only_tuning",
                 "validation_only_stage2",
                 "preregistered_final_test",
@@ -755,16 +732,13 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         ),
         "training_progress": (
             {
-                "run": active_runtime.get("run_name")
-                or state.get("active_validation_run"),
+                "run": active_runtime.get("run_name") or state.get("active_validation_run"),
                 "seed": progress_state.get("active_seed"),
                 "epoch": progress_state.get("checkpoint_epoch"),
                 "train_loss": progress_state.get("train_loss"),
                 "val_f1_at_0_5": progress_state.get("val_f1_at_0_5"),
                 "val_event_macro_iou": progress_state.get("val_event_macro_iou"),
-                "val_selection_threshold": progress_state.get(
-                    "val_selection_threshold"
-                ),
+                "val_selection_threshold": progress_state.get("val_selection_threshold"),
                 "spot_restarts": progress_state.get("spot_restarts", 0),
                 "remote_status": state.get("kernel_status"),
                 "best_completed_val_event_macro_iou": state.get(
@@ -825,13 +799,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "best_epoch": winner.get("best_epoch"),
                 "frozen": bool(
                     frozen_run_name
-                    and frozen_run_name
-                    == str((winner.get("config") or {}).get("run_name") or "")
+                    and frozen_run_name == str((winner.get("config") or {}).get("run_name") or "")
                 ),
                 "post_freeze_candidate": bool(
                     frozen_run_name
-                    and frozen_run_name
-                    != str((winner.get("config") or {}).get("run_name") or "")
+                    and frozen_run_name != str((winner.get("config") or {}).get("run_name") or "")
                 ),
                 "event_bootstrap_95_ci": validation_leader.get("event_bootstrap_95_ci"),
                 "delta_vs_runner_up": validation_runner_up.get(
@@ -867,16 +839,9 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "event_macro_iou": row.get("event_macro_iou"),
                 "event_median_iou": row.get("event_median_iou"),
                 "event_bootstrap_95_ci": row.get("event_bootstrap_95_ci") or [],
-                "delta_from_leader": row.get(
-                    "leader_minus_candidate_paired_delta"
-                ),
-                "delta_from_leader_95_ci": row.get(
-                    "leader_minus_candidate_bootstrap_95_ci"
-                )
-                or [],
-                "leader_wins_event_fraction": row.get(
-                    "leader_wins_event_fraction"
-                ),
+                "delta_from_leader": row.get("leader_minus_candidate_paired_delta"),
+                "delta_from_leader_95_ci": row.get("leader_minus_candidate_bootstrap_95_ci") or [],
+                "leader_wins_event_fraction": row.get("leader_wins_event_fraction"),
                 "threshold": row.get("selected_threshold"),
                 "best_epoch": row.get("best_epoch"),
             }
@@ -886,12 +851,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         "validation_evidence": {
             "events": (validation_scorecard or {}).get("events"),
             "candidate_count": len(validation_ranking),
-            "bootstrap_resamples": (validation_scorecard or {}).get(
-                "bootstrap_resamples"
-            ),
-            "uncertainty_unit": (validation_scorecard or {}).get(
-                "uncertainty_unit"
-            ),
+            "bootstrap_resamples": (validation_scorecard or {}).get("bootstrap_resamples"),
+            "uncertainty_unit": (validation_scorecard or {}).get("uncertainty_unit"),
             "selection_split": "val",
             "test_evaluated": False,
         },
@@ -910,9 +871,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             {
                 "name": validation_ensemble_best.get("name"),
                 "members": validation_ensemble_best.get("members") or [],
-                "event_macro_iou": validation_ensemble_best.get(
-                    "event_macro_iou"
-                ),
+                "event_macro_iou": validation_ensemble_best.get("event_macro_iou"),
                 "threshold": validation_ensemble_best.get("threshold"),
                 "delta_vs_best_individual": validation_ensemble_decision.get(
                     "best_multi_minus_individual"
@@ -920,12 +879,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "preregistered": validation_ensemble_decision.get(
                     "preregister_multi_model_ensemble"
                 ),
-                "paired_delta_95_ci": validation_ensemble_paired.get(
-                    "event_bootstrap_95_ci"
-                ),
-                "paired_wins_event_fraction": validation_ensemble_paired.get(
-                    "wins_event_fraction"
-                ),
+                "paired_delta_95_ci": validation_ensemble_paired.get("event_bootstrap_95_ci"),
+                "paired_wins_event_fraction": validation_ensemble_paired.get("wins_event_fraction"),
                 "paired_events": validation_ensemble_paired.get("events"),
                 "selection_split": "val",
                 "test_evaluated": False,
@@ -935,17 +890,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         ),
         "validation_postprocess": (
             {
-                "event_macro_iou": validation_postprocess_best.get(
-                    "event_macro_iou"
-                ),
+                "event_macro_iou": validation_postprocess_best.get("event_macro_iou"),
                 "pooled_iou": validation_postprocess_best.get("pooled_iou"),
                 "threshold": validation_postprocess_best.get("threshold"),
-                "dilation_radius_px": validation_postprocess_best.get(
-                    "dilation_radius_px"
-                ),
-                "require_t0_connection": validation_postprocess_best.get(
-                    "require_t0_connection"
-                ),
+                "dilation_radius_px": validation_postprocess_best.get("dilation_radius_px"),
+                "require_t0_connection": validation_postprocess_best.get("require_t0_connection"),
                 "delta_vs_raw": (
                     float(validation_postprocess_best["event_macro_iou"])
                     - float(postprocess_source["event_macro_iou"])
@@ -956,17 +905,14 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "selection_split": "val",
                 "test_evaluated": False,
             }
-            if isinstance(validation_postprocess_best, dict)
-            and validation_postprocess_best
+            if isinstance(validation_postprocess_best, dict) and validation_postprocess_best
             else None
         ),
         "validation_reproducibility": (
             {
                 "run_name": validation_reproducibility.get("run_name"),
                 "events": validation_reproducibility.get("events"),
-                "checkpoint_exact": validation_reproducibility.get(
-                    "checkpoint_exact"
-                ),
+                "checkpoint_exact": validation_reproducibility.get("checkpoint_exact"),
                 "metrics_exact": validation_reproducibility.get("metrics_exact"),
                 "reproducible": validation_reproducibility.get("reproducible"),
                 "max_absolute_event_iou_difference": validation_reproducibility.get(
@@ -990,20 +936,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "event_macro_iou_seed_mean": replication_validation.get(
                     "event_macro_iou_seed_mean"
                 ),
-                "event_macro_iou_by_seed": replication_validation.get(
-                    "event_macro_iou_by_seed"
-                )
+                "event_macro_iou_by_seed": replication_validation.get("event_macro_iou_by_seed")
                 or [],
-                "sample_std_across_seeds": replication_validation.get(
-                    "sample_std_across_seeds"
-                ),
-                "event_bootstrap_95_ci": replication_validation.get(
-                    "event_bootstrap_95_ci"
-                )
-                or [],
-                "ensemble_event_macro_iou": replication_best.get(
-                    "event_macro_iou"
-                )
+                "sample_std_across_seeds": replication_validation.get("sample_std_across_seeds"),
+                "event_bootstrap_95_ci": replication_validation.get("event_bootstrap_95_ci") or [],
+                "ensemble_event_macro_iou": replication_best.get("event_macro_iou")
                 if isinstance(replication_best, dict)
                 else None,
                 "ensemble_members": replication_best.get("members") or []
@@ -1015,13 +952,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "ensemble_delta_vs_best_individual": replication_decision.get(
                     "best_multi_minus_individual"
                 ),
-                "ensemble_delta_95_ci": replication_paired.get(
-                    "event_bootstrap_95_ci"
-                )
-                or [],
-                "ensemble_wins_event_fraction": replication_paired.get(
-                    "wins_event_fraction"
-                ),
+                "ensemble_delta_95_ci": replication_paired.get("event_bootstrap_95_ci") or [],
+                "ensemble_wins_event_fraction": replication_paired.get("wins_event_fraction"),
                 "selection_split": "val",
                 "test_evaluated": False,
             }
@@ -1032,12 +964,8 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             {
                 "run_name": validation_strata.get("run_name"),
                 "events": validation_strata.get("events"),
-                "duration_spearman": validation_strata.get(
-                    "duration_spearman"
-                ),
-                "growth_support_spearman": validation_strata.get(
-                    "growth_support_spearman"
-                ),
+                "duration_spearman": validation_strata.get("duration_spearman"),
+                "growth_support_spearman": validation_strata.get("growth_support_spearman"),
                 "duration_strata": validation_strata.get("duration_strata") or [],
                 "growth_strata": validation_strata.get("growth_strata") or [],
                 "selection_split": "val",
@@ -1050,18 +978,16 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             {
                 "samples": train_sampler_report.get("samples"),
                 "events": train_sampler_report.get("events"),
-                "zero_growth_fraction": train_sampler_report.get(
-                    "observed_zero_growth_fraction"
-                ),
+                "zero_growth_fraction": train_sampler_report.get("observed_zero_growth_fraction"),
                 "samples_with_any_t0_loss": (
                     train_sampler_report.get("transition_geometry") or {}
                 ).get("samples_with_any_t0_loss"),
                 "default_event_mass_cv": (
                     train_sampler_strategies.get("default_size_event_half") or {}
                 ).get("event_probability_mass_cv"),
-                "uniform_event_mass_cv": (
-                    train_sampler_strategies.get("uniform_events") or {}
-                ).get("event_probability_mass_cv"),
+                "uniform_event_mass_cv": (train_sampler_strategies.get("uniform_events") or {}).get(
+                    "event_probability_mass_cv"
+                ),
                 "validation_evaluated": False,
                 "test_evaluated": False,
             }
@@ -1077,12 +1003,12 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 if numeric_ranking and isinstance(numeric_ranking[0], dict)
                 else None
             ),
-            "train_files_scanned": (
-                numeric_failure.get("train_npy_finiteness_scan") or {}
-            ).get("files"),
-            "nonfinite_train_files": (
-                numeric_failure.get("train_npy_finiteness_scan") or {}
-            ).get("nonfinite_files"),
+            "train_files_scanned": (numeric_failure.get("train_npy_finiteness_scan") or {}).get(
+                "files"
+            ),
+            "nonfinite_train_files": (numeric_failure.get("train_npy_finiteness_scan") or {}).get(
+                "nonfinite_files"
+            ),
             "max_grad_norm": 5.0 if numeric_hotfix else None,
             "future_runs_fail_fast": bool(numeric_hotfix),
             "test_evaluated": numeric_failure.get("test_evaluated"),
@@ -1104,9 +1030,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 if isinstance(ensemble, dict)
                 else None,
                 "ensemble_vs_strongest_delta": (
-                    (ensemble.get("vs_strongest_baseline") or {}).get(
-                        "paired_delta"
-                    )
+                    (ensemble.get("vs_strongest_baseline") or {}).get("paired_delta")
                     if isinstance(ensemble, dict)
                     else None
                 ),
@@ -1117,15 +1041,11 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                     if isinstance(ensemble, dict)
                     else None
                 ),
-                "ensemble_role": ensemble.get("role")
-                if isinstance(ensemble, dict)
-                else None,
+                "ensemble_role": ensemble.get("role") if isinstance(ensemble, dict) else None,
                 "decoder_event_macro_iou": decoder.get("event_macro_iou")
                 if isinstance(decoder, dict)
                 else None,
-                "decoder_role": decoder.get("role")
-                if isinstance(decoder, dict)
-                else None,
+                "decoder_role": decoder.get("role") if isinstance(decoder, dict) else None,
             }
             if scorecard and isinstance(primary, dict)
             else None
@@ -1133,9 +1053,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
         "claims": {
             "paper_ready": bool(scorecard and scorecard.get("status") == "paper_model_candidate"),
             "external_generalization_proven": False,
-            "wfigs_external_validation_pending": not wfigs[
-                "external_evaluation_executed"
-            ],
+            "wfigs_external_validation_pending": not wfigs["external_evaluation_executed"],
         },
         "artifacts": {
             "state": _relative(state_path, root),
@@ -1154,22 +1072,19 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             ),
             "validation_ensemble_paired": _relative(
                 validation_ensemble_paired_path
-                if validation_ensemble_paired_path
-                and validation_ensemble_paired_path.is_file()
+                if validation_ensemble_paired_path and validation_ensemble_paired_path.is_file()
                 else None,
                 root,
             ),
             "validation_postprocess": _relative(
                 validation_postprocess_path
-                if validation_postprocess_path
-                and validation_postprocess_path.is_file()
+                if validation_postprocess_path and validation_postprocess_path.is_file()
                 else None,
                 root,
             ),
             "validation_reproducibility": _relative(
                 validation_reproducibility_path
-                if validation_reproducibility_path
-                and validation_reproducibility_path.is_file()
+                if validation_reproducibility_path and validation_reproducibility_path.is_file()
                 else None,
                 root,
             ),
@@ -1196,9 +1111,7 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 root,
             ),
             "training_sampler_audit": _relative(
-                train_sampler_path
-                if train_sampler_path and train_sampler_path.is_file()
-                else None,
+                train_sampler_path if train_sampler_path and train_sampler_path.is_file() else None,
                 root,
             ),
             "pretest_decision_log": _relative(

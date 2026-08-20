@@ -329,9 +329,7 @@ def test_research_status_surfaces_only_val_strata(tmp_path: Path) -> None:
     assert status["validation_strata"]["events"] == 106
     assert status["validation_strata"]["growth_support_spearman"]["rho"] == -0.005
     assert status["validation_strata"]["test_evaluated"] is False
-    assert status["artifacts"]["validation_strata"].endswith(
-        "LOW_LR_VALIDATION_STRATA.json"
-    )
+    assert status["artifacts"]["validation_strata"].endswith("LOW_LR_VALIDATION_STRATA.json")
 
 
 def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Path) -> None:
@@ -435,13 +433,9 @@ def test_research_status_surfaces_only_nonleaky_validation_ensemble(tmp_path: Pa
     assert status["numeric_stability"]["checkpoint_epoch"] == 13
     assert status["numeric_stability"]["nonfinite_train_files"] == 0
     assert status["numeric_stability"]["max_grad_norm"] == 5.0
-    assert status["artifacts"]["pretest_decision_log"].endswith(
-        "PRETEST_DECISION_LOG.json"
-    )
+    assert status["artifacts"]["pretest_decision_log"].endswith("PRETEST_DECISION_LOG.json")
     assert status["validation_ensemble"]["test_evaluated"] is False
-    assert status["artifacts"]["validation_ensemble"].endswith(
-        "PHASE1_VAL_ENSEMBLES.json"
-    )
+    assert status["artifacts"]["validation_ensemble"].endswith("PHASE1_VAL_ENSEMBLES.json")
     assert status["artifacts"]["validation_ensemble_paired"].endswith(
         "LOW_LR_WEIGHTED_VAL_ENSEMBLES_PAIRED.json"
     )
@@ -682,8 +676,7 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
         },
     )
     _write(
-        tmp_path
-        / "outputs/ml_eval/wfigs_domain_adaptation_20260819/WFIGS_ADAPTED_TEST_EVAL.json",
+        tmp_path / "outputs/ml_eval/wfigs_domain_adaptation_20260819/WFIGS_ADAPTED_TEST_EVAL.json",
         {
             "protocol": {"wfigs_test_used_for_selection": False},
             "summary": {
@@ -698,7 +691,7 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
                     "paired_delta": 0.06,
                     "paired_delta_event_bootstrap_95_ci": [-0.01, 0.11],
                 },
-            }
+            },
         },
     )
 
@@ -716,12 +709,8 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
     assert status["wfigs"]["adapted_test_used_for_selection"] is False
     assert status["wfigs"]["test_groups_complete"] == 7
     assert status["wfigs"]["test_groups_total"] == 19
-    assert status["wfigs"]["test_materialization_phase"] == (
-        "materializing_untouched_wfigs_test"
-    )
-    assert status["wfigs"]["adaptation_phase"] == (
-        "training_on_wfigs_train_val_only"
-    )
+    assert status["wfigs"]["test_materialization_phase"] == ("materializing_untouched_wfigs_test")
+    assert status["wfigs"]["adaptation_phase"] == ("training_on_wfigs_train_val_only")
 
 
 def test_research_status_keeps_sealed_external_result_during_scaleup(
@@ -826,9 +815,79 @@ def test_research_status_prioritizes_completed_prospective_result(
     assert status["prospective_events_selected"] == 16
     assert status["prospective_events_materialized"] == 10
     assert status["adapted_test_used_for_selection"] is False
-    assert status["prospective_claim_artifact"].endswith(
-        "PROSPECTIVE_OPEN_ONCE.json"
+    assert status["prospective_claim_artifact"].endswith("PROSPECTIVE_OPEN_ONCE.json")
+
+
+def test_research_status_surfaces_active_wfigs_expansion(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "outputs/ml_eval/wfigs_training_expansion_20260820/STATE.json",
+        {"groups_complete": 7, "groups_total": 28},
     )
+    _write(
+        tmp_path / "outputs/ml_eval/wfigs_validation_expansion_20260820/STATE.json",
+        {"groups_complete": 5, "groups_total": 14},
+    )
+    expansion = tmp_path / "outputs/ml_eval/wfigs_expansion_paper_20260820"
+    _write(
+        expansion / "STATE.json",
+        {"phase": "waiting_for_expansion", "test_loaded": False},
+    )
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["expansion_phase"] == "waiting_for_expansion"
+    assert status["expansion_active"] is True
+    assert status["expansion_train_groups_complete"] == 7
+    assert status["expansion_train_groups_total"] == 28
+    assert status["expansion_validation_groups_complete"] == 5
+    assert status["expansion_validation_groups_total"] == 14
+    assert status["expansion_artifact"].endswith("STATE.json")
+
+
+def test_research_status_surfaces_wfigs_confirmation_result(tmp_path: Path) -> None:
+    expansion = tmp_path / "outputs/ml_eval/wfigs_expansion_paper_20260820"
+    _write(
+        expansion / "STATE.json",
+        {"phase": "complete", "confirmation_gate": True},
+    )
+    _write(
+        expansion / "PREREGISTRATION.json",
+        {
+            "isolation": {
+                "prospective_excluded": True,
+                "counts": {
+                    "train_events": 190,
+                    "development_events": 47,
+                    "confirmation_events": 12,
+                },
+            }
+        },
+    )
+    _write(
+        expansion / "CONFIRMATION_RESULT.json",
+        {
+            "confirmation_opened_once": True,
+            "confirmation_gate": True,
+            "comparison": {
+                "candidate_event_macro_iou": 0.19,
+                "baseline_event_macro_iou": 0.14,
+                "paired_delta": 0.05,
+                "paired_delta_event_bootstrap_95_ci": [0.01, 0.09],
+            },
+        },
+    )
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["expansion_complete"] is True
+    assert status["expansion_active"] is False
+    assert status["expansion_train_events"] == 190
+    assert status["expansion_confirmation_events"] == 12
+    assert status["expansion_prospective_excluded"] is True
+    assert status["expansion_confirmation_opened_once"] is True
+    assert status["expansion_confirmation_gate"] is True
+    assert status["expansion_comparison"]["paired_delta"] == 0.05
+    assert status["expansion_artifact"].endswith("CONFIRMATION_RESULT.json")
 
 
 def test_research_status_surfaces_test_free_fixed_seed_replications(
@@ -922,7 +981,8 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Clasificacion VAL" in html
     assert "Cola nocturna de experimentos" in html
     assert "research-pipeline" in html
-    assert "Escalado WFIGS" in html
+    assert "Expansión WFIGS" in html
+    assert "Confirmación nueva" in html
     assert "Lift por adaptación" in html
     assert "Señal externa" in html
     assert "WFIGS TEST" in html
