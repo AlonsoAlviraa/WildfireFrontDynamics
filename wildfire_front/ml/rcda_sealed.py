@@ -17,6 +17,7 @@ import numpy as np
 import scipy
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from scipy.ndimage import binary_dilation, distance_transform_edt, label
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
@@ -67,6 +68,8 @@ class SealedTrainConfig:
     target_mode: str = "growth"
     extent_loss_weight: float = 0.35
     growth_loss_weight: float = 0.65
+    front_ring_bce_weight: float = 0.0
+    front_ring_radius_px: float = 16.0
     base_channels: int = 32
     scheduler_name: str = "cosine"
     selection_metric: str = "event_macro_iou"
@@ -177,6 +180,60 @@ def focal_tversky_loss(
     return torch.pow(1.0 - tversky, gamma).mean()
 
 
+def front_ring_bce_loss(
+    logits: torch.Tensor,
+    inputs: torch.Tensor,
+    growth_targets: torch.Tensor,
+    *,
+    radius_px: float,
+    max_pos_weight: float = 20.0,
+) -> torch.Tensor:
+    """Balanced growth BCE only in the observable ring outside the t0 front."""
+
+    if radius_px <= 0.0 or radius_px > DISTANCE_CAP_PX:
+        raise ValueError(
+            f"front-ring radius must be within (0, {DISTANCE_CAP_PX}] pixels"
+        )
+    if logits.shape != growth_targets.shape:
+        raise ValueError("front-ring logits and growth targets must have equal shape")
+    previous = inputs[:, 0:1] > 0.5
+    normalized_distance = inputs[:, 13:14]
+    ring = (~previous) & (normalized_distance < radius_px / DISTANCE_CAP_PX)
+    ring_logits = logits[ring]
+    ring_targets = growth_targets[ring]
+    if ring_logits.numel() == 0:
+        return logits.sum() * 0.0
+    positives = ring_targets.sum()
+    negatives = ring_targets.numel() - positives
+    pos_weight = (negatives / positives.clamp_min(1.0)).clamp(
+        min=1.0,
+        max=max_pos_weight,
+    )
+    return F.binary_cross_entropy_with_logits(
+        ring_logits,
+        ring_targets,
+        pos_weight=pos_weight,
+    )
+
+
+def _add_front_ring_objective(
+    base_loss: torch.Tensor,
+    growth_logits: torch.Tensor,
+    inputs: torch.Tensor,
+    growth_targets: torch.Tensor,
+    config: SealedTrainConfig,
+) -> torch.Tensor:
+    if config.front_ring_bce_weight <= 0.0:
+        return base_loss
+    ring_loss = front_ring_bce_loss(
+        growth_logits,
+        inputs,
+        growth_targets,
+        radius_px=config.front_ring_radius_px,
+    )
+    return base_loss + config.front_ring_bce_weight * ring_loss
+
+
 def confusion(prediction: np.ndarray, target: np.ndarray) -> np.ndarray:
     pred = prediction.astype(bool)
     truth = target.astype(bool)
@@ -237,14 +294,31 @@ def objective_loss(
             beta=config.tversky_beta,
             gamma=config.tversky_gamma,
         )
-        return config.extent_loss_weight * extent_loss + config.growth_loss_weight * growth_loss
+        base_loss = (
+            config.extent_loss_weight * extent_loss
+            + config.growth_loss_weight * growth_loss
+        )
+        return _add_front_ring_objective(
+            base_loss,
+            growth_logits,
+            inputs,
+            growth_targets,
+            config,
+        )
     if config.target_mode == "growth":
-        return focal_tversky_loss(
+        base_loss = focal_tversky_loss(
             logits,
             growth_targets,
             alpha=config.tversky_alpha,
             beta=config.tversky_beta,
             gamma=config.tversky_gamma,
+        )
+        return _add_front_ring_objective(
+            base_loss,
+            logits,
+            inputs,
+            growth_targets,
+            config,
         )
     extent_loss = focal_tversky_loss(
         logits,
@@ -265,7 +339,17 @@ def objective_loss(
             beta=config.tversky_beta,
             gamma=config.tversky_gamma,
         )
-        return config.extent_loss_weight * extent_loss + config.growth_loss_weight * growth_loss
+        base_loss = (
+            config.extent_loss_weight * extent_loss
+            + config.growth_loss_weight * growth_loss
+        )
+        return _add_front_ring_objective(
+            base_loss,
+            growth_logits,
+            inputs,
+            growth_targets,
+            config,
+        )
     raise ValueError(f"unknown target_mode {config.target_mode!r}")
 
 

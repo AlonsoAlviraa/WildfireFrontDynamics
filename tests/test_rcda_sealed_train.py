@@ -386,6 +386,57 @@ def test_multitask_objective_rewards_correct_growth_and_extent_heads() -> None:
     assert float(correct_loss) < float(swapped_loss)
 
 
+def test_front_ring_bce_rewards_correct_growth_inside_physical_ring() -> None:
+    inputs = torch.zeros(1, 16, 4, 4)
+    inputs[:, 13] = 1.0
+    inputs[:, 13, 1:3, 1:3] = 0.25
+    target = torch.zeros(1, 1, 4, 4)
+    target[:, :, 2, 2] = 1.0
+    correct = torch.full_like(target, -4.0)
+    correct[:, :, 2, 2] = 4.0
+    wrong = -correct
+
+    correct_loss = rcda_sealed.front_ring_bce_loss(
+        correct,
+        inputs,
+        target,
+        radius_px=16.0,
+    )
+    wrong_loss = rcda_sealed.front_ring_bce_loss(
+        wrong,
+        inputs,
+        target,
+        radius_px=16.0,
+    )
+
+    assert float(correct_loss) < float(wrong_loss)
+
+
+def test_front_ring_bce_ignores_logits_outside_selected_radius() -> None:
+    inputs = torch.zeros(1, 16, 4, 4)
+    inputs[:, 13] = 1.0
+    inputs[:, 13, 1:3, 1:3] = 0.25
+    target = torch.zeros(1, 1, 4, 4)
+    first = torch.zeros_like(target)
+    second = first.clone()
+    second[:, :, 0, 0] = 100.0
+
+    first_loss = rcda_sealed.front_ring_bce_loss(
+        first,
+        inputs,
+        target,
+        radius_px=16.0,
+    )
+    second_loss = rcda_sealed.front_ring_bce_loss(
+        second,
+        inputs,
+        target,
+        radius_px=16.0,
+    )
+
+    assert torch.equal(first_loss, second_loss)
+
+
 def test_multitask_prediction_rejects_single_head_output() -> None:
     with pytest.raises(ValueError, match="two output channels"):
         rcda_sealed.prediction_logits(torch.zeros(1, 1, 4, 4), "multitask")
@@ -402,6 +453,8 @@ def test_multitask_training_is_validation_only_and_checkpointed(tmp_path: Path) 
             model_name="resunet_multitask",
             run_name="multitask-smoke",
             target_mode="multitask",
+            front_ring_bce_weight=0.15,
+            front_ring_radius_px=16.0,
             evaluate_test=False,
             compute_paper_metrics=False,
             seed=0,
@@ -417,6 +470,7 @@ def test_multitask_training_is_validation_only_and_checkpointed(tmp_path: Path) 
 
     assert report["test_evaluated"] is False
     assert report["config"]["target_mode"] == "multitask"
+    assert report["config"]["front_ring_bce_weight"] == 0.15
     checkpoint = torch.load(report["checkpoint"], map_location="cpu", weights_only=False)
     assert checkpoint["model_name"] == "resunet_multitask"
     assert checkpoint["target_mode"] == "multitask"

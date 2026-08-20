@@ -62,3 +62,23 @@ def test_multitask_candidate_is_growth_focused_and_event_uniform() -> None:
     assert float(candidate["growth_loss_weight"]) > float(
         candidate["extent_loss_weight"]
     )
+
+
+def test_front_ring_candidate_is_a_single_factor_multitask_ablation() -> None:
+    recipes = {str(row["run_name"]): row for row in STAGE2_RECIPES}
+    base = recipes["resunet_multitask_uniform_events_v1"]
+    candidate = recipes["resunet_multitask_front_ring_v1"]
+
+    for key in (
+        "model_name",
+        "target_mode",
+        "lr",
+        "epochs",
+        "patience",
+        "sampling_strategy",
+        "extent_loss_weight",
+        "growth_loss_weight",
+    ):
+        assert candidate[key] == base[key]
+    assert candidate["front_ring_bce_weight"] == 0.15
+    assert candidate["front_ring_radius_px"] == 16.0
