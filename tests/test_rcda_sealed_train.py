@@ -19,6 +19,7 @@ from wildfire_front.ml.rcda_sealed import (
     confusion,
     encode_features,
     background_bce_loss,
+    far_background_bce_loss,
     focal_tversky_loss,
     load_protocol,
     train_sealed,
@@ -168,6 +169,39 @@ def test_background_bce_is_zero_for_all_growth_target() -> None:
     target = torch.ones(1, 1, 2, 2)
     logits = torch.zeros_like(target)
     assert float(background_bce_loss(logits, target)) == 0.0
+
+
+def test_far_background_bce_ignores_near_front_logits() -> None:
+    inputs = torch.zeros(1, 16, 4, 4)
+    inputs[:, 13] = 0.2
+    target = torch.zeros(1, 1, 4, 4)
+    first = torch.zeros_like(target)
+    second = first.clone()
+    second[:, :, 0, 0] = 8.0
+    first_loss = far_background_bce_loss(
+        first,
+        inputs,
+        target,
+        min_distance_px=12.0,
+    )
+    second_loss = far_background_bce_loss(
+        second,
+        inputs,
+        target,
+        min_distance_px=12.0,
+    )
+    assert torch.equal(first_loss, second_loss)
+
+
+def test_far_background_bce_penalizes_far_positive_logits() -> None:
+    inputs = torch.zeros(1, 16, 4, 4)
+    inputs[:, 13] = 0.5
+    target = torch.zeros(1, 1, 4, 4)
+    suppressed = torch.full_like(target, -4.0)
+    elevated = torch.full_like(target, 4.0)
+    assert float(far_background_bce_loss(suppressed, inputs, target, min_distance_px=12.0)) < float(
+        far_background_bce_loss(elevated, inputs, target, min_distance_px=12.0)
+    )
 
 
 def test_event_balance_power_removes_duration_mass_from_sample_weight(tmp_path: Path) -> None:
