@@ -254,13 +254,12 @@ def single_seed_run_source(run_name: str, seed: int) -> str:
     return source.replace(old, new)
 
 
-def stage_and_push(
+def stage_seed_kernel(
     run_name: str,
     slug: str,
     *,
-    env: dict[str, str],
     seed: int = 0,
-) -> tuple[str, str]:
+) -> tuple[str, str, Path]:
     stage = ROOT / "kaggle_job" / f"_alt_{slug.replace('-', '_')}"
     stage.mkdir(parents=True, exist_ok=True)
     runner = stage / "run_rcda_paper_stage2.py"
@@ -283,9 +282,24 @@ def stage_and_push(
     (stage / "kernel-metadata.json").write_text(
         json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
     )
+    return kernel, sha256_file(runner), stage
+
+
+def stage_and_push(
+    run_name: str,
+    slug: str,
+    *,
+    env: dict[str, str],
+    seed: int = 0,
+) -> tuple[str, str]:
+    kernel, runner_sha256, stage = stage_seed_kernel(
+        run_name,
+        slug,
+        seed=seed,
+    )
     pushed = run(["kaggle", "kernels", "push", "-p", str(stage)], env=env, check=False)
     require_successful_kernel_push(pushed, kernel=kernel)
-    return kernel, sha256_file(runner)
+    return kernel, runner_sha256
 
 
 def main() -> int:
