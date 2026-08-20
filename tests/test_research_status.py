@@ -102,7 +102,7 @@ def test_research_status_surfaces_kaggle_runtime_without_fake_epoch(
     assert progress["registered_runs"] == 2
     assert progress["recovered_runs"] == 1
     assert progress["test_evaluated"] is False
-    assert len(status["experiment_queue"]) == 7
+    assert len(status["experiment_queue"]) == 8
     assert status["experiment_queue"][0]["status"] == "recovered"
     assert status["experiment_queue"][1]["status"] == "active"
     assert status["experiment_queue"][2]["status"] == "planned"
@@ -557,6 +557,18 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
         },
     )
     _write(
+        tmp_path / "outputs/ml_eval/wfigs_test_campaign_20260819/STATE.json",
+        {"groups_complete": 7, "groups_total": 19},
+    )
+    _write(
+        dataset / "EXTERNAL_NIGHTWATCH_STATE.json",
+        {"phase": "materializing_untouched_wfigs_test"},
+    )
+    _write(
+        tmp_path / "outputs/ml_eval/wfigs_domain_adaptation_20260819/STATE.json",
+        {"phase": "training_on_wfigs_train_val_only"},
+    )
+    _write(
         tmp_path
         / "outputs/ml_eval/wfigs_domain_adaptation_20260819/WFIGS_ADAPTED_TEST_EVAL.json",
         {
@@ -580,6 +592,14 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
     assert status["wfigs"]["dataset_audit_issues"] == 0
     assert status["wfigs"]["adapted_evaluation_executed"] is True
     assert status["wfigs"]["adapted_summary"]["ensemble_event_macro_iou"] == 0.23
+    assert status["wfigs"]["test_groups_complete"] == 7
+    assert status["wfigs"]["test_groups_total"] == 19
+    assert status["wfigs"]["test_materialization_phase"] == (
+        "materializing_untouched_wfigs_test"
+    )
+    assert status["wfigs"]["adaptation_phase"] == (
+        "training_on_wfigs_train_val_only"
+    )
 
 
 def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
@@ -610,6 +630,10 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Ensemble adaptado" in html
     assert "Clasificacion VAL" in html
     assert "Cola nocturna de experimentos" in html
+    assert "research-pipeline" in html
+    assert "WFIGS TEST" in html
+    assert "IC95% modelo" in html
+    assert "Ensemble vs rival" in html
     assert "TEST SELLADO" in html
     assert "refreshResearchStatus" in html
     assert "app_payload.json?research=" in html

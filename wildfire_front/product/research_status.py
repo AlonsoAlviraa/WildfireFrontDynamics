@@ -26,6 +26,7 @@ PHASE_LABELS = {
     "validation_only_stage2_growth_low_lr_kaggle": "Fase 2 · growth-only con LR bajo en VAL (Kaggle T4)",
     "validation_only_stage2_event_balanced_kaggle": "Fase 2 · muestreo por incendio en VAL (Kaggle T4)",
     "validation_only_stage2_uniform_events_kaggle": "Fase 2 · masa uniforme por incendio en VAL (Kaggle T4)",
+    "validation_only_stage2_multitask_uniform_kaggle": "Fase 2 · crecimiento/extensión multitarea en VAL (Kaggle T4)",
     "validation_only_stage2_film_kaggle": "Fase 2 · condicionamiento físico FiLM en VAL (Kaggle T4)",
     "recipe_frozen": "Receta congelada",
     "preregistered_final_test": "TEST final · semillas preregistradas",
@@ -41,6 +42,7 @@ VALIDATION_RUN_ORDER = (
     "resunet_growth_low_lr_v1",
     "resunet_hybrid_event_balanced_v1",
     "resunet_hybrid_uniform_events_v1",
+    "resunet_multitask_uniform_events_v1",
     "film_growth_v1",
 )
 
@@ -219,8 +221,22 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     audit_checks = (audit or {}).get("checks") or {}
     external_path = dataset_root / "WFIGS_EXTERNAL_EVAL.json" if dataset_root else None
     external = _read_json(external_path) if external_path else None
+    external_state_path = (
+        dataset_root / "EXTERNAL_NIGHTWATCH_STATE.json" if dataset_root else None
+    )
+    external_state = _read_json(external_state_path) if external_state_path else None
+    test_campaigns = sorted(
+        (root / "outputs/ml_eval").glob("wfigs_test_campaign_*")
+    )
+    test_campaign_root = test_campaigns[-1] if test_campaigns else None
+    test_state_path = test_campaign_root / "STATE.json" if test_campaign_root else None
+    test_state = _read_json(test_state_path) if test_state_path else None
     adaptation_roots = sorted((root / "outputs/ml_eval").glob("wfigs_domain_adaptation_*"))
     adaptation_root = adaptation_roots[-1] if adaptation_roots else None
+    adaptation_state_path = adaptation_root / "STATE.json" if adaptation_root else None
+    adaptation_state = (
+        _read_json(adaptation_state_path) if adaptation_state_path else None
+    )
     adapted_path = adaptation_root / "WFIGS_ADAPTED_TEST_EVAL.json" if adaptation_root else None
     adapted = _read_json(adapted_path) if adapted_path else None
     campaign_incomplete = bool(campaign_state) and int(
@@ -254,6 +270,10 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "train_tensors": int(dataset_by_split.get("train") or 0),
         "validation_tensors": int(dataset_by_split.get("validation") or 0),
         "test_tensors": int(dataset_by_split.get("test") or 0),
+        "test_groups_complete": int((test_state or {}).get("groups_complete") or 0),
+        "test_groups_total": int((test_state or {}).get("groups_total") or 0),
+        "test_materialization_phase": (external_state or {}).get("phase"),
+        "adaptation_phase": (adaptation_state or {}).get("phase"),
         "dataset_audit_status": (audit or {}).get("status"),
         "dataset_audit_samples": int(audit_counts.get("samples_audited") or 0),
         "dataset_audit_issues": int(audit_counts.get("issues") or 0),
@@ -810,10 +830,28 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 "baseline_event_macro_iou": primary.get("dilated_copy"),
                 "paired_delta": primary.get("paired_delta"),
                 "paired_delta_ci": primary.get("paired_delta_event_bootstrap_95_ci"),
+                "model_event_macro_ci": primary.get("event_bootstrap_95_ci"),
                 "gates": gates,
                 "ensemble_event_macro_iou": ensemble.get("event_macro_iou")
                 if isinstance(ensemble, dict)
                 else None,
+                "ensemble_event_macro_ci": ensemble.get("event_bootstrap_95_ci")
+                if isinstance(ensemble, dict)
+                else None,
+                "ensemble_vs_strongest_delta": (
+                    (ensemble.get("vs_strongest_baseline") or {}).get(
+                        "paired_delta"
+                    )
+                    if isinstance(ensemble, dict)
+                    else None
+                ),
+                "ensemble_vs_strongest_delta_ci": (
+                    (ensemble.get("vs_strongest_baseline") or {}).get(
+                        "paired_delta_event_bootstrap_95_ci"
+                    )
+                    if isinstance(ensemble, dict)
+                    else None
+                ),
                 "ensemble_role": ensemble.get("role")
                 if isinstance(ensemble, dict)
                 else None,

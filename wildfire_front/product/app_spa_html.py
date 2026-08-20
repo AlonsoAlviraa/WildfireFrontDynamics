@@ -574,6 +574,16 @@ body.tab-work .rail-stack{min-height:58vh}
 @keyframes research-pulse{0%,100%{box-shadow:0 0 0 3px #0ea5e91c}50%{box-shadow:0 0 0 7px #0ea5e900}}
 .research-progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 12px}
 .research-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#818cf8);width:0}
+.research-pipeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.research-stage{position:relative;min-width:0;padding:9px 8px;border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(145deg,var(--panel),var(--panel2))}
+.research-stage .top{display:flex;align-items:center;gap:6px;color:var(--faint);font:8px/1 var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.research-stage .top i{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.research-stage b{display:block;margin-top:6px;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-size:10px;white-space:nowrap}
+.research-stage small{display:block;margin-top:4px;min-height:22px;color:var(--muted);font:8px/1.35 var(--mono)}
+.research-stage .mini{height:3px;margin-top:7px;overflow:hidden;border-radius:9px;background:var(--line)}
+.research-stage .mini span{display:block;height:100%;width:0;background:var(--faint);border-radius:9px}
+.research-stage.done{border-color:#22c55e44}.research-stage.done .top{color:var(--go)}.research-stage.done .top i,.research-stage.done .mini span{background:var(--go)}
+.research-stage.active{border-color:#0ea5e966;box-shadow:inset 0 0 24px #0ea5e908}.research-stage.active .top{color:var(--cyan)}.research-stage.active .top i{background:var(--cyan);box-shadow:0 0 0 4px #0ea5e922}.research-stage.active .mini span{background:linear-gradient(90deg,var(--cyan),#818cf8)}
 .research-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .research-figure{margin:12px 0 0}.research-figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:var(--r);background:#fff}
 .research-figure figcaption{margin-top:5px;font-size:9px;color:var(--muted)}
@@ -2094,6 +2104,21 @@ function researchCheck(parent, text, pass) {
   const label = document.createElement('span'); label.textContent = text;
   row.append(icon, label); parent.appendChild(row);
 }
+function researchStage(parent, label, status, detail, progressValue) {
+  const stage = document.createElement('div');
+  stage.className = 'research-stage ' + String(status || 'pending');
+  const top = document.createElement('div'); top.className = 'top';
+  const dot = document.createElement('i');
+  const state = document.createElement('span');
+  state.textContent = status === 'done' ? 'cerrado' : (status === 'active' ? 'en curso' : 'pendiente');
+  top.append(dot, state);
+  const name = document.createElement('b'); name.textContent = label;
+  const note = document.createElement('small'); note.textContent = detail || 'sin artefacto todavía';
+  const mini = document.createElement('div'); mini.className = 'mini';
+  const fill = document.createElement('span');
+  fill.style.width = String(Math.max(0, Math.min(100, Number(progressValue) || 0))) + '%';
+  mini.appendChild(fill); stage.append(top, name, note, mini); parent.appendChild(stage);
+}
 function researchRunName(value) {
   return String(value || 'sin nombre').replaceAll('_', ' ');
 }
@@ -2180,14 +2205,35 @@ function renderResearchStatus() {
   const numericStability = rs.numeric_stability || {};
   const final = rs.final || {};
   const strongest = baseline.strongest_learned || {};
+  const pipeline = document.createElement('div'); pipeline.className = 'research-pipeline';
+  const rcdaClosed = rs.phase === 'complete' && final.model_event_macro_iou != null;
+  const testDone = wfigs.external_evaluation_executed === true;
+  const testActive = !testDone && String(wfigs.test_materialization_phase || '').indexOf('waiting') < 0 && Boolean(wfigs.test_materialization_phase);
+  const testTotal = Number(wfigs.test_groups_total || 0);
+  const testComplete = Number(wfigs.test_groups_complete || 0);
+  const testProgress = testDone ? 100 : (testTotal > 0 ? 100 * testComplete / testTotal : 0);
+  const adaptDone = wfigs.adapted_evaluation_executed === true;
+  const adaptActive = !adaptDone && String(wfigs.adaptation_phase || '').indexOf('training') >= 0;
+  researchStage(pipeline, 'RCDA sellado', rcdaClosed ? 'done' : 'active', rcdaClosed ? (String(final.events || 0) + ' incendios · TEST cerrado') : 'receta y métricas en curso', rcdaClosed ? 100 : 50);
+  researchStage(pipeline, 'WFIGS TEST', testDone ? 'done' : (testActive ? 'active' : 'pending'), testDone ? (String(wfigs.test_tensors || 0) + ' tensores evaluados') : (String(testComplete) + '/' + String(testTotal || '—') + ' grupos materializados'), testProgress);
+  researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDone ? 'TRAIN/VAL congelado · TEST ejecutado' : researchRunName(wfigs.adaptation_phase || 'esperando TEST'), adaptDone ? 100 : (adaptActive ? 55 : 0));
+  host.appendChild(pipeline);
   const grid = document.createElement('div'); grid.className = 'research-grid';
   researchStat(grid, 'Datos sellados', String(protocol.samples || 0), String(protocol.events || 0) + ' incendios');
   researchStat(grid, strongest.event_macro_iou != null ? 'Rival aprendido TEST' : 'Baseline TEST', researchScore(strongest.event_macro_iou != null ? strongest.event_macro_iou : baseline.event_macro_iou), strongest.event_macro_iou != null ? ('IoU macro · ' + (strongest.name || 'modelo sellado')) : 'IoU macro · copia dilatada');
   if (final.model_event_macro_iou != null) {
     researchStat(grid, 'Modelo TEST', researchScore(final.model_event_macro_iou), String(final.events || protocol.splits?.test?.events || '—') + ' incendios', true);
     researchStat(grid, 'Delta pareado', (Number(final.paired_delta) >= 0 ? '+' : '') + researchScore(final.paired_delta), 'bootstrap por incendio');
+    if ((final.model_event_macro_ci || []).length === 2) {
+      researchStat(grid, 'IC95% modelo', researchScore(final.model_event_macro_ci[0]) + '–' + researchScore(final.model_event_macro_ci[1]), 'bootstrap por incendio');
+    }
     if (final.ensemble_event_macro_iou != null) {
-      researchStat(grid, 'Ensemble TEST', researchScore(final.ensemble_event_macro_iou), 'secundario · promedio de probabilidades');
+      const ensembleCi = final.ensemble_event_macro_ci || [];
+      researchStat(grid, 'Ensemble TEST', researchScore(final.ensemble_event_macro_iou), ensembleCi.length === 2 ? ('IC95% ' + researchScore(ensembleCi[0]) + '–' + researchScore(ensembleCi[1])) : 'secundario · promedio de probabilidades', true);
+    }
+    if (final.ensemble_vs_strongest_delta != null) {
+      const strongestCi = final.ensemble_vs_strongest_delta_ci || [];
+      researchStat(grid, 'Ensemble vs rival', (Number(final.ensemble_vs_strongest_delta) >= 0 ? '+' : '') + researchScore(final.ensemble_vs_strongest_delta), strongestCi.length === 2 ? ('IC95% ' + researchScore(strongestCi[0]) + '–' + researchScore(strongestCi[1])) : 'comparación pareada');
     }
     if (final.decoder_event_macro_iou != null) {
       researchStat(grid, 'Decoder TEST', researchScore(final.decoder_event_macro_iou), 'secundario · geometría congelada en VAL');
@@ -2309,6 +2355,9 @@ function renderResearchStatus() {
     ? 'campaña TRAIN/VAL en ejecución'
     : (String(wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.validation_tensors || 0) + ' VAL');
   researchStat(externalGrid, 'Tensores externos', String(wfigs.tensors_training_ready || 0), tensorDetail, true);
+  if (wfigs.test_groups_total) {
+    researchStat(externalGrid, 'Progreso WFIGS TEST', String(wfigs.test_groups_complete || 0) + '/' + String(wfigs.test_groups_total), researchRunName(wfigs.test_materialization_phase || 'pendiente'), testActive);
+  }
   const external = wfigs.external_summary || {};
   const pairedExternal = external.paired_event_analysis || {};
   if (wfigs.external_evaluation_executed) {
