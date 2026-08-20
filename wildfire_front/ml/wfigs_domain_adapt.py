@@ -223,11 +223,11 @@ def adapt_frozen_rcda_on_wfigs(
             device,
         )
         source_state = source_payload["state_dict"]
-        if adaptation.include_valid_mask:
+        if adaptation.include_valid_mask or adaptation.include_geometry_features:
             target_state = model.state_dict()
             for name, value in source_state.items():
                 if name not in target_state:
-                    raise ValueError(f"source parameter missing from valid-mask model: {name}")
+                    raise ValueError(f"augmented source parameter missing from model: {name}")
                 if target_state[name].shape == value.shape:
                     target_state[name] = value
                 elif (
@@ -244,7 +244,7 @@ def adapt_frozen_rcda_on_wfigs(
                     target_state[name][:, : value.shape[1]] = value
                     target_state[name][:, value.shape[1] :] = 0.0
                 else:
-                    raise ValueError(f"valid-mask source parameter shape mismatch: {name}")
+                    raise ValueError(f"augmented source parameter shape mismatch: {name}")
             model.load_state_dict(target_state)
         else:
             model.load_state_dict(source_state)
