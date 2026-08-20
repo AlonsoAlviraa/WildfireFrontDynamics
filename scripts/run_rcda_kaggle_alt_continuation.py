@@ -45,6 +45,7 @@ RUNS: tuple[tuple[str, str, str], ...] = (
     ("resunet_growth_low_lr_v1", "wfd-rcda-growth-low-lr-gpu-v1", "validation_only_stage2_growth_low_lr_kaggle"),
     ("resunet_hybrid_event_balanced_v1", "wfd-rcda-event-balanced-gpu-v1", "validation_only_stage2_event_balanced_kaggle"),
     ("resunet_hybrid_uniform_events_v1", "wfd-rcda-uniform-events-gpu-v1", "validation_only_stage2_uniform_events_kaggle"),
+    ("resunet_multitask_uniform_events_v1", "wfd-rcda-multitask-uniform-gpu-v1", "validation_only_stage2_multitask_uniform_kaggle"),
     ("film_growth_v1", "wfd-rcda-film-gpu-v1", "validation_only_stage2_film_kaggle"),
 )
 

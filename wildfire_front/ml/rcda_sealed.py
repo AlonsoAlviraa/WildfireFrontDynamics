@@ -218,6 +218,26 @@ def objective_loss(
 ) -> torch.Tensor:
     """Compute the registered objective without using validation or test labels."""
 
+    if config.target_mode == "multitask":
+        if logits.ndim != 4 or logits.shape[1] != 2:
+            raise ValueError("multitask mode requires [N, 2, H, W] logits")
+        growth_logits = logits[:, 0:1]
+        extent_logits = logits[:, 1:2]
+        growth_loss = focal_tversky_loss(
+            growth_logits,
+            growth_targets,
+            alpha=config.tversky_alpha,
+            beta=config.tversky_beta,
+            gamma=config.tversky_gamma,
+        )
+        extent_loss = focal_tversky_loss(
+            extent_logits,
+            extent_targets,
+            alpha=config.tversky_alpha,
+            beta=config.tversky_beta,
+            gamma=config.tversky_gamma,
+        )
+        return config.extent_loss_weight * extent_loss + config.growth_loss_weight * growth_loss
     if config.target_mode == "growth":
         return focal_tversky_loss(
             logits,
@@ -551,8 +571,16 @@ class SealedASPPUNet(nn.Module):
 
 
 class SealedResidualUNet(nn.Module):
-    def __init__(self, in_channels: int = 16, base: int = 32) -> None:
+    def __init__(
+        self,
+        in_channels: int = 16,
+        base: int = 32,
+        *,
+        out_channels: int = 1,
+    ) -> None:
         super().__init__()
+        if out_channels < 1:
+            raise ValueError("out_channels must be positive")
         self.enc1 = ResidualBlock(in_channels, base)
         self.enc2 = ResidualBlock(base, base * 2)
         self.enc3 = ResidualBlock(base * 2, base * 4)
@@ -565,7 +593,7 @@ class SealedResidualUNet(nn.Module):
         self.dec3 = ResidualBlock(base * 8, base * 4)
         self.dec2 = ResidualBlock(base * 4, base * 2)
         self.dec1 = ResidualBlock(base * 2, base)
-        self.out = nn.Conv2d(base, 1, 1)
+        self.out = nn.Conv2d(base, out_channels, 1)
 
     def forward(self, tensor: torch.Tensor) -> torch.Tensor:
         e1 = self.enc1(tensor)
@@ -655,9 +683,31 @@ def build_model(name: str, in_channels: int = 16, *, base: int = 32) -> nn.Modul
         return SealedASPPUNet(in_channels=in_channels, base=base)
     if name == "resunet":
         return SealedResidualUNet(in_channels=in_channels, base=base)
+    if name == "resunet_multitask":
+        return SealedResidualUNet(
+            in_channels=in_channels,
+            base=base,
+            out_channels=2,
+        )
     if name == "film_unet":
         return SealedFiLMUNet(in_channels=in_channels, base=base)
     raise ValueError(f"unknown model {name}")
+
+
+def prediction_logits(logits: torch.Tensor, prediction_mode: str) -> torch.Tensor:
+    """Select the growth logit while keeping auxiliary heads train-only."""
+
+    if logits.ndim != 4:
+        raise ValueError("model output must have shape [N, C, H, W]")
+    if prediction_mode == "multitask":
+        if logits.shape[1] != 2:
+            raise ValueError("multitask inference requires two output channels")
+        return logits[:, 0:1]
+    if logits.shape[1] != 1:
+        raise ValueError(
+            f"prediction mode {prediction_mode!r} requires one output channel"
+        )
+    return logits
 
 
 def prepare_model_for_device(model: nn.Module, device: torch.device) -> nn.Module:
@@ -725,12 +775,13 @@ def evaluate_split_postprocessed(
     n_samples = 0
     for batch in loader:
         inputs = batch["input"]
-        probs = torch.sigmoid(model(prepare_inputs_for_device(inputs, device))).cpu().numpy()
+        logits = model(prepare_inputs_for_device(inputs, device))
+        probs = torch.sigmoid(prediction_logits(logits, prediction_mode)).cpu().numpy()
         targets = batch["target"].numpy()
         previous = inputs[:, 0:1].numpy() > 0.5
         distance = inputs[:, 13].numpy() * DISTANCE_CAP_PX
         thresholded = probs >= threshold
-        if prediction_mode in {"extent", "hybrid"}:
+        if prediction_mode in {"extent", "hybrid", "multitask"}:
             thresholded = np.logical_and(thresholded, ~previous)
         n_samples += len(batch["uid"])
         for index, uid in enumerate(batch["uid"]):
@@ -793,11 +844,11 @@ def evaluate_split(
     for batch in loader:
         inputs = batch["input"]
         logits = model(prepare_inputs_for_device(inputs, device))
-        probs = torch.sigmoid(logits).cpu().numpy()
+        probs = torch.sigmoid(prediction_logits(logits, prediction_mode)).cpu().numpy()
         targets = batch["target"].numpy()
         extent_targets = batch["extent_target"].numpy()
         preds = probs >= threshold
-        if prediction_mode in {"extent", "hybrid"}:
+        if prediction_mode in {"extent", "hybrid", "multitask"}:
             previous = inputs[:, 0:1].numpy() > 0.5
             preds = np.logical_and(preds, ~previous)
         distance = inputs[:, 13].numpy() * DISTANCE_CAP_PX
@@ -811,7 +862,7 @@ def evaluate_split(
             if paper_metrics:
                 previous = inputs[index, 0].numpy() > 0.5
                 growth_probability = probs[index, 0].copy()
-                if prediction_mode in {"extent", "hybrid"}:
+                if prediction_mode in {"extent", "hybrid", "multitask"}:
                     growth_probability[previous] = 0.0
                 predicted_next = np.where(previous, 1.0, growth_probability)
                 sample_metrics.append(
@@ -895,13 +946,14 @@ def evaluate_threshold_grid(
     n_samples = 0
     for batch in loader:
         inputs = batch["input"]
-        probs = torch.sigmoid(model(prepare_inputs_for_device(inputs, device))).cpu().numpy()
+        logits = model(prepare_inputs_for_device(inputs, device))
+        probs = torch.sigmoid(prediction_logits(logits, prediction_mode)).cpu().numpy()
         targets = batch["target"].numpy()
         previous = inputs[:, 0:1].numpy() > 0.5
         distance = inputs[:, 13].numpy() * DISTANCE_CAP_PX
         n_samples += len(batch["uid"])
         predictions = probs[:, None] >= thresholds_array[None, :, None, None, None]
-        if prediction_mode in {"extent", "hybrid"}:
+        if prediction_mode in {"extent", "hybrid", "multitask"}:
             predictions = np.logical_and(predictions, ~previous[:, None])
         for index, uid in enumerate(batch["uid"]):
             pred = predictions[index, :, 0]
