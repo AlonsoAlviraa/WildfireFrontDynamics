@@ -320,6 +320,9 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     expansion_phase = expansion_state.get("phase")
     expansion_complete = expansion_phase == "complete" and bool(expansion_result)
     expansion_active = bool(expansion_phase) and not expansion_complete
+    expansion_failure_paths = (
+        list((expansion_root / "pilots").glob("*/PILOT_FAILURE.json")) if expansion_root else []
+    )
     return {
         "pairs_enriched": int(enrichment_counts.get("pairs") or 0),
         "pairs_hrrr_space_time_valid": int(
@@ -378,6 +381,13 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "expansion_phase": expansion_phase,
         "expansion_active": expansion_active,
         "expansion_complete": expansion_complete,
+        "expansion_preregistered": bool(expansion_prereg_path and expansion_prereg_path.is_file()),
+        "expansion_active_recipe": expansion_state.get("active_recipe"),
+        "expansion_recipe_index": int(expansion_state.get("recipe_index") or 0),
+        "expansion_recipes_total": int(expansion_state.get("recipes_total") or 0),
+        "expansion_recipe_status": expansion_state.get("recipe_status"),
+        "expansion_training_progress": expansion_state.get("training_progress"),
+        "expansion_numeric_failures": len(expansion_failure_paths),
         "expansion_train_groups_complete": int(expansion_train_state.get("groups_complete") or 0),
         "expansion_train_groups_total": int(expansion_train_state.get("groups_total") or 0),
         "expansion_validation_groups_complete": int(

@@ -844,6 +844,38 @@ def test_research_status_surfaces_active_wfigs_expansion(tmp_path: Path) -> None
     assert status["expansion_artifact"].endswith("STATE.json")
 
 
+def test_research_status_surfaces_live_expansion_recipe_and_numeric_failures(
+    tmp_path: Path,
+) -> None:
+    expansion = tmp_path / "outputs/ml_eval/wfigs_expansion_paper_20260820"
+    _write(
+        expansion / "STATE.json",
+        {
+            "phase": "development_pilot_sweep",
+            "active_recipe": "decoder_precision_tversky",
+            "recipe_index": 8,
+            "recipes_total": 8,
+            "recipe_status": "training",
+            "training_progress": {"epoch": 3, "epochs": 18, "train_loss": 0.4},
+            "test_loaded": False,
+        },
+    )
+    _write(expansion / "PREREGISTRATION.json", {"pilot_seed": 47})
+    _write(
+        expansion / "pilots/unstable/PILOT_FAILURE.json",
+        {"status": "failed_numeric", "test_loaded": False},
+    )
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["expansion_preregistered"] is True
+    assert status["expansion_active_recipe"] == "decoder_precision_tversky"
+    assert status["expansion_recipe_index"] == 8
+    assert status["expansion_recipes_total"] == 8
+    assert status["expansion_training_progress"]["epoch"] == 3
+    assert status["expansion_numeric_failures"] == 1
+
+
 def test_research_status_surfaces_wfigs_confirmation_result(tmp_path: Path) -> None:
     expansion = tmp_path / "outputs/ml_eval/wfigs_expansion_paper_20260820"
     _write(
