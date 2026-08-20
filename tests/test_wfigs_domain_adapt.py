@@ -12,6 +12,8 @@ from wildfire_front.ml.rcda_sealed import build_model
 from wildfire_front.ml.wfigs_domain_adapt import (
     WFIGSAdaptConfig,
     adapt_frozen_rcda_on_wfigs,
+    configure_trainable_scope,
+    set_adaptation_train_mode,
 )
 from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
 
@@ -61,9 +63,7 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     )
     source_checkpoint = tmp_path / "source.pt"
     model = build_model("unet", in_channels=16, base=8)
-    torch.save(
-        {"selection_split": "val", "state_dict": model.state_dict()}, source_checkpoint
-    )
+    torch.save({"selection_split": "val", "state_dict": model.state_dict()}, source_checkpoint)
     final = tmp_path / "final.json"
     final.write_text(
         json.dumps(
@@ -108,3 +108,26 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     assert report["ensemble"]["members"] == 2
     assert report["ensemble"]["threshold_selected_on"] == "wfigs_validation"
     assert report["ensemble"]["test_evaluated"] is False
+
+
+def test_decoder_scope_freezes_encoder_parameters_and_statistics() -> None:
+    model = build_model("resunet", in_channels=16, base=8)
+
+    trainable = configure_trainable_scope(model, "decoder")
+    set_adaptation_train_mode(model, "decoder")
+
+    assert trainable
+    assert all(not parameter.requires_grad for parameter in model.enc1.parameters())
+    assert all(parameter.requires_grad for parameter in model.dec1.parameters())
+    assert model.enc1.training is False
+    assert model.dec1.training is True
+
+
+def test_all_scope_keeps_every_parameter_trainable() -> None:
+    model = build_model("resunet", in_channels=16, base=8)
+
+    trainable = configure_trainable_scope(model, "all")
+
+    assert sum(parameter.numel() for parameter in trainable) == sum(
+        parameter.numel() for parameter in model.parameters()
+    )
