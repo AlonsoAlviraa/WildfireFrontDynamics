@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
+from typing import Any
 
 import torch
 
@@ -26,6 +28,72 @@ from wildfire_front.ml.rcda_sealed import (  # noqa: E402
     make_loader,
     prepare_model_for_device,
 )
+
+
+def verify_cross_backend_reproduction(
+    local: dict[str, Any],
+    remote: dict[str, Any],
+    *,
+    label: str,
+    max_changed_pixel_fraction: float = 1e-6,
+    max_iou_delta: float = 1e-5,
+    max_event_macro_delta: float = 1e-5,
+) -> dict[str, Any]:
+    """Verify CPU metrics against the authoritative GPU result.
+
+    Convolution kernels can differ by a few floating-point ulps across CUDA
+    and oneDNN. Pixels whose probabilities lie almost exactly on the frozen
+    threshold may consequently change class. We accept at most one changed
+    prediction per million evaluated pixels and keep the GPU confusion matrix
+    as the confirmatory primary result. The local pass contributes only the
+    backend-independent secondary metrics.
+    """
+
+    keys = ("tp", "tn", "fp", "fn")
+    if any(key not in local or key not in remote for key in keys):
+        raise ValueError(f"{label}: missing confusion counts")
+    local_total = sum(int(local[key]) for key in keys)
+    remote_total = sum(int(remote[key]) for key in keys)
+    if local_total != remote_total:
+        raise ValueError(
+            f"{label}: evaluated pixel totals differ ({local_total} != {remote_total})"
+        )
+    changed_pixels = sum(abs(int(local[key]) - int(remote[key])) for key in keys) // 2
+    allowed_changed_pixels = max(
+        1,
+        int(math.ceil(remote_total * float(max_changed_pixel_fraction))),
+    )
+    iou_delta = float(local["iou"]) - float(remote["iou"])
+    event_macro_delta = float(local["event_macro_iou"]) - float(
+        remote["event_macro_iou"]
+    )
+    if changed_pixels > allowed_changed_pixels:
+        raise ValueError(
+            f"{label}: CPU/GPU predictions differ at {changed_pixels} pixels; "
+            f"allowed {allowed_changed_pixels}"
+        )
+    if abs(iou_delta) > max_iou_delta:
+        raise ValueError(
+            f"{label}: CPU/GPU IoU delta {iou_delta} exceeds {max_iou_delta}"
+        )
+    if abs(event_macro_delta) > max_event_macro_delta:
+        raise ValueError(
+            f"{label}: CPU/GPU event-macro delta {event_macro_delta} exceeds "
+            f"{max_event_macro_delta}"
+        )
+    return {
+        "authoritative_primary_backend": "kaggle_t4_gpu",
+        "secondary_metrics_backend": "local_cpu",
+        "evaluated_pixels": remote_total,
+        "changed_predictions_upper_bound": changed_pixels,
+        "changed_prediction_fraction": changed_pixels / remote_total,
+        "allowed_changed_prediction_fraction": max_changed_pixel_fraction,
+        "pooled_iou_delta_local_minus_remote": iou_delta,
+        "event_macro_iou_delta_local_minus_remote": event_macro_delta,
+        "max_iou_delta": max_iou_delta,
+        "max_event_macro_delta": max_event_macro_delta,
+        "within_tolerance": True,
+    }
 
 
 def evaluate_final_checkpoints(
@@ -83,12 +151,16 @@ def evaluate_final_checkpoints(
             paper_metrics=True,
         )
         remote = report.get("test_once") or {}
-        if abs(float(metrics["iou"]) - float(remote.get("iou", metrics["iou"]))) > 1e-10:
-            raise ValueError(f"local TEST IoU does not reproduce Kaggle for {checkpoint_name}")
-        report["test_once"] = metrics
+        reproduction = verify_cross_backend_reproduction(
+            metrics,
+            remote,
+            label=checkpoint_name,
+        )
+        report["test_once"]["paper_metrics"] = metrics["paper_metrics"]
         report["paper_metrics_recomputed_from_frozen_checkpoint"] = True
         report["local_checkpoint"] = str(checkpoint_path)
         report["local_checkpoint_sha256_verified"] = True
+        report["local_cpu_reproduction"] = reproduction
     ensemble_report = summary.get("ensemble")
     if ensemble_report:
         if len(seed_models) < 2:
@@ -104,16 +176,16 @@ def evaluate_final_checkpoints(
             paper_metrics=True,
         )
         remote = ensemble_report.get("test_once") or {}
-        if (
-            abs(
-                float(ensemble_metrics["iou"])
-                - float(remote.get("iou", ensemble_metrics["iou"]))
-            )
-            > 1e-10
-        ):
-            raise ValueError("local ensemble TEST IoU does not reproduce remote result")
-        ensemble_report["test_once"] = ensemble_metrics
+        reproduction = verify_cross_backend_reproduction(
+            ensemble_metrics,
+            remote,
+            label="mean_seed_probability_ensemble",
+        )
+        ensemble_report["test_once"]["paper_metrics"] = ensemble_metrics[
+            "paper_metrics"
+        ]
         ensemble_report["paper_metrics_recomputed_from_frozen_checkpoints"] = True
+        ensemble_report["local_cpu_reproduction"] = reproduction
     decoder_report = summary.get("decoder")
     if decoder_report:
         if len(seed_models) < 2:
@@ -132,13 +204,13 @@ def evaluate_final_checkpoints(
             ),
         )
         remote = decoder_report.get("test_once") or {}
-        if (
-            abs(float(decoder_metrics["iou"]) - float(remote.get("iou", decoder_metrics["iou"])))
-            > 1e-10
-        ):
-            raise ValueError("local spatial decoder TEST IoU does not reproduce remote result")
-        decoder_report["test_once"] = decoder_metrics
+        reproduction = verify_cross_backend_reproduction(
+            decoder_metrics,
+            remote,
+            label="spatial_decoder",
+        )
         decoder_report["recomputed_from_frozen_checkpoints"] = True
+        decoder_report["local_cpu_reproduction"] = reproduction
     summary["schema"] = "wfd_rcda_paper_final_metrics_v1"
     summary["paper_metrics_recomputed_locally"] = True
     summary["paper_metrics_device"] = str(device)
