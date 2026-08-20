@@ -2201,6 +2201,7 @@ function renderResearchStatus() {
   const valEnsemble = rs.validation_ensemble || {};
   const valPostprocess = rs.validation_postprocess || {};
   const valReproducibility = rs.validation_reproducibility || {};
+  const valReplications = rs.validation_replications || {};
   const valStrata = rs.validation_strata || {};
   const samplerAudit = rs.training_sampler_audit || {};
   const numericStability = rs.numeric_stability || {};
@@ -2269,6 +2270,23 @@ function renderResearchStatus() {
       const replicaEvents = String(valReproducibility.events || 0);
       const replicaHash = String(valReproducibility.checkpoint_sha256 || '').slice(0, 10);
       researchStat(grid, 'Réplica independiente', 'exacta', replicaEvents + ' incendios · pesos ' + replicaHash + '… · TEST sellado');
+    }
+    if (valReplications.event_macro_iou_seed_mean != null) {
+      const seedStd = Number(valReplications.sample_std_across_seeds);
+      const replicationCi = valReplications.event_bootstrap_95_ci || [];
+      const replicationHint = String(valReplications.seed_count || (valReplications.seeds || []).length)
+        + ' semillas · σ ' + (Number.isFinite(seedStd) ? researchScore(seedStd) : '—')
+        + (replicationCi.length === 2 ? (' · IC 95% ' + researchScore(replicationCi[0]) + '–' + researchScore(replicationCi[1])) : '')
+        + ' · TEST sellado';
+      researchStat(grid, 'Réplicas fijas VAL', researchScore(valReplications.event_macro_iou_seed_mean), replicationHint, true);
+    }
+    if (valReplications.ensemble_event_macro_iou != null) {
+      const replicationDelta = Number(valReplications.ensemble_delta_vs_best_individual);
+      const replicationDeltaCi = valReplications.ensemble_delta_95_ci || [];
+      const ensembleHint = (Number.isFinite(replicationDelta) ? ((replicationDelta >= 0 ? '+' : '') + researchScore(replicationDelta) + ' vs mejor semilla') : 'promedio de probabilidades')
+        + (replicationDeltaCi.length === 2 ? (' · IC 95% ' + researchScore(replicationDeltaCi[0]) + '–' + researchScore(replicationDeltaCi[1])) : '')
+        + ' · sólo VAL';
+      researchStat(grid, 'Ensemble replicado VAL', researchScore(valReplications.ensemble_event_macro_iou), ensembleHint, true);
     }
     const growthStrata = valStrata.growth_strata || [];
     if (growthStrata.length) {
