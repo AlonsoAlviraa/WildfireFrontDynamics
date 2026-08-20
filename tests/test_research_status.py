@@ -102,10 +102,60 @@ def test_research_status_surfaces_kaggle_runtime_without_fake_epoch(
     assert progress["registered_runs"] == 2
     assert progress["recovered_runs"] == 1
     assert progress["test_evaluated"] is False
-    assert len(status["experiment_queue"]) == 8
+    assert len(status["experiment_queue"]) == 9
     assert status["experiment_queue"][0]["status"] == "recovered"
     assert status["experiment_queue"][1]["status"] == "active"
     assert status["experiment_queue"][2]["status"] == "planned"
+
+
+def test_research_status_uses_val_scorecard_to_complete_experiment_queue(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(
+        work / "STATE.json",
+        {
+            "phase": "validation_only_stage2_multitask_front_ring_kaggle",
+            "status": "running",
+            "kernel_status": "running",
+            "kernel": "alonsoalviraaaa/wfd-rcda-multitask-front-ring-gpu-v1",
+        },
+    )
+    _write(
+        work / "KAGGLE_RUNTIME_MANIFEST.json",
+        {
+            "test_evaluated": False,
+            "runs": [
+                {
+                    "run_name": "resunet_multitask_front_ring_v1",
+                    "kernel": "alonsoalviraaaa/wfd-rcda-multitask-front-ring-gpu-v1",
+                }
+            ],
+        },
+    )
+    _write(
+        work / "VALIDATION_SCORECARD.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "ranking": [
+                {
+                    "rank": 1,
+                    "run_name": "resunet_hybrid_uniform_events_v1",
+                    "event_macro_iou": 0.189,
+                }
+            ],
+        },
+    )
+
+    status = build_research_status(tmp_path)
+    queue = {row["run_name"]: row for row in status["experiment_queue"]}
+    assert status["execution_backend"] == "kaggle_gpu"
+    assert "frente activo" in status["phase_label"]
+    assert queue["resunet_hybrid_uniform_events_v1"]["status"] == "completed"
+    assert queue["resunet_multitask_front_ring_v1"]["status"] == "active"
+    assert queue["film_growth_v1"]["status"] == "planned"
 
 
 def test_research_status_surfaces_provisional_validation_leader(tmp_path: Path) -> None:
