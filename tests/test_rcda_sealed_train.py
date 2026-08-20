@@ -40,6 +40,28 @@ def test_probability_ensemble_matches_mean_seed_probability() -> None:
     assert torch.allclose(actual, expected, atol=1e-6)
 
 
+def test_probability_ensemble_accepts_normalized_member_weights() -> None:
+    first = torch.nn.Conv2d(2, 1, 1)
+    second = torch.nn.Conv2d(2, 1, 1)
+    torch.nn.init.constant_(first.weight, 0.2)
+    torch.nn.init.constant_(first.bias, -0.1)
+    torch.nn.init.constant_(second.weight, -0.3)
+    torch.nn.init.constant_(second.bias, 0.4)
+    inputs = torch.randn(3, 2, 8, 8)
+    ensemble = ProbabilityAveragingEnsemble([first, second], member_weights=[3.0, 1.0])
+    expected_probability = (
+        3.0 * torch.sigmoid(first(inputs)) + torch.sigmoid(second(inputs))
+    ) / 4.0
+    assert torch.allclose(torch.sigmoid(ensemble(inputs)), expected_probability, atol=1e-6)
+
+
+def test_probability_ensemble_rejects_invalid_member_weights() -> None:
+    first = torch.nn.Conv2d(1, 1, 1)
+    second = torch.nn.Conv2d(1, 1, 1)
+    with pytest.raises(ValueError, match="non-negative"):
+        ProbabilityAveragingEnsemble([first, second], member_weights=[1.0, -1.0])
+
+
 def _write_tiny_dataset(root: Path) -> None:
     dataset = root / "dataset"
     protocol = root / "protocol"
