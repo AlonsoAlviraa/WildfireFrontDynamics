@@ -860,6 +860,26 @@ def postprocess_growth(
     return growth
 
 
+def restrict_growth_to_distance(
+    prediction: np.ndarray,
+    previous: np.ndarray,
+    distance_to_front_px: np.ndarray,
+    *,
+    max_distance_px: float,
+) -> np.ndarray:
+    """Keep predicted growth inside a fixed distance from the observed front."""
+
+    if not np.isfinite(max_distance_px) or max_distance_px <= 0.0:
+        raise ValueError("max_distance_px must be finite and positive")
+    prediction_array = np.asarray(prediction, dtype=bool)
+    previous_array = np.asarray(previous, dtype=bool)
+    distance_array = np.asarray(distance_to_front_px, dtype=np.float32)
+    if prediction_array.shape != previous_array.shape or prediction_array.shape != distance_array.shape:
+        raise ValueError("prediction, previous, and distance arrays must have equal shapes")
+    growth = prediction_array & ~previous_array
+    return growth & np.isfinite(distance_array) & (distance_array <= max_distance_px)
+
+
 @torch.no_grad()
 def evaluate_split_postprocessed(
     model: nn.Module,
@@ -870,6 +890,7 @@ def evaluate_split_postprocessed(
     prediction_mode: str = "growth",
     dilation_radius: int,
     require_t0_connection: bool,
+    max_distance_px: float | None = None,
 ) -> dict[str, Any]:
     """Evaluate a fixed VAL-selected spatial decoder without retuning it."""
 
@@ -896,6 +917,13 @@ def evaluate_split_postprocessed(
                 dilation_radius=dilation_radius,
                 require_t0_connection=require_t0_connection,
             )
+            if max_distance_px is not None:
+                prediction = restrict_growth_to_distance(
+                    prediction,
+                    previous[index, 0],
+                    distance[index],
+                    max_distance_px=max_distance_px,
+                )
             truth = targets[index, 0]
             row = confusion(prediction, truth)
             total += row
@@ -916,6 +944,7 @@ def evaluate_split_postprocessed(
             "threshold": threshold,
             "dilation_radius_px": int(dilation_radius),
             "require_t0_connection": bool(require_t0_connection),
+            "max_distance_px": max_distance_px,
             "far_gt_10_5px_recall": far_metrics["recall"],
             "far_gt_10_5px_iou": far_metrics["iou"],
             "per_event": per_event,
