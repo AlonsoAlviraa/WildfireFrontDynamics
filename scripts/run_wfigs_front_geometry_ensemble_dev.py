@@ -16,8 +16,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
-    adapt_frozen_rcda_on_wfigs,
     WFIGSAdaptConfig,
+    adapt_frozen_rcda_on_wfigs,
 )
 
 
