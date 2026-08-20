@@ -2213,14 +2213,22 @@ function renderResearchStatus() {
   const testTotal = Number(wfigs.test_groups_total || 0);
   const testComplete = Number(wfigs.test_groups_complete || 0);
   const testProgress = testDone ? 100 : (testTotal > 0 ? 100 * testComplete / testTotal : 0);
-  const adaptDone = wfigs.adapted_evaluation_executed === true;
-  const adaptActive = !adaptDone && String(wfigs.adaptation_phase || '').indexOf('training') >= 0;
+  const hasScaleupAdaptation = Boolean(wfigs.scaleup_adaptation_phase);
+  const adaptDone = hasScaleupAdaptation
+    ? wfigs.scaleup_adaptation_phase === 'complete'
+    : wfigs.adapted_evaluation_executed === true;
+  const adaptActive = wfigs.scaleup_adaptation_active === true
+    || (!adaptDone && String(wfigs.adaptation_phase || '').indexOf('training') >= 0);
   const scaleupPhase = String(wfigs.dataset_phase || '');
   const scaleupActive = Boolean(scaleupPhase) && scaleupPhase !== 'complete';
   const scaleupDone = scaleupPhase === 'complete';
   researchStage(pipeline, 'RCDA sellado', rcdaClosed ? 'done' : 'active', rcdaClosed ? (String(final.events || 0) + ' incendios · TEST cerrado') : 'receta y métricas en curso', rcdaClosed ? 100 : 50);
   researchStage(pipeline, 'WFIGS TEST', testDone ? 'done' : (testActive ? 'active' : 'pending'), testDone ? (String(wfigs.test_tensors || 0) + ' tensores evaluados') : (String(testComplete) + '/' + String(testTotal || '—') + ' grupos materializados'), testProgress);
-  researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDone ? 'TRAIN/VAL congelado · TEST ejecutado' : researchRunName(wfigs.adaptation_phase || 'esperando TEST'), adaptDone ? 100 : (adaptActive ? 55 : 0));
+  const adaptDetail = adaptDone
+    ? (wfigs.scaleup_prospective_test_evaluated ? 'TRAIN/VAL congelado · TEST prospectivo ejecutado' : 'adaptación histórica completada')
+    : (researchRunName(wfigs.scaleup_adaptation_recipe || wfigs.adaptation_phase || 'esperando TEST')
+      + (hasScaleupAdaptation ? ' · TEST prospectivo cerrado' : ''));
+  researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDetail, adaptDone ? 100 : (adaptActive ? 55 : 0));
   researchStage(pipeline, 'Escalado WFIGS', scaleupDone ? 'done' : (scaleupActive ? 'active' : 'pending'), scaleupActive ? researchRunName(scaleupPhase) : (scaleupDone ? (String(wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.validation_tensors || 0) + ' VAL') : 'cohorte siguiente pendiente'), scaleupDone ? 100 : (scaleupActive ? 45 : 0));
   host.appendChild(pipeline);
   const grid = document.createElement('div'); grid.className = 'research-grid';
