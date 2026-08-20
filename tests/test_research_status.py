@@ -783,6 +783,66 @@ def test_research_status_prioritizes_active_scaleup_adaptation_state(
     assert status["scaleup_prospective_test_evaluated"] is False
 
 
+def test_research_status_surfaces_test_free_fixed_seed_replications(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "outputs/ml_eval/rcda_front_ring_val_replications_20260820"
+    _write(
+        root / "RCDA_VAL_REPLICATION_SUMMARY.json",
+        {
+            "schema": "wfd_rcda_val_replication_summary_v1",
+            "run_name": "front",
+            "seeds": [11, 29, 47],
+            "selection_split": "val",
+            "test_used_for_selection": False,
+            "test_evaluated": False,
+            "counts": {"seeds": 3, "validation_events": 106},
+            "validation": {
+                "event_macro_iou_seed_mean": 0.23,
+                "event_macro_iou_by_seed": [0.22, 0.23, 0.24],
+                "sample_std_across_seeds": 0.01,
+                "event_bootstrap_95_ci": [0.20, 0.26],
+            },
+        },
+    )
+    _write(
+        root / "RCDA_VAL_ENSEMBLES.json",
+        {
+            "schema": "wfd_rcda_val_probability_ensemble_tune_v2",
+            "selection_split": "val",
+            "test_used_for_selection": False,
+            "test_evaluated": False,
+            "ranking": [
+                {
+                    "name": "mean11_29_47",
+                    "members": ["seed11", "seed29", "seed47"],
+                    "event_macro_iou": 0.245,
+                    "threshold": 0.6,
+                }
+            ],
+            "decision": {
+                "best_multi_minus_individual": 0.015,
+                "paired_validation": {
+                    "event_bootstrap_95_ci": [0.004, 0.026],
+                    "wins_event_fraction": 0.68,
+                },
+            },
+        },
+    )
+
+    status = build_research_status(tmp_path)
+    replications = status["validation_replications"]
+
+    assert replications["seeds"] == [11, 29, 47]
+    assert replications["event_macro_iou_seed_mean"] == 0.23
+    assert replications["ensemble_event_macro_iou"] == 0.245
+    assert replications["ensemble_delta_95_ci"] == [0.004, 0.026]
+    assert replications["test_evaluated"] is False
+    assert status["artifacts"]["validation_replications"].endswith(
+        "RCDA_VAL_REPLICATION_SUMMARY.json"
+    )
+
+
 def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     payload = build_product_app_payload(repo=tmp_path, scan=False, live=False)
     html = render_product_app_html(payload)
@@ -799,6 +859,8 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Telemetría de entrenamiento" in html
     assert "Delta vs 2º VAL" in html
     assert "Mejor ensemble VAL" in html
+    assert "Réplicas fijas VAL" in html
+    assert "Ensemble replicado VAL" in html
     assert "Decoder TEST" in html
     assert "Postproceso VAL" in html
     assert "Rango estratos VAL" in html

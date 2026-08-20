@@ -394,6 +394,51 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
 
     root = Path(repo_root)
     work = _latest_nightwatch(root)
+    replication_roots = sorted(
+        (root / "outputs/ml_eval").glob("rcda_front_ring_val_replications_*")
+    )
+    replication_root = replication_roots[-1] if replication_roots else None
+    replication_summary_path = (
+        replication_root / "RCDA_VAL_REPLICATION_SUMMARY.json"
+        if replication_root
+        else None
+    )
+    replication_summary = (
+        _read_json(replication_summary_path) if replication_summary_path else None
+    )
+    if replication_summary and not (
+        replication_summary.get("schema") == "wfd_rcda_val_replication_summary_v1"
+        and replication_summary.get("selection_split") == "val"
+        and replication_summary.get("test_evaluated") is False
+        and replication_summary.get("test_used_for_selection") is False
+    ):
+        replication_summary = None
+    replication_ensemble_path = (
+        replication_root / "RCDA_VAL_ENSEMBLES.json" if replication_root else None
+    )
+    replication_ensemble = (
+        _read_json(replication_ensemble_path) if replication_ensemble_path else None
+    )
+    if replication_ensemble and not (
+        replication_ensemble.get("schema")
+        == "wfd_rcda_val_probability_ensemble_tune_v2"
+        and replication_ensemble.get("selection_split") == "val"
+        and replication_ensemble.get("test_evaluated") is False
+        and replication_ensemble.get("test_used_for_selection") is False
+    ):
+        replication_ensemble = None
+    replication_validation = (replication_summary or {}).get("validation") or {}
+    replication_counts = (replication_summary or {}).get("counts") or {}
+    replication_decision = (replication_ensemble or {}).get("decision") or {}
+    replication_paired = replication_decision.get("paired_validation") or {}
+    replication_best = next(
+        (
+            row
+            for row in (replication_ensemble or {}).get("ranking") or []
+            if len(row.get("members") or []) > 1
+        ),
+        None,
+    )
     state_path = work / "STATE.json" if work else None
     state = _read_json(state_path) if state_path else None
     state = state or {}
@@ -883,6 +928,53 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
             if validation_reproducibility
             else None
         ),
+        "validation_replications": (
+            {
+                "run_name": replication_summary.get("run_name"),
+                "seeds": replication_summary.get("seeds") or [],
+                "seed_count": replication_counts.get("seeds"),
+                "events": replication_counts.get("validation_events"),
+                "event_macro_iou_seed_mean": replication_validation.get(
+                    "event_macro_iou_seed_mean"
+                ),
+                "event_macro_iou_by_seed": replication_validation.get(
+                    "event_macro_iou_by_seed"
+                )
+                or [],
+                "sample_std_across_seeds": replication_validation.get(
+                    "sample_std_across_seeds"
+                ),
+                "event_bootstrap_95_ci": replication_validation.get(
+                    "event_bootstrap_95_ci"
+                )
+                or [],
+                "ensemble_event_macro_iou": replication_best.get(
+                    "event_macro_iou"
+                )
+                if isinstance(replication_best, dict)
+                else None,
+                "ensemble_members": replication_best.get("members") or []
+                if isinstance(replication_best, dict)
+                else [],
+                "ensemble_threshold": replication_best.get("threshold")
+                if isinstance(replication_best, dict)
+                else None,
+                "ensemble_delta_vs_best_individual": replication_decision.get(
+                    "best_multi_minus_individual"
+                ),
+                "ensemble_delta_95_ci": replication_paired.get(
+                    "event_bootstrap_95_ci"
+                )
+                or [],
+                "ensemble_wins_event_fraction": replication_paired.get(
+                    "wins_event_fraction"
+                ),
+                "selection_split": "val",
+                "test_evaluated": False,
+            }
+            if replication_summary
+            else None
+        ),
         "validation_strata": (
             {
                 "run_name": validation_strata.get("run_name"),
@@ -1025,6 +1117,18 @@ def build_research_status(repo_root: Path | str) -> dict[str, Any]:
                 validation_reproducibility_path
                 if validation_reproducibility_path
                 and validation_reproducibility_path.is_file()
+                else None,
+                root,
+            ),
+            "validation_replications": _relative(
+                replication_summary_path
+                if replication_summary_path and replication_summary_path.is_file()
+                else None,
+                root,
+            ),
+            "validation_replication_ensemble": _relative(
+                replication_ensemble_path
+                if replication_ensemble_path and replication_ensemble_path.is_file()
                 else None,
                 root,
             ),
