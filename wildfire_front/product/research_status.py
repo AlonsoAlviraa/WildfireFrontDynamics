@@ -283,8 +283,36 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         else None
     )
     scaleup_adaptation_phase = (scaleup_adaptation_state or {}).get("phase")
+    prospective_roots = sorted(
+        (root / "outputs/ml_eval").glob("wfigs_prospective_final_*")
+    )
+    prospective_root = prospective_roots[-1] if prospective_roots else None
+    prospective_claim_path = (
+        prospective_root / "PROSPECTIVE_OPEN_ONCE.json" if prospective_root else None
+    )
+    prospective_claim = (
+        _read_json(prospective_claim_path) if prospective_claim_path else None
+    )
+    prospective_result_path = (
+        prospective_root / "WFIGS_PROSPECTIVE_TEST_EVAL.json"
+        if prospective_root
+        else None
+    )
+    prospective_result = (
+        _read_json(prospective_result_path) if prospective_result_path else None
+    )
+    prospective_complete = bool(
+        prospective_claim
+        and prospective_claim.get("phase") == "complete"
+        and prospective_claim.get("test_evaluated") is True
+        and prospective_result
+    )
+    effective_adapted = prospective_result if prospective_complete else adapted
+    effective_adapted_path = (
+        prospective_result_path if prospective_complete else adapted_path
+    )
+    effective_adapted_protocol = (effective_adapted or {}).get("protocol") or {}
     external_protocol = (external or {}).get("protocol") or {}
-    adapted_protocol = (adapted or {}).get("protocol") or {}
     campaign_incomplete = bool(campaign_state) and int(
         (campaign_state or {}).get("groups_complete") or 0
     ) < int((campaign_state or {}).get("groups_total") or 0)
@@ -322,10 +350,16 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "test_groups_total": int((test_state or {}).get("groups_total") or 0),
         "test_materialization_phase": (external_state or {}).get("phase"),
         "dataset_phase": (data_state or {}).get("phase"),
-        "adaptation_phase": scaleup_adaptation_phase
+        "adaptation_phase": "complete"
+        if prospective_complete
+        else scaleup_adaptation_phase
         or (adaptation_state or {}).get("phase"),
-        "scaleup_adaptation_phase": scaleup_adaptation_phase,
-        "scaleup_adaptation_active": bool(scaleup_adaptation_state)
+        "scaleup_adaptation_phase": "complete"
+        if prospective_complete
+        else scaleup_adaptation_phase,
+        "scaleup_adaptation_active": False
+        if prospective_complete
+        else bool(scaleup_adaptation_state)
         and scaleup_adaptation_phase != "complete",
         "scaleup_adaptation_recipe": (scaleup_adaptation_state or {}).get(
             "active_recipe"
@@ -334,10 +368,21 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "scaleup_adaptation_training_progress": (
             scaleup_adaptation_state or {}
         ).get("training_progress"),
-        "scaleup_prospective_test_evaluated": bool(
+        "scaleup_prospective_test_evaluated": prospective_complete
+        or bool(
             (scaleup_adaptation_state or {}).get(
                 "prospective_test_loaded_after_recipe_freeze"
             )
+        ),
+        "prospective_events_selected": int(
+            ((prospective_claim or {}).get("cohort") or {}).get("events_selected")
+            or 0
+        ),
+        "prospective_events_materialized": int(
+            ((prospective_claim or {}).get("cohort") or {}).get(
+                "events_materialized"
+            )
+            or 0
         ),
         "dataset_audit_status": (audit or {}).get("status"),
         "dataset_audit_samples": int(audit_counts.get("samples_audited") or 0),
@@ -351,11 +396,11 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
             "wfigs_test_used_for_selection"
         ),
         "external_summary": (external or {}).get("summary"),
-        "adapted_evaluation_executed": bool(adapted),
-        "adapted_test_used_for_selection": adapted_protocol.get(
+        "adapted_evaluation_executed": bool(effective_adapted),
+        "adapted_test_used_for_selection": effective_adapted_protocol.get(
             "wfigs_test_used_for_selection"
         ),
-        "adapted_summary": (adapted or {}).get("summary"),
+        "adapted_summary": (effective_adapted or {}).get("summary"),
         "enrichment_artifact": _relative(enrichment_path, root),
         "campaign_artifact": _relative(
             campaign_path if campaign_path and campaign_path.is_file() else state_path,
@@ -376,7 +421,15 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
             root,
         ),
         "adapted_artifact": _relative(
-            adapted_path if adapted_path and adapted_path.is_file() else None,
+            effective_adapted_path
+            if effective_adapted_path and effective_adapted_path.is_file()
+            else None,
+            root,
+        ),
+        "prospective_claim_artifact": _relative(
+            prospective_claim_path
+            if prospective_claim_path and prospective_claim_path.is_file()
+            else None,
             root,
         ),
         "scaleup_adaptation_artifact": _relative(

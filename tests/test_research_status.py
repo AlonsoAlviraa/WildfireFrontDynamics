@@ -783,6 +783,54 @@ def test_research_status_prioritizes_active_scaleup_adaptation_state(
     assert status["scaleup_prospective_test_evaluated"] is False
 
 
+def test_research_status_prioritizes_completed_prospective_result(
+    tmp_path: Path,
+) -> None:
+    scaleup = tmp_path / "outputs/ml_eval/wfigs_scaleup_paper_20260820"
+    _write(
+        scaleup / "STATE.json",
+        {
+            "phase": "frozen_waiting_for_prospective_test",
+            "winner": "decoder_front_ring",
+            "test_evaluated": False,
+        },
+    )
+    prospective = tmp_path / "outputs/ml_eval/wfigs_prospective_final_20260820"
+    _write(
+        prospective / "PROSPECTIVE_OPEN_ONCE.json",
+        {
+            "phase": "complete",
+            "test_evaluated": True,
+            "cohort": {"events_selected": 16, "events_materialized": 10},
+        },
+    )
+    _write(
+        prospective / "WFIGS_PROSPECTIVE_TEST_EVAL.json",
+        {
+            "protocol": {"wfigs_test_used_for_selection": False},
+            "summary": {
+                "ensemble_event_macro_iou": 0.087,
+                "geometry_baseline_event_macro_iou": 0.138,
+                "adapted_transfer_signal_gate": False,
+            },
+        },
+    )
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["adaptation_phase"] == "complete"
+    assert status["scaleup_adaptation_active"] is False
+    assert status["scaleup_prospective_test_evaluated"] is True
+    assert status["adapted_evaluation_executed"] is True
+    assert status["adapted_summary"]["ensemble_event_macro_iou"] == 0.087
+    assert status["prospective_events_selected"] == 16
+    assert status["prospective_events_materialized"] == 10
+    assert status["adapted_test_used_for_selection"] is False
+    assert status["prospective_claim_artifact"].endswith(
+        "PROSPECTIVE_OPEN_ONCE.json"
+    )
+
+
 def test_research_status_surfaces_test_free_fixed_seed_replications(
     tmp_path: Path,
 ) -> None:
