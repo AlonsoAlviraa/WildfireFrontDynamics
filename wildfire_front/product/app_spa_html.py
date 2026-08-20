@@ -2220,9 +2220,16 @@ function renderResearchStatus() {
     : wfigs.adapted_evaluation_executed === true;
   const adaptActive = wfigs.scaleup_adaptation_active === true
     || (!adaptDone && String(wfigs.adaptation_phase || '').indexOf('training') >= 0);
-  const scaleupPhase = String(wfigs.dataset_phase || '');
-  const scaleupActive = Boolean(scaleupPhase) && scaleupPhase !== 'complete';
-  const scaleupDone = scaleupPhase === 'complete';
+  const scaleupPhase = String(wfigs.expansion_phase || wfigs.dataset_phase || '');
+  const scaleupActive = wfigs.expansion_active === true || (Boolean(scaleupPhase) && scaleupPhase !== 'complete');
+  const scaleupDone = wfigs.expansion_complete === true || scaleupPhase === 'complete';
+  const expansionTrainDone = Number(wfigs.expansion_train_groups_complete || 0);
+  const expansionTrainTotal = Number(wfigs.expansion_train_groups_total || 0);
+  const expansionValDone = Number(wfigs.expansion_validation_groups_complete || 0);
+  const expansionValTotal = Number(wfigs.expansion_validation_groups_total || 0);
+  const expansionGroupsDone = expansionTrainDone + expansionValDone;
+  const expansionGroupsTotal = expansionTrainTotal + expansionValTotal;
+  const expansionProgress = scaleupDone ? 100 : (expansionGroupsTotal > 0 ? 100 * expansionGroupsDone / expansionGroupsTotal : (scaleupActive ? 45 : 0));
   researchStage(pipeline, 'RCDA sellado', rcdaClosed ? 'done' : 'active', rcdaClosed ? (String(final.events || 0) + ' incendios · TEST cerrado') : 'receta y métricas en curso', rcdaClosed ? 100 : 50);
   researchStage(pipeline, 'WFIGS TEST', testDone ? 'done' : (testActive ? 'active' : 'pending'), testDone ? (String(wfigs.test_tensors || 0) + ' tensores evaluados') : (String(testComplete) + '/' + String(testTotal || '—') + ' grupos materializados'), testProgress);
   const adaptDetail = adaptDone
@@ -2230,7 +2237,12 @@ function renderResearchStatus() {
     : (researchRunName(wfigs.scaleup_adaptation_recipe || wfigs.adaptation_phase || 'esperando TEST')
       + (hasScaleupAdaptation ? ' · TEST prospectivo cerrado' : ''));
   researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDetail, adaptDone ? 100 : (adaptActive ? 55 : 0));
-  researchStage(pipeline, 'Escalado WFIGS', scaleupDone ? 'done' : (scaleupActive ? 'active' : 'pending'), scaleupActive ? researchRunName(scaleupPhase) : (scaleupDone ? (String(wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.validation_tensors || 0) + ' VAL') : 'cohorte siguiente pendiente'), scaleupDone ? 100 : (scaleupActive ? 45 : 0));
+  const expansionDetail = scaleupActive && expansionGroupsTotal > 0
+    ? (String(expansionGroupsDone) + '/' + String(expansionGroupsTotal) + ' grupos · ' + researchRunName(scaleupPhase))
+    : (scaleupDone
+      ? (String(wfigs.expansion_train_events || wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.expansion_development_events || wfigs.validation_tensors || 0) + ' DEV · ' + String(wfigs.expansion_confirmation_events || 0) + ' confirmación')
+      : 'cohorte histórica siguiente pendiente');
+  researchStage(pipeline, 'Expansión WFIGS', scaleupDone ? 'done' : (scaleupActive ? 'active' : 'pending'), expansionDetail, expansionProgress);
   host.appendChild(pipeline);
   const grid = document.createElement('div'); grid.className = 'research-grid';
   researchStat(grid, 'Datos sellados', String(protocol.samples || 0), String(protocol.events || 0) + ' incendios');
@@ -2386,6 +2398,28 @@ function renderResearchStatus() {
     ? 'campaña TRAIN/VAL en ejecución'
     : (String(wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.validation_tensors || 0) + ' VAL');
   researchStat(externalGrid, 'Tensores externos', String(wfigs.tensors_training_ready || 0), tensorDetail, true);
+  if (wfigs.expansion_phase) {
+    researchStat(
+      externalGrid,
+      'Expansión histórica',
+      expansionGroupsTotal > 0 ? (String(expansionGroupsDone) + '/' + String(expansionGroupsTotal)) : researchRunName(wfigs.expansion_phase),
+      'grupos TRAIN/DEV · prospectivo excluido',
+      wfigs.expansion_active === true
+    );
+  }
+  const expansionComparison = wfigs.expansion_comparison || {};
+  if (expansionComparison.paired_delta != null) {
+    const expansionCi = expansionComparison.paired_delta_event_bootstrap_95_ci || [];
+    researchStat(
+      externalGrid,
+      'Confirmación nueva',
+      researchScore(expansionComparison.candidate_event_macro_iou),
+      (Number(expansionComparison.paired_delta) >= 0 ? '+' : '') + researchScore(expansionComparison.paired_delta)
+        + ' vs modelo anterior'
+        + (expansionCi.length === 2 ? (' · IC 95% ' + researchScore(expansionCi[0]) + '–' + researchScore(expansionCi[1])) : ''),
+      wfigs.expansion_confirmation_gate === true
+    );
+  }
   if (wfigs.test_groups_total) {
     researchStat(externalGrid, 'Progreso WFIGS TEST', String(wfigs.test_groups_complete || 0) + '/' + String(wfigs.test_groups_total), researchRunName(wfigs.test_materialization_phase || 'pendiente'), testActive);
   }
@@ -2440,6 +2474,10 @@ function renderResearchStatus() {
   researchCheck(checks, 'WFIGS TRAIN/VAL disjuntos por incendio', wfigs.dataset_event_disjoint === true);
   researchCheck(checks, 'Normalización WFIGS recomputada sólo en TRAIN', wfigs.dataset_normalization_train_only === true);
   researchCheck(checks, 'WFIGS TEST no usado para seleccionar', wfigs.external_test_used_for_selection === false && wfigs.adapted_test_used_for_selection === false);
+  if (wfigs.expansion_phase) {
+    researchCheck(checks, 'Cohorte prospectiva excluida de la nueva adaptación', wfigs.expansion_prospective_excluded === true);
+    researchCheck(checks, 'Confirmación abierta como máximo una vez', wfigs.expansion_confirmation_opened_once !== false);
+  }
   if (final.gates) {
     Object.keys(final.gates).forEach(key => researchCheck(checks, key.replaceAll('_', ' '), final.gates[key] === true));
   } else {
