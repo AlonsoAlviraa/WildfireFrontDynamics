@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from scipy.ndimage import distance_transform_edt
 from torch.utils.data import Dataset
 
 from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now
@@ -28,6 +29,11 @@ from .rcda_sealed import (
 from .wfigs_tensor_dataset import WFIGS_CHANNELS
 
 EXTERNAL_EVAL_SCHEMA = "wfd_rcda_wfigs_external_eval_v1"
+WFIGS_GEOMETRY_FEATURE_NAMES = (
+    "signed_front_distance",
+    "front_normal_x",
+    "front_normal_y",
+)
 RCDA_RAW_FROM_WFIGS = (
     "previous_fire",
     "dem",
@@ -106,6 +112,36 @@ def _wfigs_to_rcda_raw(
     return raw
 
 
+def _front_geometry_features(previous_fire: np.ndarray) -> np.ndarray:
+    """Encode front-relative geometry without using the future target.
+
+    The signed distance is positive outside the previous perimeter and
+    negative inside.  The two normalized finite-difference derivatives provide
+    a local outward normal wherever the distance field has a gradient.  All
+    channels are bounded, deterministic and derived only from ``previous_fire``.
+    """
+
+    previous = np.asarray(previous_fire, dtype=np.float32) > 0.5
+    outside = distance_transform_edt(~previous).astype(np.float32)
+    inside = distance_transform_edt(previous).astype(np.float32)
+    signed = np.clip((outside - inside) / 32.0, -1.0, 1.0)
+    gradient_y, gradient_x = np.gradient(signed)
+    magnitude = np.hypot(gradient_x, gradient_y)
+    normal_x = np.divide(
+        gradient_x,
+        magnitude,
+        out=np.zeros_like(gradient_x, dtype=np.float32),
+        where=magnitude > 1e-6,
+    )
+    normal_y = np.divide(
+        gradient_y,
+        magnitude,
+        out=np.zeros_like(gradient_y, dtype=np.float32),
+        where=magnitude > 1e-6,
+    )
+    return np.stack([signed, normal_x, normal_y]).astype(np.float32)
+
+
 def _paired_event_bootstrap(
     reports: list[dict[str, Any]],
     baseline: dict[str, Any],
@@ -165,6 +201,7 @@ class WFIGSExternalDataset(Dataset):
         rcda_normalization: dict[str, Any],
         augment: bool = False,
         include_valid_mask: bool = False,
+        include_geometry_features: bool = False,
     ) -> None:
         self.dataset_root = Path(dataset_root)
         self.samples = list(manifest.get("samples") or [])
@@ -172,6 +209,7 @@ class WFIGSExternalDataset(Dataset):
         self.channel_max = np.asarray(rcda_normalization["channel_max"], dtype=np.float32)
         self.augment = augment
         self.include_valid_mask = include_valid_mask
+        self.include_geometry_features = include_geometry_features
         if self.channel_min.shape != (12,) or self.channel_max.shape != (12,):
             raise ValueError("RCDA normalization must contain 12 raw channels")
 
@@ -197,6 +235,11 @@ class WFIGSExternalDataset(Dataset):
             channel_max=self.channel_max,
             horizon_hours=horizon,
         )
+        if self.include_geometry_features:
+            features = np.concatenate(
+                [features, _front_geometry_features(raw_all[WFIGS_CHANNELS.index("previous_fire")])],
+                axis=0,
+            )
         if self.include_valid_mask:
             features = np.concatenate(
                 [features, valid[None].astype(np.float32)],

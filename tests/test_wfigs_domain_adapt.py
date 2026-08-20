@@ -15,8 +15,8 @@ from wildfire_front.ml.wfigs_domain_adapt import (
     configure_trainable_scope,
     set_adaptation_train_mode,
 )
-from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
 from wildfire_front.ml.wfigs_external_eval import WFIGSExternalDataset
+from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
 
 
 def _sample(root: Path, split: str, pair: str, event: str) -> dict:
@@ -159,7 +159,7 @@ def test_all_scope_keeps_every_parameter_trainable() -> None:
     )
 
 
-def test_decoder_plus_input_scope_trains_only_first_input_projection() -> None:
+def test_decoder_plus_input_scope_trains_only_input_projections() -> None:
     model = build_model("resunet", in_channels=17, base=8)
 
     trainable = configure_trainable_scope(model, "decoder_plus_input")
@@ -167,10 +167,11 @@ def test_decoder_plus_input_scope_trains_only_first_input_projection() -> None:
 
     assert trainable
     assert model.enc1.body[0].weight.requires_grad
+    assert model.enc1.skip.weight.requires_grad
     assert all(
         not parameter.requires_grad
         for name, parameter in model.enc1.named_parameters()
-        if name != "body.0.weight"
+        if name not in {"body.0.weight", "skip.weight"}
     )
     assert all(not parameter.requires_grad for parameter in model.enc2.parameters())
     assert all(parameter.requires_grad for parameter in model.dec1.parameters())
@@ -191,3 +192,20 @@ def test_wfigs_dataset_can_append_explicit_valid_mask(tmp_path: Path) -> None:
     )
     assert row_dataset[0]["input"].shape[0] == 17
     assert row_dataset[0]["input"][16].max() == 0.0
+
+
+def test_wfigs_dataset_can_append_front_geometry_features(tmp_path: Path) -> None:
+    dataset = tmp_path / "dataset"
+    sample = _sample(dataset, "validation", "pair", "event")
+    manifest = {"events": ["event"], "samples": [sample]}
+    normalization = {"fit_split": "train", "channel_min": [0.0] * 12, "channel_max": [1.0] * 12}
+    row_dataset = WFIGSExternalDataset(
+        dataset_root=dataset,
+        manifest=manifest,
+        rcda_normalization=normalization,
+        include_geometry_features=True,
+    )
+    features = row_dataset[0]["input"]
+    assert features.shape[0] == 19
+    assert float(features[16].min()) < 0.0
+    assert float(features[16].max()) > 0.0

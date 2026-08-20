@@ -55,6 +55,7 @@ class WFIGSAdaptConfig:
     target_mode: str | None = None
     augment: bool = True
     include_valid_mask: bool = False
+    include_geometry_features: bool = False
     source_seeds: tuple[int, ...] | None = None
 
 
@@ -72,7 +73,10 @@ def configure_trainable_scope(
         parameter.requires_grad = (
             scope == "all"
             or not name.startswith(frozen_prefixes)
-            or (scope == "decoder_plus_input" and name == "enc1.body.0.weight")
+            or (
+                scope == "decoder_plus_input"
+                and name in {"enc1.body.0.weight", "enc1.skip.weight"}
+            )
         )
         if parameter.requires_grad:
             trainable.append(parameter)
@@ -158,6 +162,7 @@ def adapt_frozen_rcda_on_wfigs(
         rcda_normalization=normalization,
         augment=adaptation.augment,
         include_valid_mask=adaptation.include_valid_mask,
+        include_geometry_features=adaptation.include_geometry_features,
     )
     val_set = WFIGSExternalDataset(
         dataset_root=dataset_root,
@@ -165,6 +170,7 @@ def adapt_frozen_rcda_on_wfigs(
         rcda_normalization=normalization,
         augment=False,
         include_valid_mask=adaptation.include_valid_mask,
+        include_geometry_features=adaptation.include_geometry_features,
     )
     train_loader = make_loader(
         train_set,
@@ -203,7 +209,11 @@ def adapt_frozen_rcda_on_wfigs(
         source_payload = torch.load(source_checkpoint, map_location=device, weights_only=False)
         if source_payload.get("selection_split") != "val":
             raise ValueError(f"source checkpoint was not selected on RCDA VAL: {source_checkpoint}")
-        input_channels = len(SEALED_CHANNEL_NAMES) + int(adaptation.include_valid_mask)
+        input_channels = (
+            len(SEALED_CHANNEL_NAMES)
+            + int(adaptation.include_valid_mask)
+            + 3 * int(adaptation.include_geometry_features)
+        )
         model = prepare_model_for_device(
             build_model(
                 str(config["model_name"]),
@@ -224,7 +234,7 @@ def adapt_frozen_rcda_on_wfigs(
                     target_state[name].ndim == 4
                     and value.ndim == 4
                     and target_state[name].shape[0] == value.shape[0]
-                    and target_state[name].shape[1] == value.shape[1] + 1
+                    and target_state[name].shape[1] > value.shape[1]
                     and target_state[name].shape[2:] == value.shape[2:]
                 ):
                     # The residual stem has both a 3x3 body projection and a
