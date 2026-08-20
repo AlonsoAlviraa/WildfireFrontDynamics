@@ -4,14 +4,34 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+import torch
 
 from scripts.tune_rcda_val_ensembles import (
+    growth_probabilities,
     paired_event_bootstrap,
     parse_combinations,
     parse_named_paths,
     selected_event_ious,
     summarize_confusions,
 )
+
+
+class _TwoHeadModel(torch.nn.Module):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        growth = torch.full_like(inputs[:, :1], 2.0)
+        extent = torch.full_like(inputs[:, :1], -3.0)
+        return torch.cat([growth, extent], dim=1)
+
+
+def test_multitask_ensemble_uses_only_the_growth_head() -> None:
+    probabilities = growth_probabilities(
+        _TwoHeadModel(),
+        {"target_mode": "multitask"},
+        torch.zeros((2, 16, 4, 4)),
+    )
+
+    assert probabilities.shape == (2, 1, 4, 4)
+    assert np.allclose(probabilities, torch.sigmoid(torch.tensor(2.0)).item())
 
 
 def test_summarize_confusions_selects_event_macro_not_pooled_iou() -> None:

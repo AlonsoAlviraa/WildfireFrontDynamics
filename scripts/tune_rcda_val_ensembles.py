@@ -32,9 +32,23 @@ from wildfire_front.ml.rcda_sealed import (  # noqa: E402
     load_protocol,
     make_loader,
     metrics_from_confusion,
+    prediction_logits,
     prepare_inputs_for_device,
     prepare_model_for_device,
 )
+
+
+def growth_probabilities(
+    model: torch.nn.Module,
+    checkpoint: dict[str, Any],
+    inputs: torch.Tensor,
+) -> np.ndarray:
+    logits = model(inputs)
+    growth_logits = prediction_logits(
+        logits,
+        str(checkpoint.get("target_mode", "growth")),
+    )
+    return torch.sigmoid(growth_logits).cpu().numpy()
 
 
 def sha256_file(path: Path) -> str:
@@ -237,8 +251,8 @@ def tune_validation_ensembles(
         previous = inputs[:, 0:1].numpy() > 0.5
         targets = batch["target"].numpy()[:, 0].astype(bool)
         probabilities: dict[str, np.ndarray] = {}
-        for alias, (model, _checkpoint) in loaded.items():
-            probability = torch.sigmoid(model(prepared)).cpu().numpy()
+        for alias, (model, checkpoint) in loaded.items():
+            probability = growth_probabilities(model, checkpoint, prepared)
             # Growth cannot occupy an already-burning t0 pixel.  Apply this
             # physical constraint uniformly, including growth-trained models.
             probability[previous] = 0.0
