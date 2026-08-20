@@ -54,6 +54,7 @@ class WFIGSAdaptConfig:
     tversky_gamma: float | None = None
     target_mode: str | None = None
     augment: bool = True
+    include_valid_mask: bool = False
     source_seeds: tuple[int, ...] | None = None
 
 
@@ -63,12 +64,16 @@ def configure_trainable_scope(
 ) -> list[torch.nn.Parameter]:
     """Freeze the source encoder for low-data decoder-only adaptation."""
 
-    if scope not in {"all", "decoder"}:
+    if scope not in {"all", "decoder", "decoder_plus_input"}:
         raise ValueError(f"unknown WFIGS adaptation trainable scope: {scope!r}")
     frozen_prefixes = ("enc1.", "enc2.", "enc3.", "enc4.", "context.")
     trainable: list[torch.nn.Parameter] = []
     for name, parameter in model.named_parameters():
-        parameter.requires_grad = scope == "all" or not name.startswith(frozen_prefixes)
+        parameter.requires_grad = (
+            scope == "all"
+            or not name.startswith(frozen_prefixes)
+            or (scope == "decoder_plus_input" and name == "enc1.body.0.weight")
+        )
         if parameter.requires_grad:
             trainable.append(parameter)
     if not trainable:
@@ -80,9 +85,12 @@ def set_adaptation_train_mode(model: torch.nn.Module, scope: str) -> None:
     """Enter train mode while keeping frozen encoder normalization immutable."""
 
     model.train()
-    if scope == "decoder":
+    if scope in {"decoder", "decoder_plus_input"}:
         for name, module in model.named_children():
-            if name in {"enc1", "enc2", "enc3", "enc4", "context"}:
+            frozen = {"enc2", "enc3", "enc4", "context"}
+            if scope == "decoder":
+                frozen.add("enc1")
+            if name in frozen:
                 module.eval()
 
 
@@ -149,12 +157,14 @@ def adapt_frozen_rcda_on_wfigs(
         manifest=train_manifest,
         rcda_normalization=normalization,
         augment=adaptation.augment,
+        include_valid_mask=adaptation.include_valid_mask,
     )
     val_set = WFIGSExternalDataset(
         dataset_root=dataset_root,
         manifest=val_manifest,
         rcda_normalization=normalization,
         augment=False,
+        include_valid_mask=adaptation.include_valid_mask,
     )
     train_loader = make_loader(
         train_set,
@@ -193,15 +203,34 @@ def adapt_frozen_rcda_on_wfigs(
         source_payload = torch.load(source_checkpoint, map_location=device, weights_only=False)
         if source_payload.get("selection_split") != "val":
             raise ValueError(f"source checkpoint was not selected on RCDA VAL: {source_checkpoint}")
+        input_channels = len(SEALED_CHANNEL_NAMES) + int(adaptation.include_valid_mask)
         model = prepare_model_for_device(
             build_model(
                 str(config["model_name"]),
-                in_channels=len(SEALED_CHANNEL_NAMES),
+                in_channels=input_channels,
                 base=int(config["base_channels"]),
             ),
             device,
         )
-        model.load_state_dict(source_payload["state_dict"])
+        source_state = source_payload["state_dict"]
+        if adaptation.include_valid_mask:
+            target_state = model.state_dict()
+            for name, value in source_state.items():
+                if name not in target_state:
+                    raise ValueError(f"source parameter missing from valid-mask model: {name}")
+                if target_state[name].shape == value.shape:
+                    target_state[name] = value
+                elif name == "enc1.body.0.weight" and (
+                    target_state[name].ndim == 4
+                    and target_state[name].shape[1] == value.shape[1] + 1
+                ):
+                    target_state[name][:, : value.shape[1]] = value
+                    target_state[name][:, value.shape[1] :] = 0.0
+                else:
+                    raise ValueError(f"valid-mask source parameter shape mismatch: {name}")
+            model.load_state_dict(target_state)
+        else:
+            model.load_state_dict(source_state)
         trainable_parameters = configure_trainable_scope(
             model,
             adaptation.trainable_scope,

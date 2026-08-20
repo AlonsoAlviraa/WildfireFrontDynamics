@@ -16,6 +16,7 @@ from wildfire_front.ml.wfigs_domain_adapt import (
     set_adaptation_train_mode,
 )
 from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
+from wildfire_front.ml.wfigs_external_eval import WFIGSExternalDataset
 
 
 def _sample(root: Path, split: str, pair: str, event: str) -> dict:
@@ -156,3 +157,37 @@ def test_all_scope_keeps_every_parameter_trainable() -> None:
     assert sum(parameter.numel() for parameter in trainable) == sum(
         parameter.numel() for parameter in model.parameters()
     )
+
+
+def test_decoder_plus_input_scope_trains_only_first_input_projection() -> None:
+    model = build_model("resunet", in_channels=17, base=8)
+
+    trainable = configure_trainable_scope(model, "decoder_plus_input")
+    set_adaptation_train_mode(model, "decoder_plus_input")
+
+    assert trainable
+    assert model.enc1.body[0].weight.requires_grad
+    assert all(
+        not parameter.requires_grad
+        for name, parameter in model.enc1.named_parameters()
+        if name != "body.0.weight"
+    )
+    assert all(not parameter.requires_grad for parameter in model.enc2.parameters())
+    assert all(parameter.requires_grad for parameter in model.dec1.parameters())
+    assert model.enc1.training is True
+    assert model.enc2.training is False
+
+
+def test_wfigs_dataset_can_append_explicit_valid_mask(tmp_path: Path) -> None:
+    dataset = tmp_path / "dataset"
+    sample = _sample(dataset, "validation", "pair", "event")
+    manifest = {"events": ["event"], "samples": [sample]}
+    normalization = {"fit_split": "train", "channel_min": [0.0] * 12, "channel_max": [1.0] * 12}
+    row_dataset = WFIGSExternalDataset(
+        dataset_root=dataset,
+        manifest=manifest,
+        rcda_normalization=normalization,
+        include_valid_mask=True,
+    )
+    assert row_dataset[0]["input"].shape[0] == 17
+    assert row_dataset[0]["input"][16].max() == 0.0

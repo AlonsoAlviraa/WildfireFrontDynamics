@@ -164,12 +164,14 @@ class WFIGSExternalDataset(Dataset):
         manifest: dict[str, Any],
         rcda_normalization: dict[str, Any],
         augment: bool = False,
+        include_valid_mask: bool = False,
     ) -> None:
         self.dataset_root = Path(dataset_root)
         self.samples = list(manifest.get("samples") or [])
         self.channel_min = np.asarray(rcda_normalization["channel_min"], dtype=np.float32)
         self.channel_max = np.asarray(rcda_normalization["channel_max"], dtype=np.float32)
         self.augment = augment
+        self.include_valid_mask = include_valid_mask
         if self.channel_min.shape != (12,) or self.channel_max.shape != (12,):
             raise ValueError("RCDA normalization must contain 12 raw channels")
 
@@ -195,6 +197,11 @@ class WFIGSExternalDataset(Dataset):
             channel_max=self.channel_max,
             horizon_hours=horizon,
         )
+        if self.include_valid_mask:
+            features = np.concatenate(
+                [features, valid[None].astype(np.float32)],
+                axis=0,
+            )
         if self.augment:
             features, targets = _augment(features, np.stack([target, extent]))
             target, extent = targets[0], targets[1]
