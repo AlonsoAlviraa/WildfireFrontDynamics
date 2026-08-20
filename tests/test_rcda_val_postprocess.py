@@ -9,6 +9,7 @@ from scripts.tune_rcda_val_postprocess import (
     evaluate_postprocess_grid,
     postprocess_growth,
 )
+from wildfire_front.ml.rcda_sealed import restrict_growth_to_distance
 
 
 def test_dilation_never_repredicts_the_observed_t0_extent() -> None:
@@ -40,6 +41,25 @@ def test_connection_filter_removes_isolated_growth_component() -> None:
     )
     assert result[1, 2]
     assert not result[6, 6]
+
+
+def test_distance_restriction_removes_far_growth_without_touching_t0() -> None:
+    previous = np.zeros((5, 5), dtype=bool)
+    previous[2, 2] = True
+    prediction = np.zeros_like(previous)
+    prediction[2, 3] = True
+    prediction[0, 0] = True
+    distance = np.full((5, 5), 20.0, dtype=np.float32)
+    distance[2, 3] = 4.0
+    result = restrict_growth_to_distance(
+        prediction,
+        previous,
+        distance,
+        max_distance_px=8.0,
+    )
+    assert result[2, 3]
+    assert not result[0, 0]
+    assert not result[2, 2]
 
 
 def test_grid_selects_validation_configuration_by_event_macro_iou() -> None:
