@@ -34,6 +34,12 @@ WFIGS_GEOMETRY_FEATURE_NAMES = (
     "front_normal_x",
     "front_normal_y",
 )
+WFIGS_TILE_STANDARDIZED_CHANNEL_NAMES = (
+    "blue_tile_z",
+    "green_tile_z",
+    "red_tile_z",
+    "ndvi_tile_z",
+)
 RCDA_RAW_FROM_WFIGS = (
     "previous_fire",
     "dem",
@@ -142,6 +148,28 @@ def _front_geometry_features(previous_fire: np.ndarray) -> np.ndarray:
     return np.stack([signed, normal_x, normal_y]).astype(np.float32)
 
 
+def _tile_standardized_features(raw_all: np.ndarray, valid: np.ndarray) -> np.ndarray:
+    """Add robust per-tile EO residuals using valid pixels only.
+
+    The median/IQR statistics are computed from the current input tile and are
+    independent of the future perimeter.  Clipping keeps rare reflectance
+    outliers from dominating the small trainable input projection.
+    """
+
+    channel_indices = [WFIGS_CHANNELS.index(name) for name in ("blue", "green", "red", "ndvi")]
+    channels: list[np.ndarray] = []
+    for index in channel_indices:
+        channel = np.asarray(raw_all[index], dtype=np.float32)
+        sample = channel[valid] if bool(valid.any()) else channel.reshape(-1)
+        median = float(np.median(sample))
+        quartiles = np.percentile(sample, [25.0, 75.0])
+        scale = max(float(quartiles[1] - quartiles[0]) / 1.349, 1e-3)
+        standardized = np.clip((channel - median) / (4.0 * scale), -1.0, 1.0)
+        standardized[~valid] = 0.0
+        channels.append(standardized.astype(np.float32))
+    return np.stack(channels).astype(np.float32)
+
+
 def _paired_event_bootstrap(
     reports: list[dict[str, Any]],
     baseline: dict[str, Any],
@@ -202,6 +230,7 @@ class WFIGSExternalDataset(Dataset):
         augment: bool = False,
         include_valid_mask: bool = False,
         include_geometry_features: bool = False,
+        include_tile_standardized_features: bool = False,
     ) -> None:
         self.dataset_root = Path(dataset_root)
         self.samples = list(manifest.get("samples") or [])
@@ -210,6 +239,7 @@ class WFIGSExternalDataset(Dataset):
         self.augment = augment
         self.include_valid_mask = include_valid_mask
         self.include_geometry_features = include_geometry_features
+        self.include_tile_standardized_features = include_tile_standardized_features
         if self.channel_min.shape != (12,) or self.channel_max.shape != (12,):
             raise ValueError("RCDA normalization must contain 12 raw channels")
 
@@ -238,6 +268,11 @@ class WFIGSExternalDataset(Dataset):
         if self.include_geometry_features:
             features = np.concatenate(
                 [features, _front_geometry_features(raw_all[WFIGS_CHANNELS.index("previous_fire")])],
+                axis=0,
+            )
+        if self.include_tile_standardized_features:
+            features = np.concatenate(
+                [features, _tile_standardized_features(raw_all, valid)],
                 axis=0,
             )
         if self.include_valid_mask:

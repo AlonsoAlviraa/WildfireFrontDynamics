@@ -56,6 +56,7 @@ class WFIGSAdaptConfig:
     augment: bool = True
     include_valid_mask: bool = False
     include_geometry_features: bool = False
+    include_tile_standardized_features: bool = False
     source_seeds: tuple[int, ...] | None = None
 
 
@@ -164,6 +165,7 @@ def adapt_frozen_rcda_on_wfigs(
         augment=adaptation.augment,
         include_valid_mask=adaptation.include_valid_mask,
         include_geometry_features=adaptation.include_geometry_features,
+        include_tile_standardized_features=adaptation.include_tile_standardized_features,
     )
     val_set = WFIGSExternalDataset(
         dataset_root=dataset_root,
@@ -172,6 +174,7 @@ def adapt_frozen_rcda_on_wfigs(
         augment=False,
         include_valid_mask=adaptation.include_valid_mask,
         include_geometry_features=adaptation.include_geometry_features,
+        include_tile_standardized_features=adaptation.include_tile_standardized_features,
     )
     train_loader = make_loader(
         train_set,
@@ -214,6 +217,7 @@ def adapt_frozen_rcda_on_wfigs(
             len(SEALED_CHANNEL_NAMES)
             + int(adaptation.include_valid_mask)
             + 3 * int(adaptation.include_geometry_features)
+            + 4 * int(adaptation.include_tile_standardized_features)
         )
         model = prepare_model_for_device(
             build_model(

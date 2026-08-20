@@ -224,3 +224,20 @@ def test_wfigs_dataset_can_append_front_geometry_features(tmp_path: Path) -> Non
     assert features.shape[0] == 19
     assert float(features[16].min()) < 0.0
     assert float(features[16].max()) > 0.0
+
+
+def test_wfigs_dataset_can_append_tile_standardized_features(tmp_path: Path) -> None:
+    dataset = tmp_path / "dataset"
+    sample = _sample(dataset, "validation", "pair", "event")
+    manifest = {"events": ["event"], "samples": [sample]}
+    normalization = {"fit_split": "train", "channel_min": [0.0] * 12, "channel_max": [1.0] * 12}
+    row_dataset = WFIGSExternalDataset(
+        dataset_root=dataset,
+        manifest=manifest,
+        rcda_normalization=normalization,
+        include_tile_standardized_features=True,
+    )
+    features = row_dataset[0]["input"]
+    assert features.shape[0] == 20
+    assert float(features[16:].max()) <= 1.0
+    assert float(features[16:].min()) >= -1.0
