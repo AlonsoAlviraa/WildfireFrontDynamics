@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from torch import nn
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -19,36 +18,15 @@ if str(ROOT) not in sys.path:
 
 from wildfire_front.ml.rcda_sealed import (  # noqa: E402
     SEALED_CHANNEL_NAMES,
+    HeterogeneousGrowthProbabilityEnsemble,
     build_model,
     make_loader,
-    prediction_logits,
     prepare_model_for_device,
     select_threshold_on_val,
 )
 from wildfire_front.ml.wfigs_domain_adapt import ADAPTATION_SCHEMA  # noqa: E402
 from wildfire_front.ml.wfigs_external_eval import WFIGSExternalDataset  # noqa: E402
 from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now  # noqa: E402
-
-
-class GrowthHeadProbabilityEnsemble(nn.Module):
-    """Average growth probabilities from models with heterogeneous heads."""
-
-    def __init__(self, models: list[nn.Module], target_modes: list[str]) -> None:
-        super().__init__()
-        if len(models) < 2 or len(models) != len(target_modes):
-            raise ValueError("cross-source ensemble requires aligned models and modes")
-        self.models = nn.ModuleList(models)
-        self.target_modes = tuple(target_modes)
-
-    def forward(self, tensor: torch.Tensor) -> torch.Tensor:
-        probabilities = torch.stack(
-            [
-                torch.sigmoid(prediction_logits(model(tensor), mode))
-                for model, mode in zip(self.models, self.target_modes, strict=True)
-            ],
-            dim=0,
-        ).mean(dim=0)
-        return torch.logit(probabilities.clamp(1e-6, 1.0 - 1e-6))
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -140,7 +118,7 @@ def main() -> int:
         num_workers=0,
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    models: list[nn.Module] = []
+    models: list[torch.nn.Module] = []
     modes: list[str] = []
     for report in reports:
         config = report["config"]
@@ -163,7 +141,7 @@ def main() -> int:
         model.eval()
         models.append(model)
         modes.append(str(config["target_mode"]))
-    ensemble = GrowthHeadProbabilityEnsemble(models, modes)
+    ensemble = HeterogeneousGrowthProbabilityEnsemble(models, modes)
     threshold, validation = select_threshold_on_val(
         ensemble,
         loader,

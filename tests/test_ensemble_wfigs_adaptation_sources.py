@@ -8,9 +8,9 @@ import torch
 from torch import nn
 
 from scripts.ensemble_wfigs_adaptation_sources import (
-    GrowthHeadProbabilityEnsemble,
     validate_sources,
 )
+from wildfire_front.ml.rcda_sealed import HeterogeneousGrowthProbabilityEnsemble
 
 
 class _OneHead(nn.Module):
@@ -64,7 +64,7 @@ def _source(tmp_path: Path, name: str, *, test_evaluated: bool = False) -> Path:
 
 
 def test_growth_ensemble_accepts_one_and_two_head_models() -> None:
-    model = GrowthHeadProbabilityEnsemble(
+    model = HeterogeneousGrowthProbabilityEnsemble(
         [_OneHead(), _TwoHead()],
         ["hybrid", "multitask"],
     )

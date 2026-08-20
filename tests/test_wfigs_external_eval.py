@@ -285,7 +285,11 @@ def test_adapted_evaluator_uses_val_selected_ensemble_once(tmp_path: Path) -> No
     checkpoint = tmp_path / "adapted.pt"
     model = build_model("unet", in_channels=16, base=8)
     torch.save(
-        {"selection_split": "wfigs_validation", "state_dict": model.state_dict()},
+        {
+            "selection_split": "wfigs_validation",
+            "wfigs_test_evaluated": False,
+            "state_dict": model.state_dict(),
+        },
         checkpoint,
     )
     adaptation = tmp_path / "adaptation.json"
@@ -298,6 +302,7 @@ def test_adapted_evaluator_uses_val_selected_ensemble_once(tmp_path: Path) -> No
                     {
                         "checkpoint": str(checkpoint),
                         "selected_threshold": 0.5,
+                        "test_evaluated": False,
                         "config": {
                             "seed": seed,
                             "model_name": "unet",
@@ -351,3 +356,126 @@ def test_adapted_evaluator_uses_val_selected_ensemble_once(tmp_path: Path) -> No
     assert report["summary"]["ensemble_event_macro_iou"] is not None
     assert report["summary"]["ensemble_paired_event_analysis"]["events"] == 1
     assert report["protocol"]["wfigs_test_used_for_selection"] is False
+
+
+def test_adapted_evaluator_supports_cross_source_growth_heads(tmp_path: Path) -> None:
+    dataset = tmp_path / "dataset"
+    sample = dataset / "samples/test/pair.npz"
+    sample.parent.mkdir(parents=True)
+    inputs = np.zeros((len(WFIGS_CHANNELS), 16, 16), dtype=np.float32)
+    inputs[WFIGS_CHANNELS.index("valid_data")] = 1.0
+    inputs[WFIGS_CHANNELS.index("previous_fire"), 7:9, 7:9] = 1.0
+    extent = inputs[0].astype(np.uint8)
+    extent[6:10, 6:10] = 1
+    growth = np.logical_and(extent > 0, inputs[0] == 0).astype(np.uint8)
+    np.savez_compressed(
+        sample,
+        inputs=inputs,
+        target_growth=growth,
+        target_extent=extent,
+        horizon_hours=np.asarray(12.0, dtype=np.float32),
+    )
+    (dataset / "test.json").write_text(
+        json.dumps(
+            {
+                "events": ["event"],
+                "samples": [
+                    {
+                        "pair_id": "pair",
+                        "event_id": "event",
+                        "sample": sample.relative_to(dataset).as_posix(),
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    normalization = tmp_path / "normalization.json"
+    normalization.write_text(
+        json.dumps(
+            {
+                "fit_split": "train",
+                "channel_min": [0.0] * 12,
+                "channel_max": [1.0] * 12,
+            }
+        ),
+        encoding="utf-8",
+    )
+    model_specs = (("unet", "hybrid"), ("resunet_multitask", "multitask"))
+    reports = []
+    for seed, (model_name, target_mode) in zip((11, 29), model_specs, strict=True):
+        checkpoint = tmp_path / f"adapted-{seed}.pt"
+        model = build_model(model_name, in_channels=16, base=8)
+        torch.save(
+            {
+                "selection_split": "wfigs_validation",
+                "wfigs_test_evaluated": False,
+                "state_dict": model.state_dict(),
+            },
+            checkpoint,
+        )
+        reports.append(
+            {
+                "checkpoint": str(checkpoint),
+                "selected_threshold": 0.5,
+                "test_evaluated": False,
+                "config": {
+                    "seed": seed,
+                    "model_name": model_name,
+                    "base_channels": 8,
+                    "target_mode": target_mode,
+                },
+            }
+        )
+    adaptation = tmp_path / "adaptation-cross.json"
+    adaptation.write_text(
+        json.dumps(
+            {
+                "test_used_for_selection": False,
+                "wfigs_test_loaded": False,
+                "reports": reports,
+                "ensemble": {
+                    "aggregation": "equal_weight_growth_probability_across_sources",
+                    "members": 2,
+                    "selected_threshold": 0.45,
+                    "threshold_selected_on": "wfigs_validation",
+                    "test_used_for_selection": False,
+                    "test_evaluated": False,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    baseline = tmp_path / "geometry.json"
+    baseline.write_text(
+        json.dumps(
+            {
+                "selection": {
+                    "test_not_used_for_selection": True,
+                    "growth_transition_iou": {"selected_radius_m": 250},
+                },
+                "per_pair": [
+                    {
+                        "pair_id": "pair",
+                        "event_id": "event",
+                        "status": "usable",
+                        "radii": {"250": {"growth_transition_iou": 0.1}},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = evaluate_adapted_rcda_on_wfigs(
+        adaptation_summary_path=adaptation,
+        wfigs_dataset_root=dataset,
+        rcda_normalization_path=normalization,
+        geometry_baseline_path=baseline,
+        output_path=tmp_path / "cross-external.json",
+    )
+
+    assert report["ensemble"]["aggregation"] == (
+        "equal_weight_growth_probability_across_sources"
+    )
+    assert report["ensemble"]["members"] == 2
