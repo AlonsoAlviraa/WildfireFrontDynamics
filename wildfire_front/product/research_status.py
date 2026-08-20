@@ -208,8 +208,22 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         for row in state_rows
     )
     dataset_roots = sorted((root / "outputs/ml_eval").glob("wfigs_tensor_dataset_*"))
-    dataset_root = dataset_roots[-1] if dataset_roots else None
-    data_state_path = dataset_root / "NIGHTWATCH_STATE.json" if dataset_root else None
+    complete_dataset_roots = [
+        candidate
+        for candidate in dataset_roots
+        if (candidate / "DATASET_REPORT.json").is_file()
+    ]
+    dataset_root = (
+        complete_dataset_roots[-1]
+        if complete_dataset_roots
+        else (dataset_roots[-1] if dataset_roots else None)
+    )
+    active_dataset_root = dataset_roots[-1] if dataset_roots else None
+    data_state_path = (
+        active_dataset_root / "NIGHTWATCH_STATE.json"
+        if active_dataset_root
+        else None
+    )
     data_state = _read_json(data_state_path) if data_state_path else None
     dataset_report_path = dataset_root / "DATASET_REPORT.json" if dataset_root else None
     dataset_report = _read_json(dataset_report_path) if dataset_report_path else None
@@ -219,10 +233,19 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     audit = _read_json(audit_path) if audit_path else None
     audit_counts = (audit or {}).get("counts") or {}
     audit_checks = (audit or {}).get("checks") or {}
-    external_path = dataset_root / "WFIGS_EXTERNAL_EVAL.json" if dataset_root else None
+    external_roots = [
+        candidate
+        for candidate in dataset_roots
+        if (candidate / "WFIGS_EXTERNAL_EVAL.json").is_file()
+        or (candidate / "EXTERNAL_NIGHTWATCH_STATE.json").is_file()
+    ]
+    external_root = external_roots[-1] if external_roots else dataset_root
+    external_path = (
+        external_root / "WFIGS_EXTERNAL_EVAL.json" if external_root else None
+    )
     external = _read_json(external_path) if external_path else None
     external_state_path = (
-        dataset_root / "EXTERNAL_NIGHTWATCH_STATE.json" if dataset_root else None
+        external_root / "EXTERNAL_NIGHTWATCH_STATE.json" if external_root else None
     )
     external_state = _read_json(external_state_path) if external_state_path else None
     test_campaigns = sorted(
@@ -239,6 +262,8 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
     )
     adapted_path = adaptation_root / "WFIGS_ADAPTED_TEST_EVAL.json" if adaptation_root else None
     adapted = _read_json(adapted_path) if adapted_path else None
+    external_protocol = (external or {}).get("protocol") or {}
+    adapted_protocol = (adapted or {}).get("protocol") or {}
     campaign_incomplete = bool(campaign_state) and int(
         (campaign_state or {}).get("groups_complete") or 0
     ) < int((campaign_state or {}).get("groups_total") or 0)
@@ -273,6 +298,7 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "test_groups_complete": int((test_state or {}).get("groups_complete") or 0),
         "test_groups_total": int((test_state or {}).get("groups_total") or 0),
         "test_materialization_phase": (external_state or {}).get("phase"),
+        "dataset_phase": (data_state or {}).get("phase"),
         "adaptation_phase": (adaptation_state or {}).get("phase"),
         "dataset_audit_status": (audit or {}).get("status"),
         "dataset_audit_samples": int(audit_counts.get("samples_audited") or 0),
@@ -282,8 +308,14 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
             "normalization_recomputed_from_train_only"
         ),
         "external_evaluation_executed": bool(external),
+        "external_test_used_for_selection": external_protocol.get(
+            "wfigs_test_used_for_selection"
+        ),
         "external_summary": (external or {}).get("summary"),
         "adapted_evaluation_executed": bool(adapted),
+        "adapted_test_used_for_selection": adapted_protocol.get(
+            "wfigs_test_used_for_selection"
+        ),
         "adapted_summary": (adapted or {}).get("summary"),
         "enrichment_artifact": _relative(enrichment_path, root),
         "campaign_artifact": _relative(
