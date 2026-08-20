@@ -22,7 +22,11 @@ from .rcda_sealed import (
     make_loader,
     prepare_model_for_device,
 )
-from .wfigs_external_eval import WFIGSExternalDataset
+from .wfigs_external_eval import (
+    RCDA_RAW_FROM_WFIGS,
+    WFIGSExternalDataset,
+    _wfigs_to_rcda_raw,
+)
 
 EXPANSION_SCHEMA = "wfd_wfigs_expansion_protocol_v1"
 
@@ -165,6 +169,73 @@ def validate_inventory_isolation(
     }
 
 
+def fit_converted_train_normalization(
+    *,
+    dataset_root: Path,
+    reference_normalization_path: Path,
+    output_path: Path,
+) -> dict[str, Any]:
+    """Fit the converted 12-channel contract using WFIGS TRAIN only."""
+
+    dataset_root = Path(dataset_root)
+    if (dataset_root / "test.json").exists():
+        raise ValueError("normalization fitter refuses a dataset containing TEST")
+    manifest = json.loads((dataset_root / "train.json").read_text(encoding="utf-8"))
+    samples = list(manifest.get("samples") or [])
+    if not samples:
+        raise ValueError("WFIGS normalization requires TRAIN samples")
+    reference = json.loads(Path(reference_normalization_path).read_text(encoding="utf-8"))
+    if reference.get("fit_split") != "train":
+        raise ValueError("reference RCDA normalization was not fitted on TRAIN")
+    reference_min = np.asarray(reference["channel_min"], dtype=np.float64)
+    reference_max = np.asarray(reference["channel_max"], dtype=np.float64)
+    if reference_min.shape != (12,) or reference_max.shape != (12,):
+        raise ValueError("reference normalization must contain 12 channels")
+    channel_min = np.full(12, np.inf, dtype=np.float64)
+    channel_max = np.full(12, -np.inf, dtype=np.float64)
+    below_reference = np.zeros(12, dtype=np.int64)
+    above_reference = np.zeros(12, dtype=np.int64)
+    pixels = np.zeros(12, dtype=np.int64)
+    for row in samples:
+        with np.load(dataset_root / str(row["sample"]), allow_pickle=False) as artifact:
+            raw_all = np.asarray(artifact["inputs"], dtype=np.float32)
+            horizon = float(np.asarray(artifact["horizon_hours"]).item())
+        raw = _wfigs_to_rcda_raw(raw_all, horizon_hours=horizon).astype(np.float64)
+        flat = raw.reshape(12, -1)
+        channel_min = np.minimum(channel_min, flat.min(axis=1))
+        channel_max = np.maximum(channel_max, flat.max(axis=1))
+        below_reference += (flat < reference_min[:, None]).sum(axis=1)
+        above_reference += (flat > reference_max[:, None]).sum(axis=1)
+        pixels += flat.shape[1]
+    if not np.isfinite(channel_min).all() or not np.isfinite(channel_max).all():
+        raise ValueError("converted WFIGS normalization contains non-finite values")
+    if np.any(channel_max <= channel_min):
+        raise ValueError("converted WFIGS normalization contains constant channels")
+    report = {
+        "schema": "wfd_wfigs_converted_train_only_minmax_v1",
+        "generated_at": utc_now(),
+        "fit_split": "train",
+        "test_used": False,
+        "test_loaded": False,
+        "channel_names": list(RCDA_RAW_FROM_WFIGS),
+        "channel_min": channel_min.tolist(),
+        "channel_max": channel_max.tolist(),
+        "samples_used": len(samples),
+        "events_used": len({str(row["event_id"]) for row in samples}),
+        "train_events_sha256": set_digest({str(row["event_id"]) for row in samples}),
+        "reference_normalization_sha256": sha256_file(reference_normalization_path),
+        "reference_out_of_range_fraction": {
+            name: {
+                "below": float(below_reference[index] / pixels[index]),
+                "above": float(above_reference[index] / pixels[index]),
+            }
+            for index, name in enumerate(RCDA_RAW_FROM_WFIGS)
+        },
+    }
+    _atomic_write_json(output_path, report)
+    return report
+
+
 def evaluate_frozen_adaptation_on_validation(
     *,
     adaptation_summary_path: Path,
@@ -304,6 +375,7 @@ def paired_event_comparison(
 __all__ = [
     "EXPANSION_SCHEMA",
     "evaluate_frozen_adaptation_on_validation",
+    "fit_converted_train_normalization",
     "paired_event_comparison",
     "set_digest",
     "sha256_file",
