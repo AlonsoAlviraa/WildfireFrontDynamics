@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -83,6 +84,7 @@ def adapt_frozen_rcda_on_wfigs(
     rcda_normalization_path: Path,
     output_root: Path,
     adaptation: WFIGSAdaptConfig = WFIGSAdaptConfig(),
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Fine-tune each preregistered seed; never load the WFIGS TEST manifest."""
 
@@ -236,7 +238,9 @@ def adapt_frozen_rcda_on_wfigs(
                     "seconds": time.perf_counter() - started,
                 }
             )
-            if score >= best_score:
+            improved = score >= best_score
+            should_stop = False
+            if improved:
                 best_score = score
                 best_epoch = epoch
                 stale = 0
@@ -257,8 +261,26 @@ def adapt_frozen_rcda_on_wfigs(
                 )
             else:
                 stale += 1
-                if stale > adaptation.patience:
-                    break
+                should_stop = stale > adaptation.patience
+            if progress_callback is not None:
+                progress_callback(
+                    {
+                        "seed": seed,
+                        "epoch": epoch,
+                        "epochs_total": adaptation.epochs,
+                        "train_loss": history[-1]["train_loss"],
+                        "val_event_macro_iou": score,
+                        "val_threshold": selected["threshold"],
+                        "best_epoch": best_epoch,
+                        "best_val_event_macro_iou": best_score,
+                        "improved": improved,
+                        "early_stop_pending": should_stop,
+                        "selection_split": "wfigs_validation",
+                        "test_evaluated": False,
+                    }
+                )
+            if should_stop:
+                break
         best = torch.load(checkpoint_path, map_location=device, weights_only=False)
         model.load_state_dict(best["state_dict"])
         threshold, val_search = select_threshold_on_val(
