@@ -16,6 +16,7 @@ from wildfire_front.open_if.regional.wfigs_rights import wfigs_rights_summary
 
 from .rcda_sealed import (
     SEALED_CHANNEL_NAMES,
+    HeterogeneousGrowthProbabilityEnsemble,
     ProbabilityAveragingEnsemble,
     _augment,
     build_model,
@@ -431,12 +432,16 @@ def evaluate_adapted_rcda_on_wfigs(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reports: list[dict[str, Any]] = []
     adapted_models: list[torch.nn.Module] = []
-    adapted_target_mode: str | None = None
+    adapted_target_modes: list[str] = []
     for source in adaptation.get("reports") or []:
         config = source["config"]
         checkpoint_path = Path(source["checkpoint"])
         checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
-        if checkpoint.get("selection_split") != "wfigs_validation":
+        if not (
+            checkpoint.get("selection_split") == "wfigs_validation"
+            and checkpoint.get("wfigs_test_evaluated") is False
+            and source.get("test_evaluated") is False
+        ):
             raise ValueError(f"adapted checkpoint not selected on WFIGS VAL: {checkpoint_path}")
         model = prepare_model_for_device(
             build_model(
@@ -467,37 +472,48 @@ def evaluate_adapted_rcda_on_wfigs(
             }
         )
         adapted_models.append(model)
-        current_target_mode = str(config["target_mode"])
-        if adapted_target_mode is None:
-            adapted_target_mode = current_target_mode
-        elif adapted_target_mode != current_target_mode:
-            raise ValueError("adapted seed target modes differ")
+        adapted_target_modes.append(str(config["target_mode"]))
     pair_ids = {str(row["pair_id"]) for row in manifest.get("samples") or []}
     baseline = _geometry_baseline(geometry_baseline_path, pair_ids)
     ensemble_result = None
     ensemble_paired = None
     ensemble_source = adaptation.get("ensemble")
     if ensemble_source:
+        aggregation = str(ensemble_source.get("aggregation") or "")
         if (
-            ensemble_source.get("aggregation") != "mean_seed_probability"
+            aggregation
+            not in {
+                "mean_seed_probability",
+                "equal_weight_growth_probability_across_sources",
+            }
             or ensemble_source.get("threshold_selected_on") != "wfigs_validation"
             or ensemble_source.get("test_used_for_selection") is not False
             or ensemble_source.get("test_evaluated") is not False
             or int(ensemble_source.get("members") or 0) != len(adapted_models)
         ):
             raise ValueError("adapted ensemble violates WFIGS VAL/TEST isolation")
-        ensemble_model = ProbabilityAveragingEnsemble(adapted_models).to(device)
+        if aggregation == "mean_seed_probability":
+            if len(set(adapted_target_modes)) != 1:
+                raise ValueError("mean-seed ensemble target modes differ")
+            ensemble_model = ProbabilityAveragingEnsemble(adapted_models).to(device)
+            ensemble_prediction_mode = adapted_target_modes[0]
+        else:
+            ensemble_model = HeterogeneousGrowthProbabilityEnsemble(
+                adapted_models,
+                adapted_target_modes,
+            ).to(device)
+            ensemble_prediction_mode = "hybrid"
         ensemble_threshold = float(ensemble_source["selected_threshold"])
         ensemble_metrics = evaluate_split(
             ensemble_model,
             loader,
             device,
             ensemble_threshold,
-            prediction_mode=str(adapted_target_mode),
+            prediction_mode=ensemble_prediction_mode,
             paper_metrics=True,
         )
         ensemble_result = {
-            "aggregation": "mean_seed_probability",
+            "aggregation": aggregation,
             "members": len(adapted_models),
             "threshold": ensemble_threshold,
             "threshold_selected_on": "wfigs_validation",

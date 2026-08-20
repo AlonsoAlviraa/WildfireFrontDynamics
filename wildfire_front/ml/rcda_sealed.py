@@ -758,6 +758,27 @@ class ProbabilityAveragingEnsemble(nn.Module):
         return torch.logit(probabilities.clamp(1e-6, 1.0 - 1e-6))
 
 
+class HeterogeneousGrowthProbabilityEnsemble(nn.Module):
+    """Average growth heads from models with different output contracts."""
+
+    def __init__(self, models: list[nn.Module], target_modes: list[str]) -> None:
+        super().__init__()
+        if len(models) < 2 or len(models) != len(target_modes):
+            raise ValueError("heterogeneous ensemble requires aligned models and modes")
+        self.models = nn.ModuleList(models)
+        self.target_modes = tuple(target_modes)
+
+    def forward(self, tensor: torch.Tensor) -> torch.Tensor:
+        probabilities = torch.stack(
+            [
+                torch.sigmoid(prediction_logits(model(tensor), mode))
+                for model, mode in zip(self.models, self.target_modes, strict=True)
+            ],
+            dim=0,
+        ).mean(dim=0)
+        return torch.logit(probabilities.clamp(1e-6, 1.0 - 1e-6))
+
+
 def build_model(name: str, in_channels: int = 16, *, base: int = 32) -> nn.Module:
     if name == "unet":
         return SealedUNet(in_channels=in_channels, base=base)
