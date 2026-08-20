@@ -1,12 +1,39 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
+
+import pytest
 
 from scripts.run_rcda_kaggle_alt_continuation import (
     kaggle_env,
+    require_successful_kernel_push,
     single_run_source,
     validate_single_run_val_summary,
 )
+
+
+def test_kaggle_push_guard_rejects_zero_exit_cli_error() -> None:
+    result = subprocess.CompletedProcess(
+        args=["kaggle", "kernels", "push"],
+        returncode=0,
+        stdout="Kernel push error: Maximum batch GPU session count of 2 reached.",
+        stderr="",
+    )
+
+    with pytest.raises(RuntimeError, match="Maximum batch GPU"):
+        require_successful_kernel_push(result, kernel="owner/kernel")
+
+
+def test_kaggle_push_guard_accepts_successful_creation() -> None:
+    result = subprocess.CompletedProcess(
+        args=["kaggle", "kernels", "push"],
+        returncode=0,
+        stdout="Kernel version 1 successfully pushed.",
+        stderr="",
+    )
+
+    require_successful_kernel_push(result, kernel="owner/kernel")
 
 
 def test_alt_kaggle_env_overrides_global_account(
