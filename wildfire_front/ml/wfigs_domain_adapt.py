@@ -220,10 +220,17 @@ def adapt_frozen_rcda_on_wfigs(
                     raise ValueError(f"source parameter missing from valid-mask model: {name}")
                 if target_state[name].shape == value.shape:
                     target_state[name] = value
-                elif name == "enc1.body.0.weight" and (
+                elif (
                     target_state[name].ndim == 4
+                    and value.ndim == 4
+                    and target_state[name].shape[0] == value.shape[0]
                     and target_state[name].shape[1] == value.shape[1] + 1
+                    and target_state[name].shape[2:] == value.shape[2:]
                 ):
+                    # The residual stem has both a 3x3 body projection and a
+                    # 1x1 skip projection.  Preserve the source channels and
+                    # start the learned valid-data channel at zero for either
+                    # branch, so the adapted model initially matches RCDA.
                     target_state[name][:, : value.shape[1]] = value
                     target_state[name][:, value.shape[1] :] = 0.0
                 else:
