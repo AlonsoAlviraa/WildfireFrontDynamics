@@ -291,7 +291,9 @@ def _wfigs_summary(root: Path) -> dict[str, Any]:
         "campaign_groups_complete": int((campaign_state or {}).get("groups_complete") or 0),
         "campaign_groups_total": int((campaign_state or {}).get("groups_total") or 0),
         "tensors_materialized": max(
-            int(counts.get("pairs_materialized") or 0), state_materialized
+            int(counts.get("pairs_materialized") or 0),
+            state_materialized,
+            int(dataset_counts.get("samples_written") or 0),
         ),
         "tensors_training_ready": max(
             int(counts.get("pairs_training_ready") or 0),
