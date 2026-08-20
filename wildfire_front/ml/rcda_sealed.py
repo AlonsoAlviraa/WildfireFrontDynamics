@@ -70,6 +70,7 @@ class SealedTrainConfig:
     growth_loss_weight: float = 0.65
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
+    background_bce_weight: float = 0.0
     base_channels: int = 32
     scheduler_name: str = "cosine"
     selection_metric: str = "event_macro_iou"
@@ -234,6 +235,43 @@ def _add_front_ring_objective(
     return base_loss + config.front_ring_bce_weight * ring_loss
 
 
+def background_bce_loss(
+    logits: torch.Tensor,
+    growth_targets: torch.Tensor,
+) -> torch.Tensor:
+    """BCE on observed non-growth pixels, separated from the overlap loss.
+
+    Focal-Tversky is intentionally recall-oriented in the sealed recipe.  This
+    auxiliary term is opt-in and lets a preregistered DEV experiment test
+    whether the WFIGS domain shift is producing too many low-area false
+    positives without changing the frozen default recipe.
+    """
+
+    if logits.shape != growth_targets.shape:
+        raise ValueError("background BCE logits and targets must have equal shape")
+    negative = growth_targets < 0.5
+    if not bool(negative.any()):
+        return logits.sum() * 0.0
+    return F.binary_cross_entropy_with_logits(
+        logits[negative],
+        torch.zeros_like(logits[negative]),
+    )
+
+
+def _add_background_objective(
+    base_loss: torch.Tensor,
+    growth_logits: torch.Tensor,
+    growth_targets: torch.Tensor,
+    config: SealedTrainConfig,
+) -> torch.Tensor:
+    if config.background_bce_weight <= 0.0:
+        return base_loss
+    return base_loss + config.background_bce_weight * background_bce_loss(
+        growth_logits,
+        growth_targets,
+    )
+
+
 def confusion(prediction: np.ndarray, target: np.ndarray) -> np.ndarray:
     pred = prediction.astype(bool)
     truth = target.astype(bool)
@@ -275,6 +313,9 @@ def objective_loss(
 ) -> torch.Tensor:
     """Compute the registered objective without using validation or test labels."""
 
+    if not math.isfinite(config.background_bce_weight) or config.background_bce_weight < 0.0:
+        raise ValueError("background_bce_weight must be finite and non-negative")
+
     if config.target_mode == "multitask":
         if logits.ndim != 4 or logits.shape[1] != 2:
             raise ValueError("multitask mode requires [N, 2, H, W] logits")
@@ -298,6 +339,12 @@ def objective_loss(
             config.extent_loss_weight * extent_loss
             + config.growth_loss_weight * growth_loss
         )
+        base_loss = _add_background_objective(
+            base_loss,
+            growth_logits,
+            growth_targets,
+            config,
+        )
         return _add_front_ring_objective(
             base_loss,
             growth_logits,
@@ -312,6 +359,12 @@ def objective_loss(
             alpha=config.tversky_alpha,
             beta=config.tversky_beta,
             gamma=config.tversky_gamma,
+        )
+        base_loss = _add_background_objective(
+            base_loss,
+            logits,
+            growth_targets,
+            config,
         )
         return _add_front_ring_objective(
             base_loss,
@@ -342,6 +395,12 @@ def objective_loss(
         base_loss = (
             config.extent_loss_weight * extent_loss
             + config.growth_loss_weight * growth_loss
+        )
+        base_loss = _add_background_objective(
+            base_loss,
+            growth_logits,
+            growth_targets,
+            config,
         )
         return _add_front_ring_objective(
             base_loss,
