@@ -40,6 +40,40 @@ class WFIGSAdaptConfig:
     weight_decay: float = 1e-4
     patience: int = 7
     num_workers: int = 0
+    max_grad_norm: float = 5.0
+    trainable_scope: str = "all"
+    front_ring_bce_weight: float = 0.0
+    front_ring_radius_px: float = 16.0
+    source_seeds: tuple[int, ...] | None = None
+
+
+def configure_trainable_scope(
+    model: torch.nn.Module,
+    scope: str,
+) -> list[torch.nn.Parameter]:
+    """Freeze the source encoder for low-data decoder-only adaptation."""
+
+    if scope not in {"all", "decoder"}:
+        raise ValueError(f"unknown WFIGS adaptation trainable scope: {scope!r}")
+    frozen_prefixes = ("enc1.", "enc2.", "enc3.", "enc4.", "context.")
+    trainable: list[torch.nn.Parameter] = []
+    for name, parameter in model.named_parameters():
+        parameter.requires_grad = scope == "all" or not name.startswith(frozen_prefixes)
+        if parameter.requires_grad:
+            trainable.append(parameter)
+    if not trainable:
+        raise ValueError("WFIGS adaptation has no trainable parameters")
+    return trainable
+
+
+def set_adaptation_train_mode(model: torch.nn.Module, scope: str) -> None:
+    """Enter train mode while keeping frozen encoder normalization immutable."""
+
+    model.train()
+    if scope == "decoder":
+        for name, module in model.named_children():
+            if name in {"enc1", "enc2", "enc3", "enc4", "context"}:
+                module.eval()
 
 
 def adapt_frozen_rcda_on_wfigs(
@@ -52,6 +86,8 @@ def adapt_frozen_rcda_on_wfigs(
 ) -> dict[str, Any]:
     """Fine-tune each preregistered seed; never load the WFIGS TEST manifest."""
 
+    if adaptation.max_grad_norm <= 0.0:
+        raise ValueError("WFIGS adaptation max_grad_norm must be positive")
     final = json.loads(Path(final_summary_path).read_text(encoding="utf-8"))
     if final.get("test_used_for_selection") is not False:
         raise ValueError("source RCDA summary does not prove selection isolation")
@@ -97,7 +133,15 @@ def adapt_frozen_rcda_on_wfigs(
     reports: list[dict[str, Any]] = []
     adapted_models: list[torch.nn.Module] = []
     adapted_target_mode: str | None = None
-    for source in final.get("reports") or []:
+    sources = list(final.get("reports") or [])
+    if adaptation.source_seeds is not None:
+        requested_seeds = set(adaptation.source_seeds)
+        sources = [source for source in sources if int(source["config"]["seed"]) in requested_seeds]
+        if {int(source["config"]["seed"]) for source in sources} != requested_seeds:
+            raise ValueError("requested WFIGS adaptation seed is absent from RCDA final")
+    if not sources:
+        raise ValueError("WFIGS adaptation requires at least one RCDA source report")
+    for source in sources:
         config = source["config"]
         seed = int(config["seed"])
         set_seed(seed)
@@ -114,8 +158,14 @@ def adapt_frozen_rcda_on_wfigs(
             device,
         )
         model.load_state_dict(source_payload["state_dict"])
+        trainable_parameters = configure_trainable_scope(
+            model,
+            adaptation.trainable_scope,
+        )
         optimizer = torch.optim.AdamW(
-            model.parameters(), lr=adaptation.lr, weight_decay=adaptation.weight_decay
+            trainable_parameters,
+            lr=adaptation.lr,
+            weight_decay=adaptation.weight_decay,
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
@@ -135,6 +185,8 @@ def adapt_frozen_rcda_on_wfigs(
             tversky_gamma=float(config.get("tversky_gamma", 0.75)),
             extent_loss_weight=float(config.get("extent_loss_weight", 0.35)),
             growth_loss_weight=float(config.get("growth_loss_weight", 0.65)),
+            front_ring_bce_weight=adaptation.front_ring_bce_weight,
+            front_ring_radius_px=adaptation.front_ring_radius_px,
             evaluate_test=False,
         )
         checkpoint_path = output_root / f"wfigs_adapt_seed{seed}_best.pt"
@@ -144,7 +196,7 @@ def adapt_frozen_rcda_on_wfigs(
         history: list[dict[str, Any]] = []
         for epoch in range(1, adaptation.epochs + 1):
             started = time.perf_counter()
-            model.train()
+            set_adaptation_train_mode(model, adaptation.trainable_scope)
             running_loss = 0.0
             for batch in train_loader:
                 inputs = prepare_inputs_for_device(batch["input"], device)
@@ -155,6 +207,13 @@ def adapt_frozen_rcda_on_wfigs(
                     logits = model(inputs)
                     loss = objective_loss(logits, inputs, growth, extent, loss_config)
                 scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                gradient_norm = torch.nn.utils.clip_grad_norm_(
+                    trainable_parameters,
+                    adaptation.max_grad_norm,
+                )
+                if not torch.isfinite(gradient_norm):
+                    raise FloatingPointError("non-finite WFIGS adaptation gradient norm")
                 scaler.step(optimizer)
                 scaler.update()
                 running_loss += float(loss.item())
@@ -219,6 +278,11 @@ def adapt_frozen_rcda_on_wfigs(
                 "threshold_selected_on": "wfigs_validation",
                 "validation": val_search,
                 "history": history,
+                "trainable_scope": adaptation.trainable_scope,
+                "trainable_parameters": sum(
+                    parameter.numel() for parameter in trainable_parameters
+                ),
+                "total_parameters": sum(parameter.numel() for parameter in model.parameters()),
                 "test_evaluated": False,
             }
         )
@@ -276,4 +340,10 @@ def adapt_frozen_rcda_on_wfigs(
     return report
 
 
-__all__ = ["ADAPTATION_SCHEMA", "WFIGSAdaptConfig", "adapt_frozen_rcda_on_wfigs"]
+__all__ = [
+    "ADAPTATION_SCHEMA",
+    "WFIGSAdaptConfig",
+    "adapt_frozen_rcda_on_wfigs",
+    "configure_trainable_scope",
+    "set_adaptation_train_mode",
+]
