@@ -4,8 +4,34 @@ import pytest
 
 from scripts.run_wfigs_scaleup_paper_nightwatch import (
     _validate_preregistered_inventory,
+    _validate_tuning_audit,
     _validation_score,
 )
+
+
+def test_scaleup_tuning_audit_is_a_hard_pretraining_gate() -> None:
+    report = {
+        "status": "pass",
+        "counts": {
+            "issues": 0,
+            "by_split": {"train": 87, "validation": 27},
+        },
+        "checks": {
+            "event_disjoint": True,
+            "unique_pair_ids": True,
+            "normalization_recomputed_from_train_only": True,
+            "test_used_for_selection": False,
+        },
+    }
+
+    _validate_tuning_audit(report)
+    report["counts"]["by_split"]["test"] = 10
+    with pytest.raises(ValueError, match="only TRAIN/VALIDATION"):
+        _validate_tuning_audit(report)
+    report["counts"]["by_split"].pop("test")
+    report["checks"]["normalization_recomputed_from_train_only"] = False
+    with pytest.raises(ValueError, match="isolation checks"):
+        _validate_tuning_audit(report)
 
 
 def test_scaleup_score_accepts_only_val_isolated_single_seed() -> None:
