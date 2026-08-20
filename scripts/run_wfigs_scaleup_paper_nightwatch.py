@@ -16,6 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from wildfire_front.ml.wfigs_dataset_audit import (  # noqa: E402
+    audit_wfigs_tensor_dataset,
+)
 from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
     WFIGSAdaptConfig,
     adapt_frozen_rcda_on_wfigs,
@@ -60,6 +63,27 @@ SWEEP_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
         ),
     ),
 )
+
+
+def _validate_tuning_audit(report: dict[str, Any]) -> None:
+    checks = report.get("checks") or {}
+    counts = report.get("counts") or {}
+    by_split = counts.get("by_split") or {}
+    required_checks = (
+        "event_disjoint",
+        "unique_pair_ids",
+        "normalization_recomputed_from_train_only",
+    )
+    if report.get("status") != "pass" or int(counts.get("issues") or 0) != 0:
+        raise ValueError("expanded WFIGS tuning dataset failed tensor audit")
+    if not all(checks.get(name) is True for name in required_checks):
+        raise ValueError("expanded WFIGS tuning dataset failed isolation checks")
+    if checks.get("test_used_for_selection") is not False:
+        raise ValueError("expanded WFIGS tuning audit does not prove TEST isolation")
+    if set(by_split) != {"train", "validation"}:
+        raise ValueError("expanded WFIGS tuning dataset must contain only TRAIN/VALIDATION")
+    if any(int(by_split[split]) <= 0 for split in ("train", "validation")):
+        raise ValueError("expanded WFIGS tuning dataset has an empty split")
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -180,6 +204,16 @@ def main() -> int:
         time.sleep(max(10, args.poll_seconds))
     if (args.scaleup_dataset / "test.json").exists():
         raise ValueError("scale-up tuning dataset unexpectedly contains TEST")
+    _atomic_write_json(
+        state_path,
+        {
+            "phase": "auditing_expanded_train_validation",
+            "updated_at": utc_now(),
+            "test_evaluated": False,
+        },
+    )
+    tuning_audit = audit_wfigs_tensor_dataset(args.scaleup_dataset)
+    _validate_tuning_audit(tuning_audit)
 
     rows: list[dict[str, Any]] = []
     for index, (name, config) in enumerate(SWEEP_RECIPES, start=1):
@@ -248,6 +282,10 @@ def main() -> int:
                 "selection_split": "wfigs_validation",
                 "test_evaluated": False,
                 "test_used_for_selection": False,
+                "dataset_audit": str(args.scaleup_dataset / "DATASET_AUDIT.json"),
+                "dataset_audit_sha256": _sha256(
+                    args.scaleup_dataset / "DATASET_AUDIT.json"
+                ),
                 "ranking": rows,
             },
         )
