@@ -348,6 +348,80 @@ def test_film_model_has_weather_distance_residual_prior() -> None:
     assert tuple(model.PRIOR_CHANNELS) == (6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
 
 
+def test_multitask_resunet_has_distinct_growth_and_extent_heads() -> None:
+    model = build_model("resunet_multitask", in_channels=16, base=16)
+
+    output = model(torch.zeros(2, 16, 32, 32))
+
+    assert output.shape == (2, 2, 32, 32)
+    growth = rcda_sealed.prediction_logits(output, "multitask")
+    assert growth.shape == (2, 1, 32, 32)
+
+
+def test_multitask_objective_rewards_correct_growth_and_extent_heads() -> None:
+    growth = torch.zeros(1, 1, 4, 4)
+    growth[:, :, 2, 2] = 1.0
+    extent = torch.zeros_like(growth)
+    extent[:, :, 1:3, 1:3] = 1.0
+    inputs = torch.zeros(1, 16, 4, 4)
+    correct = torch.cat(
+        [
+            torch.logit(growth.clamp(1e-4, 1 - 1e-4)),
+            torch.logit(extent.clamp(1e-4, 1 - 1e-4)),
+        ],
+        dim=1,
+    )
+    swapped = correct.flip(1)
+    config = SealedTrainConfig(
+        dataset_root="unused",
+        protocol_dir="unused",
+        output_dir="unused",
+        model_name="resunet_multitask",
+        target_mode="multitask",
+    )
+
+    correct_loss = rcda_sealed.objective_loss(correct, inputs, growth, extent, config)
+    swapped_loss = rcda_sealed.objective_loss(swapped, inputs, growth, extent, config)
+
+    assert float(correct_loss) < float(swapped_loss)
+
+
+def test_multitask_prediction_rejects_single_head_output() -> None:
+    with pytest.raises(ValueError, match="two output channels"):
+        rcda_sealed.prediction_logits(torch.zeros(1, 1, 4, 4), "multitask")
+
+
+def test_multitask_training_is_validation_only_and_checkpointed(tmp_path: Path) -> None:
+    _write_tiny_dataset(tmp_path)
+
+    report = train_sealed(
+        SealedTrainConfig(
+            dataset_root=str(tmp_path / "dataset"),
+            protocol_dir=str(tmp_path / "protocol"),
+            output_dir=str(tmp_path / "multitask"),
+            model_name="resunet_multitask",
+            run_name="multitask-smoke",
+            target_mode="multitask",
+            evaluate_test=False,
+            compute_paper_metrics=False,
+            seed=0,
+            epochs=1,
+            batch_size=2,
+            patience=1,
+            num_workers=0,
+            amp=False,
+            smoke=True,
+            base_channels=8,
+        )
+    )
+
+    assert report["test_evaluated"] is False
+    assert report["config"]["target_mode"] == "multitask"
+    checkpoint = torch.load(report["checkpoint"], map_location="cpu", weights_only=False)
+    assert checkpoint["model_name"] == "resunet_multitask"
+    assert checkpoint["target_mode"] == "multitask"
+
+
 def test_tuning_mode_never_evaluates_test(tmp_path: Path) -> None:
     _write_tiny_dataset(tmp_path)
     report = train_sealed(

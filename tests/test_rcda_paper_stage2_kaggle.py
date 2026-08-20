@@ -50,3 +50,15 @@ def test_growth_low_lr_ablation_matches_leader_except_target() -> None:
         assert candidate[key] == leader[key]
     assert leader["target_mode"] == "hybrid"
     assert candidate["target_mode"] == "growth"
+
+
+def test_multitask_candidate_is_growth_focused_and_event_uniform() -> None:
+    recipes = {str(row["run_name"]): row for row in STAGE2_RECIPES}
+    candidate = recipes["resunet_multitask_uniform_events_v1"]
+
+    assert candidate["model_name"] == "resunet_multitask"
+    assert candidate["target_mode"] == "multitask"
+    assert candidate["sampling_strategy"] == "uniform_events"
+    assert float(candidate["growth_loss_weight"]) > float(
+        candidate["extent_loss_weight"]
+    )
