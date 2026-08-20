@@ -46,6 +46,7 @@ RUNS: tuple[tuple[str, str, str], ...] = (
     ("resunet_hybrid_event_balanced_v1", "wfd-rcda-event-balanced-gpu-v1", "validation_only_stage2_event_balanced_kaggle"),
     ("resunet_hybrid_uniform_events_v1", "wfd-rcda-uniform-events-gpu-v1", "validation_only_stage2_uniform_events_kaggle"),
     ("resunet_multitask_uniform_events_v1", "wfd-rcda-multitask-uniform-gpu-v1", "validation_only_stage2_multitask_uniform_kaggle"),
+    ("resunet_multitask_front_ring_v1", "wfd-rcda-multitask-front-ring-gpu-v1", "validation_only_stage2_multitask_front_ring_kaggle"),
     ("film_growth_v1", "wfd-rcda-film-gpu-v1", "validation_only_stage2_film_kaggle"),
 )
 
@@ -73,6 +74,18 @@ def kaggle_env(config_dir: Path) -> dict[str, str]:
 
 def run(arguments: list[str], *, env: dict[str, str], check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(arguments, check=check, capture_output=True, text=True, env=env)
+
+
+def require_successful_kernel_push(
+    result: subprocess.CompletedProcess[str],
+    *,
+    kernel: str,
+) -> None:
+    """Reject Kaggle CLI push errors even when the CLI incorrectly exits zero."""
+
+    combined = f"{result.stdout}\n{result.stderr}"
+    if result.returncode != 0 or "kernel push error:" in combined.lower():
+        raise RuntimeError(f"Kaggle push failed for {kernel}: {combined[-1200:]}")
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -257,8 +270,7 @@ def stage_and_push(
         json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
     )
     pushed = run(["kaggle", "kernels", "push", "-p", str(stage)], env=env, check=False)
-    if pushed.returncode != 0:
-        raise RuntimeError(f"Kaggle push failed for {kernel}: {pushed.stdout}\n{pushed.stderr}")
+    require_successful_kernel_push(pushed, kernel=kernel)
     return kernel, sha256_file(runner)
 
 
@@ -512,8 +524,7 @@ def main() -> int:
             json.dumps(final_metadata, indent=2) + "\n", encoding="utf-8"
         )
         pushed = run(["kaggle", "kernels", "push", "-p", str(final_stage)], env=env, check=False)
-        if pushed.returncode != 0:
-            raise RuntimeError(f"final Kaggle push failed: {pushed.stdout}\n{pushed.stderr}")
+        require_successful_kernel_push(pushed, kernel=final_kernel)
         wait_for_kernel(
             final_kernel,
             phase="preregistered_final_test_kaggle",
