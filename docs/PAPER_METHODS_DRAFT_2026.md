@@ -245,13 +245,16 @@ selects its single threshold only on WFIGS VALIDATION. WFIGS TEST is materialize
 frozen and is evaluated once. A morphological dilation radius selected only on
 WFIGS VALIDATION is the external baseline.
 
-The pre-TEST physical cohort contains 61 TRAIN and 19 VALIDATION fires, with one
+The expanded pre-TEST cohort contains 87 TRAIN and 27 VALIDATION fires, with one
 pair per event and 13 channels on a fixed 256×256, 60 m grid. Horizon counts for
-6–12/12–24/24–48 h are 6/26/29 in TRAIN and 2/8/9 in VALIDATION. Mean valid EO
-coverage is 0.964 in both splits. Growth pixels represent 17.2% of target extent
-in TRAIN and 38.5% in VALIDATION; this observed cohort heterogeneity is retained
-and reported rather than rebalanced using any TEST information. An independent
-audit reloaded all 80 tensors and found zero integrity or leakage issues.
+6–12/12–24/24–48 h are 11/39/37 in TRAIN and 2/12/13 in VALIDATION. Growth
+pixels represent 21.0% of target extent in TRAIN and 40.8% in VALIDATION; this
+observed cohort heterogeneity is retained and reported rather than rebalanced
+using TEST information. An independent audit reloaded all 114 tuning tensors
+and found zero integrity or leakage issues. After source selection was frozen,
+10 of 16 preregistered prospective fires were physically materialized. The
+final 124-tensor dataset (87/27/10 TRAIN/VALIDATION/TEST) also passed the audit
+with zero issues.
 
 ## Rights and reproducibility
 
@@ -265,13 +268,17 @@ equivalent.
 
 ## Result tables populated from artifacts
 
-### Table 1 — Validation-only architecture search
+### Table 1 — Validation-only architecture search and replication
 
-Source: `COMBINED_TUNING_SUMMARY.json` (`test_evaluated=false`).
+Sources: `VALIDATION_SCORECARD.json`, `RCDA_VAL_REPLICATION_SUMMARY.json`, and
+`RCDA_VAL_ENSEMBLES.json` (all validation-only; `test_evaluated=false`).
 
 | Rank | Recipe | Target | Best epoch | VAL threshold | VAL event-macro IoU |
 |---:|---|---|---:|---:|---:|
-| PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT |
+| 1 | Front-ring fixed-seed probability ensemble (11/29/47) | multitask growth | — | 0.60 | **0.25369** |
+| 2 | `resunet_multitask_front_ring_v1` seed 47 | multitask growth | 23 | 0.65 | 0.23961 |
+| 3 | `resunet_multitask_front_ring_v1` seed 11 | multitask growth | 30 | 0.60 | 0.23003 |
+| 4 | `resunet_multitask_front_ring_v1` seed 29 | multitask growth | 22 | 0.80 | 0.22803 |
 
 ### Table 2 — Sealed RCDA TEST
 
@@ -282,16 +289,22 @@ Source: `PAPER_SCORECARD.json` and `FINAL_SUMMARY_PAPER_METRICS.json`.
 | Dilated copy (radius 6 selected on VAL event-macro IoU) | — | 0.12724 | — | — | baseline |
 | Historical U-Net | 1 | 0.16331 | — | — | reproduced |
 | Historical RCDA | 1 | 0.15635 | — | — | reproduced |
-| Frozen candidate | 11/29/47 | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT |
+| Frozen historical candidate, primary seed mean | 11/29/47 | 0.18040 | +0.05316 vs dilated copy | [0.03800, 0.06856] | below 0.20 paper gate |
+| Frozen historical candidate, probability ensemble | 11/29/47 | 0.18693 | +0.02362 vs strongest learned | [0.01021, 0.03744] | secondary positive |
+| Later front-ring ensemble | 11/29/47 | not evaluated | — | — | TEST already observed; VAL-only |
 
 ### Table 3 — External WFIGS TEST
 
-Sources: `WFIGS_EXTERNAL_EVAL.json` and `WFIGS_ADAPTED_TEST_EVAL.json`.
+Sources: `FROZEN_WFIGS_SOURCE.json` and `WFIGS_PROSPECTIVE_TEST_EVAL.json`.
 
 | Setting | Events | Event-macro growth IoU | Geometry baseline | All seeds above baseline |
 |---|---:|---:|---:|---|
-| Frozen RCDA zero-shot | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT |
-| WFIGS domain-adapted | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT | PENDING_ARTIFACT |
+| WFIGS-adapted seed mean | 10 | 0.07631 | 0.13821 | no |
+| WFIGS-adapted probability ensemble | 10 | **0.08737** | 0.13821 | no |
+
+The prospective ensemble-minus-baseline paired delta is −0.05084 with a 95%
+event-bootstrap interval [−0.12832, +0.01089]. The external transfer gate is
+false; no external-superiority or operational-generalization claim is made.
 
 ## Reproduction entry points
 
@@ -311,3 +324,10 @@ Sources: `WFIGS_EXTERNAL_EVAL.json` and `WFIGS_ADAPTED_TEST_EVAL.json`.
   and zero-shot evaluation.
 - `scripts/run_wfigs_domain_adaptation_nightwatch.py`: VAL-only adaptation and
   single post-freeze TEST evaluation.
+- `scripts/summarize_rcda_val_replications.py`: fixed-seed RCDA VAL aggregation.
+- `scripts/assemble_wfigs_adaptation_replications.py`: test-free reuse and
+  probability ensemble of independent WFIGS adaptations.
+- `scripts/select_wfigs_adaptation_source.py`: deterministic WFIGS VAL source
+  freeze before TEST.
+- `scripts/run_wfigs_prospective_once.py`: hash-bound, resumable one-time
+  prospective evaluation gate.
