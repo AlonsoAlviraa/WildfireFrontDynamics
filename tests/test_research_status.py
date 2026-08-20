@@ -584,6 +584,56 @@ def test_research_status_surfaces_frozen_winner_and_final_gates(tmp_path: Path):
     assert status["claims"]["external_generalization_proven"] is False
 
 
+def test_research_status_separates_postfreeze_val_leader_from_test_recipe(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "outputs/ml_eval/rcda_paper_nightwatch_20260819"
+    _write(work / "STATE.json", {"phase": "complete", "status": "complete"})
+    _write(
+        work / "FROZEN_RECIPE.json",
+        {
+            "winner": {
+                "val_event_macro_iou": 0.208,
+                "selected_threshold": 0.45,
+                "best_epoch": 28,
+                "config": {"run_name": "frozen_old"},
+            }
+        },
+    )
+    _write(
+        work / "VALIDATION_SCORECARD.json",
+        {
+            "selection_split": "val",
+            "test_evaluated": False,
+            "test_used_for_selection": False,
+            "ranking": [
+                {
+                    "rank": 1,
+                    "run_name": "new_front_ring",
+                    "event_macro_iou": 0.22,
+                    "selected_threshold": 0.7,
+                    "best_epoch": 21,
+                },
+                {
+                    "rank": 2,
+                    "run_name": "frozen_old",
+                    "event_macro_iou": 0.208,
+                    "leader_minus_candidate_paired_delta": 0.012,
+                },
+            ],
+        },
+    )
+    _write(work / "PAPER_SCORECARD.json", {"status": "continue_model_improvement"})
+
+    status = build_research_status(tmp_path)
+    assert status["validation_winner"]["run_name"] == "new_front_ring"
+    assert status["validation_winner"]["frozen"] is False
+    assert status["validation_winner"]["post_freeze_candidate"] is True
+    assert status["frozen_test_recipe"]["run_name"] == "frozen_old"
+    assert status["frozen_test_recipe"]["tested"] is True
+    assert status["frozen_test_recipe"]["superseded_on_validation"] is True
+
+
 def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
     dataset = tmp_path / "outputs/ml_eval/wfigs_tensor_dataset_20260819"
     _write(
