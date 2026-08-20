@@ -48,6 +48,8 @@ class WFIGSAdaptConfig:
     tversky_alpha: float | None = None
     tversky_beta: float | None = None
     tversky_gamma: float | None = None
+    target_mode: str | None = None
+    augment: bool = True
     source_seeds: tuple[int, ...] | None = None
 
 
@@ -100,6 +102,13 @@ def adapt_frozen_rcda_on_wfigs(
     ):
         if value is not None and not 0.0 < value <= 1.0:
             raise ValueError(f"WFIGS adaptation {name} must be within (0, 1]")
+    if adaptation.target_mode is not None and adaptation.target_mode not in {
+        "growth",
+        "extent",
+        "hybrid",
+        "multitask",
+    }:
+        raise ValueError(f"unknown WFIGS adaptation target mode: {adaptation.target_mode!r}")
     final = json.loads(Path(final_summary_path).read_text(encoding="utf-8"))
     if final.get("test_used_for_selection") is not False:
         raise ValueError("source RCDA summary does not prove selection isolation")
@@ -117,7 +126,7 @@ def adapt_frozen_rcda_on_wfigs(
         dataset_root=dataset_root,
         manifest=train_manifest,
         rcda_normalization=normalization,
-        augment=True,
+        augment=adaptation.augment,
     )
     val_set = WFIGSExternalDataset(
         dataset_root=dataset_root,
@@ -156,6 +165,7 @@ def adapt_frozen_rcda_on_wfigs(
     for source in sources:
         config = source["config"]
         seed = int(config["seed"])
+        target_mode = str(adaptation.target_mode or config["target_mode"])
         set_seed(seed)
         source_checkpoint = Path(source["local_checkpoint"])
         source_payload = torch.load(source_checkpoint, map_location=device, weights_only=False)
@@ -191,7 +201,7 @@ def adapt_frozen_rcda_on_wfigs(
             output_dir=str(output_root),
             model_name=str(config["model_name"]),
             seed=seed,
-            target_mode=str(config["target_mode"]),
+            target_mode=target_mode,
             tversky_alpha=float(
                 adaptation.tversky_alpha
                 if adaptation.tversky_alpha is not None
@@ -247,7 +257,7 @@ def adapt_frozen_rcda_on_wfigs(
                 val_loader,
                 device,
                 EARLY_STOP_THRESHOLDS,
-                prediction_mode=str(config["target_mode"]),
+                prediction_mode=target_mode,
             )
             selected = max(grid.values(), key=lambda row: float(row["event_macro_iou"]))
             score = float(selected["event_macro_iou"])
@@ -273,7 +283,7 @@ def adapt_frozen_rcda_on_wfigs(
                         "source_selection_split": "val",
                         "source_checkpoint": str(source_checkpoint),
                         "model_name": config["model_name"],
-                        "target_mode": config["target_mode"],
+                        "target_mode": target_mode,
                         "base_channels": config["base_channels"],
                         "seed": seed,
                         "epoch": epoch,
@@ -309,7 +319,7 @@ def adapt_frozen_rcda_on_wfigs(
             model,
             val_loader,
             device,
-            prediction_mode=str(config["target_mode"]),
+            prediction_mode=target_mode,
             selection_metric="event_macro_iou",
         )
         reports.append(
@@ -331,7 +341,7 @@ def adapt_frozen_rcda_on_wfigs(
             }
         )
         adapted_models.append(model)
-        current_target_mode = str(config["target_mode"])
+        current_target_mode = target_mode
         if adapted_target_mode is None:
             adapted_target_mode = current_target_mode
         elif adapted_target_mode != current_target_mode:
