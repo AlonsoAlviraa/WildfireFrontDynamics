@@ -45,6 +45,9 @@ class WFIGSAdaptConfig:
     trainable_scope: str = "all"
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
+    tversky_alpha: float | None = None
+    tversky_beta: float | None = None
+    tversky_gamma: float | None = None
     source_seeds: tuple[int, ...] | None = None
 
 
@@ -90,6 +93,13 @@ def adapt_frozen_rcda_on_wfigs(
 
     if adaptation.max_grad_norm <= 0.0:
         raise ValueError("WFIGS adaptation max_grad_norm must be positive")
+    for name, value in (
+        ("tversky_alpha", adaptation.tversky_alpha),
+        ("tversky_beta", adaptation.tversky_beta),
+        ("tversky_gamma", adaptation.tversky_gamma),
+    ):
+        if value is not None and not 0.0 < value <= 1.0:
+            raise ValueError(f"WFIGS adaptation {name} must be within (0, 1]")
     final = json.loads(Path(final_summary_path).read_text(encoding="utf-8"))
     if final.get("test_used_for_selection") is not False:
         raise ValueError("source RCDA summary does not prove selection isolation")
@@ -182,9 +192,21 @@ def adapt_frozen_rcda_on_wfigs(
             model_name=str(config["model_name"]),
             seed=seed,
             target_mode=str(config["target_mode"]),
-            tversky_alpha=float(config.get("tversky_alpha", 0.3)),
-            tversky_beta=float(config.get("tversky_beta", 0.7)),
-            tversky_gamma=float(config.get("tversky_gamma", 0.75)),
+            tversky_alpha=float(
+                adaptation.tversky_alpha
+                if adaptation.tversky_alpha is not None
+                else config.get("tversky_alpha", 0.3)
+            ),
+            tversky_beta=float(
+                adaptation.tversky_beta
+                if adaptation.tversky_beta is not None
+                else config.get("tversky_beta", 0.7)
+            ),
+            tversky_gamma=float(
+                adaptation.tversky_gamma
+                if adaptation.tversky_gamma is not None
+                else config.get("tversky_gamma", 0.75)
+            ),
             extent_loss_weight=float(config.get("extent_loss_weight", 0.35)),
             growth_loss_weight=float(config.get("growth_loss_weight", 0.65)),
             front_ring_bce_weight=adaptation.front_ring_bce_weight,

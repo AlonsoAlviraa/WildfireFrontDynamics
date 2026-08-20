@@ -102,6 +102,36 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig, str], ...] = (
         ),
         "wfigs_converted_train",
     ),
+    (
+        "decoder_balanced_tversky",
+        WFIGSAdaptConfig(
+            epochs=18,
+            patience=5,
+            lr=1e-4,
+            trainable_scope="decoder",
+            front_ring_bce_weight=0.15,
+            front_ring_radius_px=16.0,
+            tversky_alpha=0.5,
+            tversky_beta=0.5,
+            source_seeds=(47,),
+        ),
+        "rcda_train",
+    ),
+    (
+        "decoder_precision_tversky",
+        WFIGSAdaptConfig(
+            epochs=18,
+            patience=5,
+            lr=1e-4,
+            trainable_scope="decoder",
+            front_ring_bce_weight=0.15,
+            front_ring_radius_px=16.0,
+            tversky_alpha=0.7,
+            tversky_beta=0.3,
+            source_seeds=(47,),
+        ),
+        "rcda_train",
+    ),
 )
 
 
