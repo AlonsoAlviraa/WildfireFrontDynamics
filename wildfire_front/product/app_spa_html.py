@@ -2229,7 +2229,18 @@ function renderResearchStatus() {
   const expansionValTotal = Number(wfigs.expansion_validation_groups_total || 0);
   const expansionGroupsDone = expansionTrainDone + expansionValDone;
   const expansionGroupsTotal = expansionTrainTotal + expansionValTotal;
-  const expansionProgress = scaleupDone ? 100 : (expansionGroupsTotal > 0 ? 100 * expansionGroupsDone / expansionGroupsTotal : (scaleupActive ? 45 : 0));
+  const expansionRecipeIndex = Number(wfigs.expansion_recipe_index || 0);
+  const expansionRecipesTotal = Number(wfigs.expansion_recipes_total || 0);
+  const expansionEpoch = Number((wfigs.expansion_training_progress || {}).epoch || 0);
+  const expansionEpochs = Number((wfigs.expansion_training_progress || {}).epochs_total || (wfigs.expansion_training_progress || {}).epochs || 0);
+  const expansionRecipeFraction = expansionRecipesTotal > 0
+    ? Math.min(1, Math.max(0, (expansionRecipeIndex - 1 + (expansionEpochs > 0 ? expansionEpoch / expansionEpochs : 0)) / expansionRecipesTotal))
+    : 0;
+  const expansionProgress = scaleupDone
+    ? 100
+    : (expansionRecipesTotal > 0
+      ? 45 + 40 * expansionRecipeFraction
+      : (expansionGroupsTotal > 0 ? 45 * expansionGroupsDone / expansionGroupsTotal : (scaleupActive ? 10 : 0)));
   researchStage(pipeline, 'RCDA sellado', rcdaClosed ? 'done' : 'active', rcdaClosed ? (String(final.events || 0) + ' incendios · TEST cerrado') : 'receta y métricas en curso', rcdaClosed ? 100 : 50);
   researchStage(pipeline, 'WFIGS TEST', testDone ? 'done' : (testActive ? 'active' : 'pending'), testDone ? (String(wfigs.test_tensors || 0) + ' tensores evaluados') : (String(testComplete) + '/' + String(testTotal || '—') + ' grupos materializados'), testProgress);
   const adaptDetail = adaptDone
@@ -2237,11 +2248,14 @@ function renderResearchStatus() {
     : (researchRunName(wfigs.scaleup_adaptation_recipe || wfigs.adaptation_phase || 'esperando TEST')
       + (hasScaleupAdaptation ? ' · TEST prospectivo cerrado' : ''));
   researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDetail, adaptDone ? 100 : (adaptActive ? 55 : 0));
-  const expansionDetail = scaleupActive && expansionGroupsTotal > 0
+  const expansionDetail = scaleupActive && expansionGroupsTotal > 0 && expansionGroupsDone < expansionGroupsTotal
     ? (String(expansionGroupsDone) + '/' + String(expansionGroupsTotal) + ' grupos · ' + researchRunName(scaleupPhase))
+    : (scaleupActive && wfigs.expansion_active_recipe
+      ? (String(expansionRecipeIndex) + '/' + String(expansionRecipesTotal || '—') + ' recetas · ' + researchRunName(wfigs.expansion_active_recipe)
+        + (expansionEpoch > 0 ? (' · época ' + String(expansionEpoch) + '/' + String(expansionEpochs || '—')) : ''))
     : (scaleupDone
       ? (String(wfigs.expansion_train_events || wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.expansion_development_events || wfigs.validation_tensors || 0) + ' DEV · ' + String(wfigs.expansion_confirmation_events || 0) + ' confirmación')
-      : 'cohorte histórica siguiente pendiente');
+      : 'cohorte histórica siguiente pendiente'));
   researchStage(pipeline, 'Expansión WFIGS', scaleupDone ? 'done' : (scaleupActive ? 'active' : 'pending'), expansionDetail, expansionProgress);
   host.appendChild(pipeline);
   const grid = document.createElement('div'); grid.className = 'research-grid';
@@ -2405,6 +2419,21 @@ function renderResearchStatus() {
       expansionGroupsTotal > 0 ? (String(expansionGroupsDone) + '/' + String(expansionGroupsTotal)) : researchRunName(wfigs.expansion_phase),
       'grupos TRAIN/DEV · prospectivo excluido',
       wfigs.expansion_active === true
+    );
+  }
+  if (wfigs.expansion_active_recipe) {
+    const expansionLive = wfigs.expansion_training_progress || {};
+    const failureDetail = Number(wfigs.expansion_numeric_failures || 0) > 0
+      ? (' · ' + String(wfigs.expansion_numeric_failures) + ' fallo(s) numérico(s) aislado(s)')
+      : '';
+    researchStat(
+      externalGrid,
+      'Barrido DEV',
+      String(wfigs.expansion_recipe_index || 0) + '/' + String(wfigs.expansion_recipes_total || '—'),
+      researchRunName(wfigs.expansion_active_recipe)
+        + (expansionLive.epoch != null ? (' · época ' + String(expansionLive.epoch) + '/' + String(expansionLive.epochs_total || expansionLive.epochs || '—')) : '')
+        + failureDetail,
+      wfigs.expansion_recipe_status !== 'failed_numeric'
     );
   }
   const expansionComparison = wfigs.expansion_comparison || {};
