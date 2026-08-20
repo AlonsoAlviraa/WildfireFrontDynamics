@@ -1,0 +1,79 @@
+{
+  "schema": "wfd_rcda_val_replication_protocol_v1",
+  "registered_at": "2026-08-20T02:07:03.180911Z",
+  "purpose": "fixed_seed_validation_reproducibility",
+  "candidate": {
+    "run_name": "resunet_multitask_front_ring_v1",
+    "configuration": {
+      "dataset_root": "/kaggle/input/wfd-rcda-archive/dataset",
+      "protocol_dir": "/kaggle/input/wfd-rcda-sealed/protocol",
+      "output_dir": "/kaggle/working/rcda_paper_stage2",
+      "model_name": "resunet_multitask",
+      "run_name": "resunet_multitask_front_ring_v1",
+      "seed": 0,
+      "epochs": 32,
+      "batch_size": 8,
+      "lr": 0.0002,
+      "weight_decay": 0.0001,
+      "max_grad_norm": 5.0,
+      "patience": 8,
+      "num_workers": 2,
+      "loss_name": "focal_tversky",
+      "tversky_alpha": 0.3,
+      "tversky_beta": 0.7,
+      "tversky_gamma": 0.75,
+      "target_mode": "multitask",
+      "extent_loss_weight": 0.25,
+      "growth_loss_weight": 0.75,
+      "front_ring_bce_weight": 0.15,
+      "front_ring_radius_px": 16.0,
+      "base_channels": 32,
+      "scheduler_name": "cosine",
+      "selection_metric": "event_macro_iou",
+      "evaluate_test": false,
+      "compute_paper_metrics": false,
+      "weighted_sampling": true,
+      "sampling_strategy": "uniform_events",
+      "event_balance_power": 0.5,
+      "amp": true,
+      "smoke": false,
+      "max_train_samples": null,
+      "max_eval_samples": null
+    },
+    "seed0_val_event_macro_iou": 0.22021763040962594,
+    "seed0_selected_threshold": 0.7,
+    "source_summary_sha256": "57c53f70f170f5b2287e2bbf7149099e6b5f10001c2f10a4da16120164c7f98d",
+    "source_checkpoint_sha256": "adbd829b9dc9296906c7f043a2c5b0649b07dfdbedaa03dd0a36e9991927a85c"
+  },
+  "replications": [
+    {
+      "seed": 11,
+      "kernel": "alonsoalviraaaa/wfd-rcda-front-ring-seed11-gpu-v1",
+      "runner_sha256": "6707a1a639b038d33b4e7e0fbde06c5913307171266f3864f1b9c769c81ba904",
+      "selection_split": "val",
+      "test_evaluated": false
+    },
+    {
+      "seed": 29,
+      "kernel": "alonsoalviraaaa/wfd-rcda-front-ring-seed29-gpu-v1",
+      "runner_sha256": "d2438b0747055f0eade9b846073906ab33d319828466d80ca8ed97541af61c31",
+      "selection_split": "val",
+      "test_evaluated": false
+    },
+    {
+      "seed": 47,
+      "kernel": "alonsoalviraaaa/wfd-rcda-front-ring-seed47-gpu-v1",
+      "runner_sha256": "f13c1c625e34ad9ec99dc10f1cb422ced39c587478df9bceec0bc6390d7b9c73",
+      "selection_split": "val",
+      "test_evaluated": false
+    }
+  ],
+  "selection_split": "val",
+  "test_evaluated": false,
+  "test_used_for_selection": false,
+  "claims": {
+    "limited_to_validation_reproducibility": true,
+    "does_not_restore_historical_test_sealing": true,
+    "eligible_for_untouched_prospective_external_selection": true
+  }
+}
