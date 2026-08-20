@@ -20,7 +20,6 @@ from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
     adapt_frozen_rcda_on_wfigs,
 )
 
-
 SEEDS = (11, 29, 47)
 
 
