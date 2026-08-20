@@ -873,17 +873,34 @@ class SealedFiLMUNet(nn.Module):
 class ProbabilityAveragingEnsemble(nn.Module):
     """Average seed probabilities while preserving the evaluator's logit API."""
 
-    def __init__(self, models: list[nn.Module]) -> None:
+    def __init__(
+        self,
+        models: list[nn.Module],
+        member_weights: list[float] | tuple[float, ...] | None = None,
+    ) -> None:
         super().__init__()
         if len(models) < 2:
             raise ValueError("probability ensemble requires at least two models")
+        if member_weights is None:
+            weights = torch.ones(len(models), dtype=torch.float32)
+        else:
+            weights = torch.as_tensor(member_weights, dtype=torch.float32)
+            if weights.ndim != 1 or weights.numel() != len(models):
+                raise ValueError("member_weights must align with ensemble members")
+            if bool((weights < 0.0).any()) or not bool(torch.isfinite(weights).all()):
+                raise ValueError("member_weights must be finite and non-negative")
+            if float(weights.sum()) <= 0.0:
+                raise ValueError("member_weights must have positive sum")
+        self.register_buffer("member_weights", weights / weights.sum())
         self.models = nn.ModuleList(models)
 
     def forward(self, tensor: torch.Tensor) -> torch.Tensor:
         probabilities = torch.stack(
             [torch.sigmoid(model(tensor)) for model in self.models],
             dim=0,
-        ).mean(dim=0)
+        )
+        weights = self.member_weights.to(device=probabilities.device, dtype=probabilities.dtype)
+        probabilities = (probabilities * weights.view(-1, 1, 1, 1, 1)).sum(dim=0)
         return torch.logit(probabilities.clamp(1e-6, 1.0 - 1e-6))
 
 
