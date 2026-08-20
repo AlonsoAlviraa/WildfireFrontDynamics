@@ -18,6 +18,7 @@ from wildfire_front.ml.rcda_sealed import (
     build_model,
     confusion,
     encode_features,
+    background_bce_loss,
     focal_tversky_loss,
     load_protocol,
     train_sealed,
@@ -151,6 +152,22 @@ def test_focal_tversky_is_lower_when_prediction_matches() -> None:
     perfect = torch.logit(target.clamp(1e-4, 1 - 1e-4))
     wrong = torch.full_like(perfect, -4.0)
     assert float(focal_tversky_loss(perfect, target)) < float(focal_tversky_loss(wrong, target))
+
+
+def test_background_bce_rewards_suppressed_non_growth_logits() -> None:
+    target = torch.zeros(1, 1, 4, 4)
+    target[:, :, 1, 1] = 1.0
+    suppressed = torch.full_like(target, -4.0)
+    elevated = torch.full_like(target, 4.0)
+    assert float(background_bce_loss(suppressed, target)) < float(
+        background_bce_loss(elevated, target)
+    )
+
+
+def test_background_bce_is_zero_for_all_growth_target() -> None:
+    target = torch.ones(1, 1, 2, 2)
+    logits = torch.zeros_like(target)
+    assert float(background_bce_loss(logits, target)) == 0.0
 
 
 def test_event_balance_power_removes_duration_mass_from_sample_weight(tmp_path: Path) -> None:

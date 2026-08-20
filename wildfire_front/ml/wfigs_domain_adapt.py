@@ -45,6 +45,7 @@ class WFIGSAdaptConfig:
     trainable_scope: str = "all"
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
+    background_bce_weight: float = 0.0
     tversky_alpha: float | None = None
     tversky_beta: float | None = None
     tversky_gamma: float | None = None
@@ -95,6 +96,8 @@ def adapt_frozen_rcda_on_wfigs(
 
     if adaptation.max_grad_norm <= 0.0:
         raise ValueError("WFIGS adaptation max_grad_norm must be positive")
+    if not torch.isfinite(torch.tensor(adaptation.background_bce_weight)) or adaptation.background_bce_weight < 0.0:
+        raise ValueError("WFIGS adaptation background_bce_weight must be finite and non-negative")
     for name, value in (
         ("tversky_alpha", adaptation.tversky_alpha),
         ("tversky_beta", adaptation.tversky_beta),
@@ -221,6 +224,7 @@ def adapt_frozen_rcda_on_wfigs(
             growth_loss_weight=float(config.get("growth_loss_weight", 0.65)),
             front_ring_bce_weight=adaptation.front_ring_bce_weight,
             front_ring_radius_px=adaptation.front_ring_radius_px,
+            background_bce_weight=adaptation.background_bce_weight,
             evaluate_test=False,
         )
         checkpoint_path = output_root / f"wfigs_adapt_seed{seed}_best.pt"
