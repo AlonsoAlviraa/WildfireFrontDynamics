@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from scripts.run_wfigs_expansion_nightwatch import (
@@ -10,10 +11,12 @@ from scripts.run_wfigs_expansion_nightwatch import (
     _resume_confirmation,
 )
 from wildfire_front.ml.wfigs_expansion import (
+    fit_converted_train_normalization,
     paired_event_comparison,
     split_validation_inventory,
     validate_inventory_isolation,
 )
+from wildfire_front.ml.wfigs_tensor_dataset import WFIGS_CHANNELS
 
 
 def _inventory(path: Path, split: str, events: list[str]) -> Path:
@@ -90,3 +93,76 @@ def test_confirmation_claim_resumes_without_reopening(tmp_path: Path) -> None:
     assert _resume_confirmation(claim_path=claim, result_path=result, evidence=evidence) is not None
     with pytest.raises(ValueError, match="different frozen evidence"):
         _claim_confirmation(claim, {"freeze": "changed"})
+
+
+def test_converted_normalization_uses_train_only(tmp_path: Path) -> None:
+    sample = tmp_path / "samples/train/pair.npz"
+    sample.parent.mkdir(parents=True)
+    values = np.linspace(0.1, 0.9, 16, dtype=np.float32).reshape(4, 4)
+    inputs = np.stack(
+        [
+            values > 0.5,
+            1000.0 + values,
+            values,
+            values * 0.9,
+            values * 0.8,
+            values * 2.0 - 1.0,
+            np.ones_like(values),
+            1.0 + values,
+            values * 6.0 - 3.0,
+            285.0 + values,
+            values,
+            30.0 + values,
+            1.0 + values * 0.1,
+        ],
+        axis=0,
+    ).astype(np.float32)
+    np.savez_compressed(sample, inputs=inputs, horizon_hours=np.asarray(24.0))
+    (tmp_path / "train.json").write_text(
+        json.dumps(
+            {
+                "events": ["train-event"],
+                "samples": [
+                    {
+                        "event_id": "train-event",
+                        "pair_id": "pair",
+                        "sample": "samples/train/pair.npz",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    reference = tmp_path / "reference.json"
+    reference.write_text(
+        json.dumps(
+            {
+                "fit_split": "train",
+                "channel_min": [0.0] * 12,
+                "channel_max": [1.0] * 12,
+            }
+        ),
+        encoding="utf-8",
+    )
+    output = tmp_path / "converted.json"
+
+    report = fit_converted_train_normalization(
+        dataset_root=tmp_path,
+        reference_normalization_path=reference,
+        output_path=output,
+    )
+
+    assert inputs.shape[0] == len(WFIGS_CHANNELS)
+    assert report["fit_split"] == "train"
+    assert report["test_loaded"] is False
+    assert report["samples_used"] == 1
+    assert len(report["channel_min"]) == 12
+    assert output.is_file()
+
+    (tmp_path / "test.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="containing TEST"):
+        fit_converted_train_normalization(
+            dataset_root=tmp_path,
+            reference_normalization_path=reference,
+            output_path=output,
+        )

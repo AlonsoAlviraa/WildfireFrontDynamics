@@ -22,6 +22,7 @@ from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
 )
 from wildfire_front.ml.wfigs_expansion import (  # noqa: E402
     evaluate_frozen_adaptation_on_validation,
+    fit_converted_train_normalization,
     paired_event_comparison,
     sha256_file,
     split_validation_inventory,
@@ -30,7 +31,7 @@ from wildfire_front.ml.wfigs_expansion import (  # noqa: E402
 from wildfire_front.ml.wfigs_tensor_dataset import WFIGSTensorDatasetBuilder  # noqa: E402
 from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now  # noqa: E402
 
-PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
+PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig, str], ...] = (
     (
         "decoder_front_ring_control",
         WFIGSAdaptConfig(
@@ -42,6 +43,7 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
             front_ring_radius_px=16.0,
             source_seeds=(47,),
         ),
+        "rcda_train",
     ),
     (
         "decoder_light_front_ring",
@@ -54,6 +56,7 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
             front_ring_radius_px=16.0,
             source_seeds=(47,),
         ),
+        "rcda_train",
     ),
     (
         "decoder_no_front_ring",
@@ -64,6 +67,7 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
             trainable_scope="decoder",
             source_seeds=(47,),
         ),
+        "rcda_train",
     ),
     (
         "all_low_lr",
@@ -74,6 +78,29 @@ PILOT_RECIPES: tuple[tuple[str, WFIGSAdaptConfig], ...] = (
             trainable_scope="all",
             source_seeds=(47,),
         ),
+        "rcda_train",
+    ),
+    (
+        "all_low_lr_wfigs_normalized",
+        WFIGSAdaptConfig(
+            epochs=18,
+            patience=5,
+            lr=3e-5,
+            trainable_scope="all",
+            source_seeds=(47,),
+        ),
+        "wfigs_converted_train",
+    ),
+    (
+        "all_medium_lr_wfigs_normalized",
+        WFIGSAdaptConfig(
+            epochs=18,
+            patience=5,
+            lr=1e-4,
+            trainable_scope="all",
+            source_seeds=(47,),
+        ),
+        "wfigs_converted_train",
     ),
 )
 
@@ -226,6 +253,18 @@ def main() -> int:
         output_root=args.confirmation_dataset,
     ).build()
     _audit_or_raise(args.confirmation_dataset)
+    converted_normalization_path = (
+        args.tuning_dataset / "normalization_wfigs_converted_train_only.json"
+    )
+    converted_normalization = fit_converted_train_normalization(
+        dataset_root=args.tuning_dataset,
+        reference_normalization_path=args.rcda_normalization,
+        output_path=converted_normalization_path,
+    )
+    normalization_paths = {
+        "rcda_train": args.rcda_normalization,
+        "wfigs_converted_train": converted_normalization_path,
+    }
 
     preregistration = {
         "schema": "wfd_wfigs_expansion_adaptation_preregistration_v1",
@@ -237,8 +276,20 @@ def main() -> int:
         "isolation": isolation,
         "pilot_seed": 47,
         "pilot_recipes": [
-            {"name": name, "configuration": asdict(config)} for name, config in PILOT_RECIPES
+            {
+                "name": name,
+                "configuration": asdict(config),
+                "normalization": normalization_mode,
+                "normalization_sha256": sha256_file(normalization_paths[normalization_mode]),
+            }
+            for name, config, normalization_mode in PILOT_RECIPES
         ],
+        "converted_train_normalization": {
+            "path": str(converted_normalization_path),
+            "sha256": sha256_file(converted_normalization_path),
+            "samples_used": converted_normalization["samples_used"],
+            "test_loaded": False,
+        },
         "selection_rule": "max_wfigs_development_event_macro_iou_then_recipe_order",
         "final_seeds": [11, 29, 47],
         "confirmation_rule": "evaluate_frozen_thresholds_once_after_recipe_freeze",
@@ -260,7 +311,7 @@ def main() -> int:
         _atomic_write_json(preregistration_path, preregistration)
 
     ranking: list[dict[str, Any]] = []
-    for index, (name, config) in enumerate(PILOT_RECIPES, start=1):
+    for index, (name, config, normalization_mode) in enumerate(PILOT_RECIPES, start=1):
         recipe_root = args.output / "pilots" / name
         summary_path = recipe_root / "WFIGS_ADAPTATION_VAL_ONLY.json"
         report = _read(summary_path)
@@ -276,12 +327,35 @@ def main() -> int:
                     "test_loaded": False,
                 },
             )
+
+            def pilot_progress(
+                row: dict[str, Any],
+                *,
+                active_name: str = name,
+                active_index: int = index,
+                active_normalization: str = normalization_mode,
+            ) -> None:
+                _atomic_write_json(
+                    state_path,
+                    {
+                        "phase": "development_pilot_sweep",
+                        "updated_at": utc_now(),
+                        "active_recipe": active_name,
+                        "normalization": active_normalization,
+                        "recipe_index": active_index,
+                        "recipes_total": len(PILOT_RECIPES),
+                        "training_progress": row,
+                        "test_loaded": False,
+                    },
+                )
+
             report = adapt_frozen_rcda_on_wfigs(
                 final_summary_path=args.source_final,
                 wfigs_dataset_root=args.tuning_dataset,
-                rcda_normalization_path=args.rcda_normalization,
+                rcda_normalization_path=normalization_paths[normalization_mode],
                 output_root=recipe_root,
                 adaptation=config,
+                progress_callback=pilot_progress,
             )
         ranking.append(
             {
@@ -290,12 +364,19 @@ def main() -> int:
                 "summary": str(summary_path),
                 "summary_sha256": sha256_file(summary_path),
                 "configuration": asdict(config),
+                "normalization": normalization_mode,
+                "normalization_sha256": sha256_file(normalization_paths[normalization_mode]),
             }
         )
-    order = {name: index for index, (name, _config) in enumerate(PILOT_RECIPES)}
+    order = {name: index for index, (name, _config, _normalization) in enumerate(PILOT_RECIPES)}
     ranking.sort(key=lambda row: (-float(row["development_event_macro_iou"]), order[row["name"]]))
     winner = ranking[0]
-    winner_config = next(config for name, config in PILOT_RECIPES if name == winner["name"])
+    winner_config, winner_normalization_mode = next(
+        (config, normalization_mode)
+        for name, config, normalization_mode in PILOT_RECIPES
+        if name == winner["name"]
+    )
+    winner_normalization_path = normalization_paths[winner_normalization_mode]
     freeze = {
         "schema": "wfd_wfigs_expansion_recipe_freeze_v1",
         "frozen_at": utc_now(),
@@ -330,12 +411,28 @@ def main() -> int:
                 "test_loaded": False,
             },
         )
+
+        def final_progress(row: dict[str, Any]) -> None:
+            _atomic_write_json(
+                state_path,
+                {
+                    "phase": "replicating_frozen_recipe",
+                    "updated_at": utc_now(),
+                    "winner": winner["name"],
+                    "normalization": winner_normalization_mode,
+                    "training_progress": row,
+                    "confirmation_loaded": False,
+                    "test_loaded": False,
+                },
+            )
+
         final_report = adapt_frozen_rcda_on_wfigs(
             final_summary_path=args.source_final,
             wfigs_dataset_root=args.tuning_dataset,
-            rcda_normalization_path=args.rcda_normalization,
+            rcda_normalization_path=winner_normalization_path,
             output_root=final_root,
             adaptation=replace(winner_config, source_seeds=None),
+            progress_callback=final_progress,
         )
     if len(final_report.get("reports") or []) != 3:
         raise ValueError("expanded final adaptation did not produce three seeds")
@@ -345,6 +442,7 @@ def main() -> int:
         "candidate_summary_sha256": sha256_file(final_summary_path),
         "baseline_summary_sha256": sha256_file(args.baseline_adaptation),
         "confirmation_audit_sha256": sha256_file(args.confirmation_dataset / "DATASET_AUDIT.json"),
+        "candidate_normalization_sha256": sha256_file(winner_normalization_path),
     }
     claim_path = args.output / "CONFIRMATION_CLAIM.json"
     result_path = args.output / "CONFIRMATION_RESULT.json"
@@ -381,7 +479,7 @@ def main() -> int:
     candidate = evaluate_frozen_adaptation_on_validation(
         adaptation_summary_path=final_summary_path,
         dataset_root=args.confirmation_dataset,
-        rcda_normalization_path=args.rcda_normalization,
+        rcda_normalization_path=winner_normalization_path,
     )
     baseline = evaluate_frozen_adaptation_on_validation(
         adaptation_summary_path=args.baseline_adaptation,
