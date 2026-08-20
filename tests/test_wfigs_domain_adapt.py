@@ -41,6 +41,7 @@ def _sample(root: Path, split: str, pair: str, event: str) -> dict:
 
 
 def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
+    progress: list[dict] = []
     dataset = tmp_path / "dataset"
     train = [_sample(dataset, "train", "train-pair", "train-event")]
     validation = [_sample(dataset, "validation", "val-pair", "val-event")]
@@ -99,6 +100,7 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
         rcda_normalization_path=normalization,
         output_root=tmp_path / "adapted",
         adaptation=WFIGSAdaptConfig(epochs=1, batch_size=1, patience=0),
+        progress_callback=progress.append,
     )
     assert report["counts"]["reports"] == 2
     assert report["wfigs_test_loaded"] is False
@@ -108,6 +110,11 @@ def test_domain_adaptation_never_requires_wfigs_test(tmp_path: Path) -> None:
     assert report["ensemble"]["members"] == 2
     assert report["ensemble"]["threshold_selected_on"] == "wfigs_validation"
     assert report["ensemble"]["test_evaluated"] is False
+    assert len(progress) == 2
+    assert {row["seed"] for row in progress} == {11, 29}
+    assert all(row["epoch"] == 1 for row in progress)
+    assert all(row["selection_split"] == "wfigs_validation" for row in progress)
+    assert all(row["test_evaluated"] is False for row in progress)
 
 
 def test_decoder_scope_freezes_encoder_parameters_and_statistics() -> None:

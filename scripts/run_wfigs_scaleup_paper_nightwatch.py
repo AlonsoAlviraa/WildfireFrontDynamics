@@ -199,6 +199,27 @@ def main() -> int:
                     "test_evaluated": False,
                 },
             )
+
+            def sweep_progress(
+                progress: dict[str, Any],
+                *,
+                active_recipe: str = name,
+                active_index: int = index,
+            ) -> None:
+                _atomic_write_json(
+                    state_path,
+                    {
+                        "phase": "validation_only_adaptation_sweep",
+                        "updated_at": utc_now(),
+                        "active_recipe": active_recipe,
+                        "recipe_index": active_index,
+                        "recipes_total": len(SWEEP_RECIPES),
+                        "completed": rows,
+                        "training_progress": progress,
+                        "test_evaluated": False,
+                    },
+                )
+
             report = adapt_frozen_rcda_on_wfigs(
                 final_summary_path=args.source_final,
                 wfigs_dataset_root=args.scaleup_dataset,
@@ -207,6 +228,7 @@ def main() -> int:
                 ),
                 output_root=recipe_root,
                 adaptation=config,
+                progress_callback=sweep_progress,
             )
         rows.append(
             {
@@ -257,6 +279,19 @@ def main() -> int:
                 "test_evaluated": False,
             },
         )
+
+        def final_progress(progress: dict[str, Any]) -> None:
+            _atomic_write_json(
+                state_path,
+                {
+                    "phase": "training_frozen_adaptation_three_seeds",
+                    "updated_at": utc_now(),
+                    "winner": winner["name"],
+                    "training_progress": progress,
+                    "test_evaluated": False,
+                },
+            )
+
         final_adaptation = adapt_frozen_rcda_on_wfigs(
             final_summary_path=args.source_final,
             wfigs_dataset_root=args.scaleup_dataset,
@@ -265,6 +300,7 @@ def main() -> int:
             ),
             output_root=final_root,
             adaptation=replace(winner_config, source_seeds=None),
+            progress_callback=final_progress,
         )
     if len(final_adaptation.get("reports") or []) != 3:
         raise ValueError("frozen WFIGS adaptation did not produce three seeds")
