@@ -71,6 +71,8 @@ class SealedTrainConfig:
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
     background_bce_weight: float = 0.0
+    far_background_bce_weight: float = 0.0
+    far_background_min_distance_px: float = 12.0
     base_channels: int = 32
     scheduler_name: str = "cosine"
     selection_metric: str = "event_macro_iou"
@@ -272,6 +274,51 @@ def _add_background_objective(
     )
 
 
+def far_background_bce_loss(
+    logits: torch.Tensor,
+    inputs: torch.Tensor,
+    growth_targets: torch.Tensor,
+    *,
+    min_distance_px: float,
+) -> torch.Tensor:
+    """BCE on non-growth pixels outside a fixed t0-front distance band."""
+
+    if min_distance_px <= 0.0 or min_distance_px > DISTANCE_CAP_PX:
+        raise ValueError(
+            f"far-background distance must be within (0, {DISTANCE_CAP_PX}] pixels"
+        )
+    if logits.shape != growth_targets.shape:
+        raise ValueError("far-background BCE logits and targets must have equal shape")
+    if inputs.ndim != 4 or inputs.shape[1] <= 13 or inputs.shape[0] != logits.shape[0]:
+        raise ValueError("far-background BCE requires encoded distance channel 13")
+    far_negative = (inputs[:, 13:14] >= min_distance_px / DISTANCE_CAP_PX) & (
+        growth_targets < 0.5
+    )
+    if not bool(far_negative.any()):
+        return logits.sum() * 0.0
+    return F.binary_cross_entropy_with_logits(
+        logits[far_negative],
+        torch.zeros_like(logits[far_negative]),
+    )
+
+
+def _add_far_background_objective(
+    base_loss: torch.Tensor,
+    growth_logits: torch.Tensor,
+    inputs: torch.Tensor,
+    growth_targets: torch.Tensor,
+    config: SealedTrainConfig,
+) -> torch.Tensor:
+    if config.far_background_bce_weight <= 0.0:
+        return base_loss
+    return base_loss + config.far_background_bce_weight * far_background_bce_loss(
+        growth_logits,
+        inputs,
+        growth_targets,
+        min_distance_px=config.far_background_min_distance_px,
+    )
+
+
 def confusion(prediction: np.ndarray, target: np.ndarray) -> np.ndarray:
     pred = prediction.astype(bool)
     truth = target.astype(bool)
@@ -315,6 +362,8 @@ def objective_loss(
 
     if not math.isfinite(config.background_bce_weight) or config.background_bce_weight < 0.0:
         raise ValueError("background_bce_weight must be finite and non-negative")
+    if not math.isfinite(config.far_background_bce_weight) or config.far_background_bce_weight < 0.0:
+        raise ValueError("far_background_bce_weight must be finite and non-negative")
 
     if config.target_mode == "multitask":
         if logits.ndim != 4 or logits.shape[1] != 2:
@@ -345,6 +394,13 @@ def objective_loss(
             growth_targets,
             config,
         )
+        base_loss = _add_far_background_objective(
+            base_loss,
+            growth_logits,
+            inputs,
+            growth_targets,
+            config,
+        )
         return _add_front_ring_objective(
             base_loss,
             growth_logits,
@@ -363,6 +419,13 @@ def objective_loss(
         base_loss = _add_background_objective(
             base_loss,
             logits,
+            growth_targets,
+            config,
+        )
+        base_loss = _add_far_background_objective(
+            base_loss,
+            logits,
+            inputs,
             growth_targets,
             config,
         )
@@ -399,6 +462,13 @@ def objective_loss(
         base_loss = _add_background_objective(
             base_loss,
             growth_logits,
+            growth_targets,
+            config,
+        )
+        base_loss = _add_far_background_objective(
+            base_loss,
+            growth_logits,
+            inputs,
             growth_targets,
             config,
         )
