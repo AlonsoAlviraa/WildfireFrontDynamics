@@ -569,15 +569,34 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
         {"phase": "training_on_wfigs_train_val_only"},
     )
     _write(
+        dataset / "WFIGS_EXTERNAL_EVAL.json",
+        {
+            "protocol": {"wfigs_test_used_for_selection": False},
+            "summary": {
+                "ensemble_event_macro_iou": 0.10,
+                "paired_event_analysis": {
+                    "paired_delta": -0.02,
+                    "paired_delta_event_bootstrap_95_ci": [-0.04, -0.01],
+                },
+            },
+        },
+    )
+    _write(
         tmp_path
         / "outputs/ml_eval/wfigs_domain_adaptation_20260819/WFIGS_ADAPTED_TEST_EVAL.json",
         {
+            "protocol": {"wfigs_test_used_for_selection": False},
             "summary": {
                 "adapted_event_macro_iou_mean": 0.22,
                 "ensemble_event_macro_iou": 0.23,
+                "adapted_transfer_signal_gate": False,
                 "paired_event_analysis": {
                     "paired_delta": 0.05,
                     "paired_delta_event_bootstrap_95_ci": [0.01, 0.09],
+                },
+                "ensemble_paired_event_analysis": {
+                    "paired_delta": 0.06,
+                    "paired_delta_event_bootstrap_95_ci": [-0.01, 0.11],
                 },
             }
         },
@@ -592,6 +611,8 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
     assert status["wfigs"]["dataset_audit_issues"] == 0
     assert status["wfigs"]["adapted_evaluation_executed"] is True
     assert status["wfigs"]["adapted_summary"]["ensemble_event_macro_iou"] == 0.23
+    assert status["wfigs"]["external_test_used_for_selection"] is False
+    assert status["wfigs"]["adapted_test_used_for_selection"] is False
     assert status["wfigs"]["test_groups_complete"] == 7
     assert status["wfigs"]["test_groups_total"] == 19
     assert status["wfigs"]["test_materialization_phase"] == (
@@ -600,6 +621,29 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
     assert status["wfigs"]["adaptation_phase"] == (
         "training_on_wfigs_train_val_only"
     )
+
+
+def test_research_status_keeps_sealed_external_result_during_scaleup(
+    tmp_path: Path,
+) -> None:
+    sealed = tmp_path / "outputs/ml_eval/wfigs_tensor_dataset_20260819"
+    _write(sealed / "DATASET_REPORT.json", {"counts": {"samples_written": 101}})
+    _write(
+        sealed / "WFIGS_EXTERNAL_EVAL.json",
+        {
+            "protocol": {"wfigs_test_used_for_selection": False},
+            "summary": {"ensemble_event_macro_iou": 0.09},
+        },
+    )
+    scaleup = tmp_path / "outputs/ml_eval/wfigs_tensor_dataset_scaleup_20260820"
+    _write(scaleup / "NIGHTWATCH_STATE.json", {"phase": "expanding_train_campaign"})
+
+    status = build_research_status(tmp_path)["wfigs"]
+
+    assert status["external_evaluation_executed"] is True
+    assert status["external_summary"]["ensemble_event_macro_iou"] == 0.09
+    assert status["dataset_phase"] == "expanding_train_campaign"
+    assert status["campaign_running"] is True
 
 
 def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
@@ -631,6 +675,9 @@ def test_spa_contains_research_panel_and_accessible_tabs(tmp_path: Path):
     assert "Clasificacion VAL" in html
     assert "Cola nocturna de experimentos" in html
     assert "research-pipeline" in html
+    assert "Escalado WFIGS" in html
+    assert "Lift por adaptación" in html
+    assert "Señal externa" in html
     assert "WFIGS TEST" in html
     assert "IC95% modelo" in html
     assert "Ensemble vs rival" in html

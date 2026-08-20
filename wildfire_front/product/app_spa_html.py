@@ -574,7 +574,7 @@ body.tab-work .rail-stack{min-height:58vh}
 @keyframes research-pulse{0%,100%{box-shadow:0 0 0 3px #0ea5e91c}50%{box-shadow:0 0 0 7px #0ea5e900}}
 .research-progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0 12px}
 .research-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#818cf8);width:0}
-.research-pipeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.research-pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin:0 0 12px}
 .research-stage{position:relative;min-width:0;padding:9px 8px;border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(145deg,var(--panel),var(--panel2))}
 .research-stage .top{display:flex;align-items:center;gap:6px;color:var(--faint);font:8px/1 var(--mono);text-transform:uppercase;letter-spacing:.05em}
 .research-stage .top i{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
@@ -2214,9 +2214,13 @@ function renderResearchStatus() {
   const testProgress = testDone ? 100 : (testTotal > 0 ? 100 * testComplete / testTotal : 0);
   const adaptDone = wfigs.adapted_evaluation_executed === true;
   const adaptActive = !adaptDone && String(wfigs.adaptation_phase || '').indexOf('training') >= 0;
+  const scaleupPhase = String(wfigs.dataset_phase || '');
+  const scaleupActive = Boolean(scaleupPhase) && scaleupPhase !== 'complete';
+  const scaleupDone = scaleupPhase === 'complete';
   researchStage(pipeline, 'RCDA sellado', rcdaClosed ? 'done' : 'active', rcdaClosed ? (String(final.events || 0) + ' incendios · TEST cerrado') : 'receta y métricas en curso', rcdaClosed ? 100 : 50);
   researchStage(pipeline, 'WFIGS TEST', testDone ? 'done' : (testActive ? 'active' : 'pending'), testDone ? (String(wfigs.test_tensors || 0) + ' tensores evaluados') : (String(testComplete) + '/' + String(testTotal || '—') + ' grupos materializados'), testProgress);
   researchStage(pipeline, 'Adaptación', adaptDone ? 'done' : (adaptActive ? 'active' : 'pending'), adaptDone ? 'TRAIN/VAL congelado · TEST ejecutado' : researchRunName(wfigs.adaptation_phase || 'esperando TEST'), adaptDone ? 100 : (adaptActive ? 55 : 0));
+  researchStage(pipeline, 'Escalado WFIGS', scaleupDone ? 'done' : (scaleupActive ? 'active' : 'pending'), scaleupActive ? researchRunName(scaleupPhase) : (scaleupDone ? (String(wfigs.train_tensors || 0) + ' TRAIN · ' + String(wfigs.validation_tensors || 0) + ' VAL') : 'cohorte siguiente pendiente'), scaleupDone ? 100 : (scaleupActive ? 45 : 0));
   host.appendChild(pipeline);
   const grid = document.createElement('div'); grid.className = 'research-grid';
   researchStat(grid, 'Datos sellados', String(protocol.samples || 0), String(protocol.events || 0) + ' incendios');
@@ -2377,11 +2381,18 @@ function renderResearchStatus() {
     if (adaptedExternal.ensemble_event_macro_iou != null) {
       researchStat(externalGrid, 'Ensemble adaptado', researchScore(adaptedExternal.ensemble_event_macro_iou), 'umbral elegido sólo en WFIGS VAL');
     }
-    const adaptedPaired = adaptedExternal.paired_event_analysis || {};
+    const adaptedPaired = adaptedExternal.ensemble_paired_event_analysis || adaptedExternal.paired_event_analysis || {};
     if (adaptedPaired.paired_delta != null) {
       const adaptedCi = adaptedPaired.paired_delta_event_bootstrap_95_ci || [];
       researchStat(externalGrid, 'Delta adaptado', (Number(adaptedPaired.paired_delta) >= 0 ? '+' : '') + researchScore(adaptedPaired.paired_delta), adaptedCi.length === 2 ? ('IC 95% ' + researchScore(adaptedCi[0]) + '–' + researchScore(adaptedCi[1])) : 'bootstrap por incendio');
     }
+    const zeroShotEnsemble = Number(external.ensemble_event_macro_iou);
+    const adaptedEnsemble = Number(adaptedExternal.ensemble_event_macro_iou);
+    if (Number.isFinite(zeroShotEnsemble) && Number.isFinite(adaptedEnsemble)) {
+      const lift = adaptedEnsemble - zeroShotEnsemble;
+      researchStat(externalGrid, 'Lift por adaptación', (lift >= 0 ? '+' : '') + researchScore(lift), researchScore(zeroShotEnsemble) + '→' + researchScore(adaptedEnsemble) + ' IoU macro');
+    }
+    researchStat(externalGrid, 'Señal externa', adaptedExternal.adapted_transfer_signal_gate === true ? 'APROBADA' : 'NO CONCLUYENTE', adaptedExternal.adapted_transfer_signal_gate === true ? 'IC pareado por encima de cero' : 'el IC pareado todavía cruza cero', adaptedExternal.adapted_transfer_signal_gate === true);
   }
   host.appendChild(externalGrid);
 
@@ -2401,7 +2412,7 @@ function renderResearchStatus() {
   researchCheck(checks, 'Auditoría tensorial WFIGS sin incidencias', wfigs.dataset_audit_status === 'pass' && wfigs.dataset_audit_issues === 0);
   researchCheck(checks, 'WFIGS TRAIN/VAL disjuntos por incendio', wfigs.dataset_event_disjoint === true);
   researchCheck(checks, 'Normalización WFIGS recomputada sólo en TRAIN', wfigs.dataset_normalization_train_only === true);
-  researchCheck(checks, 'Evaluación externa WFIGS todavía aislada', wfigs.external_evaluation_executed === false);
+  researchCheck(checks, 'WFIGS TEST no usado para seleccionar', wfigs.external_test_used_for_selection === false && wfigs.adapted_test_used_for_selection === false);
   if (final.gates) {
     Object.keys(final.gates).forEach(key => researchCheck(checks, key.replaceAll('_', ' '), final.gates[key] === true));
   } else {
@@ -2410,9 +2421,11 @@ function renderResearchStatus() {
   section.append(sectionTitle, checks); host.appendChild(section);
 
   const warning = document.createElement('div'); warning.className = 'research-warning';
-  warning.textContent = (rs.claims || {}).paper_ready
-    ? (wfigs.external_evaluation_executed ? 'Candidato RCDA con evaluación WFIGS ejecutada; revisar el informe externo antes de formular claims.' : 'Candidato de paper en este dataset. WFIGS se está materializando, pero la generalización externa aún no ha sido evaluada.')
-    : (wfigs.external_evaluation_executed ? 'Evaluación WFIGS disponible, pero no implica todavía validez operativa.' : 'Aún no es un claim de paper ni una métrica operativa. WFIGS ya tiene pipeline físico, pero su evaluación externa sigue pendiente.');
+  warning.textContent = wfigs.adapted_evaluation_executed && (wfigs.adapted_summary || {}).adapted_transfer_signal_gate !== true
+    ? 'La adaptación mejora el resultado WFIGS, pero su intervalo pareado cruza cero: la generalización externa sigue sin demostrarse y la nueva cohorte permanece en escalado.'
+    : ((rs.claims || {}).paper_ready
+      ? (wfigs.external_evaluation_executed ? 'Candidato RCDA con evaluación WFIGS ejecutada; revisar el informe externo antes de formular claims.' : 'Candidato de paper en este dataset. WFIGS se está materializando, pero la generalización externa aún no ha sido evaluada.')
+      : (wfigs.external_evaluation_executed ? 'Evaluación WFIGS disponible, pero no implica todavía validez operativa.' : 'Aún no es un claim de paper ni una métrica operativa. WFIGS ya tiene pipeline físico, pero su evaluación externa sigue pendiente.'));
   host.appendChild(warning);
   const path = document.createElement('div'); path.className = 'research-path';
   path.textContent = ((rs.artifacts || {}).scorecard || (rs.artifacts || {}).frozen_recipe || (rs.artifacts || {}).state || 'Sin artefacto');
