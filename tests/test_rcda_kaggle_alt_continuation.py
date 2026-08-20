@@ -9,6 +9,7 @@ from scripts.run_rcda_kaggle_alt_continuation import (
     kaggle_env,
     require_successful_kernel_push,
     single_run_source,
+    single_seed_run_source,
     validate_single_run_val_summary,
 )
 
@@ -75,3 +76,14 @@ def test_single_run_source_is_val_only_and_numerically_guarded() -> None:
     assert "clip_grad_norm_" in source
     assert "evaluate_test=False" in source
     assert "test_evaluated\": False" in source
+
+
+def test_single_seed_source_changes_only_the_training_seed() -> None:
+    source = single_seed_run_source("resunet_multitask_front_ring_v1", 29)
+    assert '"RCDA_STAGE2_RUNS", "resunet_multitask_front_ring_v1"' in source
+    assert source.count("seed=29,") == 1
+    assert "seed=0," not in source
+    assert "evaluate_test=False" in source
+    assert "test_evaluated\": False" in source
+    with pytest.raises(ValueError, match="non-negative"):
+        single_seed_run_source("resunet_multitask_front_ring_v1", -1)

@@ -241,16 +241,30 @@ def single_run_source(run_name: str) -> str:
     return source.replace(old, new)
 
 
+def single_seed_run_source(run_name: str, seed: int) -> str:
+    """Build a VAL-only runner for a fixed replication seed."""
+
+    if seed < 0:
+        raise ValueError("RCDA replication seed must be non-negative")
+    source = single_run_source(run_name)
+    old = "            seed=0,"
+    new = f"            seed={seed},"
+    if source.count(old) != 1:
+        raise ValueError("stage-2 runner seed hook changed")
+    return source.replace(old, new)
+
+
 def stage_and_push(
     run_name: str,
     slug: str,
     *,
     env: dict[str, str],
+    seed: int = 0,
 ) -> tuple[str, str]:
     stage = ROOT / "kaggle_job" / f"_alt_{slug.replace('-', '_')}"
     stage.mkdir(parents=True, exist_ok=True)
     runner = stage / "run_rcda_paper_stage2.py"
-    runner.write_text(single_run_source(run_name), encoding="utf-8")
+    runner.write_text(single_seed_run_source(run_name, seed), encoding="utf-8")
     kernel = f"{ALT_OWNER}/{slug}"
     metadata = {
         "id": kernel,
