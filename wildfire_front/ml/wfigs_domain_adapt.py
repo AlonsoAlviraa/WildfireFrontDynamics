@@ -46,6 +46,7 @@ class WFIGSAdaptConfig:
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
     background_bce_weight: float = 0.0
+    balanced_growth_bce_weight: float = 0.0
     far_background_bce_weight: float = 0.0
     far_background_min_distance_px: float = 12.0
     tversky_alpha: float | None = None
@@ -100,6 +101,13 @@ def adapt_frozen_rcda_on_wfigs(
         raise ValueError("WFIGS adaptation max_grad_norm must be positive")
     if not torch.isfinite(torch.tensor(adaptation.background_bce_weight)) or adaptation.background_bce_weight < 0.0:
         raise ValueError("WFIGS adaptation background_bce_weight must be finite and non-negative")
+    if (
+        not torch.isfinite(torch.tensor(adaptation.balanced_growth_bce_weight))
+        or adaptation.balanced_growth_bce_weight < 0.0
+    ):
+        raise ValueError(
+            "WFIGS adaptation balanced_growth_bce_weight must be finite and non-negative"
+        )
     if (
         not torch.isfinite(torch.tensor(adaptation.far_background_bce_weight))
         or adaptation.far_background_bce_weight < 0.0
@@ -236,6 +244,7 @@ def adapt_frozen_rcda_on_wfigs(
             front_ring_bce_weight=adaptation.front_ring_bce_weight,
             front_ring_radius_px=adaptation.front_ring_radius_px,
             background_bce_weight=adaptation.background_bce_weight,
+            balanced_growth_bce_weight=adaptation.balanced_growth_bce_weight,
             far_background_bce_weight=adaptation.far_background_bce_weight,
             far_background_min_distance_px=adaptation.far_background_min_distance_px,
             evaluate_test=False,

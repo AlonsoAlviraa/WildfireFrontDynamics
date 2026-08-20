@@ -71,6 +71,7 @@ class SealedTrainConfig:
     front_ring_bce_weight: float = 0.0
     front_ring_radius_px: float = 16.0
     background_bce_weight: float = 0.0
+    balanced_growth_bce_weight: float = 0.0
     far_background_bce_weight: float = 0.0
     far_background_min_distance_px: float = 12.0
     base_channels: int = 32
@@ -274,6 +275,45 @@ def _add_background_objective(
     )
 
 
+def balanced_growth_bce_loss(
+    logits: torch.Tensor,
+    growth_targets: torch.Tensor,
+    *,
+    max_pos_weight: float = 20.0,
+) -> torch.Tensor:
+    """Class-balanced BCE over the complete incremental-growth target."""
+
+    if logits.shape != growth_targets.shape:
+        raise ValueError("balanced BCE logits and targets must have equal shape")
+    if max_pos_weight < 1.0 or not math.isfinite(max_pos_weight):
+        raise ValueError("max_pos_weight must be finite and at least one")
+    positives = growth_targets.sum()
+    negatives = growth_targets.numel() - positives
+    pos_weight = (negatives / positives.clamp_min(1.0)).clamp(
+        min=1.0,
+        max=max_pos_weight,
+    )
+    return F.binary_cross_entropy_with_logits(
+        logits,
+        growth_targets,
+        pos_weight=pos_weight,
+    )
+
+
+def _add_balanced_growth_objective(
+    base_loss: torch.Tensor,
+    growth_logits: torch.Tensor,
+    growth_targets: torch.Tensor,
+    config: SealedTrainConfig,
+) -> torch.Tensor:
+    if config.balanced_growth_bce_weight <= 0.0:
+        return base_loss
+    return base_loss + config.balanced_growth_bce_weight * balanced_growth_bce_loss(
+        growth_logits,
+        growth_targets,
+    )
+
+
 def far_background_bce_loss(
     logits: torch.Tensor,
     inputs: torch.Tensor,
@@ -362,6 +402,8 @@ def objective_loss(
 
     if not math.isfinite(config.background_bce_weight) or config.background_bce_weight < 0.0:
         raise ValueError("background_bce_weight must be finite and non-negative")
+    if not math.isfinite(config.balanced_growth_bce_weight) or config.balanced_growth_bce_weight < 0.0:
+        raise ValueError("balanced_growth_bce_weight must be finite and non-negative")
     if not math.isfinite(config.far_background_bce_weight) or config.far_background_bce_weight < 0.0:
         raise ValueError("far_background_bce_weight must be finite and non-negative")
 
@@ -394,6 +436,12 @@ def objective_loss(
             growth_targets,
             config,
         )
+        base_loss = _add_balanced_growth_objective(
+            base_loss,
+            growth_logits,
+            growth_targets,
+            config,
+        )
         base_loss = _add_far_background_objective(
             base_loss,
             growth_logits,
@@ -417,6 +465,12 @@ def objective_loss(
             gamma=config.tversky_gamma,
         )
         base_loss = _add_background_objective(
+            base_loss,
+            logits,
+            growth_targets,
+            config,
+        )
+        base_loss = _add_balanced_growth_objective(
             base_loss,
             logits,
             growth_targets,
@@ -460,6 +514,12 @@ def objective_loss(
             + config.growth_loss_weight * growth_loss
         )
         base_loss = _add_background_objective(
+            base_loss,
+            growth_logits,
+            growth_targets,
+            config,
+        )
+        base_loss = _add_balanced_growth_objective(
             base_loss,
             growth_logits,
             growth_targets,
