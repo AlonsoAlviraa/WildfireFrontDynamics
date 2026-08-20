@@ -29,6 +29,7 @@ def main() -> int:
     )
     parser.add_argument("--split", default="train", choices=["train", "validation", "test"])
     parser.add_argument("--events-per-region", type=int, default=2)
+    parser.add_argument("--event-offset-per-region", type=int, default=0)
     parser.add_argument("--size", type=int, default=256)
     parser.add_argument("--resolution-m", type=float, default=60.0)
     parser.add_argument("--min-valid-fraction", type=float, default=0.70)
@@ -38,6 +39,7 @@ def main() -> int:
         output_root=args.output,
         split=args.split,
         events_per_region=args.events_per_region,
+        event_offset_per_region=args.event_offset_per_region,
         size=args.size,
         resolution_m=args.resolution_m,
         min_valid_fraction=args.min_valid_fraction,

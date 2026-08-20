@@ -5,6 +5,24 @@ from __future__ import annotations
 from wildfire_front.open_if.regional.wfigs_campaign import select_campaign_pairs
 
 
+def _eligible_enrichment(cloud_cover_pct: float) -> dict:
+    return {
+        "t0_bbox": [-111.0, 33.0, -110.98, 33.02],
+        "weather": {"status": "resolved", "available_by_t0_verified": True},
+        "eo": {
+            "sentinel2": {
+                "candidates": [
+                    {
+                        "id": "scene",
+                        "cloud_cover_pct": cloud_cover_pct,
+                        "stac_created_at_or_before_t0": True,
+                    }
+                ]
+            }
+        },
+    }
+
+
 def test_campaign_is_event_disjoint_and_excludes_alaska_hrrr_mismatch() -> None:
     pairs = [
         {
@@ -52,9 +70,7 @@ def test_campaign_is_event_disjoint_and_excludes_alaska_hrrr_mismatch() -> None:
         "az-2": enriched([-111.0, 33.0, -110.98, 33.02]),
         "ak-1": enriched([-150.0, 64.0, -149.0, 65.0]),
     }
-    selected = select_campaign_pairs(
-        pairs, enrichment, split="train", events_per_region=2
-    )
+    selected = select_campaign_pairs(pairs, enrichment, split="train", events_per_region=2)
     assert [row["pair_id"] for row in selected] == ["az-1"]
 
 
@@ -83,6 +99,37 @@ def test_campaign_rejects_oversize_t0_without_reading_t1_metrics() -> None:
             },
         }
     }
-    assert select_campaign_pairs(
-        [pair], enriched, split="train", events_per_region=1
-    ) == []
+    assert select_campaign_pairs([pair], enriched, split="train", events_per_region=1) == []
+
+
+def test_campaign_offset_selects_a_disjoint_prospective_cohort() -> None:
+    pairs = [
+        {
+            "pair_id": f"pair-{index}",
+            "event_id": f"event-{index}",
+            "region": "SWCC",
+            "split": "test",
+            "approved": True,
+            "metrics": {"growth_ha": 10_000 - index},
+        }
+        for index in range(5)
+    ]
+    enrichment = {f"pair-{index}": _eligible_enrichment(float(index)) for index in range(5)}
+
+    first = select_campaign_pairs(
+        pairs,
+        enrichment,
+        split="test",
+        events_per_region=2,
+    )
+    prospective = select_campaign_pairs(
+        pairs,
+        enrichment,
+        split="test",
+        events_per_region=2,
+        event_offset_per_region=2,
+    )
+
+    assert [row["event_id"] for row in first] == ["event-0", "event-1"]
+    assert [row["event_id"] for row in prospective] == ["event-2", "event-3"]
+    assert {row["event_id"] for row in first}.isdisjoint(row["event_id"] for row in prospective)

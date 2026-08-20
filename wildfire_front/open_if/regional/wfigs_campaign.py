@@ -29,7 +29,7 @@ REGION_DIRECTORIES = {
 
 
 def _eligible_scene(enriched: dict[str, Any]) -> dict[str, Any] | None:
-    sentinel = ((enriched.get("eo") or {}).get("sentinel2") or {})
+    sentinel = (enriched.get("eo") or {}).get("sentinel2") or {}
     for candidate in sentinel.get("candidates") or []:
         if candidate.get("stac_created_at_or_before_t0") is True:
             return candidate
@@ -42,6 +42,7 @@ def select_campaign_pairs(
     *,
     split: str,
     events_per_region: int,
+    event_offset_per_region: int = 0,
     grid_span_m: float = 15_360.0,
 ) -> list[dict[str, Any]]:
     """Select one pair per event, balanced by GACC, without target-derived ranking."""
@@ -53,9 +54,7 @@ def select_campaign_pairs(
         enriched = enrichment.get(str(pair.get("pair_id")))
         if enriched is None or not _inside_hrrr_conus(enriched.get("t0_bbox")):
             continue
-        west, south, east, north = (
-            float(value) for value in enriched["t0_bbox"]
-        )
+        west, south, east, north = (float(value) for value in enriched["t0_bbox"])
         latitude = (south + north) / 2.0
         width_m = (east - west) * 111_320.0 * max(math.cos(math.radians(latitude)), 0.1)
         height_m = (north - south) * 110_540.0
@@ -64,25 +63,35 @@ def select_campaign_pairs(
         if max(width_m, height_m) > grid_span_m * 0.9:
             continue
         weather = enriched.get("weather") or {}
-        if weather.get("status") != "resolved" or weather.get("available_by_t0_verified") is not True:
+        if (
+            weather.get("status") != "resolved"
+            or weather.get("available_by_t0_verified") is not True
+        ):
             continue
         scene = _eligible_scene(enriched)
         if scene is None:
             continue
         # Cloud is an input-availability property. Growth, t1 area and overlap
         # are intentionally absent from this selection score.
-        cloud = float(scene.get("cloud_cover_pct") or 100.0)
+        cloud_value = scene.get("cloud_cover_pct")
+        cloud = 100.0 if cloud_value is None else float(cloud_value)
         candidates.append((str(pair.get("region")), cloud, str(pair["pair_id"]), pair))
 
     selected: list[dict[str, Any]] = []
-    region_events: dict[str, set[str]] = defaultdict(set)
+    seen_region_events: dict[str, set[str]] = defaultdict(set)
+    selected_region_events: dict[str, set[str]] = defaultdict(set)
     for region, _cloud, _pair_id, pair in sorted(candidates):
-        if region not in REGION_DIRECTORIES or len(region_events[region]) >= events_per_region:
+        if region not in REGION_DIRECTORIES:
             continue
         event_id = str(pair["event_id"])
-        if event_id in region_events[region]:
+        if event_id in seen_region_events[region]:
             continue
-        region_events[region].add(event_id)
+        seen_region_events[region].add(event_id)
+        if len(seen_region_events[region]) <= event_offset_per_region:
+            continue
+        if len(selected_region_events[region]) >= events_per_region:
+            continue
+        selected_region_events[region].add(event_id)
         selected.append(pair)
     return selected
 
@@ -97,16 +106,20 @@ class WFIGSTensorCampaign:
         output_root: Path,
         split: str = "train",
         events_per_region: int = 2,
+        event_offset_per_region: int = 0,
         size: int = 256,
         resolution_m: float = 60.0,
         min_valid_fraction: float = 0.70,
     ) -> None:
         if events_per_region <= 0:
             raise ValueError("events_per_region must be positive")
+        if event_offset_per_region < 0:
+            raise ValueError("event_offset_per_region must be non-negative")
         self.history_root = Path(history_root)
         self.output_root = Path(output_root)
         self.split = split
         self.events_per_region = events_per_region
+        self.event_offset_per_region = event_offset_per_region
         self.size = size
         self.resolution_m = resolution_m
         self.min_valid_fraction = min_valid_fraction
@@ -122,6 +135,7 @@ class WFIGSTensorCampaign:
             enrichment,
             split=self.split,
             events_per_region=self.events_per_region,
+            event_offset_per_region=self.event_offset_per_region,
             grid_span_m=self.size * self.resolution_m,
         )
         groups: dict[tuple[int, str], list[dict[str, Any]]] = defaultdict(list)
@@ -194,13 +208,16 @@ class WFIGSTensorCampaign:
                 },
             )
 
-        reasons = Counter(str(row.get("reason")) for row in all_rows if row["status"] != "materialized")
+        reasons = Counter(
+            str(row.get("reason")) for row in all_rows if row["status"] != "materialized"
+        )
         inventory = {
             "schema": CAMPAIGN_SCHEMA,
             "generated_at": utc_now(),
             "configuration": {
                 "split": self.split,
                 "events_per_region": self.events_per_region,
+                "event_offset_per_region": self.event_offset_per_region,
                 "one_pair_per_event": True,
                 "selection_uses_t1_or_growth": False,
                 "size": self.size,
@@ -214,7 +231,9 @@ class WFIGSTensorCampaign:
                 "pairs_rejected": sum(row["status"] != "materialized" for row in all_rows),
                 "pairs_training_ready": sum(row.get("training_ready") is True for row in all_rows),
                 "rejection_reasons": dict(sorted(reasons.items())),
-                "regions_selected": dict(sorted(Counter(str(pair["region"]) for pair in selected).items())),
+                "regions_selected": dict(
+                    sorted(Counter(str(pair["region"]) for pair in selected).items())
+                ),
             },
             "groups": group_rows,
             "rows": all_rows,
