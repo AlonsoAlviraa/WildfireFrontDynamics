@@ -654,6 +654,7 @@ def test_research_status_surfaces_wfigs_dataset_audit(tmp_path: Path):
 
     status = build_research_status(tmp_path)
 
+    assert status["wfigs"]["tensors_materialized"] == 80
     assert status["wfigs"]["tensors_training_ready"] == 80
     assert status["wfigs"]["train_tensors"] == 61
     assert status["wfigs"]["validation_tensors"] == 19
