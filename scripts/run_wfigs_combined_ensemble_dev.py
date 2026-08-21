@@ -5,17 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
-from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
-    WFIGSAdaptConfig,
-    adapt_frozen_rcda_on_wfigs,
-)
 from scripts.run_wfigs_front_geometry_ensemble_dev import (  # noqa: E402
     SEEDS,
     _assert_dev_only,
     _local_source_summary,
+)
+from wildfire_front.ml.wfigs_domain_adapt import (  # noqa: E402
+    WFIGSAdaptConfig,
+    adapt_frozen_rcda_on_wfigs,
 )
 
 
