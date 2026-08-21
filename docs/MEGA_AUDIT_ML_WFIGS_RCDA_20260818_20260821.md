@@ -125,13 +125,15 @@ La expansión que sustentó todas las ablaciones comparables tuvo:
 - un par por evento y splits disjuntos por `event_id`.
 
 El baseline de referencia de las ablationes es el control de semilla 47
-(`0.131902`) y, para decisiones de estabilidad, el ensemble congelado de tres
-semillas (`0.136178`).
+(`0.131902` **DEV** event-macro IoU sobre los 42 incendios DEV, no TRAIN) y,
+para decisiones de estabilidad, el ensemble congelado de tres semillas
+(`0.136178`).
 
 ### 4.2 Campaña grande cerrada
 
 El PR [#152](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/152)
-añade una campaña reanudable con hasta 50 eventos por región/año, rejilla
+añade una campaña reanudable con hasta 50 eventos por región GACC
+(`events_per_region=50`; el año solo agrupa la materialización, no el tope), rejilla
 `256×256`, resolución 60 m y fracción mínima válida 0,70. El script:
 
 ```text
@@ -166,7 +168,9 @@ confirmación y aún no se ha publicado ningún tensor, geometría ni checkpoint
 - Tversky: `alpha=0.3`, `beta=0.7`, `gamma=0.75`;
 - adaptación habitual: decoder + proyecciones de entrada residuales;
 - deeper encoder/context congelados en los experimentos de baja muestra;
-- AdamW, `lr=1e-4`, batch 4, máximo 18 épocas, paciencia 5;
+- AdamW, `lr=1e-4`, batch 4; receta de las ablaciones DEV de esta campaña:
+  máximo 18 épocas, paciencia 5. El default del adapter en código
+  (`WFIGSAdaptConfig` y el protocolo 2026-08-19) es 30 épocas y paciencia 7;
 - front-ring BCE `0.05` cuando lo indica el protocolo.
 
 ### 5.2 Features que se probaron
@@ -413,3 +417,18 @@ Hasta que esos seis puntos se cumplan, el modelo no debe etiquetarse como
 “listo para paper confirmatorio”. Sí está listo para una sección metodológica y
 para un informe de auditoría reproducible: las decisiones, los rechazos y la
 frontera de derechos están documentados y comprobados.
+
+## 13. Corrección post deep-verify (2026-08-21)
+
+Verificación claim-a-claim de los PRs `#56`–`#155`: 322 claims, 314 supported,
+4 contradicted, 4 unverifiable en el checkout `wip/latam-au-campaign`.
+
+- `#107` IoU 0.131902 / 0.083614 / 0.082554 es **DEV**, no TRAIN. TRAIN=184 es
+  el tamaño de la cohorte de entrenamiento, no el split de la métrica.
+- El tope de la campaña grande es **50 eventos por región GACC**, no por
+  región/año. El año solo agrupa la materialización.
+- `wfigs_rights_summary()` ahora lista `per_pixel_prediction` en
+  `publication_blocked`, alineado con la prosa de esta auditoría.
+- Conteos de `#155` comprobados en GitHub (el archivo no estaba en el checkout
+  local): TRAIN 235/52, VAL 76/11, total 311, `samples_failed=0`, 6 rechazos
+  VAL `t1_geometry_truncated`.

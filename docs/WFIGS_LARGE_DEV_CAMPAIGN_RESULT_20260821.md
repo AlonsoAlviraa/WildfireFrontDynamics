@@ -6,7 +6,8 @@ Informe de ejecución: `LARGE_DEV_CAMPAIGN_REPORT.json` (artefacto local, no pub
 
 ## Alcance
 
-Se ejecutó la cosecha ampliada con un máximo de 50 eventos por región/año,
+Se ejecutó la cosecha ampliada con un máximo de 50 eventos por región GACC
+(`events_per_region=50`; el año solo agrupa la materialización),
 rejilla de `256×256`, resolución de 60 m y fracción mínima de píxeles válidos
 de 0,70. El script sólo permitió los assignments `train` y `validation`.
 No se materializó, leyó ni evaluó ningún `test`, confirmación o conjunto
@@ -49,9 +50,9 @@ relleno de geometrías.
 - `test_materialized=false` y no existe `test.json` en el dataset resultante.
 - `test_used_for_selection=false` en el informe final.
 - El uso resuelto es **entrenamiento interno no comercial**.
-- No se publican datos WFIGS crudos, geometrías, teselas, tensores ni
-  checkpoints. Sólo pueden publicarse código, configuración, metodología,
-  gráficos y métricas agregadas.
+- No se publican datos WFIGS crudos, geometrías, teselas, tensores,
+  predicciones por píxel ni checkpoints. Sólo pueden publicarse código,
+  configuración, metodología, gráficos y métricas agregadas.
 
 ## Qué habilita
 
