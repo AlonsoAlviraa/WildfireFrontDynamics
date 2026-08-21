@@ -128,7 +128,7 @@ El baseline de referencia de las ablationes es el control de semilla 47
 (`0.131902`) y, para decisiones de estabilidad, el ensemble congelado de tres
 semillas (`0.136178`).
 
-### 4.2 Campaña grande en curso
+### 4.2 Campaña grande cerrada
 
 El PR [#152](https://github.com/AlonsoAlviraa/WildfireFrontDynamics/pull/152)
 añade una campaña reanudable con hasta 50 eventos por región/año, rejilla
@@ -140,17 +140,20 @@ scripts/run_wfigs_large_dev_campaign.py
 
 Sólo acepta los assignments `train` y `validation`, materializa por grupos,
 escribe `STATE.json`, falla si aparece un `test.json` y construye después el
-dataset de adaptación. En el último corte observado mientras se redacta este
-documento:
+dataset de adaptación. El informe final `LARGE_DEV_CAMPAIGN_REPORT.json` fue
+revisado y deja este corte reproducible:
 
-- TRAIN: 33/33 grupos cerrados, 235 tensores (~460 MB);
-- VALIDATION: 16/24 grupos cerrados, 51 tensores (~99 MB);
-- `test.json`: no existe;
-- el proceso sigue reanudable y los rechazos quedan en cada inventario.
+| Split | Seleccionados | Materializados | Rechazados | Tensores | Principales motivos |
+|---|---:|---:|---:|---:|---|
+| TRAIN | 287 | 235 | 52 | 235 | 25 píxeles válidos insuficientes; 3 geometrías fuera de la rejilla; 24 geometrías `t1` truncadas |
+| VALIDATION | 87 | 76 | 11 | 76 | 5 píxeles válidos insuficientes; 6 geometrías `t1` truncadas |
+| **Total** | **374** | **311** | **63** | **311** | **0 fallos de escritura** |
 
-El número de VALIDATION es un corte vivo de la cosecha, no el resultado final.
-El informe final sólo se considerará cerrado cuando aparezca
-`LARGE_DEV_CAMPAIGN_REPORT.json` y pase la auditoría de conteos y derechos.
+La configuración fue `events_per_region=50`, `256×256`, 60 m y fracción mínima
+válida 0,70. Los 311 pares elegibles se materializaron sin fallos, los splits
+son disjuntos por evento y `test.json` no existe ni fue usado para selección.
+El dataset resultante es sólo TRAIN/VALIDATION; todavía no es evidencia de
+confirmación y aún no se ha publicado ningún tensor, geometría ni checkpoint.
 
 ## 5. Protocolo ML congelado
 
