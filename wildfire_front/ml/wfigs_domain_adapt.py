@@ -228,7 +228,11 @@ def adapt_frozen_rcda_on_wfigs(
             device,
         )
         source_state = source_payload["state_dict"]
-        if adaptation.include_valid_mask or adaptation.include_geometry_features:
+        if (
+            adaptation.include_valid_mask
+            or adaptation.include_geometry_features
+            or adaptation.include_tile_standardized_features
+        ):
             target_state = model.state_dict()
             for name, value in source_state.items():
                 if name not in target_state:
