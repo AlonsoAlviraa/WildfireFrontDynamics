@@ -18,9 +18,11 @@ those checkpoints (`scripts/eval_wfigs_saved_checkpoints.py`).
 
 ## Result
 
-| Recipe | DEV events | Event-macro growth IoU | Pooled IoU | Threshold | Precision | Recall |
+| Recipe | DEV events | Event-macro growth IoU | Pooled IoU | Threshold / radius | Precision | Recall |
 |---|---:|---:|---:|---:|---:|---:|
-| Frozen 16-channel hybrid ensemble, transferred from the 184/42 cohort | 76 | 0.100220 | 0.096300 | 0.35 | 0.307950 | 0.122896 |
+| Dilated-copy, TRAIN-selected radius 3 px (180 m) | 76 | 0.099155 | 0.102371 | 3 px | 0.217762 | 0.161912 |
+| Dilated-copy, VAL-selected radius 6 px (360 m) | 76 | 0.099160 | 0.122080 | 6 px | 0.182948 | 0.268436 |
+| Frozen 16-channel hybrid, transferred from 184/42 | 76 | 0.100220 | 0.096300 | 0.35 | 0.307950 | 0.122896 |
 | Large-DEV fixed-source geometry+EO ensemble | 76 | **0.125428** | 0.151714 | 0.35 | 0.238060 | 0.294921 |
 | Same recipe on the previous 42-event DEV | 42 | 0.140044 | 0.156678 | 0.25 | 0.240205 | 0.310616 |
 | Preregistered paper control (42-event DEV) | 42 | 0.136178 | 0.149627 | 0.30 | 0.226176 | 0.306567 |
@@ -29,15 +31,18 @@ those checkpoints (`scripts/eval_wfigs_saved_checkpoints.py`).
 Individual large-DEV adaptation seeds: `0.124358` (seed 11, epoch 14),
 `0.127798` (seed 29, epoch 10), `0.123424` (seed 47, epoch 12).
 
-Versus the transferred 16-channel control on the **same** 76-event DEV the
-adapted ensemble is `+0.025208` event-macro IoU and recovers recall
-(`0.123 → 0.295`). That comparison is not a retrained control: the 16-channel
-weights were trained on the old 184-event TRAIN and only re-thresholded here.
+Versus dilated-copy on the **same** 76-event DEV the adapted ensemble is
+`+0.026273` event-macro IoU (TRAIN-selected radius 3 px) and `+0.026268`
+(VAL-selected radius 6 px). That is real growth skill against the official
+persistence comparator, not a cross-cohort artefact.
+
+Versus the transferred 16-channel control on the same DEV the adapted ensemble
+is `+0.025208` and recovers recall (`0.123 → 0.295`). That control was trained
+on the old 184-event TRAIN and only re-thresholded here.
 
 Versus the preregistered 42-event gate the large-DEV ensemble is `-0.015750`
-(`0.125428` vs `0.141178`). Absolute event-macro IoU also sits below the
-old-DEV paper control (`0.136178`). The new DEV is a harder, more diverse
-cohort; the 42-event number is not a same-split comparison.
+(`0.125428` vs `0.141178`). The new DEV is harder: dilated-copy itself only
+reaches `0.099` here. The 42-event number is not a same-split comparison.
 
 ## Decision
 
