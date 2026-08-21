@@ -23,8 +23,12 @@ def test_internal_research_allowed_without_enabling_redistribution() -> None:
 def test_publication_guard_is_allow_listed_and_fails_closed() -> None:
     assert_wfigs_publication_allowed("code")
     assert_wfigs_publication_allowed("aggregate-metrics")
+    rights = wfigs_rights_summary()
+    assert "per_pixel_prediction" in rights["publication_blocked"]
     with pytest.raises(WFIGSPublicationBlocked):
         assert_wfigs_publication_allowed("raw_data")
+    with pytest.raises(WFIGSPublicationBlocked):
+        assert_wfigs_publication_allowed("per_pixel_prediction")
     with pytest.raises(WFIGSPublicationBlocked):
         assert_wfigs_publication_allowed("future_artifact_type")
 

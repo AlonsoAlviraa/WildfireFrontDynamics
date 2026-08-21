@@ -28,6 +28,7 @@ PUBLICATION_BLOCKED = frozenset(
         "checkpoint",
         "derived_dataset",
         "geometry",
+        "per_pixel_prediction",
         "raw_data",
         "tensor",
         "tile",
@@ -73,7 +74,8 @@ def wfigs_rights_summary(*, event_count: int | None = None) -> dict[str, Any]:
             "Project policy permits internal non-commercial scientific use because the "
             "NIFC item is public and its disclaimer expressly addresses scientific and "
             "aggregate use. No affirmative redistribution licence was found, so public "
-            "release of source data, derived datasets, tensors, or checkpoints remains blocked."
+            "release of source data, derived datasets, tensors, checkpoints, or "
+            "per-pixel predictions remains blocked."
         ),
         "not_legal_advice": True,
     }
