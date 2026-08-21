@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from wildfire_front.ml.wfigs_tensor_dataset import WFIGSTensorDatasetBuilder
-from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now
-from wildfire_front.open_if.regional.wfigs_campaign import WFIGSTensorCampaign
+from wildfire_front.ml.wfigs_tensor_dataset import WFIGSTensorDatasetBuilder  # noqa: E402
+from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now  # noqa: E402
+from wildfire_front.open_if.regional.wfigs_campaign import WFIGSTensorCampaign  # noqa: E402
 
 
 def main() -> int:
