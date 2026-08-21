@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from wildfire_front.ml.rcda_sealed import build_model
+from wildfire_front.ml.rcda_sealed import _augment, build_model
 from wildfire_front.ml.wfigs_domain_adapt import (
     WFIGSAdaptConfig,
     adapt_frozen_rcda_on_wfigs,
@@ -241,3 +241,14 @@ def test_wfigs_dataset_can_append_tile_standardized_features(tmp_path: Path) -> 
     assert features.shape[0] == 20
     assert float(features[16:].max()) <= 1.0
     assert float(features[16:].min()) >= -1.0
+
+
+def test_augmentation_transforms_front_normals(monkeypatch) -> None:
+    features = np.zeros((19, 4, 4), dtype=np.float32)
+    features[17] = 1.0
+    target = np.zeros((2, 4, 4), dtype=np.float32)
+    monkeypatch.setattr("wildfire_front.ml.rcda_sealed.random.random", lambda: 1.0)
+    monkeypatch.setattr("wildfire_front.ml.rcda_sealed.random.choice", lambda values: 1)
+    augmented, _ = _augment(features, target, front_normal_indices=(17, 18))
+    assert np.allclose(augmented[17], 0.0)
+    assert np.allclose(augmented[18], 1.0)

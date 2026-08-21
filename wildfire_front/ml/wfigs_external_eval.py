@@ -281,7 +281,15 @@ class WFIGSExternalDataset(Dataset):
                 axis=0,
             )
         if self.augment:
-            features, targets = _augment(features, np.stack([target, extent]))
+            normal_indices = None
+            if self.include_geometry_features:
+                geometry_start = len(SEALED_CHANNEL_NAMES)
+                normal_indices = (geometry_start + 1, geometry_start + 2)
+            features, targets = _augment(
+                features,
+                np.stack([target, extent]),
+                front_normal_indices=normal_indices,
+            )
             target, extent = targets[0], targets[1]
         return {
             "input": torch.from_numpy(np.ascontiguousarray(features)),

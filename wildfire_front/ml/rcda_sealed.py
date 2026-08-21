@@ -640,19 +640,37 @@ class SealedRCDADataset(Dataset):
         }
 
 
-def _augment(features: np.ndarray, target: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _augment(
+    features: np.ndarray,
+    target: np.ndarray,
+    front_normal_indices: tuple[int, int] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Apply spatial augmentation and keep optional front normals physical."""
+
+    if front_normal_indices is not None:
+        x_index, y_index = front_normal_indices
+        if not (
+            0 <= x_index < features.shape[0]
+            and 0 <= y_index < features.shape[0]
+            and x_index != y_index
+        ):
+            raise ValueError("front normal indices must be distinct feature channels")
     horizontal_axis = target.ndim - 1
     vertical_axis = target.ndim - 2
     if random.random() < 0.5:
         features = np.flip(features, axis=2).copy()
         target = np.flip(target, axis=horizontal_axis).copy()
         features[7] = -features[7]
+        if front_normal_indices is not None:
+            features[front_normal_indices[0]] = -features[front_normal_indices[0]]
     if random.random() < 0.5:
         features = np.flip(features, axis=1).copy()
         target = np.flip(target, axis=vertical_axis).copy()
         # Wind is encoded as (east=sin(direction), north=cos(direction)).
         # A vertical image reflection reverses north/south, not east/west.
         features[8] = -features[8]
+        if front_normal_indices is not None:
+            features[front_normal_indices[1]] = -features[front_normal_indices[1]]
     k = random.choice([0, 1, 2, 3])
     if k:
         features = np.rot90(features, k=k, axes=(1, 2)).copy()
@@ -661,6 +679,13 @@ def _augment(features: np.ndarray, target: np.ndarray) -> tuple[np.ndarray, np.n
         angle = -k * (math.pi / 2)
         features[7] = sin_c * math.cos(angle) + cos_c * math.sin(angle)
         features[8] = cos_c * math.cos(angle) - sin_c * math.sin(angle)
+        if front_normal_indices is not None:
+            normal_x, normal_y = (
+                features[front_normal_indices[0]].copy(),
+                features[front_normal_indices[1]].copy(),
+            )
+            features[front_normal_indices[0]] = normal_x * math.cos(angle) + normal_y * math.sin(angle)
+            features[front_normal_indices[1]] = normal_y * math.cos(angle) - normal_x * math.sin(angle)
     return features, target
 
 
