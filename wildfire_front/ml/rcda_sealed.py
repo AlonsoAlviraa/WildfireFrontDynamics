@@ -74,6 +74,8 @@ class SealedTrainConfig:
     balanced_growth_bce_weight: float = 0.0
     far_background_bce_weight: float = 0.0
     far_background_min_distance_px: float = 12.0
+    focal_bce_weight: float = 0.0
+    focal_gamma: float = 2.0
     base_channels: int = 32
     scheduler_name: str = "cosine"
     selection_metric: str = "event_macro_iou"
@@ -236,6 +238,60 @@ def _add_front_ring_objective(
         radius_px=config.front_ring_radius_px,
     )
     return base_loss + config.front_ring_bce_weight * ring_loss
+
+
+def binary_focal_loss(
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+    *,
+    gamma: float = 2.0,
+) -> torch.Tensor:
+    """Pixel-wise binary focal loss; gamma>0 down-weights easy negatives."""
+
+    if gamma < 0.0 or not math.isfinite(gamma):
+        raise ValueError("focal gamma must be finite and non-negative")
+    if logits.shape != targets.shape:
+        raise ValueError("focal logits and targets must have equal shape")
+    bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
+    probability = torch.sigmoid(logits)
+    p_t = targets * probability + (1.0 - targets) * (1.0 - probability)
+    return (((1.0 - p_t).clamp(min=0.0, max=1.0) ** gamma) * bce).mean()
+
+
+def _add_focal_bce_objective(
+    base_loss: torch.Tensor,
+    growth_logits: torch.Tensor,
+    growth_targets: torch.Tensor,
+    config: SealedTrainConfig,
+) -> torch.Tensor:
+    if config.focal_bce_weight <= 0.0:
+        return base_loss
+    return base_loss + config.focal_bce_weight * binary_focal_loss(
+        growth_logits,
+        growth_targets,
+        gamma=config.focal_gamma,
+    )
+
+
+def binary_average_precision(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """PR-AUC on flattened labels/scores; 0 when the split has no positives."""
+
+    labels = np.asarray(y_true).astype(np.int8).ravel()
+    scores = np.asarray(y_score).astype(np.float64).ravel()
+    if labels.size == 0:
+        return 0.0
+    n_pos = int(labels.sum())
+    if n_pos == 0:
+        return 0.0
+    order = np.argsort(-scores, kind="mergesort")
+    ranked = labels[order]
+    true_pos = np.cumsum(ranked)
+    false_pos = np.cumsum(1 - ranked)
+    recall = true_pos / float(n_pos)
+    precision = true_pos / np.maximum(true_pos + false_pos, 1)
+    recall = np.concatenate(([0.0], recall))
+    precision = np.concatenate(([1.0], precision))
+    return float(np.sum((recall[1:] - recall[:-1]) * precision[1:]))
 
 
 def background_bce_loss(
@@ -406,6 +462,10 @@ def objective_loss(
         raise ValueError("balanced_growth_bce_weight must be finite and non-negative")
     if not math.isfinite(config.far_background_bce_weight) or config.far_background_bce_weight < 0.0:
         raise ValueError("far_background_bce_weight must be finite and non-negative")
+    if not math.isfinite(config.focal_bce_weight) or config.focal_bce_weight < 0.0:
+        raise ValueError("focal_bce_weight must be finite and non-negative")
+    if not math.isfinite(config.focal_gamma) or config.focal_gamma < 0.0:
+        raise ValueError("focal_gamma must be finite and non-negative")
 
     if config.target_mode == "multitask":
         if logits.ndim != 4 or logits.shape[1] != 2:
@@ -449,10 +509,15 @@ def objective_loss(
             growth_targets,
             config,
         )
-        return _add_front_ring_objective(
-            base_loss,
+        return _add_focal_bce_objective(
+            _add_front_ring_objective(
+                base_loss,
+                growth_logits,
+                inputs,
+                growth_targets,
+                config,
+            ),
             growth_logits,
-            inputs,
             growth_targets,
             config,
         )
@@ -483,10 +548,15 @@ def objective_loss(
             growth_targets,
             config,
         )
-        return _add_front_ring_objective(
-            base_loss,
+        return _add_focal_bce_objective(
+            _add_front_ring_objective(
+                base_loss,
+                logits,
+                inputs,
+                growth_targets,
+                config,
+            ),
             logits,
-            inputs,
             growth_targets,
             config,
         )
@@ -532,10 +602,15 @@ def objective_loss(
             growth_targets,
             config,
         )
-        return _add_front_ring_objective(
-            base_loss,
+        return _add_focal_bce_objective(
+            _add_front_ring_objective(
+                base_loss,
+                growth_logits,
+                inputs,
+                growth_targets,
+                config,
+            ),
             growth_logits,
-            inputs,
             growth_targets,
             config,
         )
@@ -1252,6 +1327,35 @@ def evaluate_split(
     if paper_metrics:
         result["paper_metrics"] = aggregate_ndws_evaluation(sample_metrics)
     return result
+
+
+@torch.no_grad()
+def evaluate_growth_average_precision(
+    model: nn.Module,
+    loader: DataLoader,
+    device: torch.device,
+    *,
+    prediction_mode: str = "growth",
+) -> float:
+    """Average precision of growth on pixels that were unburned at t0."""
+
+    model.eval()
+    scores: list[np.ndarray] = []
+    labels: list[np.ndarray] = []
+    for batch in loader:
+        inputs = batch["input"]
+        logits = model(prepare_inputs_for_device(inputs, device))
+        probs = torch.sigmoid(prediction_logits(logits, prediction_mode)).cpu().numpy()
+        targets = batch["target"].numpy()
+        previous = inputs[:, 0:1].numpy() > 0.5
+        growable = ~previous
+        if prediction_mode in {"extent", "hybrid", "multitask"}:
+            probs = np.where(previous, 0.0, probs)
+        scores.append(probs[growable])
+        labels.append(targets[growable])
+    if not scores:
+        return 0.0
+    return binary_average_precision(np.concatenate(labels), np.concatenate(scores))
 
 
 @torch.no_grad()

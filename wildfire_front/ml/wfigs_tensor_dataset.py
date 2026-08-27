@@ -10,7 +10,6 @@ from typing import Any
 import numpy as np
 
 from wildfire_front.open_if.regional.base import _atomic_write_json, utc_now
-from wildfire_front.open_if.regional.wfigs_materialize import _atomic_savez
 from wildfire_front.open_if.regional.wfigs_rights import wfigs_rights_summary
 
 WFIGS_DATASET_SCHEMA = "wfd_wfigs_tensor_dataset_v1"
@@ -110,6 +109,10 @@ class WFIGSTensorDatasetBuilder:
                 destination = (
                     self.output_root / "samples" / split / f"{row['pair_id']}.npz"
                 )
+                from wildfire_front.open_if.regional.wfigs_materialize import (
+                    _atomic_savez,
+                )
+
                 _atomic_savez(
                     destination,
                     inputs=inputs,

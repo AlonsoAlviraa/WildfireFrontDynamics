@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -242,6 +243,37 @@ class WFIGSExternalDataset(Dataset):
         self.include_tile_standardized_features = include_tile_standardized_features
         if self.channel_min.shape != (12,) or self.channel_max.shape != (12,):
             raise ValueError("RCDA normalization must contain 12 raw channels")
+        self._event_counts = Counter(str(row["event_id"]) for row in self.samples)
+
+    def sample_weight(
+        self,
+        index: int,
+        *,
+        event_balance_power: float = 0.5,
+        sampling_strategy: str = "size_event_power",
+    ) -> float:
+        """Match RCDA event-macro training: do not let large fires dominate the loader."""
+
+        row = self.samples[index]
+        event_days = max(1, self._event_counts[str(row["event_id"])])
+        if sampling_strategy == "uniform_events":
+            return 1.0 / event_days
+        if sampling_strategy != "size_event_power":
+            raise ValueError(f"unknown sampling_strategy {sampling_strategy!r}")
+        support = int(row.get("growth_pixels") or 0)
+        if support == 0:
+            size_w = 4.0
+        elif support < 100:
+            size_w = 3.0
+        elif support < 500:
+            size_w = 1.5
+        elif support < 2000:
+            size_w = 1.0
+        else:
+            size_w = 2.0
+        if not 0.0 <= event_balance_power <= 1.0:
+            raise ValueError("event_balance_power must be within [0, 1]")
+        return size_w / (event_days**event_balance_power)
 
     def __len__(self) -> int:
         return len(self.samples)

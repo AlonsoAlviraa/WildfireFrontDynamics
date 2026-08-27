@@ -78,6 +78,13 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--epochs", type=int, default=18)
     parser.add_argument("--patience", type=int, default=5)
+    parser.add_argument("--focal-bce-weight", type=float, default=0.0)
+    parser.add_argument("--focal-gamma", type=float, default=2.0)
+    parser.add_argument(
+        "--epoch-selection-metric",
+        choices=("event_macro_iou", "growth_ap"),
+        default="event_macro_iou",
+    )
     args = parser.parse_args()
     _assert_dev_only(args.wfigs_dev_root)
     source_summary = _source_summary(args.source_checkpoint)
@@ -98,6 +105,9 @@ def main() -> int:
             include_geometry_features=True,
             include_tile_standardized_features=True,
             source_seeds=ADAPTATION_SEEDS,
+            focal_bce_weight=args.focal_bce_weight,
+            focal_gamma=args.focal_gamma,
+            epoch_selection_metric=args.epoch_selection_metric,
         ),
     )
     if report["wfigs_test_loaded"] or report["test_used_for_selection"]:

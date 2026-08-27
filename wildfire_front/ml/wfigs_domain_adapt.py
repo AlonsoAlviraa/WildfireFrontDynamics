@@ -20,6 +20,7 @@ from .rcda_sealed import (
     ProbabilityAveragingEnsemble,
     SealedTrainConfig,
     build_model,
+    evaluate_growth_average_precision,
     evaluate_threshold_grid,
     make_loader,
     objective_loss,
@@ -58,6 +59,12 @@ class WFIGSAdaptConfig:
     include_geometry_features: bool = False
     include_tile_standardized_features: bool = False
     source_seeds: tuple[int, ...] | None = None
+    focal_bce_weight: float = 0.0
+    focal_gamma: float = 2.0
+    epoch_selection_metric: str = "event_macro_iou"
+    weighted_sampling: bool = False
+    event_balance_power: float = 1.0
+    sampling_strategy: str = "uniform_events"
 
 
 def configure_trainable_scope(
@@ -131,6 +138,20 @@ def adapt_frozen_rcda_on_wfigs(
         )
     if not 0.0 < adaptation.far_background_min_distance_px <= 32.0:
         raise ValueError("WFIGS adaptation far-background distance must be within (0, 32]")
+    if adaptation.epoch_selection_metric not in {"event_macro_iou", "growth_ap"}:
+        raise ValueError(
+            f"unknown WFIGS epoch selection metric: {adaptation.epoch_selection_metric!r}"
+        )
+    if not torch.isfinite(torch.tensor(adaptation.focal_bce_weight)) or adaptation.focal_bce_weight < 0.0:
+        raise ValueError("WFIGS adaptation focal_bce_weight must be finite and non-negative")
+    if not torch.isfinite(torch.tensor(adaptation.focal_gamma)) or adaptation.focal_gamma < 0.0:
+        raise ValueError("WFIGS adaptation focal_gamma must be finite and non-negative")
+    if not 0.0 <= adaptation.event_balance_power <= 1.0:
+        raise ValueError("WFIGS adaptation event_balance_power must be within [0, 1]")
+    if adaptation.sampling_strategy not in {"uniform_events", "size_event_power"}:
+        raise ValueError(
+            f"unknown WFIGS sampling strategy: {adaptation.sampling_strategy!r}"
+        )
     for name, value in (
         ("tversky_alpha", adaptation.tversky_alpha),
         ("tversky_beta", adaptation.tversky_beta),
@@ -179,9 +200,11 @@ def adapt_frozen_rcda_on_wfigs(
     train_loader = make_loader(
         train_set,
         batch_size=adaptation.batch_size,
-        shuffle=True,
-        weighted=False,
+        shuffle=not adaptation.weighted_sampling,
+        weighted=adaptation.weighted_sampling,
         num_workers=adaptation.num_workers,
+        event_balance_power=adaptation.event_balance_power,
+        sampling_strategy=adaptation.sampling_strategy,
     )
     val_loader = make_loader(
         val_set,
@@ -271,7 +294,11 @@ def adapt_frozen_rcda_on_wfigs(
             T_max=max(adaptation.epochs, 1),
             eta_min=adaptation.lr * 0.02,
         )
-        scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda")
+        scaler = torch.amp.GradScaler(
+            "cuda",
+            enabled=device.type == "cuda",
+            init_scale=1024.0,
+        )
         loss_config = SealedTrainConfig(
             dataset_root=str(dataset_root),
             protocol_dir=str(dataset_root),
@@ -302,6 +329,8 @@ def adapt_frozen_rcda_on_wfigs(
             balanced_growth_bce_weight=adaptation.balanced_growth_bce_weight,
             far_background_bce_weight=adaptation.far_background_bce_weight,
             far_background_min_distance_px=adaptation.far_background_min_distance_px,
+            focal_bce_weight=adaptation.focal_bce_weight,
+            focal_gamma=adaptation.focal_gamma,
             evaluate_test=False,
         )
         checkpoint_path = output_root / f"wfigs_adapt_seed{seed}_best.pt"
@@ -320,13 +349,34 @@ def adapt_frozen_rcda_on_wfigs(
                 optimizer.zero_grad(set_to_none=True)
                 with torch.amp.autocast("cuda", enabled=device.type == "cuda"):
                     logits = model(inputs)
-                    loss = objective_loss(logits, inputs, growth, extent, loss_config)
+                loss = objective_loss(
+                    logits.float(),
+                    inputs,
+                    growth.float(),
+                    extent.float(),
+                    loss_config,
+                )
+                if not bool(torch.isfinite(loss).item()):
+                    print(
+                        f"non-finite WFIGS loss skipped seed={seed} epoch={epoch}",
+                        flush=True,
+                    )
+                    scaler.update()
+                    continue
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
                 gradient_norm = torch.nn.utils.clip_grad_norm_(
                     trainable_parameters,
                     adaptation.max_grad_norm,
+                    error_if_nonfinite=not scaler.is_enabled(),
                 )
+                if scaler.is_enabled() and not torch.isfinite(gradient_norm):
+                    print(
+                        f"AMP overflow skipped seed={seed} epoch={epoch}",
+                        flush=True,
+                    )
+                    scaler.update()
+                    continue
                 if not torch.isfinite(gradient_norm):
                     raise FloatingPointError("non-finite WFIGS adaptation gradient norm")
                 scaler.step(optimizer)
@@ -341,13 +391,26 @@ def adapt_frozen_rcda_on_wfigs(
                 prediction_mode=target_mode,
             )
             selected = max(grid.values(), key=lambda row: float(row["event_macro_iou"]))
-            score = float(selected["event_macro_iou"])
+            growth_ap = evaluate_growth_average_precision(
+                model,
+                val_loader,
+                device,
+                prediction_mode=target_mode,
+            )
+            event_macro = float(selected["event_macro_iou"])
+            score = (
+                growth_ap
+                if adaptation.epoch_selection_metric == "growth_ap"
+                else event_macro
+            )
             history.append(
                 {
                     "epoch": epoch,
                     "train_loss": running_loss / max(len(train_loader), 1),
-                    "val_event_macro_iou": score,
+                    "val_event_macro_iou": event_macro,
+                    "val_growth_ap": growth_ap,
                     "val_threshold": selected["threshold"],
+                    "epoch_selection_metric": adaptation.epoch_selection_metric,
                     "seconds": time.perf_counter() - started,
                 }
             )
@@ -375,6 +438,14 @@ def adapt_frozen_rcda_on_wfigs(
             else:
                 stale += 1
                 should_stop = stale > adaptation.patience
+            print(
+                f"EPOCH seed={seed} epoch={epoch}/{adaptation.epochs} "
+                f"loss={history[-1]['train_loss']:.4f} "
+                f"val_iou={event_macro:.4f} val_ap={growth_ap:.4f} "
+                f"thr={selected['threshold']} best={best_score:.4f} "
+                f"improved={improved} stale={stale}",
+                flush=True,
+            )
             if progress_callback is not None:
                 progress_callback(
                     {
@@ -382,7 +453,8 @@ def adapt_frozen_rcda_on_wfigs(
                         "epoch": epoch,
                         "epochs_total": adaptation.epochs,
                         "train_loss": history[-1]["train_loss"],
-                        "val_event_macro_iou": score,
+                        "val_event_macro_iou": event_macro,
+                        "val_growth_ap": growth_ap,
                         "val_threshold": selected["threshold"],
                         "best_epoch": best_epoch,
                         "best_val_event_macro_iou": best_score,

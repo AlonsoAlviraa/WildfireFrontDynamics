@@ -44,8 +44,9 @@ def select_campaign_pairs(
     events_per_region: int,
     event_offset_per_region: int = 0,
     grid_span_m: float = 15_360.0,
+    max_pairs_per_event: int = 1,
 ) -> list[dict[str, Any]]:
-    """Select one pair per event, balanced by GACC, without target-derived ranking."""
+    """Select event-disjoint pairs, balanced by GACC, without target-derived ranking."""
 
     candidates: list[tuple[str, float, str, dict[str, Any]]] = []
     for pair in pairs:
@@ -77,21 +78,32 @@ def select_campaign_pairs(
         cloud = 100.0 if cloud_value is None else float(cloud_value)
         candidates.append((str(pair.get("region")), cloud, str(pair["pair_id"]), pair))
 
+    if max_pairs_per_event <= 0:
+        raise ValueError("max_pairs_per_event must be positive")
     selected: list[dict[str, Any]] = []
     seen_region_events: dict[str, set[str]] = defaultdict(set)
+    skipped_region_events: dict[str, set[str]] = defaultdict(set)
     selected_region_events: dict[str, set[str]] = defaultdict(set)
+    pairs_for_event: dict[str, int] = defaultdict(int)
     for region, _cloud, _pair_id, pair in sorted(candidates):
         if region not in REGION_DIRECTORIES:
             continue
         event_id = str(pair["event_id"])
-        if event_id in seen_region_events[region]:
+        if event_id not in seen_region_events[region]:
+            seen_region_events[region].add(event_id)
+            if len(seen_region_events[region]) <= event_offset_per_region:
+                skipped_region_events[region].add(event_id)
+                continue
+            if len(selected_region_events[region]) >= events_per_region:
+                continue
+            selected_region_events[region].add(event_id)
+        if event_id in skipped_region_events[region]:
             continue
-        seen_region_events[region].add(event_id)
-        if len(seen_region_events[region]) <= event_offset_per_region:
+        if event_id not in selected_region_events[region]:
             continue
-        if len(selected_region_events[region]) >= events_per_region:
+        if pairs_for_event[event_id] >= max_pairs_per_event:
             continue
-        selected_region_events[region].add(event_id)
+        pairs_for_event[event_id] += 1
         selected.append(pair)
     return selected
 
@@ -107,6 +119,7 @@ class WFIGSTensorCampaign:
         split: str = "train",
         events_per_region: int = 2,
         event_offset_per_region: int = 0,
+        max_pairs_per_event: int = 1,
         size: int = 256,
         resolution_m: float = 60.0,
         min_valid_fraction: float = 0.70,
@@ -115,11 +128,14 @@ class WFIGSTensorCampaign:
             raise ValueError("events_per_region must be positive")
         if event_offset_per_region < 0:
             raise ValueError("event_offset_per_region must be non-negative")
+        if max_pairs_per_event <= 0:
+            raise ValueError("max_pairs_per_event must be positive")
         self.history_root = Path(history_root)
         self.output_root = Path(output_root)
         self.split = split
         self.events_per_region = events_per_region
         self.event_offset_per_region = event_offset_per_region
+        self.max_pairs_per_event = max_pairs_per_event
         self.size = size
         self.resolution_m = resolution_m
         self.min_valid_fraction = min_valid_fraction
@@ -137,6 +153,7 @@ class WFIGSTensorCampaign:
             events_per_region=self.events_per_region,
             event_offset_per_region=self.event_offset_per_region,
             grid_span_m=self.size * self.resolution_m,
+            max_pairs_per_event=self.max_pairs_per_event,
         )
         groups: dict[tuple[int, str], list[dict[str, Any]]] = defaultdict(list)
         for pair in selected:
@@ -218,7 +235,8 @@ class WFIGSTensorCampaign:
                 "split": self.split,
                 "events_per_region": self.events_per_region,
                 "event_offset_per_region": self.event_offset_per_region,
-                "one_pair_per_event": True,
+                "max_pairs_per_event": self.max_pairs_per_event,
+                "one_pair_per_event": self.max_pairs_per_event == 1,
                 "selection_uses_t1_or_growth": False,
                 "size": self.size,
                 "resolution_m": self.resolution_m,
