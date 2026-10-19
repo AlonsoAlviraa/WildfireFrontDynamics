@@ -88,7 +88,8 @@ TREE_MAP: dict[str, tuple[str, ...]] = {
         "artifacts/aligned_spatial_v1/tobarra_20240802",
         "artifacts/tobarra_reprojected_lwir",
         "artifacts/tobarra_lwir_masks",
-        "data/real_if/pablo_geacam_20260730_tobarra",
+        # Private perimeter/thermal bytes are gitignored and not scored here.
+        # See data/real_if/private/README.md.
     ),
     "cardoso_2025": (
         "artifacts/aligned_spatial_v1/CARDOSO",

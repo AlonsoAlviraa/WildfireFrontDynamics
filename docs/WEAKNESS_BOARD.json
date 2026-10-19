@@ -46,7 +46,7 @@
       "on_disk_tif_count": 138,
       "dated_scene_count": 35,
       "usable_dated_scene_count": 35,
-      "on_disk_kmz_count": 2,
+      "on_disk_kmz_count": 0,
       "aligned_tif_count": 68,
       "mask_tif_count": 69,
       "blocking_gap": "rights",
@@ -57,13 +57,11 @@
       "trees_present": [
         "artifacts/aligned_spatial_v1/tobarra_20240802",
         "artifacts/tobarra_reprojected_lwir",
-        "artifacts/tobarra_lwir_masks",
-        "data/real_if/pablo_geacam_20260730_tobarra"
+        "artifacts/tobarra_lwir_masks"
       ],
       "tree_fingerprint": "cf8185b19ae1f22e31612818b41bd0563ca834ae66a0aff13c160214965ba091",
       "manifest_sha256": {
-        "artifacts/aligned_spatial_v1/tobarra_20240802/align_manifest.json": "665bdc394423cb561b81198c0e8c65605321897edb4b070cffd7403345c4aa4c",
-        "data/real_if/pablo_geacam_20260730_tobarra/inventory.json": "11f129c0829c4f5d03a5a6e498d94c3bfa14e31def9569622e9db5cbbc6f00d6"
+        "artifacts/aligned_spatial_v1/tobarra_20240802/align_manifest.json": "665bdc394423cb561b81198c0e8c65605321897edb4b070cffd7403345c4aa4c"
       },
       "pack_kind": "clm",
       "invented_vp_ha": false,

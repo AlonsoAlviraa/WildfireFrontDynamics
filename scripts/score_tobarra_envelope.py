@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
 from wildfire_front.fuel.envelope_scorecard import (  # noqa: E402
     build_tobarra_envelope_scorecard,
 )
+from wildfire_front.ops_perimeter import private_tobarra_inventory_path  # noqa: E402
 
 
 def _load_vp() -> float | None:
@@ -75,7 +76,7 @@ def main() -> int:
         if default_card.is_file():
             card = json.loads(default_card.read_text(encoding="utf-8"))
 
-    pablo = ROOT / "data" / "real_if" / "pablo_geacam_20260730_tobarra" / "inventory.json"
+    pablo = private_tobarra_inventory_path(ROOT)
 
     weather_doc = None
     weather_path = args.weather
@@ -101,7 +102,7 @@ def main() -> int:
         calibration_recipe=recipe if recipe.is_file() else None,
         weather_scenario=weather_doc,
         fuel_id=fuel_id,
-        pablo_inventory=pablo if pablo.is_file() else None,
+        pablo_inventory=pablo,
         decision_card=card,
         with_ensemble=not args.no_ensemble,
     )

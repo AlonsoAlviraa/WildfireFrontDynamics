@@ -82,15 +82,11 @@ def test_attach_card_weight_zero() -> None:
 
 
 def test_full_scorecard(tmp_path: Path) -> None:
-    inv = (
-        Path(__file__).resolve().parents[1]
-        / "data"
-        / "real_if"
-        / "pablo_geacam_20260730_tobarra"
-        / "inventory.json"
-    )
+    from wildfire_front.ops_perimeter import private_tobarra_inventory_path
+
+    inv = private_tobarra_inventory_path(Path(__file__).resolve().parents[1])
     score = build_tobarra_envelope_scorecard(
-        pablo_inventory=inv if inv.is_file() else None,
+        pablo_inventory=inv,
         decision_card={
             "event_id": "tobarra",
             "decision": "HOLD",

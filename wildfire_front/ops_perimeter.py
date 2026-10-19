@@ -24,6 +24,7 @@ would poison Hausdorff. Callers that need meters must handle
 from __future__ import annotations
 
 import json
+import os
 import re
 import zipfile
 from dataclasses import asdict, dataclass
@@ -65,6 +66,53 @@ def repo_relative_path(path: Path | str, *, root: Path | None = None) -> str:
         return str(p.relative_to(base)).replace("\\", "/")
     except ValueError:
         return str(path).replace("\\", "/")
+
+
+# Third-party Tobarra perimeter bytes are local-only. See data/real_if/private/README.md.
+PRIVATE_TOBARRA_PERIMETERS_REL = "data/real_if/private/tobarra_20240802_perimeters"
+_LEGACY_PRIVATE_TOBARRA_DIRNAME = "pablo_geacam_20260730_tobarra"
+_PRIVATE_TOBARRA_ENV = "WFD_PRIVATE_TOBARRA_PERIMETERS"
+
+
+def resolve_private_tobarra_perimeter_dir(root: Path | None = None) -> Path | None:
+    """Private Tobarra KMZ/KML directory, or None when it is not on this machine.
+
+    Search order: ``WFD_PRIVATE_TOBARRA_PERIMETERS``, the documented private
+    path, then a legacy gitignored directory so an existing local copy still
+    loads. Callers skip when this returns None. Do not commit the bytes.
+    """
+    base = (root or _repo_root()).resolve()
+    candidates: list[Path] = []
+    env = os.environ.get(_PRIVATE_TOBARRA_ENV, "").strip()
+    if env:
+        candidates.append(Path(env).expanduser())
+    candidates.append(base / PRIVATE_TOBARRA_PERIMETERS_REL)
+    candidates.append(base / "data" / "real_if" / _LEGACY_PRIVATE_TOBARRA_DIRNAME)
+    for path in candidates:
+        if path.is_dir():
+            return path
+    return None
+
+
+def private_tobarra_inventory_path(root: Path | None = None) -> Path | None:
+    drop = resolve_private_tobarra_perimeter_dir(root)
+    if drop is None:
+        return None
+    inv = drop / "inventory.json"
+    return inv if inv.is_file() else None
+
+
+def public_private_drop_label(path: Path | str, *, root: Path | None = None) -> str:
+    """Report label that does not repeat the legacy organisation folder name."""
+    rel = repo_relative_path(path, root=root).replace("\\", "/")
+    parts = rel.split("/")
+    if _LEGACY_PRIVATE_TOBARRA_DIRNAME not in parts:
+        return rel
+    idx = parts.index(_LEGACY_PRIVATE_TOBARRA_DIRNAME)
+    tail = parts[idx + 1 :]
+    if not tail:
+        return PRIVATE_TOBARRA_PERIMETERS_REL
+    return "/".join([PRIVATE_TOBARRA_PERIMETERS_REL, *tail])
 
 
 @dataclass(frozen=True)

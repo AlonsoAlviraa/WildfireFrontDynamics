@@ -33,6 +33,12 @@ data/real_if/**/cite/
 data/real_if/cite_drops/**
 !data/real_if/cite_drops/README.md
 !data/real_if/cite_drops/.gitkeep
+# Third-party Tobarra perimeter/thermal drop — local use only, do not distribute.
+# Legacy folder is ignored so it cannot be re-committed. Documented path: data/real_if/private/
+data/real_if/pablo_geacam_20260730_tobarra/
+data/real_if/private/**
+!data/real_if/private/README.md
+!data/real_if/private/.gitkeep
 
 # ─── Python ──────────────────────────────────────────────────
 __pycache__/

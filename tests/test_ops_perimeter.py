@@ -1,4 +1,8 @@
-"""Tests for operational KMZ/KML perimeter parser (Pablo/GEACAM Tobarra drop)."""
+"""Tests for operational KMZ/KML perimeter parser.
+
+Real-file cases use the private Tobarra drop when it is present locally
+(see ``data/real_if/private/README.md``) and skip when it is absent.
+"""
 
 from __future__ import annotations
 
@@ -10,17 +14,19 @@ from pathlib import Path
 
 import pytest
 
+from wildfire_front.ops_perimeter import resolve_private_tobarra_perimeter_dir
+
 ROOT = Path(__file__).resolve().parents[1]
-DROP = ROOT / "data" / "real_if" / "pablo_geacam_20260730_tobarra"
-KMZ_1830 = DROP / "2024020124_TOBARRA_20240802_1830.kmz"
-KMZ_2143 = DROP / "2024020124_TOBARRA_20240802_2143.kmz"
-KML_1830 = DROP / "2024020124_TOBARRA_20240802_1830.kml"
+DROP = resolve_private_tobarra_perimeter_dir(ROOT)
+KMZ_1830 = (DROP / "2024020124_TOBARRA_20240802_1830.kmz") if DROP else None
+KMZ_2143 = (DROP / "2024020124_TOBARRA_20240802_2143.kmz") if DROP else None
+KML_1830 = (DROP / "2024020124_TOBARRA_20240802_1830.kml") if DROP else None
 MAIN_FRONT = ROOT / "outputs" / "observatorio" / "tobarra_20240802" / "main_front.geojson"
 
-# Real-file tests skip when drop absent
+# Real-file tests skip when the private drop is absent
 real_drop = pytest.mark.skipif(
-    not KMZ_1830.is_file(),
-    reason="Pablo Tobarra KMZ drop not present under data/real_if/",
+    KMZ_1830 is None or not KMZ_1830.is_file(),
+    reason="private Tobarra perimeter drop not present (data/real_if/private/README.md)",
 )
 
 
@@ -382,3 +388,65 @@ def test_sup_ha_checks_keyed_by_basename_not_order():
     c = rep["sup_ha_inventory_checks"][0]
     assert c["sup_ha_expected_inventory"] == pytest.approx(37.075054)
     assert c["match"] is True
+
+
+def test_resolve_private_drop_absent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("WFD_PRIVATE_TOBARRA_PERIMETERS", raising=False)
+    assert resolve_private_tobarra_perimeter_dir(tmp_path) is None
+
+
+def test_public_label_hides_legacy_folder(tmp_path: Path):
+    from wildfire_front.ops_perimeter import (
+        _LEGACY_PRIVATE_TOBARRA_DIRNAME,
+        PRIVATE_TOBARRA_PERIMETERS_REL,
+        public_private_drop_label,
+    )
+
+    legacy = tmp_path / "data" / "real_if" / _LEGACY_PRIVATE_TOBARRA_DIRNAME
+    kmz = legacy / "2024020124_TOBARRA_20240802_1830.kmz"
+    label = public_private_drop_label(kmz, root=tmp_path)
+    assert label == f"{PRIVATE_TOBARRA_PERIMETERS_REL}/2024020124_TOBARRA_20240802_1830.kmz"
+    assert _LEGACY_PRIVATE_TOBARRA_DIRNAME not in label
+
+
+def test_eval_script_skips_when_drop_missing(tmp_path: Path):
+    out = tmp_path / "report.json"
+    missing = tmp_path / "no-such-drop"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "eval_tobarra_pablo_perimeters.py"),
+            "--drop-dir",
+            str(missing),
+            "--output",
+            str(out),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+    )
+    assert r.returncode == 0, r.stderr + r.stdout
+    summary = json.loads(r.stdout)
+    assert summary["skipped"] is True
+    assert summary["verdict"] == "SKIPPED"
+    assert not out.exists()
+
+
+def test_public_manifests_do_not_name_legacy_perimeter_folder():
+    from wildfire_front.ops_perimeter import _LEGACY_PRIVATE_TOBARRA_DIRNAME
+
+    token = _LEGACY_PRIVATE_TOBARRA_DIRNAME
+    roots = [ROOT / "docs", ROOT / "data" / "fuel_stack", ROOT / "data" / "real_if" / "private"]
+    hits: list[str] = []
+    for base in roots:
+        if not base.exists():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file():
+                continue
+            if path.suffix.lower() not in {".md", ".json", ".csv", ".html", ".txt"}:
+                continue
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            if token in text:
+                hits.append(str(path.relative_to(ROOT)))
+    assert hits == []
