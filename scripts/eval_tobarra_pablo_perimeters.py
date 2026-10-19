@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Evaluate Pablo/GEACAM Tobarra operational KMZ perimeters (2026-07-30 drop).
+"""Evaluate private Tobarra operational KMZ perimeters when they are present locally.
 
 Loads the two multi-hour perímetro activo KMZ files, reports Sup_ha growth,
 pairwise Hausdorff between ops polygons, and (if available) Hausdorff vs the
-Tobarra reconstructed main_front pack.
+Tobarra reconstructed main_front pack. Exits 0 with ``skipped`` when the
+private drop is absent (see ``data/real_if/private/README.md``).
 
 Honesty:
   - Ops perimeter ≠ national cadastre (O2 national remains BLOCKED).
@@ -38,13 +39,15 @@ from wildfire_front.ops_perimeter import (  # noqa: E402
     area_growth_summary,
     area_ha_from_ring_wgs84,
     parse_ops_perimeter,
+    public_private_drop_label,
     pyproj_available,
     repo_relative_path,
+    resolve_private_tobarra_perimeter_dir,
     ring_wgs84_to_utm30n,
     write_geojson,
 )
 
-DEFAULT_DROP = ROOT / "data" / "real_if" / "pablo_geacam_20260730_tobarra"
+DEFAULT_DROP = resolve_private_tobarra_perimeter_dir(ROOT)
 DEFAULT_KMZ = [
     "2024020124_TOBARRA_20240802_1830.kmz",
     "2024020124_TOBARRA_20240802_2143.kmz",
@@ -243,7 +246,7 @@ def _perim_record(p: OpsPerimeter) -> dict:
     except MetricCrsError as exc:
         geom_err = str(exc)
     return {
-        "source_path": p.source_path,
+        "source_path": public_private_drop_label(p.source_path, root=ROOT),
         "name": p.name,
         "time_local_inferred": p.time_local_inferred,
         "time_source": p.time_source,
@@ -486,7 +489,7 @@ def build_report(
             write_geojson([p], out_gj, name=stem)
             geojson_paths.append(repo_relative_path(out_gj))
         coll = out_dir / "tobarra_ops_perimeters.geojson"
-        write_geojson(perims, coll, name="tobarra_ops_perimeters_pablo_20260730")
+        write_geojson(perims, coll, name="tobarra_ops_perimeters_private")
         geojson_paths.append(repo_relative_path(coll))
 
     pair_metrics = None
@@ -505,8 +508,8 @@ def build_report(
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "fire_id": "tobarra_20240802",
         "incident_code": "2024020124",
-        "source_drop": repo_relative_path(drop_dir),
-        "source_contact": "pablo.arroyobretano@geacam.com / GEACAM-CMA",
+        "source_drop": public_private_drop_label(drop_dir, root=ROOT),
+        "source_contact": "private_third_party",
         "received_date": "2026-07-30",
         "product_class": "operational_active_perimeter",
         "clock_model": _clock_model_doc(),
@@ -520,7 +523,7 @@ def build_report(
             "tobarra_ops_proxy": "PARTIAL_GO",
             "national_cadastre_official": "BLOCKED",
             "note": (
-                "Pablo KMZ multi-hour perímetro activo unblocks Tobarra O2 as "
+                "Private multi-hour perímetro activo unblocks Tobarra O2 as "
                 "ops proxy only. National/catastral O2 remains BLOCKED."
             ),
         },
@@ -543,9 +546,23 @@ def build_report(
     return report
 
 
+def _skip(reason: str, **extra: object) -> int:
+    summary = {"skipped": True, "ok": True, "verdict": "SKIPPED", "reason": reason, **extra}
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    return 0
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Tobarra Pablo ops perimeter eval")
-    ap.add_argument("--drop-dir", type=Path, default=DEFAULT_DROP)
+    ap = argparse.ArgumentParser(description="Tobarra private ops perimeter eval")
+    ap.add_argument(
+        "--drop-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Private local perimeter directory. Default: WFD_PRIVATE_TOBARRA_PERIMETERS "
+            "or data/real_if/private/tobarra_20240802_perimeters (see data/real_if/private/README.md)"
+        ),
+    )
     ap.add_argument(
         "--kmz",
         nargs="+",
@@ -580,15 +597,31 @@ def main() -> int:
     ap.add_argument("--output", type=Path, default=DEFAULT_OUT)
     args = ap.parse_args()
 
+    drop_dir = args.drop_dir if args.drop_dir is not None else DEFAULT_DROP
+    if drop_dir is None or not drop_dir.is_dir():
+        return _skip(
+            "private Tobarra perimeter drop absent",
+            documented_path="data/real_if/private/tobarra_20240802_perimeters",
+        )
+    missing = []
+    for name in args.kmz:
+        candidate = drop_dir / name
+        alt = candidate.with_suffix(".kml")
+        if not candidate.is_file() and not alt.is_file():
+            missing.append(name)
+    if missing:
+        return _skip(
+            "private Tobarra perimeter files absent",
+            documented_path="data/real_if/private/tobarra_20240802_perimeters",
+            missing=missing,
+        )
+
     main_front = None if args.no_main_front else args.main_front
     export_gj = bool(args.export_geojson) or bool(args.export_geojson_to_drop)
-    if args.export_geojson_to_drop:
-        geojson_dir = args.drop_dir
-    else:
-        geojson_dir = args.geojson_dir or DEFAULT_OUT_DIR
+    geojson_dir = drop_dir if args.export_geojson_to_drop else args.geojson_dir or DEFAULT_OUT_DIR
 
     report = build_report(
-        args.drop_dir,
+        drop_dir,
         list(args.kmz),
         main_front,
         args.sample_spacing_m,

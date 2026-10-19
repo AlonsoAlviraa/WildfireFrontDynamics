@@ -386,7 +386,7 @@ python scripts/run_tobarra_aemet_pipeline.py   # needs .env if no cache
 
 ---
 
-### PR-11 — (Optional) Pablo GEACAM Tobarra perimeter eval
+### PR-11 — (Optional) Tobarra operational perimeter eval
 
 **Branch:** `feat/ops-perimeter-pablo-tobarra`  
 **Deps:** none hard (nice after PR-2 for context)  
@@ -394,9 +394,9 @@ python scripts/run_tobarra_aemet_pipeline.py   # needs .env if no cache
 **Scope**
 
 - `wildfire_front/ops_perimeter.py` KMZ/KML → GeoJSON / ha growth.
-- `scripts/eval_tobarra_pablo_perimeters.py`.
-- Local inventory under `data/real_if/pablo_geacam_20260730_tobarra/` (README + inventory; binary KMZ policy: prefer LFS or local-only).
-- Tests with synthetic polygons if raw KMZ not committed.
+- `scripts/eval_tobarra_pablo_perimeters.py` (skips when the private drop is absent).
+- Third-party perimeter bytes stay on the private local path in `data/real_if/private/README.md`. They are not committed and not redistributed.
+- Tests with synthetic polygons when that path is absent.
 
 **Files**
 
@@ -405,8 +405,7 @@ python scripts/run_tobarra_aemet_pipeline.py   # needs .env if no cache
 | `wildfire_front/ops_perimeter.py` | add |
 | `scripts/eval_tobarra_pablo_perimeters.py` | add |
 | `tests/test_ops_perimeter.py` | add |
-| `data/real_if/pablo_geacam_20260730_tobarra/README.md` | add |
-| `data/real_if/pablo_geacam_20260730_tobarra/inventory.json` | add |
+| `data/real_if/private/README.md` | document private local path (no bytes) |
 
 **DoD**
 
@@ -472,7 +471,7 @@ Code is largely present uncommitted. Two valid approaches:
 |-----------|----------|-------------------|
 | **PR-α Core physics** | PR-1 + 2 + 3 + 4 + 5 + 7 | **DONE** — `/implement` 0 open issues · 87 tests |
 | **PR-β Envelope + AEMET** | PR-6 + 8 + 9 + 10 | **DONE DoD** — pipeline PASS · `tests/test_pr_beta_envelope_aemet.py` |
-| **PR-γ (optional)** | PR-11 Pablo perímetros | Pending if not landed with ops_perimeter |
+| **PR-γ (optional)** | PR-11 Tobarra perímetros (private local path) | Pending if not landed with ops_perimeter |
 
 **PR-β verify**
 

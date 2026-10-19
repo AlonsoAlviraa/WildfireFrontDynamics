@@ -199,9 +199,10 @@ def save_weather_scenario(scenario: WeatherScenario, path: Path | str) -> Path:
 
 
 def tobarra_20240802_default_scenario() -> WeatherScenario:
-    """Scenario from Pablo/INFOCAM map notes (pre_analisis_1711) — **assumed**.
+    """Scenario transcribed from a private operational map note — **assumed**.
 
-    Inventory string (``data/real_if/pablo_geacam_20260730_tobarra/inventory.json``)::
+    The source map is not redistributed. Local copies, when present, live under
+    the path in ``data/real_if/private/README.md``. Transcribed note::
 
         pre_analisis_1711: \"02/08/2024 17:11; meteo T35 HR10 wind W21 gust40; detection 16:42\"
 
@@ -219,7 +220,7 @@ def tobarra_20240802_default_scenario() -> WeatherScenario:
     engineering preset when no weather file is supplied.
     """
     notes = [
-        "from_pablo_inventory.map_notes.pre_analisis_1711",
+        "from_private_ops_map_notes.pre_analisis_1711",
         "wind_speed_unit_assumed_kmh_not_ms_not_beaufort",
         "not_aemet_station_observation",
         "dead_fmc_pct=7.0 is engineering default — not measured on map",
@@ -242,9 +243,8 @@ def tobarra_20240802_default_scenario() -> WeatherScenario:
             "pre_analisis_1711": (
                 "02/08/2024 17:11; meteo T35 HR10 wind W21 gust40; detection 16:42"
             ),
-            "inventory_path": (
-                "data/real_if/pablo_geacam_20260730_tobarra/inventory.json"
-            ),
+            "inventory_path": None,
+            "inventory_note": "private local map notes; not redistributed",
             "wind_kmh_assumed": wind_kmh,
             "gust_kmh_assumed": gust_kmh,
             "wind_cardinal": "W",

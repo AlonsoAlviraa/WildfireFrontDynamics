@@ -8,7 +8,7 @@
   "source": "scenario_assumed",
   "as_of": "2024-08-02T17:11:00",
   "notes": [
-    "from_pablo_inventory.map_notes.pre_analisis_1711",
+    "from_private_ops_map_notes.pre_analisis_1711",
     "wind_speed_unit_assumed_kmh_not_ms_not_beaufort",
     "not_aemet_station_observation",
     "dead_fmc_pct=7.0 is engineering default — not measured on map",
@@ -17,7 +17,8 @@
   "fire_id": "tobarra_20240802",
   "raw": {
     "pre_analisis_1711": "02/08/2024 17:11; meteo T35 HR10 wind W21 gust40; detection 16:42",
-    "inventory_path": "data/real_if/pablo_geacam_20260730_tobarra/inventory.json",
+    "inventory_path": null,
+    "inventory_note": "private local map notes; not redistributed",
     "wind_kmh_assumed": 21.0,
     "gust_kmh_assumed": 40.0,
     "wind_cardinal": "W"

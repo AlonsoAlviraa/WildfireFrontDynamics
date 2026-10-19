@@ -31,6 +31,11 @@ from wildfire_front.open_if.latam_au import (  # noqa: E402
     default_source_pack_dir,
     source_pack_ready,
 )
+from wildfire_front.ops_perimeter import (  # noqa: E402
+    PRIVATE_TOBARRA_PERIMETERS_REL,
+    public_private_drop_label,
+    resolve_private_tobarra_perimeter_dir,
+)
 
 OUT = ROOT / "outputs" / "open_if" / "best_fires_e2e"
 
@@ -412,22 +417,31 @@ def main(argv: list[str] | None = None) -> int:
     cfsds = inventory_cfsds_pack(ROOT)
     nirops = inventory_nirops_mendeley()
 
-    tobarra_src = ROOT / "data" / "real_if" / "pablo_geacam_20260730_tobarra"
-    tobarra_out = OUT / "tobarra_pablo_inventory.csv"
-    tobarra_cmd = _run(
-        [
-            sys.executable,
-            "scripts/inventory_real_if_material.py",
-            "--source",
-            str(tobarra_src),
-            "--output",
-            str(tobarra_out),
-        ]
-    )
+    tobarra_src = resolve_private_tobarra_perimeter_dir(ROOT)
+    tobarra_out = OUT / "tobarra_private_inventory.csv"
+    if tobarra_src is None:
+        tobarra_cmd = {
+            "cmd": ["scripts/inventory_real_if_material.py"],
+            "exit_code": 0,
+            "skipped": True,
+            "reason": "private Tobarra perimeter drop absent",
+        }
+        tobarra_n = 0
+    else:
+        tobarra_cmd = _run(
+            [
+                sys.executable,
+                "scripts/inventory_real_if_material.py",
+                "--source",
+                str(tobarra_src),
+                "--output",
+                str(tobarra_out),
+            ]
+        )
+        tobarra_n = 0
+        if tobarra_out.is_file():
+            tobarra_n = max(0, len(tobarra_out.read_text(encoding="utf-8").splitlines()) - 1)
     commands.append(tobarra_cmd)
-    tobarra_n = 0
-    if tobarra_out.is_file():
-        tobarra_n = max(0, len(tobarra_out.read_text(encoding="utf-8").splitlines()) - 1)
 
     aligned_path = OUT / "tobarra_aligned_decide" / "decide_report.json"
     if not args.skip_tobarra_aligned:
@@ -497,13 +511,19 @@ def main(argv: list[str] | None = None) -> int:
         },
         "firebench_caldor": caldor,
         "tobarra": {
-            "source": "data/real_if/pablo_geacam_20260730_tobarra",
-            "output": _rel(tobarra_out),
+            "source": (
+                public_private_drop_label(tobarra_src, root=ROOT)
+                if tobarra_src is not None
+                else "absent"
+            ),
+            "documented_path": PRIVATE_TOBARRA_PERIMETERS_REL,
+            "output": _rel(tobarra_out) if tobarra_src is not None else None,
             "n_records": tobarra_n,
             "exit_code": tobarra_cmd.get("exit_code"),
+            "skipped": bool(tobarra_cmd.get("skipped")),
             "keep_reopened": False,
             "retrained": False,
-            "used_as": "inventory_only",
+            "used_as": "inventory_only" if tobarra_src is not None else "skipped_private_absent",
         },
         "tobarra_aligned_decide": aligned,
         "on_disk_used": [
@@ -511,7 +531,6 @@ def main(argv: list[str] | None = None) -> int:
             "data/open_if/latam_au/cl/CL_EMSR647_NACIMIENTO",
             "data/external/firebench/caldor_2021",
             "data/external/wildfirespreadts/ndws_kaggle_proxy",
-            "data/real_if/pablo_geacam_20260730_tobarra (inventory only; no KEEP reopen)",
         ],
         "cfsds": cfsds,
         "nirops": nirops,
@@ -541,6 +560,10 @@ def main(argv: list[str] | None = None) -> int:
             "not grade-A promote from Tobarra inventory or aligned-LWIR decide",
         ],
     }
+    if tobarra_src is not None:
+        report["on_disk_used"].append(
+            public_private_drop_label(tobarra_src, root=ROOT) + " (inventory only; no KEEP reopen)"
+        )
     _attach_honesty(report)
 
     json_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
